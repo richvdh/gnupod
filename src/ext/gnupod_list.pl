@@ -7,15 +7,14 @@
 
 use strict;
 use iPod;
-use Getopt::Std;
-use Getopt::Mixed qw(nextOption);
+use Getopt::Long;
 
 sub usage() {
     die <<END_USAGE
 Usage: $0 [ablsth] [-m directory]
 List GnuPod tunes database.
 
-  -a --album             :  list artists
+  -a --artist            :  list artist
   -b --by-artist         :  list albums by artist
   -l --list-albums       :  list albums
   -s --songs             :  list songs
@@ -29,19 +28,20 @@ END_USAGE
 my %opt = ();
 
 
-Getopt::Mixed::init("help h>help titles t>titles songs s>songs \
-list-albums l>list-albums by-artist b>by-artist album a>album mount=s m>mount genres g>genres");
 
-while(my($goption, $gvalue)=nextOption()) {
- $gvalue = 1 if !$gvalue;
- $opt{substr($goption, 0,1)} = $gvalue;
-}
-Getopt::Mixed::cleanup();
+$opt{m} = $ENV{IPOD_MOUNTPOINT} if !$opt{m}; #defaulting
 
-
+GetOptions ('help|h' => \$opt{h}, 'mount|m=s' => \$opt{m},
+            'artist|a'      => \$opt{a},
+	    'by-artist|b'   => \$opt{b},
+	    'list-albums|l' => \$opt{l},
+	    'songs|s'       => \$opt{s},
+	    'titles|t'      => \$opt{t},
+	    'genres|g'      => \$opt{g},	    
+	    'mount|m=s'     => \$opt{m});
 
 $opt{b} = 1 unless keys %opt;  # default: list albums by artist
-$opt{m} = $ENV{IPOD_MOUNTPOINT} if !$opt{m}; #defaulting
+
 usage() if !$opt{m} || $opt{h};
 
 iPod::read_xml("$opt{m}/iPod_Control/.gnupod/GNUtunesDB");

@@ -7,19 +7,13 @@
 
 use strict;
 use iPod;
-use Getopt::Mixed qw(nextOption);
+use Getopt::Long;
 
 my %opt = ();
 $opt{m} = $ENV{IPOD_MOUNTPOINT}; #defaulting
 
 
-Getopt::Mixed::init("mount=s m>mount help h>help");
-
-while(my($goption, $gvalue)=nextOption()) {
- $gvalue = 1 if !$gvalue;
- $opt{substr($goption, 0,1)} = $gvalue;
-}
-Getopt::Mixed::cleanup();
+GetOptions ('help|h' => \$opt{h}, 'mount|m=s' => \$opt{m});
 
 
 if (!$opt{m} || $opt{h}) {

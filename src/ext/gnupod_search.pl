@@ -6,7 +6,7 @@
 # Some changes made by Adrian Ulrich
 use strict;
 use iPod;
-use Getopt::Mixed qw(nextOption);
+use Getopt::Long;
 
 sub usage() {
     die <<END_USAGE
@@ -28,17 +28,14 @@ my %opt = ();
 $opt{m} = $ENV{IPOD_MOUNTPOINT}; #defaulting
 
 
+GetOptions ('help|h' => \$opt{h}, 'numbers|n' => \$opt{n},
+            'artist|a=s' => \$opt{a},
+	    'album|l=s'  => \$opt{l},
+	    'title|t=s'  => \$opt{t},
+	    'id|i=s'     => \$opt{i},
+	    'genre|g=s'  => \$opt{g},
+	    'mount|m=s'  => \$opt{m});
 
-Getopt::Mixed::init("help h>help numbers n>numbers \
-artist=s a>artist album=s l>album title=s t>title \
-id=i i>id mount=s m>mount genre=s g>genre");
-
-while(my($goption, $gvalue)=nextOption()) {
- $gvalue = 1 if !$gvalue;
- $goption = "l" if $goption eq "album"; #ugly bugfix
- $opt{substr($goption, 0,1)} = $gvalue;
-}
-Getopt::Mixed::cleanup();
 
 usage() if !$opt{m} || $opt{h};
 
