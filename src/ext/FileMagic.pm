@@ -69,8 +69,10 @@ sub __is_mp3 {
  $rh{filesize} = $h->{SIZE};
  $rh{time}     = int($h->{SECS}*1000);
  $rh{fdesc}    = "MPEG ${$h}{VERSION} layer ${$h}{LAYER} file";
- $h = MP3::Info::get_mp3tag($file, 1);  #Get the IDv1 tag
- $hs = MP3::Info::get_mp3tag($file, 2); #Get the IDv2 tag ### BROKEN! FIXME
+ $h = MP3::Info::get_mp3tag($file);  #Get the IDv1 tag
+ $hs = MP3::Info::get_mp3tag($file, 2,1); #Get the IDv2 tag ### BROKEN! FIXME
+
+
 
 #IDv2 is stronger than IDv1..
  #Try to parse things like 01/01
@@ -105,17 +107,37 @@ sub pss {
  }
 }
 
-#Guess charset and try to return valid UTF8 data
+
 sub getutf8 {
  my($in) = @_;
- my $oldstderr = *STDERR; #Kill all utf8 warnings.. bad thing..
- *STDERR = "NULLFH";
- my $bfx = Unicode::String::utf8($in)->utf8;
- *STDERR = $oldstderr;
+ $in =~ s/^(.)//;
+ my $encoding = $1;
 
- return $in if $bfx eq $in; #Input was valid utf8 data
- return Unicode::String::latin1($in)->utf8; #Maybe it was latin1?
+ if($encoding eq "\001" || $encoding eq "\002") {
+  #From MP3::Info
+  my $u = Unicode::String::utf16($data);
+  $data = $u->utf8;
+  $data =~ s/^\xEF\xBB\xBF//;
+ }
+ else { #AutoGuess (We accept invalid id3tags)
+  $in = $encoding.$in;
+  my $oldstderr = *STDERR; #Kill all utf8 warnings.. bad thing..
+  *STDERR = "NULLFH";
+  my $bfx = Unicode::String::utf8($in)->utf8;
+  *STDERR = $oldstderr;
+   if($bfx ne $in) {
+    #Input was no valid utf8, assume latin1 input
+    $in = Unicode::String::latin1($in)->utf8
+   }
+   else {
+    $in = $bfx;
+   }
+   #Remove all 00's
+   $in =~ tr/\0000//d;
+ }
+ return $in;
 }
+
 
 1;
 
