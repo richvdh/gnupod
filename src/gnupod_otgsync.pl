@@ -51,6 +51,7 @@ else {
 ####################################################
 # Worker
 sub go {
+
  #Disable auto-run of tunes2pod or gnupod_otgsync.pl
  $opts{_no_sync} = 1;
  my $con = GNUpod::FooBar::connect(\%opts);
@@ -62,12 +63,12 @@ sub go {
 
 
 
-#Read on The Go list written by the iPod
-my @xotg    = GNUpod::iTunesDB::readOTG($con->{onthego});
+ #Read on The Go list written by the iPod
+ my @xotg    = GNUpod::iTunesDB::readOTG($con->{onthego});
 
-#plcref is used by newfile()
-#so we have to call this before doxml()
-$plcref  = GNUpod::iTunesDB::readPLC($con->{playcounts});
+ #plcref is used by newfile()
+ #so we have to call this before doxml()
+ $plcref  = GNUpod::iTunesDB::readPLC($con->{playcounts});
 
 
  #Add dummy entry, we start to count at 1, not at 0
@@ -87,7 +88,8 @@ $plcref  = GNUpod::iTunesDB::readPLC($con->{playcounts});
 #############################################
 # Add onthego contents to XML
 sub mkotg {
-my(@xotg) = @_;
+ my(@xotg) = @_;
+ 
  #Get all old playlists and create a new name
  my $otggen = 1;
  foreach(GNUpod::XMLhelper::getpl_names()) {
@@ -97,6 +99,7 @@ my(@xotg) = @_;
  }
  
  GNUpod::XMLhelper::addpl("On-The-Go $otggen");
+ 
  foreach(@xotg) {
   my $otgid = $_+1;
   my $plfh = ();
@@ -104,6 +107,7 @@ my(@xotg) = @_;
   next unless $plfh->{add}->{id};
   GNUpod::XMLhelper::mkfile($plfh,{"plname"=>"On-The-Go $otggen"});
  }
+
 }
 
 #############################################

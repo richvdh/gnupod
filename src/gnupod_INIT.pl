@@ -28,7 +28,7 @@ use Getopt::Long;
 use vars qw(%opts);
 
 
-print "gnupod_addsong.pl Version 0.94 (C) 2002-2004 Adrian Ulrich\n";
+print "gnupod_INIT.pl Version 0.95 (C) 2002-2004 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
@@ -56,8 +56,8 @@ and creates an *empty* GNUtunesDB (..or convert your old
 iTunesDB to a new GNUtunesDB).
 
 You only have to use this command if
- a) You never used GNUpod with this iPod
- b) You did an 'rm -rf' on your iPod
+    -> You never used GNUpod with this iPod
+ or -> You did an 'rm -rf' on your iPod
 
 btw: use 'gnupod_addsong -m $opts{mount} --restore'
      if you lost your songs on the iPod after using
@@ -91,24 +91,24 @@ EOF
    print "+$path\n";
  }
 
-if($opts{france}) {
- print "> Creating 'Limit' file (because you used --france)\n";
- mkdir("$opts{mount}/iPod_Control/Device");
- open(LIMIT, ">$opts{mount}/iPod_Control/Device/Limit") or die "Failed: $!\n";
-  print LIMIT "216\n"; #Why?
- close(LIMIT);
-}
-elsif(-e "$opts{mount}/iPod_Control/Device/Limit") {
- print "> Removing 'Limit' file (because you didn't use --france)\n";
- unlink("$opts{mount}/iPod_Control/Device/Limit");
-}
-else {
- print "> No 'Limit' file created or deleted..\n";
-}
+ if($opts{france}) {
+  print "> Creating 'Limit' file (because you used --france)\n";
+  mkdir("$opts{mount}/iPod_Control/Device");
+  open(LIMIT, ">$opts{mount}/iPod_Control/Device/Limit") or die "Failed: $!\n";
+   print LIMIT "216\n"; #Why?
+  close(LIMIT);
+ }
+ elsif(-e "$opts{mount}/iPod_Control/Device/Limit") {
+  print "> Removing 'Limit' file (because you didn't use --france)\n";
+  unlink("$opts{mount}/iPod_Control/Device/Limit");
+ }
+ else {
+  print "> No 'Limit' file created or deleted..\n";
+ }
  
  print "> Creating dummy files\n";
  
-  GNUpod::XMLhelper::writexml($con->{xml});
+ GNUpod::XMLhelper::writexml($con->{xml});
 
  
  if(-e $con->{itunesdb} && !$opts{'disable-convert'}) {

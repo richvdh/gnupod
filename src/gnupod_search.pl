@@ -48,7 +48,8 @@ sub go {
  my $con = GNUpod::FooBar::connect(\%opts);
  usage($con->{status}."\n") if $con->{status};
 
-pview(undef,1);
+ pview(undef,1);
+ 
  GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}\n");
  #XML::Parser finished, write new file
  GNUpod::XMLhelper::writexml($con->{xml}) if $opts{delete};
@@ -155,16 +156,16 @@ Usage: gnupod_search.pl [-h] [-m directory] File1 File2 ...
 
    -h, --help             : This ;)
    -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
-   -t, --title=TITLE      : print songs by Title
-   -a, --artist=ARTIST    : print songs by Artist
-   -l, --album=ALBUM      : print songs by Album
-   -i, --id=ID            : print songs by ID
-   -g, --genre=GENRE      : print songs by Genre
+   -t, --title=TITLE      : search songs by Title
+   -a, --artist=ARTIST    : search songs by Artist
+   -l, --album=ALBUM      : search songs by Album
+   -i, --id=ID            : search songs by ID
+   -g, --genre=GENRE      : search songs by Genre
    -o, --match-once       : Search doesn't need to match multiple times (eg. -a & -l)
        --delete           : REMOVE (!) matched songs
        --view=ialt        : Modify output, default=ialt
                             t = title    a = artist   r = rating      p = path
-			    l = album    g = genre    c = playcount   i = id
+                            l = album    g = genre    c = playcount   i = id
 
 Note: Argument for title/artist/album.. has to be UTF8 encoded, *not* latin1!
 

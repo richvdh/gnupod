@@ -58,7 +58,7 @@ elsif($ARGV[0] eq "-" && @ARGV == 1) {
  my @files = ();
   while(<STDIN>) {
    chomp;
-   push(@files, $_);
+   push(@files, $_); #This eats memory, but it isn't so bad...
   }
   startup(@files);
 }
@@ -77,15 +77,15 @@ sub startup {
  $opts{_no_sync} = $opts{restore};
  
  my $con = GNUpod::FooBar::connect(\%opts);
-usage($con->{status}."\n") if $con->{status} || !@files;
+ usage($con->{status}."\n") if $con->{status} || !@files;
 
-unless($opts{restore}) {
- GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}\n");
-}
+ unless($opts{restore}) {
+  GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}\n");
+ }
 
-my $addcount = 0;
+ my $addcount = 0;
 
-#We are ready to copy each file..
+ #We are ready to copy each file..
  foreach my $file (@files) {
     #Skip all songs if user sent INT
     next if !$int_count;
@@ -95,7 +95,7 @@ my $addcount = 0;
     #Get the filetype
     my ($fh,$media_h,$converted) =  GNUpod::FileMagic::wtf_is($file, {noIDv1=>$opts{'disable-v1'}, 
                                                                       noIDv2=>$opts{'disable-v2'},
-								      decode=>$opts{'decode'}});
+								                                      decode=>$opts{'decode'}});
     unless($fh) {
      warn "* [****] Skipping '$file', unknown file type\n";
      next;
@@ -119,29 +119,40 @@ my $addcount = 0;
    #Copy the file
    if(!$opts{duplicate} && (my $dup = checkdup($fh))) {
     print "! [!!!] '$file' is a duplicate of song $dup, skipping file\n";
-    unlink($converted) if $converted;
+    unlink($converted) if $converted; #Unlink file, if we converted it.. (tmp)
     next;
    }
    
+   
+   #ReSet filename if we did a convert
    $file = $converted if $converted;
+   
    if($opts{restore} || File::Copy::copy($file, $target)) {
-     printf("+ [%-4s][%3d] %-32s | %-32s | %-24s\n",uc($wtf_ftyp),1+$addcount, $fh->{title}, $fh->{album},$fh->{artist});
-     my $fmh;
+     printf("+ [%-4s][%3d] %-32s | %-32s | %-24s\n",
+	    uc($wtf_ftyp),1+$addcount, $fh->{title}, $fh->{album},$fh->{artist});
+     
+	 my $fmh;
      $fmh->{file} = $fh;
      GNUpod::XMLhelper::mkfile($fmh,{addid=>1}); #Try to add an id
-     $addcount++;
-     unlink($converted) if $converted;
+     $addcount++; #Inc. addcount
    }
    else { #We failed..
      warn "*** FATAL *** Could not copy '$file' to '$target': $!\n";
    }
    
+   #Now we unlink leftover converted files even if we couldn't
+   #copy the file to the iPod
+   unlink($converted) if $converted;
+   
  }
 
-if($addcount) { #We have to modify the xmldoc
- print "> Writing new XML File, added $addcount file(s)\n";
- GNUpod::XMLhelper::writexml($con->{xml});
-}
+ 
+ 
+ if($addcount) { #We have to modify the xmldoc
+  print "> Writing new XML File, added $addcount file(s)\n";
+  GNUpod::XMLhelper::writexml($con->{xml});
+ }
+ 
  print "\n Done\n";
 }
 

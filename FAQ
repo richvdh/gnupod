@@ -74,7 +74,7 @@ But there are some GNUpod 'forks'
 - Rhythmbox  http://www.rhythmbox.org/ (Uses GTKpod code)
 
 (<ironic>..and some companies created commercial iPod apps.. and i'm sure
- the didn't look at my source ;-) </ironic> .. sad)
+ they didn't look at my source ;-) </ironic> .. sad)
 
 
 5. Does GNUpod support feature $foobar?
@@ -93,7 +93,6 @@ Firmware 2.x
  - Rating is supported
  - Basic Smart-Playlist support is implemented
    -> See README.smartplaylists
-   [I need to get the interface less cryptic...]
    
 
 6. Can i add File-Format $foobar ?
@@ -102,7 +101,7 @@ Firmware 2.x
 The iPod supports 3 Filetypes:
 
  - MP3
- - Apple AAC files (.m4a)
+ - Apple AAC/ALAC files (.m4a)
  - PCM (.wav)
 
 gnupod_addsong.pl can read this 3 formats.
@@ -113,7 +112,7 @@ GNUpod does (currently) *NOT* support:
  - Apple MusicStore files (.m4p - DRM AAC) but it does support .m4a
  - Unsupported formats, like ogg / midi / nsf...
 
-gnupod 0.95 can convert FLAC files 'on the fly'.
+GnuPod >= 0.95 can convert FLAC files 'on the fly'.
 You'll have to call gnupod_addsong.pl with the
 --decode switch and 'flac' needs to be in your current
 $PATH. It's somewhat alpha and gnupod will convert the
@@ -129,7 +128,7 @@ But gnupod works pretty well with M4A files from allofmp3.com
 7. Why?
 -------
 
-I wanted a iPod so bad and after buying one, i realized that
+I wanted an iPod and after buying one, i realized that
 nobody else created an application to support it on GNU/Linux, so
 i did it myself :)
 (Ok, tex9 created a commercial tool, but for x86 only...
@@ -170,7 +169,7 @@ Use gnupod and:
  * Send me patches (better ;) )
  * Write better documentation
  * Buy me an iPod-Mini ;)
-
+ * Donate via Paypal to paypal@blinkenlights.ch ;)
 
 
 *END*
