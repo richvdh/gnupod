@@ -22,6 +22,12 @@ Summary
   <playlist .. sort="artist"> or (reverse)
   <playlist .. sort="reverse title">
 
+- Do not generate filenames longer than 64 chars..
+  looks like the iPod Photo has a problem
+  (Thanks to Mathieu Chouquet-Stringer for reporting)
+
+- Added tools/fwpatch.pl. Allows you to convert an
+  EU-iPod into an US-iPod (Make it louder)
 
 
 *** OLD STUFF ***

@@ -195,7 +195,6 @@ sub __is_pcm {
   $rh{srate}    = $srate;
   $rh{time}     = int(1000*$size/$bps);
   $rh{fdesc}    = "RIFF Audio File";
-# warn "debug: $bps / $srate\n";
   #No id3 tags for us.. but mmmmaybe...
   #We use getuft8 because you could use umlauts and such things :)  
   #Fixme: absolute versus relative paths :
@@ -242,10 +241,6 @@ sub __is_mp3 {
     $hs->{$xkey} = join(":", @{$hs->{$xkey}});
    } 
  }
-
-#foreach(keys(%$hs)) {
-# print "$_ -> $hs->{$_}\n";
-#}
 
 
 #IDv2 is stronger than IDv1..
@@ -301,12 +296,14 @@ sub getutf8 {
  #Get the ENCODING
  $in =~ s/^(.)//;
  my $encoding = $1;
-
+ if($in eq "") {
+  return undef;
+ }
  # -> UTF16 with or without BOM
- if(ord($encoding) == 1 || ord($encoding) == 2) {
-  my $bfx = Unicode::String::utf16($in)->utf16; #Paranoia
+ elsif(ord($encoding) == 1 || ord($encoding) == 2) {
+  my $bfx = Unicode::String::utf16($in); #Object is utf16
   $bfx->byteswap if $bfx->ord == 0xFFFE;
-  $in = $bfx;
+  $in = $bfx->utf16; #Return utf16 version
  }
  # -> UTF8
  elsif(ord($encoding) == 3) {

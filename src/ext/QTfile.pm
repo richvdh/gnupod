@@ -69,40 +69,37 @@ $hchild{'disk'} = 8;
 
 ##Call this to parse a file
 sub parsefile {
- my($qtfile) = @_;
- 
- 
- open(QTFILE, $qtfile) or return undef;
+	my($qtfile) = @_;
 
- my $fsize = -s "$qtfile" or return undef; #Hey.. VFS borken?
- my $pos = 0;
- my $level = 1;
- my %lx = ();
-    %reth = (); #Cleanup
 
- if($fsize < 16 || rseek(4,4) ne "ftyp") { #Can't be a QTfile
-  close(QTFILE);
-  return undef;
- }
+	open(QTFILE, $qtfile) or return undef;
+
+	my $fsize = -s "$qtfile" or return undef; #Hey.. VFS borken?
+	my $pos = 0;
+	my $level = 1;
+	my %lx = ();
+	   %reth = (); #Cleanup
+
+	if($fsize < 16 || rseek(4,4) ne "ftyp") { #Can't be a QTfile
+		close(QTFILE);
+		return undef;
+	}
  
 
- #Ok, header looks okay.. seek each atom and buildup $lx{metadat}
- while($pos<$fsize) {
-  my($clevel, $len) = get_atom($level, $pos, \%lx);
-  unless($len) {
-    warn "QTfile.pm: ** Unexpected data found at $pos!\n";
-    warn "QTfile.pm: ** You found a bug! Please send a bugreport\n";
-    warn "QTfile.pm: ** to pab\@blinkenlights.ch\n";
-    warn "QTfile.pm: ** GIVING UP PARSING **\n";
-    last;
-  }
-  $pos+=$len;
-  $level = $clevel;
- }
- close(QTFILE);
- 
- 
- 
+	#Ok, header looks okay.. seek each atom and buildup $lx{metadat}
+	while($pos<$fsize) {
+		my($clevel, $len) = get_atom($level, $pos, \%lx);
+		unless($len) {
+			warn "QTfile.pm: ** Unexpected data found at $pos!\n";
+			warn "QTfile.pm: ** You found a bug! Please send a bugreport\n";
+			warn "QTfile.pm: ** to pab\@blinkenlights.ch\n";
+			warn "QTfile.pm: ** GIVING UP PARSING **\n";
+			last;
+		}
+	$pos+=$len;
+	$level = $clevel;
+	}
+	close(QTFILE);
  
  
 ########### Now we build the chain #######################################
@@ -202,86 +199,84 @@ while(<STDIN>) {
 ############################################################
 # Get a single ATOM
 sub get_atom {
- my($level, $pos, $lt) = @_;
-
- my $len = getoct($pos,4); #Length of field
- #Error
- return(undef, undef) if $len < 8;
+	my($level, $pos, $lt) = @_;
+	my $len = getoct($pos,4); #Length of field
+	#Error
+	return(undef, undef) if $len < 8;
  
- #Now get the type
- my $typ = rseek($pos+4,4);
- #..and keep track of it..
- $level = $lt->{ltrack}->{$pos} if $lt->{ltrack}->{$pos};
+	#Now get the type
+	my $typ = rseek($pos+4,4);
+	#..and keep track of it..
+	$level = $lt->{ltrack}->{$pos} if $lt->{ltrack}->{$pos};
+	
+	#Build a chain for this level.. looks like '::foo::bar::bla'
+	$LEVELA[$level] = $typ;
+	my $cChain = undef;
+	for(1..$level) {
+		$cChain .= "::".$LEVELA[$_];
+	}
 
- #Build a chain for this level.. looks like '::foo::bar::bla'
- $LEVELA[$level] = $typ;
- my $cChain = undef;
- for(1..$level) {
-  $cChain .= "::".$LEVELA[$_];
- }
+	if(defined($hchild{$typ})) { #This type has a child
+		#Track the old level
+		$lt->{ltrack}->{$pos+$len} = $level unless $lt->{ltrack}->{$pos+$len};
+		#Go to the next
+		$level++;
+		#Fix len
+		$len = $hchild{$typ};
+	}
+	elsif($len >= 16 && $cChain !~ /(::mdat|::free)$/) {  #No child -> final element -> data!
+		push(@{$lt->{metadat}->{$cChain}},rseek($pos+16,$len-16));
+	}
 
-  if(defined($hchild{$typ})) { #This type has a child
-   #Track the old level
-   $lt->{ltrack}->{$pos+$len} = $level unless $lt->{ltrack}->{$pos+$len};
-   #Go to the next
-   $level++;
-   #Fix len
-   $len = $hchild{$typ};
-  }
-  elsif($len >= 16 && $cChain !~ /(::mdat|::free)$/) {  #No child -> final element -> data!
-#   print "+$cChain ($len)\n";
-   push(@{$lt->{metadat}->{$cChain}},rseek($pos+16,$len-16));
-  }
-
- return($level,$len);
+	return($level,$len);
 }
 
 ############################################
 # Search the 'soun' item
 sub get_sound_index {
- my($ref) = @_;
- my $sid = 0;
- my $sound_index = -1;
- foreach(@$ref) {
-  if( substr($_,0,4) eq SOUND_ITEM ) {
-   $sound_index = $sid;
-   last;
-  }
-  $sid++;
- }
- return $sound_index;
+	my($ref) = @_;
+	my $sid = 0;
+	my $sound_index = -1;
+	foreach(@$ref) {
+		if( substr($_,0,4) eq SOUND_ITEM ) {
+			$sound_index = $sid;
+			last;
+		}
+		$sid++;
+	}
+	return $sound_index;
 }
 
 ###################################################
 # Get INT vaules
 sub getoct {
-my($offset, $len) = @_;
-  GNUpod::FooBar::shx2_x86_int(rseek($offset,$len));
+	my($offset, $len) = @_;
+	GNUpod::FooBar::shx2_x86_int(rseek($offset,$len));
 }
 
 
 ###################################################
 # Get INT vaules from string
 sub get_string_oct {
-my($offset, $len, $string) = @_;
+	my($offset, $len, $string) = @_;
 
- if($offset+$len > length($string)) {
-  warn "Bug: invalid substr() call! Returning 0\n";
-  return 0;
- }
+	if($offset+$len > length($string)) {
+		warn "Bug: invalid substr() call! Returning 0\n";
+		return 0;
+	}
  
-  GNUpod::FooBar::shx2_x86_int(substr($string,$offset,$len));
+	GNUpod::FooBar::shx2_x86_int(substr($string,$offset,$len));
 }
 
 ####################################################
 # Raw seeking
 sub rseek {
- my($offset, $len) = @_;
- return undef if $len < 0;
- my $buff;
- seek(QTFILE, $offset, 0);
- read(QTFILE, $buff, $len);
- return $buff;
+	my($offset, $len) = @_;
+	return undef if $len < 0;
+	my $buff;
+	seek(QTFILE, $offset, 0);
+	read(QTFILE, $buff, $len);
+	return $buff;
 }
 
 1;
