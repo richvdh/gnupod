@@ -510,7 +510,7 @@ XML File).
      </playlist>
 
    You are not limited to use 'id', you can also use other attributes:
-     <playist name="bogus">
+     <playlist name="bogus">
       <add album="seiken densetsu" bitrate="256" />
      </playlist>
    This would add every song from the album 'Seiken Densetsu' (<add..
@@ -1191,14 +1191,14 @@ Node: Add files15760
 Node: Search files16880
 Node: Remove files17361
 Node: Creating playlists17666
-Node: Unplug the iPod19504
-Node: Recovering files20408
-Node: Coexistence21298
-Node: Problems22761
-Node: GNUtunesDB23140
-Node: Get rid of '-m'24641
-Node: Known bugs and limitations24921
-Node: Reporting Bugs25204
-Node: GNU Free Documentation License25647
+Node: Unplug the iPod19505
+Node: Recovering files20409
+Node: Coexistence21299
+Node: Problems22762
+Node: GNUtunesDB23141
+Node: Get rid of '-m'24642
+Node: Known bugs and limitations24922
+Node: Reporting Bugs25205
+Node: GNU Free Documentation License25648
 
 End Tag Table

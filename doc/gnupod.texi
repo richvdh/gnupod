@@ -531,7 +531,7 @@ To create a playlist named 'sweet' which holds the songs with the ID 1 and 2, cr
 
 You are not limited to use 'id', you can also use other attributes:
 @example
-<playist name="bogus">
+<playlist name="bogus">
  <add album="seiken densetsu" bitrate="256" />
 </playlist>
 @end example
