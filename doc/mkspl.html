@@ -3,26 +3,10 @@
   <title>SmartPlaylist generator</title>
   
   <script language="JavaScript">
-   var current_id = -1;
-   var STRINGOPT = new Array();
-   STRINGOPT[0] = new Option('is',               'IS');
-   STRINGOPT[1] = new Option('is not',           'NOT_IS');
-   STRINGOPT[2] = new Option('contains',         'CONTAINS');
-   STRINGOPT[3] = new Option('does not contain', 'NOT_CONTAINS');
-   STRINGOPT[4] = new Option('starts with', 'STARTWITH');
-   STRINGOPT[5] = new Option('does not start with', 'NOT_STARTWITH');
-   STRINGOPT[6] = new Option('ends with', 'ENDWITH');
-   STRINGOPT[7] = new Option('does not end with', 'NOT_ENDWITH');            
-   
-   var INTOPT = new Array();
-   INTOPT[0] = new Option('==',    'eq');
-   INTOPT[1] = new Option('!=',    '!eq');
-   INTOPT[2] = new Option('>',     'gt');
-   INTOPT[3] = new Option('not >', '!gt');
-   INTOPT[4] = new Option('<', 'lt');
-   INTOPT[5] = new Option('not <', '!lt');
-   INTOPT[6] = new Option('range (use "from:to")', 'range');      
-   INTOPT[7] = new Option('not in range (use "from:to")', '!range');    
+  
+  /* Define FORMs */
+   var counter = 0;
+
    
    function mkspl() {
     var liveupdate = 1;
@@ -32,97 +16,123 @@
     var limitsort =document.spling.limitsort.value;
     var name = document.spling.name.value;
     
+    var anymatch = 0;
+    var checkrule = 'both';
     
-    var splLine = "<smartplaylist name=\""+name+"\" checkrule=FIXME liveupdate=\""+liveupdate+"\" limititem=\""+
-                  limititem+"\" limitval=\""+limitval+"\" limitsort=\""+limitsort+"\" >\n";
+    if(document.spling.anymatch.checked) {
+     anymatch=1;
+    }   
+    
+    if(document.spling.spl_match.checked == false) {
+     document.spling.do_limit.checked = true; /*Force user */
+     checkrule = 'limit';
+    }
+    else if(document.spling.do_limit.checked == false) {
+     checkrule = 'spl';
+    }
+    
+    
+    var splLine = "<smartplaylist name=\""+name+"\" checkrule=\""+checkrule+"\" liveupdate=\""+liveupdate+"\" limititem=\""+
+                  limititem+"\" limitval=\""+limitval+"\" limitsort=\""+limitsort+"\" matchany=\""+anymatch+"\" >\n";
    
     var spl_field;
     var spl_action;
     var spl_value;
     var evalme;
-    for(var i=0;i<=current_id;i++) {
+    for(var i=1;i<=counter;i++) {
+     var action_field = getField(getChangedTo(i));
      evalme =  "spl_field = document.spling.field_"+i+".value;";
-     evalme += "spl_action = document.spling.action_"+i+".value;";
+     evalme += "spl_action = document.spling."+action_field+"_"+i+".value;";
      evalme += "spl_value  = document.spling.value_"+i+".value;";           
      eval(evalme);
      spl_field = spl_field.substr(1);
-     splLine += "  <spl action=\""+spl_action+"\" field=\""+spl_field+"\" value=\""+spl_value+"\" />\n";
+     splLine += "  <spl action=\""+spl_action+"\" field=\""+spl_field+"\" string=\""+spl_value+"\" />\n";
     }
      splLine += "</smartplaylist>";
-    document.spling.FINISHED.value=splLine;
+     document.spling.FINISH.value = splLine;
    }
   
 
   /* Handle a change of the FIELD item 
     - Set the current ACTION
     - Set the current value vield */
-  function xChange(fID) {
-   var changedto = -1;
-   var current_array = new Array();
-   var evalme = "changedto = document.spling.field_"+fID+".value.substr(0,1)";
-   eval(evalme); /* Set changedto */
+  function xChange(init_fID, xn) {
+  
+   var fID 
    
-
-   
-   if(changedto == "S") {
-    current_array = STRINGOPT;
+   if(xn) { /* We got a this. */
+    fID = xn.name.substr((xn.name.length)-1,1);
    }
-   else if(changedto == "I") {
-    current_array = INTOPT;
+   else { /* No this.. primitive forced */
+    fID = init_fID;
+   }
+
+   /* Hide forms */
+   eval("document.spling.INTaction_"+fID+".style.display = 'none'");
+   eval("document.spling.STRaction_"+fID+".style.display = 'none'");
+   
+   var changedto = getChangedTo(fID);
+   var a_field   = getField(changedto);
+   
+   if (a_field)
+     eval("document.spling."+a_field+"_"+fID+".style.display = 'inline'");
+
+
+
+  }
+  
+  function getChangedTo(ID) {
+   var returnme = -1;
+   eval("returnme = document.spling.field_"+ID+".value.substr(0,1)");
+   return returnme;
+  }
+  
+  
+  function getField(ChangedTo) {
+   if(ChangedTo == "S") {
+    return "STRaction";
+   }
+   else if(ChangedTo == "I") {
+    return "INTaction";
    }
    else {
-    alert("Unknown changedto "+changedto);
-    return -1;
+    alert("Panic, unknown changedto "+ChangedTo);
+    return 0;
    }
-   
-    
-//   evalme = "document.spling.action_"+(fID)+".options[0]=foo[0];";
-//   eval(evalme);
-   for(var i=0;i<3;i++) {
-    eval("document.spling.action_"+fID+".options[0] = current_array[0];");
-   }
-
   }
   
   
-  function addMatch() {
-   current_id++;
-   x = document.getElementById('splmatcher');
 
-x.innerHTML += current_id+' <select name="field_'+current_id+'" onChange="xChange('+current_id+')">\
-   <option value="Stitle">Title</option>\
-   <option value="Salbum">Album</option>\
-   <option value="Sartist">Artist</option>\
-   <option value="Sgenre">Genre</option>\
-   <option value="Sfdesc">Description</option>\
-   <option value="Scomment">Comment</option>\
-   <option value="Scomposer">Composer</option>\
-   <option value="Sgroup">Group</option>\
-   <option value="Ibitrate">Bitrate</option>\
-   <option value="Israte">Sampling Rate</option>\
-   <option value="Iyear">Year</option>\
-   <option value="Dchangetime">Changetime</option>\
-   <option value="Itracknum">Tracknumber</option>\
-   <option value="Isize">Size</option>\
-   <option value="Itime">Playtime</option>\
-   <option value="Daddtime">Addtime</option>\
-   <option value="Iplaycount">Playcount</option>\
-   <option value="Dlastplay">Last played</option>\
-   <option value="Icdnum">CD Number</option>\
-   <option value="Xrating">Rating</option>\
-   <option value="Bcompilation">Compilation</option>\
-   <option value="Ibpm">BPM</option>\
-  </select>\
-  <select name="action_'+current_id+'"><option>'+current_id+'</select>\
-  <input name="value_'+current_id+'">\
-  <br>';
-//  xChange(current_id);
+  
+  
+  
+
+/* Add a new mode.. 'Stolen' from www.quirksmode.org */
+
+function moreFields()
+{
+  counter++; /* Inc counter */
+  var newFields = document.getElementById('splmatcher').cloneNode(true);
+  newFields.id = '';
+  newFields.style.display = 'block';
+  var newField = newFields.childNodes;
+    /* Change the name */
+  for (var i=0;i<newField.length;i++) {
+    var theName = newField[i].name
+    if (theName) {
+      newField[i].name = theName + counter;
+    }
   }
+    var insertHere = document.getElementById('writeroot');
+    insertHere.parentNode.insertBefore(newFields,insertHere);
+    xChange(counter); /* Force Change Event */
+} 
+  
   </script>
   
  </head>
  
- <body>
+ <body onLoad="javascript:moreFields()" bgcolor="#DEDBD6">
  
  <form name="spling">
  <table border=1>
@@ -131,12 +141,62 @@ x.innerHTML += current_id+' <select name="field_'+current_id+'" onChange="xChang
  </td></tr>
  
  <tr><td>
-  <div id="splmatcher">
+ 
+  <input type="checkbox" name="spl_match" value=1> Match &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <input type="checkbox" name="anymatch" value=1> any
+ 
+  <div id="splmatcher" style="display: none">
+<select name="field_" onChange="javascript:xChange(0,this)">
+   <option value="Stitle">Title</option>
+   <option value="Salbum">Album</option>
+   <option value="Sartist">Artist</option>
+   <option value="Sgenre">Genre</option>
+   <option value="Sfdesc">Description</option>
+   <option value="Scomment">Comment</option>
+   <option value="Scomposer">Composer</option>
+   <option value="Sgroup">Group</option>
+   <option value="Ibitrate">Bitrate</option>
+   <option value="Israte">Sampling Rate</option>
+   <option value="Iyear">Year</option>
+   <option value="Dchangetime">Changetime</option>
+   <option value="Itracknum">Tracknumber</option>
+   <option value="Isize">Size</option>
+   <option value="Itime">Playtime</option>
+   <option value="Daddtime">Addtime</option>
+   <option value="Iplaycount">Playcount</option>
+   <option value="Dlastplay">Last played</option>
+   <option value="Icdnum">CD Number</option>
+   <option value="Xrating">Rating</option>
+   <option value="Bcompilation">Compilation</option>
+   <option value="Ibpm">BPM</option>
+  </select>  
+   
+  <select name="INTaction_">
+   <option value="eq">==</option>
+   <option value="!eq">!=</option>
+   <option value="gt">&gt;</option>
+   <option value="lt">&lt;</option>
+   <option value="range">Range (use from:to)</option>
+   <option value="!range">not Range (use from:to)</option>
+  </select> 
+  
+  <select name="STRaction_">
+   <option value="IS">is</option>
+   <option value="NOT_IS">is not</option>
+   <option value="CONTAINS">contains</option>
+   <option value="NOT_CONTAINS">doesn't contain</option>
+   <option value="STARTWITH">starts with</option>
+   <option value="NOT_STARTWITH">doesn't start with</option>
+   <option value="ENDWITH">ends with</option>
+   <option value="NOT_ENDWITH">doesn't end with</option>
+  </select>
+  <input name="value_">
   </div>
   
 
+<span id="writeroot"></span>
 
-  <a href="#" onClick="javascript:addMatch()">ADD</a>
+  <a href="#" onClick="javascript:moreFields()">ADD</a>
   
   
  </td></tr>
@@ -173,7 +233,9 @@ x.innerHTML += current_id+' <select name="field_'+current_id+'" onChange="xChang
 
  <a href="#" onClick="mkspl()">Create SPL</a>
  <br>
- <textarea rows=7 cols=80 name=FINISHED></textarea>
- </form> 
+
+ 
+ <textarea rows=12 cols=120 name=FINISH></textarea>
+  </form> 
  </body>
 </html>
