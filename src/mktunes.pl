@@ -130,13 +130,13 @@ if(ref($spl) eq "HASH") { #We got splpref!
   $cid++; #Whoo! We ReUse the global CID.. first plitem = last file item+1 (or maybe 2 ;) )
   my $cmhip = GNUpod::iTunesDB::mk_mhip({plid=>$cid, sid=>$_});
   my $cmhod = GNUpod::iTunesDB::mk_mhod({fqid=>$_});
-  next unless (defined($cmhip) && defined($cmhod));
+  next unless (defined($cmhip) && defined($cmhod)); #mk_mhod needs to be ok
   $fc++;
   $pl .= $cmhip.$cmhod;
  }
  my $plSize = length($pl);
 
- 
+  #mhyp appends a listview to itself
   return(GNUpod::iTunesDB::mk_mhyp({size=>$plSize,name=>$name,type=>$type,files=>$fc,mhods=>$mhp}).$pl,$fc);
 }
 

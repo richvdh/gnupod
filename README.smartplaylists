@@ -1,0 +1,64 @@
+About SmartPlaylist-Support
+===========================
+
+GNUpod 0.92 'supports' smartplaylists:
+It can READ and WRITE SmartPlaylists, but it *can't*
+do a 'liveupdate' (=Adding new songs/matching..)
+
+If you create a smartplaylist with GNUpod, you'll see
+the SPL (=SmartPlayList) on iTunes with the correct
+fields set, but GNUpod doesn't add any songs to this
+SPL (iTunes will do it if you set 'liveupdate="1"')
+
+If you convert an iTunesDB written by iTunes4 with
+SPL's, you won't loose the songs in the SPL:
+GNUpod set's '<splcont id=..' to keep the IDs.
+
+
+Ok, again:
+GNUpod 0.92 supports SPL's but it can't do a
+liveupdate
+
+
+Example of a smartplaylist:
+
+<smartplaylist name="Example" limititem="05" checkrule="2" moselected="1" limitval="1" matchany="1" liveupdate="0" limitsort="2">
+ <spl action="1" field="4" string="TestoStado" />
+ <spl action="1" field="4" string="Foo" />
+</smartplaylist>
+
+
+Key/Val list: INCOMPLETE
+
+SMARTPLAYLIST 'limititem'
+------------------------
+MINUTES        : 01
+HOURS          : 04
+MB             : 02
+GB             : 05
+SONGS          : 03
+
+
+SPL 'field'
+------------------------
+ALBUM          : 03
+ARTIST         : 04
+BPM            : 35
+BITRATE        : 05
+COMMENT        : 14
+COMPILATION    : 31
+COMPOSER       : 18
+TIME ADDED     : 16
+LAST MODIFY    : 10
+GENRE          : 08
+KIND           : 09
+LAST PLAYED    : 23
+RATING         : 25
+PLAYCOUNT      : 22
+SAMPLING-RATE  : 06
+SIZE           : 12
+SONGNAME       : 02
+TIME           : 13
+TRACKNUMBER    : 11
+YEAR           : 07
+

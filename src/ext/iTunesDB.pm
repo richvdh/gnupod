@@ -1,4 +1,4 @@
-# iTunesDB.pm - Version 20030923
+# iTunesDB.pm - Version 20031002
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
@@ -28,8 +28,8 @@ use Unicode::String;
 
 use vars qw(%mhod_id @mhod_array);
 
-
-%mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, "comment", 8, "composer", 12, "SPLPREF",50, "SPLDATA",51, "PLTHING", 100) ;
+#mk_mhod() will take care of lc() entries
+%mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, "comment", 8, "composer", 12);# "SPLPREF",50, "SPLDATA",51, "PLTHING", 100) ;
 
  foreach(keys(%mhod_id)) {
   $mhod_array[$mhod_id{$_}] = $_;
@@ -768,7 +768,7 @@ $sum += get_int($sum+4,4);
       $ret{$xml_name} = $mhh->{string};
     }
     else {
-     warn "iTunesDB.pm: got $mhh->{type} , not a known element!\n";
+     warn "iTunesDB.pm: found unhandled mhod type '$mhh->{type}'\n";
     }
  }
 return ($sum,\%ret);          #black magic, returns next (possible?) start of the mhit
