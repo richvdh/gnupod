@@ -132,7 +132,7 @@ elsif($vol < 0 && $vol >= -255) {            #Convert value
  $vol = oct("0xFFFFFFFF") + $vol; 
 }
 else {
- print STDERR "Warning: ID $file_hash{id} has volume set to $file_hash{volume} percent. Ignoring value\n";
+ print STDERR "** Warning: ID $file_hash{id} has volume set to $file_hash{volume} percent. Volume set to +-0%\n";
  $vol = 0; #We won't nuke the iPod with an ultra high volume setting..
 }
 

@@ -429,6 +429,14 @@ gnupod_INIT.pl -m /mnt/ipod
 gnupod_INIT.pl will create the default directory tree and creates an empty GNUtunesDB 
 (or if it finds an iTunesDB, it runs tunes2pod.pl to convert the iTunesDB to an GNUtunesDB)
 
+Use
+@example
+gnupod_INIT.pl -m /mnt/ipod --france
+@end example
+
+if you would like to enable the 'EU-Volume-Limit' (=decrase max. volume).
+This only works for iPods running Firmware 1.x
+
 Your iPod is now ready for GNUpod!
 
 
@@ -531,6 +539,16 @@ Simply run
 @example
 mktunes.pl -m /mnt/ipod
 @end example
+
+Note: Since GNUpod 0.91, mktunes.pl has a '--volume' option wich you can use to 
+boost the Volume.
+
+@example
+mktunes.pl -m /mnt/ipod --volume 40
+@end example
+
+This would adjust the volume +40 percent. (You can also use '-100' to get 
+a silent iPod ;) )
 
 After @code{@w{mktunes.pl}} is done, you can umount the iPod and remove the sbp2 module
 @example

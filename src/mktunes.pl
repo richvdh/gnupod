@@ -36,7 +36,7 @@ print "mktunes.pl Version 0.91 (C) 2002-2003 Adrian Ulrich\n";
 
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
-GetOptions(\%opts, "help|h", "xml|x=s", "itunes|i=s", "mount|m=s");
+GetOptions(\%opts, "help|h", "xml|x=s", "itunes|i=s", "mount|m=s", "volume|v=i");
 
 usage() if $opts{help};
 
@@ -355,6 +355,15 @@ my $nhod = undef;
       $cmhod .= $nhod;
       $cmhod_count++ if defined $nhod;
      }
+     
+     #Volume adjust
+     if($opts{volume}) {
+      $href->{volume} += int($opts{volume});
+      if(abs($href->{volume}) > 100) {
+        $href->{volume} = ($href->{volume}/abs($href->{volume})*100);
+      }
+     }
+     
      #Ok, we created the mhod's for this item, now we have to create an mhit
      my $mhit = GNUpod::iTunesDB::mk_mhit(length($cmhod), $cmhod_count, %{$href}).$cmhod;
      $itb{mhit}{_data_} .= $mhit;
@@ -377,12 +386,13 @@ sub usage {
 my($rtxt) = @_;
 die << "EOF";
 $rtxt
-Usage: mktunes.pl [-h] [-m directory | -i iTunesDB | -x GNUtunesDB]
+Usage: mktunes.pl [-h] [-m directory | -i iTunesDB | -x GNUtunesDB] [-v VALUE]
 
    -h, --help             : This ;)
    -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
    -i, --itunes=iTunesDB  : Specify an alternate iTunesDB
    -x, --xml=file         : GNUtunesDB (XML File)
+   -v, --volume=VALUE     : Adjust volume +-VALUE% (example: -v -20)
 
 EOF
 }

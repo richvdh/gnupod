@@ -1,12 +1,12 @@
-<?xml version="1.0">
+<?xml version="1.0"?>
 <gnuPod>
 <files>
  <file id="1" bitrate="192" time="305200" path=":iPod_Control:Music:F01:Track_08___Kanon_D_dur__normal_.mp3" genre="Soundtrack" filesize="7324948" album="S2_INC" artist="Soundtrack" title="Kanon D-dur (normal)" year="1997" />
  <file id="2" bitrate="192" time="304155" path=":iPod_Control:Music:F07:Track_09___Kanon_D_dur__W_quinte.mp3" genre="Soundtrack" filesize="7299871" album="S2_INC" artist="Soundtrack" comment="W Quintett" title="Kanon D-dur" year="1997" />
  <file id="3" bitrate="192" time="117119" path=":iPod_Control:Music:F12:Track_41___A_15__Tenpo_chi_.mp3" genre="Soundtrack" filesize="2810989" album="S2_INC" artist="Soundtrack" title="A-15 &quot;Tenpo chi&quot;" year="1997" />
- <file id="4" bitrate="192" time="131072" path=":iPod_Control:Music:F02:Track_42___A_15__Tenpo_chi_Rizum.mp3" filesize="3145856" album="S2_INC" artist="Soundtrack" title="Tenpo chi Rizumo" id="1284" />
+ <file id="4" bitrate="192" time="131072" path=":iPod_Control:Music:F02:Track_42___A_15__Tenpo_chi_Rizum.mp3" filesize="3145856" album="S2_INC" artist="Soundtrack" title="Tenpo chi Rizumo" />
  <file id="5" bitrate="128" time="242920" path=":iPod_Control:Music:F17:02___Zankoku_Na_Tenshi_No_These.mp3" filesize="3886856" album="Refrain" artist="Soundtrack" comment="Evangelion Refrain" title="Cruel Angel&apos;s Thesis - Ambiv" year="1997" />
- <file id="6" bitrate="192" time="20100"  path=":iPod_Control:Music:F04:Track_04___Violin_Tuning.mp3" genre="Soundtrack" filesize="482538" album="S2_INC" artist="Soundtrack" title="Violin Tuning" id="1265" year="1997" />
+ <file id="6" bitrate="192" time="20100"  path=":iPod_Control:Music:F04:Track_04___Violin_Tuning.mp3" genre="Soundtrack" filesize="482538" album="S2_INC" artist="Soundtrack" title="Violin Tuning" year="1997" />
  <file id="7" bitrate="192" time="107192" path=":iPod_Control:Music:F16:Track_05___OP_1_Strings__Tenpo_c.mp3" genre="Soundtrack" filesize="2572752" album="S2_INC" artist="Soundtrack" comment="The Heady Feeling of Freedom" title="OP-1 Strings &quot;Tenpo chi&quot;" year="1998" />
 
  <!-- You can also change the Volume of a song :) //-->
@@ -58,10 +58,9 @@
  <add id="3" />
 </playlist>
 
-<!-- this is XML .. feel free to use UTF8 encoded text
- Yudit (www.yudit.org) is a nice editor for UNICODE documents
-//-->
-<playlist name="劇場版"> <!-- i don't know what this text means ;) //->
+<!-- This is XML, you can use UTF8
+     Yudit (www.yudit.org) is a very good unicode editor //-->
+<playlist name="劇場版">
  <iregex album="Eva" />
 </playlist>
 
