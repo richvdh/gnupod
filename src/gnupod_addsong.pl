@@ -1,4 +1,3 @@
-#!/usr/bin/perl
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
@@ -30,7 +29,7 @@ use Getopt::Long;
 use File::Copy;
 use vars qw(%opts %dupdb);
 
-print "gnupod_addsong.pl Version 0.91 (C) 2002-2003 Adrian Ulrich\n";
+print "gnupod_addsong.pl Version 0.92 (C) 2002-2003 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
@@ -68,12 +67,14 @@ sub startup {
  my(@files) = @_;
  my($stat, $itunes, $xml) = GNUpod::FooBar::connect(\%opts);
 
- usage($stat."\n") if $stat || !@files;
+usage($stat."\n") if $stat || !@files;
+
 unless($opts{restore}) {
- GNUpod::XMLhelper::doxml($xml, cleanit=>$opts{restore}) or usage("Failed to parse $xml\n");
+ GNUpod::XMLhelper::doxml($xml) or usage("Failed to parse $xml\n");
 }
 
 my $addcount = 0;
+
 #We are ready to copy each file..
  foreach my $file (@files) {
     #Get the filetype
@@ -91,10 +92,10 @@ my $addcount = 0;
     next;
    }
    if($opts{restore} || File::Copy::copy($file, $target)) {
-     print "+ $fh->{title}\n";
+     print "+ $fh->{album} / $fh->{title}\n";
      my $fmh;
      $fmh->{file} = $fh;
-     GNUpod::XMLhelper::mkfile($fmh,{addid=>1});
+     GNUpod::XMLhelper::mkfile($fmh,{addid=>1}); #Try to add an id
      $addcount++;
    }
    else { #We failed..
@@ -103,23 +104,26 @@ my $addcount = 0;
    
  }
 
-if($addcount) {
+if($addcount) { #We have to modify the xmldoc
  print "> Writing new XML File\n";
  GNUpod::XMLhelper::writexml($xml);
 }
  print "\n Done\n";
 }
 
+## XML Handlers ##
 sub newfile {
  $dupdb{"$_[0]->{file}->{bitrate}/$_[0]->{file}->{time}/$_[0]->{file}->{filesize}"}= $_[0]->{file}->{id}||-1;
  GNUpod::XMLhelper::mkfile($_[0],{addid=>1});
 }
-
 sub newpl {
  GNUpod::XMLhelper::mkfile($_[0],{$_[2]."name"=>$_[1]});
 }
+##################
 
 
+###############################################################
+# Check if the file is a duplicate
 sub checkdup {
  my($fh) = @_;
  return $dupdb{"$fh->{bitrate}/$fh->{time}/$fh->{filesize}"};

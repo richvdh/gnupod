@@ -1,4 +1,3 @@
-#!/usr/bin/perl
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
@@ -28,7 +27,7 @@ use GNUpod::FooBar;
 use Getopt::Long;
 use vars qw(%opts @keeplist);
 
-print "gnupod_search.pl Version 0.91 (C) 2002-2003 Adrian Ulrich\n";
+print "gnupod_search.pl Version 0.92 (C) 2002-2003 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
@@ -38,7 +37,7 @@ GetOptions(\%opts, "help|h", "mount|m=s", "artist|a=s",
 
 usage() if $opts{help};
 
-usage("-d was removed, use '--delete'\n") if $opts{RMME};
+usage("\n-d was removed, use '--delete'\n") if $opts{RMME};
 
 go();
 
@@ -51,8 +50,10 @@ sub go {
 
 print "ID        : ARTIST / ALBUM / TITLE\n";
 print "==================================\n"; 
-GNUpod::XMLhelper::doxml($xml) or usage("Failed to parse $xml\n");
-GNUpod::XMLhelper::writexml($xml) if $opts{delete};
+ GNUpod::XMLhelper::doxml($xml) or usage("Failed to parse $xml\n");
+ #XML::Parser finished, write new file
+ GNUpod::XMLhelper::writexml($xml) if $opts{delete};
+print "==================================\n"; 
 
 
 }

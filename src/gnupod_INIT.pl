@@ -1,5 +1,3 @@
-#!/usr/bin/perl
-
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
@@ -50,7 +48,7 @@ sub go {
 print << "EOF";
 
 Your iPod it mounted at $opts{mount}, ok ?
-=========================================================
+*********************************************************
 This tool creates the default directory tree on your iPod
 and creates an *empty* GNUtunesDB (..or convert your old
 iTunesDB to a new GNUtunesDB).
@@ -63,7 +61,7 @@ btw: use 'gnupod_addsong -m $opts{mount} --restore'
      if you lost your songs on the iPod after using
      gnupod_INIT.pl (..but this won't happen, because
      this tool has no bugs ;) )
-
+*********************************************************
 
 Hit ENTER to continue or CTRL+C to abort
 

@@ -1,5 +1,5 @@
-AC_INIT(gnupod, 0.91, bug-gnupod@nongnu.org)
-AC_PATH_PROGS(PERL, perl-5.8 perl-5.6 perl)
+AC_INIT(gnupod, 0.92, bug-gnupod@nongnu.org)
+AC_PATH_PROGS(PERL, perl-5.8.1 perl-5.8.0 perl-5.8 perl-5.6 perl)
 
 if test $PERL; then
 echo "GNUpod will use $PERL"
@@ -10,7 +10,7 @@ exit 1
 fi
 
 dnl Basic modules
-ALL_MODULES="XML::Parser Unicode::String"
+ALL_MODULES="XML::Parser Unicode::String MP3::Info"
 
 
 dnl Ugly check for modules

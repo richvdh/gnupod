@@ -27,7 +27,7 @@ use XML::Parser;
 use Unicode::String;
 
 
-## Release 20030927
+## Release 20030928
 
 my $cpn = undef; #Current PlaylistName
 my @idpub = ();
@@ -98,7 +98,7 @@ sub mkfile {
      foreach (keys %{$hr->{$base}}) {
       $r .= xescaped($_)."=\"".xescaped($hr->{$base}->{$_})."\" ";
      }
-     if($magic->{addid} && !$hr->{$base}->{id}) {
+     if($magic->{addid} && int($hr->{$base}->{id}) < 1) {
       while($idpub[$xid]) { $xid++; }
       $r .= "id=\"$xid\" ";
       $idpub[$xid] = 1;
@@ -139,6 +139,9 @@ sub getpl_names {
  return @plorder;
 }
 
+sub get_splpref {
+ return $XDAT->{spls}->{pref}->{$_[0]};
+}
 
 ##############################################################
 # Call events
@@ -169,9 +172,6 @@ sub eventer {
    die "Fatal XML Error: smartplaylist without name found!\n" if $cpn eq "";
    main::newpl(mkh($el, @it), $cpn,"spl"); #Call sub  
   }
- # else {
- #  print "?? $href->{Context}[0] // $href->{Context}[1] // $href->{Context}[2] // $el\n";
- # }
 }
 
 
@@ -204,7 +204,7 @@ return $p;
 # Write the XML File
 sub writexml {
  my($out) = @_;
- open(OUT, ">$out") or die "Could not write to $out : $!\n";
+ open(OUT, ">$out") or die "Could not write to '$out' : $!\n";
  binmode(OUT);
 
  print OUT "<?xml version='1.0' standalone='yes'?>\n";
@@ -219,7 +219,7 @@ sub writexml {
 #Print all playlists
  foreach(@plorder) {
   #addspl() will create {pref}->{$_}->{name} .. so this 'if' is safe
-  if(my $shr = $XDAT->{spls}->{pref}->{$_}) { #prefs present = is a spl
+  if(my $shr = get_splpref($_)) { #prefs present = is a spl
       print OUT "\n <smartplaylist ";
          foreach(keys(%$shr)) { print OUT "$_=\"$shr->{$_}\" "; }
       print OUT ">\n";    

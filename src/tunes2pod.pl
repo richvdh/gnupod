@@ -1,4 +1,3 @@
-#!/usr/bin/perl
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
@@ -30,7 +29,7 @@ use Getopt::Long;
 
 use vars qw(%opts);
 $| = 1;
-print "tunes2pod.pl Version 0.91 (C) 2002-2003 Adrian Ulrich\n";
+print "tunes2pod.pl Version 0.92 (C) 2002-2003 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
@@ -51,17 +50,19 @@ GNUpod::iTunesDB::open_itunesdb($in) or usage("Could not open $in\n");
 
 #Check where the FILES and PLAYLIST part starts..
 #..and how many files are in this iTunesDB
-
 my $itinfo = GNUpod::iTunesDB::get_starts();
 #This 2 will change while running..
 my $pos = $itinfo->{position};
 my $pdi = $itinfo->{pdi};
 
 print "> Has $itinfo->{songs} songs";
-my ($ff, $href) = undef;
+
+#Get all files
+my $href= undef;
+my $ff = 0;
 my %hout = ();
  for(my $i=0;$i<$itinfo->{songs};$i++) {
-  ($pos,$href) = GNUpod::iTunesDB::get_mhits($pos); #get_nod_a returns wher it's guessing the next MHIT, if it fails, it returns '-1'
+  ($pos,$href) = GNUpod::iTunesDB::get_mhits($pos); #get the mhit + all child mhods
   #Seek failed.. this shouldn't happen..  
   if($pos == -1) {
    print STDERR "\n*** FATAL: Expected to find $itinfo->{songs} files,\n";
@@ -83,7 +84,7 @@ print STDOUT "\r> Found $ff files, ok\n";
 #Now get each playlist
 print STDOUT "> Found ".($itinfo->{playlists}-1)." playlists:\n";
 for(my $i=0;$i<$itinfo->{playlists};$i++) {
-  ($pdi, $href) = GNUpod::iTunesDB::get_pl($pdi);
+  ($pdi, $href) = GNUpod::iTunesDB::get_pl($pdi); #Get an mhyp + all child mhods
   if($pdi == -1) {
    print STDERR "*** FATAL: Expected to find $itinfo->{playlists} playlists,\n";
    print STDERR "*** but i failed to get nr. $i\n";
@@ -122,7 +123,8 @@ exit(0);
 
 
 
-
+#######################################################
+# create a spl
 sub render_spl {
  my($name, $pref, $data, $mr) = @_;
  

@@ -23,8 +23,8 @@ package GNUpod::FileMagic;
 # This product is not supported/written/published by Apple!
 
 use MP3::Info qw(:all);
-#use GNUpod::QTparser;
-$^W = undef;
+
+
 BEGIN {
  MP3::Info::use_winamp_genres();
  open(NULLFH, "> /dev/null") or die "Could not open /dev/null, $!\n";
@@ -33,9 +33,7 @@ BEGIN {
 sub wtf_is {
 
  my($file) = @_;
-# print "FileMagic: $file\n";
   if(my $h = __is_mp3($file)) {
-#   print "--> MP3 detected\n";
    return $h;
   }
   elsif(__is_qt($file)) {
@@ -49,7 +47,6 @@ sub wtf_is {
 
 sub __is_qt {
  my($file) = @_;
-# print "FIXME\n";
  return undef;
 }
 
@@ -73,7 +70,7 @@ sub __is_mp3 {
  $rh{time}     = int($h->{SECS}*1000);
  $rh{fdesc}    = "MPEG ${$h}{VERSION} layer ${$h}{LAYER} file";
  $h = MP3::Info::get_mp3tag($file, 1);  #Get the IDv1 tag
- $hs = MP3::Info::get_mp3tag($file, 2); #Get the IDv2 tag
+ $hs = MP3::Info::get_mp3tag($file, 2); #Get the IDv2 tag ### BROKEN! FIXME
 
 #IDv2 is stronger than IDv1..
  #Try to parse things like 01/01

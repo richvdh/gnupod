@@ -1,20 +1,33 @@
 GNUpod 0.92 - codename 'sachiel' (Skipped 'adam' & 'lilith' ;))
 
-* Fixed a 'gnupod versus iTunes' bug
-  -> iTunes shouldn't try to 'resort' playlist items anymore
-     (Note: iTunes will ALWAYS re-sort the playlists.. that's
-      a 'feature' of iTunes)
+-> This version supports SmartPlaylists!
 
-* Added 'eq syntax check', you can use (since 0.90?) 
-  'eq="#!#NUMBER#!#' to specify the EQ-Setting per song.
-  mktunes.pl will now check if this syntax is correct.
-  (You'll see a warning if it failed)
+iTunesDB.pm:
+  * Fixed the very old 'gnupod versus iTunes' bug
+    -> iTunes shouldn't try to 'resort' playlist items anymore
+       (Note: iTunes will ALWAYS re-sort the playlists.. that's
+        a 'feature' of iTunes)
+  * Added 'eq syntax check', you can use (since 0.90) 
+    'eq="#!#NUMBER#!#' to specify the EQ-Setting per song.
+    mktunes.pl will now check if this syntax is correct.
+    (You'll see a warning if it failed)
+  * Fixed get_string() to handle null-size strings correct
+  * Changed some internal things (using hrefs.. etc)
+  * Misc SPL-Related code
 
-* gnupod_addsong.pl's duplicate-checker displayed the
-  wrong number of the dup, works again
+XMLhelper.pm:
+  * Misc cleanups
+  * Added SPL-Support
+
+
+gnupod_addsong.pl:
+  * duplicate-checker displayed the
+    wrong number of the dup, works again
 
 
 
+
+** OLD STUFF **
 
 
 GNUpod 0.91 
@@ -59,8 +72,6 @@ XMLhelper.pm
 
 
 
-
-** OLD GNUpod RELEASES **
 
 GNUpod 0.90
 

@@ -33,7 +33,7 @@ use Getopt::Long;
 use vars qw($cid %pldb %itb %opts %meat %cmeat);
 
 $| = 1;
-print "mktunes.pl Version 0.91b (C) 2002-2003 Adrian Ulrich\n";
+print "mktunes.pl Version 0.92 (C) 2002-2003 Adrian Ulrich\n";
 
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
@@ -112,10 +112,22 @@ print " - May the iPod be with you!\n\n";
 #########################################################################
 # Create a single playlist
 sub r_mpl {
- my($name, $type, @xid) = @_;
+ my($name, $type, $xidref, $spref) = @_;
 my $pl = undef;
 my $fc = 0;
- foreach(@xid) {
+my $mhp = 0;
+
+if($spref) {
+print "mktunes.pl: creating dummy spl\n";
+my @da = ({field=>4,action=>2,string=>"test"});
+ $pl .= GNUpod::iTunesDB::mk_splprefmhod({item=>$spref->{limititem},sort=>$spref->{limitsort},mos=>$spref->{moselected}
+                                          ,liveupdate=>$spref->{liveupdate},value=>$spref->{limitval},chkrgx=>1,chklim=>1});
+ $pl .= GNUpod::iTunesDB::mk_spldatamhod({anymatch=>0,data=>\@da});
+ $mhp=2; #Add a mhod
+}
+
+ 
+ foreach(@{$xidref}) {
   $cid++; #Whoo! We ReUse the global CID.. first plitem = last file item+1 (or maybe 2 ;) )
   my $cmhip = GNUpod::iTunesDB::mk_mhip({plid=>$cid, sid=>$_});
   my $cmhod = GNUpod::iTunesDB::mk_mhod({fqid=>$_});
@@ -124,23 +136,28 @@ my $fc = 0;
   $pl .= $cmhip.$cmhod;
  }
  my $plSize = length($pl);
-  return(GNUpod::iTunesDB::mk_mhyp({size=>$plSize,name=>$name,type=>$type,files=>$fc}).$pl,$fc);
+
+ 
+  return(GNUpod::iTunesDB::mk_mhyp({size=>$plSize,name=>$name,type=>$type,files=>$fc,mhods=>$mhp}).$pl,$fc);
 }
 
 
 #########################################################################
 # Generate playlists from %pldb (+MPL)
 sub genpls {
- my ($pldata,undef) = r_mpl("gnuPod-0.92", 1,(1..$cid));
+ my @mpldat = (1..$cid);
+ my ($pldata,undef) = r_mpl("GNUpod", 1,\@mpldat);
  my $plc = 1;
- 
+#CID is now used by r_mpl, dont use it yourself anymore
   foreach(GNUpod::XMLhelper::getpl_names()) {
     print ">> Adding Playlist '$_...'";
+    my $splh = GNUpod::XMLhelper::get_splpref($_);
     $plc++;
-    my($pl, $xc) = r_mpl($_, 0, @{$pldb{$_}});
-    $pldata .= $pl;
-    print "\r>> Added Playlist '$_' with $xc file"; print "s" if $xc != 1;
-    print "\n";
+       my($pl, $xc) = r_mpl($_, 0, $pldb{$_}, $splh);
+       $pldata .= $pl;
+       print "\r>> Added Playlist '$_' with $xc file"; print "s" if $xc !=1;
+     
+     print "\n";
   }
  
  return GNUpod::iTunesDB::mk_mhlp({playlists=>$plc}).$pldata;
@@ -195,15 +212,38 @@ sub newfile {
  
  #Warning: build_mhit will change $el->{file}->{id}
  #Don't trust $el->{file} after build_mhit() ;-)
- $itb{mhit}{_len_} += build_mhit($cid, $el->{file}); 
+ $itb{mhit}{_len_} += build_mhit($cid, \%{$el->{file}}); 
 }
 
 
 #########################################################################
 # EventHandler for <playlist childs
 sub newpl   {
+ my($el, $name, $pltype) = @_;
+ 
+ if($pltype eq "pl") {
+  xmk_newpl($el, $name);
+ }
+ elsif($pltype eq "spl") {
+  xmk_newspl($el, $name);
+ }
+ else {
+  warn "mktunes.pl: unknown pltype '$pltype'\n";
+ }
+}
+
+
+sub xmk_newspl {
  my($el, $name) = @_;
-  
+ my $mpref = GNUpod::XMLhelper::get_splpref($name)->{matchany};
+  print "!!!!!!!! [$name] SPL:: Adding song 1.. dummy!\n";
+  push(@{$pldb{$name}}, 1);
+}
+
+
+
+sub xmk_newpl {
+ my($el, $name) = @_;
    foreach my $action (keys(%$el)) {
      if($action eq "add") {
        my $ntm;

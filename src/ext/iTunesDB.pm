@@ -152,8 +152,6 @@ sub mk_mhod
 #7   - EQ Setting
 #8   - comment
 #12  - composer
-#50  - SPL Stuff
-#51  - SPL Stuff
 #100 - Playlist item or/and PlaylistLayout (used for trash? ;))
 
 my ($hr) = @_;
@@ -172,7 +170,7 @@ if($fqid) {
  #Playlist mhods are longer
  $mod += 4;
 }
-elsif(!$type) { #No type, skip it
+elsif(!$type) { #No type and no fqid, skip it
  return undef;
 }
 else { #has a type, default fqid
@@ -212,6 +210,7 @@ return $ret;
 sub mk_splprefmhod {
  my($hs) = @_;
  my($live, $chkrgx, $chklim, $mos) = 0;
+ #Bool stuff
  $live   = 1 if $hs->{liveupdate};
  $chkrgx = 1 if $hs->{chkrgx};
  $chklim = 1 if $hs->{chklim};
@@ -239,10 +238,14 @@ sub mk_spldatamhod {
  my($hs) = @_;
 
  my $anymatch = 1 if $hs->{anymatch};
- my $cr = undef;
 
+ my $cr = undef;
  foreach my $chr (@{$hs->{data}}) {
   my $string = Unicode::String::utf8($chr->{string})->utf16;
+   if(length($string) > 254) {
+    warn "iTunesDB.pm: splstring to long for iTunes, cropping\n";
+    $string = substr($string,0,254);
+   }
   $cr .= pack("H6");
   $cr .= pack("h2", _itop($chr->{field}));
   $cr .= pack("H6", reverse("010000"));
@@ -258,11 +261,11 @@ sub mk_spldatamhod {
  $ret .= pack("h8", _itop(51));    #type
  $ret .= pack("H16");
  $ret .= "SLst";                   #Magic
- $ret .= pack("H8", reverse("00010001"));
+ $ret .= pack("H8", reverse("00010001")); #?
  $ret .= pack("h6");
- $ret .= pack("h2", _itop(int(@{$hs->{data}})));     #HTM
+ $ret .= pack("h2", _itop(int(@{$hs->{data}})));     #HTM (Childs from cr)
  $ret .= pack("h6");
- $ret .= pack("h2", _itop($anymatch));     #anym
+ $ret .= pack("h2", _itop($anymatch));     #anymatch rule on or off
  $ret .= pack("h240");
 
 
@@ -317,24 +320,23 @@ sub mk_mhyp
 my($hr) = @_;
 
 #We need to create a listview-layout and an mhod with the name..
-my $appnd = __dummy_listview().mk_mhod({stype=>"title", string=>$hr->{name}});   #itunes prefs for this PL & PL name (default PL has  device name as PL name)
+my $appnd = mk_mhod({stype=>"title", string=>$hr->{name}}).__dummy_listview();   #itunes prefs for this PL & PL name (default PL has  device name as PL name)
 
-my @da = ({field=>1,action=>1,string=>"f1,act1"},{field=>2,action=>2,string=>"f2/action2"},
-{field=>3,action=>3,string=>"Hi, this is a spl demo :) (all=3)"});
+##Child mhods calc..
+##We create 2 mhod's here.. mktunes may have created more mhods.. so we
+##have to adjust the childs here
+my $cmh = 2+$hr->{mhods};
 
-$appnd .= mk_splprefmhod({item=>3,sort=>2,mos=>1,liveupdate=>1,value=>9999,chkrgx=>1,chklim=>1}).mk_spldatamhod({anymatch=>1,data=>\@da});
-
-#mk_splprefmhod({stype=>"SPLPREF", value=>"20", sort=>2, liveupdate=>1, chkrgx=>1, chklim=>1, mos=>1, item=>1});
 my $ret .= "mhyp";
    $ret .= pack("h8", _itop(108)); #type
    $ret .= pack("h8", _itop($hr->{size}+108+(length($appnd))));          #size
-   $ret .= pack("H8", "02");			      #? 
+   $ret .= pack("h8", _itop($cmh));			      #mhods
    $ret .= pack("h8", _itop($hr->{files}));   #songs in pl
    $ret .= pack("h8", _itop($hr->{type}));    # 1 = main .. 0=not main
    $ret .= pack("H8", "00"); 			      #?
-   $ret .= pack("H8", "00");                          #?
-   $ret .= pack("H8", "00");                          #?
-   $ret .= pack("H144", "00");       		      #dummy space
+   $ret .= pack("H8", "00");                  #?
+   $ret .= pack("H8", "00");                  #?
+   $ret .= pack("H144", "00");       		  #dummy space
 
  return $ret.$appnd;
 }
@@ -378,11 +380,11 @@ return $utf8string;
 
 
 ## _INTERNAL ##################################################
-#returns a /dummy) timestamp in MAC time format
+#returns a (dummy) timestamp in MAC time format
 sub _mactime {
 #my $x  = time();
 #my   $x = 2082844800;
-my $x = 666;
+my $x =    1234567890;
 return sprintf("%08X", $x);
 }
 
@@ -457,20 +459,6 @@ return $ret
 ### Here are the READ sub's used by tunes2pod.pl
 
 ###########################################
-# Get a x86 INT value (WHY did apple mix this?)
-sub get_x86_int {
- my($start, $anz) = @_;
- my($buffer,$xr) = undef;
-  seek(FILE, int($start), 0);
-  read(FILE, $buffer, int($anz));
-  foreach(split(//,$buffer)) {
-   $xr .= sprintf("%02X",ord($_));
-  
-  }
- return(oct("0x".$xr));
-}
-
-###########################################
 # Get a INT value
 sub get_int {
 my($start, $anz) = @_;
@@ -503,10 +491,9 @@ my @ret = ();
  for(1..$hr->{htm}) {
   my $field = get_int($diff+3, 1);
   my $action= get_int($diff+7, 1);
-  my $slen  = get_int($diff+55,1);
+  my $slen  = get_int($diff+55,1); #Whoa! This is true: string is limited to 0xfe (254) chars!! (iTunes4)
   my $string= get_string($diff+56, $slen);
- print "// $slen\n";
-  #This sucks! no byteswap here.. apple uses x86 endian.. why??
+  #This sucks! no byteswap here..
   #Is this an iTunes bug?!
   $string = Unicode::String::utf16($string)->utf8;
 =head
@@ -568,31 +555,27 @@ my $ml  = get_int($seek+8, 4);           #Length of this mhod
 my $mty = get_int($seek+12, 4);          #type number
 my $xl  = get_int($seek+28,4);           #String length
 
-## That's spl stuff..
+## That's spl stuff, only to be used with 51 mhod's
 my $htm = get_int($seek+35,1); #Only set for 51
 my $anym= get_int($seek+39,1); #Only set for 51
-my $spldata = undef;
-my $splpref = undef;
+my $spldata = undef; #dummy
+my $splpref = undef; #dummy
 
-#__hd(get_string($seek,$ml)) if $mty == 100;
 if($id eq "mhod") { #Seek was okay
-    my $foo = get_string($seek+($ml-$xl), $xl); #string of the entry            #maybe a 'no conv' flag would be better
+    my $foo = get_string($seek+($ml-$xl), $xl); #string of the entry 
     #$foo is now UTF16 (Swapped), but we need an utf8
     $foo = Unicode::String::byteswap2($foo);
     $foo = Unicode::String::utf16($foo)->utf8;
 
  ##Special handling for SPLs
- if($mty == 51) {
+ if($mty == 51) { #Get data from spldata mhod
    $foo = undef;
    $spldata = read_spldata({start=>$seek, htm=>$htm});
-  __hd(get_string($seek,$ml));
-print "HTM: $htm // $anym\n";
  }
- elsif($mty == 50) {
+ elsif($mty == 50) { #Get prefs from splpref mhod
   $foo = undef;
   $splpref = read_splpref({start=>$seek, end=>$ml});
  }
- 
  return({size=>$ml,string=>$foo,type=>$mty,spldata=>$spldata,splpref=>$splpref,matchrule=>$anym});
 
 }
@@ -611,7 +594,7 @@ sub get_mhip {
  if(get_string($pos, 4) eq "mhip") {
   my $oof = get_int($pos+4, 4);
   my $oid = get_mhod($pos+$oof)->{size};
-  return $oid if $oid == -1; #fatal error..
+  return ({size=>-1}) if $oid == -1; #fatal error..
    my $plid = get_int($pos+5*4,4);
    my $sid  = get_int($pos+6*4, 4);
   return({size=>($oid+$oof),sid=>$sid,plid=>$plid});
@@ -639,7 +622,7 @@ read(FILE, $buffer, $anz);
 
 
 #############################################
-# Get a playlist
+# Get a playlist (Should be called get_mhyp, but it does the whole playlist)
 sub get_pl {
  my($pos) = @_;
 
@@ -650,31 +633,38 @@ sub get_pl {
       $ret_hash{type} = get_int($pos+20, 4); #Is it a main playlist?
    my $scount         = get_int($pos+16, 4); #How many songs should we expect?
    my $header_len     = get_int($pos+4, 4);  #Size of the header
-   
+   my $mhods          = get_int($pos+12,4); #How many mhods we have here
    $pos += $header_len; #set pos to start of first mhod
-  
    #We can now read the name of the Playlist
    #Ehpod is buggy and writes the playlist name 2 times.. well catch both of them
    #MusicMatch is also stupid and doesn't create a playlist mhod
    #for the mainPlaylist
    my ($oid, $plname, $itt) = undef;
-   
-   while($oid != -1) {
-    $pos += $oid;
-    my $mhh = get_mhod($pos);
-    $oid = $mhh->{size};
-     if($mhh->{type} == 1) { #We found the PLname
-       $ret_hash{name} = $mhh->{string};
-     }
-     elsif(ref($mhh->{splpref}) eq "HASH") { #50er mhod (splpref)
-       $ret_hash{splpref} = \%{$mhh->{splpref}};
-     }
-     elsif(ref($mhh->{spldata}) eq "ARRAY") { #51 mhod (spldata)
-       $ret_hash{spldata} = \@{$mhh->{spldata}};
-       $ret_hash{matchrule} = $mhh->{matchrule};
-     }
+
+ for(my $i=0;$i<$mhods;$i++) {
+   my $mhh = get_mhod($pos);
+   if($mhh->{size} == -1) {
+    print STDERR "*** FATAL: Expected to find $mhods mhods,\n";
+    print STDERR "*** but i failed to get nr. $i\n";
+    print STDERR "*** Please send your iTuneDB to:\n";
+    print STDERR "*** pab\@blinkenlights.ch\n";
+    print STDERR "!!! iTunesDB.pm panic!\n";
+    exit(1);
    }
-    
+   $pos+=$mhh->{size};
+   
+   if($mhh->{type} == 1) {
+     $ret_hash{name} = $mhh->{string};
+   }
+   elsif(ref($mhh->{splpref}) eq "HASH") {
+     $ret_hash{splpref} = \%{$mhh->{splpref}};
+   }
+   elsif(ref($mhh->{spldata}) eq "ARRAY") {
+     $ret_hash{spldata} = \@{$mhh->{spldata}};
+     $ret_hash{matchrule}=$mhh->{matchrule};
+   }
+ }
+ 
    #Now get the items
  for(my $i = 0; $i<$scount;$i++) {
     my $mhih = get_mhip($pos);
@@ -684,6 +674,7 @@ sub get_pl {
        print STDERR "*** Your iTunesDB maybe corrupt or you found\n";
        print STDERR "*** a bug in GNUpod. Please send this\n";
        print STDERR "*** iTunesDB to pab\@blinkenlights.ch\n\n";
+       print STDERR "!!! tunes2pod.pl panic!\n";
        exit(1);
     }
     $pos += $mhih->{size};
@@ -700,7 +691,7 @@ sub get_pl {
 
 
 ###########################################
-# Get mhits
+# Get mhit + child mhods
 sub get_mhits {
 my ($sum) = @_;
 if(get_string($sum, 4) eq "mhit") { #Ok, its a mhit
@@ -720,7 +711,7 @@ $ret{bitrate}  = get_int($sum+56,4);
 $ret{volume}   = get_int($sum+64,4);
 $ret{starttime}= get_int($sum+68,4);
 $ret{stoptime} = get_int($sum+72,4);
-$ret{playcount} = get_int($sum+80,4); #84 has also something to do with playcounts.
+$ret{playcount} = get_int($sum+80,4); #84 has also something to do with playcounts. (Like rating + prerating?)
 
 $ret{rating}    = int((get_int($sum+28,4)-256)/oct('0x14000000'));
 $ret{prerating} = int(get_int($sum+120,4) / oct('0x140000'));
@@ -744,20 +735,28 @@ if(abs($ret{volume}) > 100) {
 
 
  #Now get the mhods from this mhit
+my $mhods = get_int($sum+12,4);
 $sum += get_int($sum+4,4);
- my ($next_start) = undef;
-    while($next_start != -1) {
-     $sum += $next_start; 
-     my $mhh = get_mhod($sum);    #returns the number where its guessing the next mhod, -1 if it's failed
-       $next_start = $mhh->{size};
-       #Convert ID to XML Name
-       my $xml_name = $mhod_array[$mhh->{type}];
-       if($xml_name) { #add known name to hash
-        $ret{$xml_name} = $mhh->{string};
-       }
- 
+
+ for(my $i=0;$i<$mhods;$i++) {
+    my $mhh = get_mhod($sum);
+    if($mhh->{size} == -1) {
+     print STDERR "** FATAL: Expected to find $mhods mhods,\n";
+     print STDERR "** but i failed to get nr $i\n";
+     print STDERR "*** Please send your iTuneDB to:\n";
+     print STDERR "*** pab\@blinkenlights.ch\n";
+     print STDERR "!!! iTunesDB.pm panic!\n";     
+     exit(1);
     }
-    
+    $sum+=$mhh->{size};
+    my $xml_name = $mhod_array[$mhh->{type}];
+    if($xml_name) { #Has an xml name.. sounds interesting
+      $ret{$xml_name} = $mhh->{string};
+    }
+    else {
+     warn "iTunesDB.pm: got $mhh->{type} , not a known element!\n";
+    }
+ }
 return ($sum,\%ret);          #black magic, returns next (possible?) start of the mhit
 }
 #Was no mhod
