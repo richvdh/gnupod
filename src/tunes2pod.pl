@@ -53,7 +53,7 @@ if(!$opts{force} && !(GNUpod::FooBar::havetosync($con))) {
  print "I don't think that you have to run tunes2pod.pl\n";
  print "The GNUtunesDB looks up-to-date\n";
  print "\n";
- print "If you think i'm wrong, use --force\n";
+ print "If you think i'm wrong, use '$0 --force'\n";
  exit(1);
 }
 
