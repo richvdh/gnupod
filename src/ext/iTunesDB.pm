@@ -27,13 +27,97 @@ use strict;
 use Unicode::String;
 use GNUpod::FooBar;
 
-use vars qw(%mhod_id @mhod_array);
+use vars qw(%mhod_id @mhod_array %SPLDEF);
 
 #mk_mhod() will take care of lc() entries
 %mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, "comment", 8, "composer", 12, "group", 13);# "SPLPREF",50, "SPLDATA",51, "PLTHING", 100) ;
  foreach(keys(%mhod_id)) {
   $mhod_array[$mhod_id{$_}] = $_;
  }
+
+
+
+
+#Human prefix
+$SPLDEF{hprefix}{2} = "!";
+$SPLDEF{hprefix}{3} = "NOT_";
+
+#String types
+$SPLDEF{is_string}{3} = 1;
+$SPLDEF{is_string}{1} = 1;
+
+
+
+#String Actions
+$SPLDEF{string_action}{1} = 'IS';
+$SPLDEF{string_action}{2} = 'CONTAINS';
+$SPLDEF{string_action}{4} = 'STARTWITH';
+$SPLDEF{string_action}{8} = 'ENDWITH';
+
+#Num. Actions
+$SPLDEF{num_action}{1}       = "eq";
+$SPLDEF{num_action}{0x10}    = "gt";
+$SPLDEF{num_action}{0x40}    = "lt";
+$SPLDEF{num_action}{0x0100}  = "range";  #0x0100
+$SPLDEF{num_action}{0x0200}  = "unknown_fixme";
+
+#Field names  ## string types uc() .. int types lc()
+$SPLDEF{field}{2}  = "TITLE";
+$SPLDEF{field}{3}  = "ALBUM";
+$SPLDEF{field}{4}  = "ARTIST";
+$SPLDEF{field}{5}  = "bitrate";
+$SPLDEF{field}{6}  = "srate";
+$SPLDEF{field}{7}  = "year";
+$SPLDEF{field}{8}  = "GENRE";
+$SPLDEF{field}{9}  = "FDESC";
+$SPLDEF{field}{10} = "changetime";
+$SPLDEF{field}{11} = "tracknum";
+$SPLDEF{field}{12} = "size";
+$SPLDEF{field}{13} = "time";
+$SPLDEF{field}{14} = "COMMENT";
+$SPLDEF{field}{16} = "addtime";
+$SPLDEF{field}{18} = "COMPOSER";
+$SPLDEF{field}{22} = "playcount";
+$SPLDEF{field}{23} = "playtime";
+$SPLDEF{field}{24} = "cdnum";
+$SPLDEF{field}{25} = "rating";
+$SPLDEF{field}{31} = "compilation";
+$SPLDEF{field}{35} = "bpm";
+$SPLDEF{field}{39} = "GROUP";
+
+
+$SPLDEF{checkrule}{1} = "limit";
+$SPLDEF{checkrule}{2} = "spl";
+$SPLDEF{checkrule}{3} = "both";
+
+
+$SPLDEF{limititem}{1} = "minute";
+$SPLDEF{limititem}{2} = "megabyte";
+$SPLDEF{limititem}{3} = "song";
+$SPLDEF{limititem}{4} = "hour";
+$SPLDEF{limititem}{5} = "gigabyte";
+
+
+my %SPLREDEF = _r_spldef();
+
+##########################################3
+#ReConvert the SPLDEF hash
+sub _r_spldef {
+my %RES = ();
+ foreach my $spldsc (keys(%SPLDEF)) {
+   foreach my $xkey (keys(%{$SPLDEF{$spldsc}})) {
+    my $xval = $SPLDEF{$spldsc}{$xkey};
+    $RES{$spldsc}{$xval} = int($xkey);
+   }
+ }
+ return %RES;
+}
+
+
+
+
+
+
 
 ## GENERAL #########################################################
 # create an iTunesDB header
@@ -215,14 +299,22 @@ return $ret;
 sub mk_splprefmhod {
  my($hs) = @_;
  my($live, $chkrgx, $chklim, $mos) = 0;
+
  #Bool stuff
  $live        = 1 if $hs->{liveupdate};
-my $checkrule   = int($hs->{checkrule});
  $mos         = 1 if $hs->{mos};
+ #Tristate
+my $checkrule   = $SPLREDEF{checkrule}{lc($hs->{checkrule})};
+my $int_item    = $SPLREDEF{limititem}{lc($hs->{item})};
 
 if($checkrule < 1 || $checkrule > 3) {
- warn "iTunesDB.pm: error: 'checkrule' ($checkrule) out of range. value set to 1 (=LimitMatch)\n";
- $checkrule = 1;
+ warn "iTunesDB.pm: error: 'checkrule' ($hs->{checkrule}) invalid. Value set to 'limit')\n";
+ $checkrule = $SPLREDEF{checkrule}{limit};
+}
+
+if($int_item < 1) {
+ warn "iTunesDB.pm: error: 'item' ($hs->{item}) invalid. Value set to 'minute'\n";
+ $int_item = $SPLREDEF{limititem}{minute};
 }
 
 $chkrgx = 1 if $checkrule>1;
@@ -237,12 +329,13 @@ $chklim = $checkrule-$chkrgx*2;
  $ret .= pack("h2", _itop($live,0xff)); #LiveUpdate ?
  $ret .= pack("h2", _itop($chkrgx,0xff)); #Check regexps?
  $ret .= pack("h2", _itop($chklim,0xff)); #Check limits?
- $ret .= pack("h2", _itop($hs->{item},0xff)); #Wich item?
+ $ret .= pack("h2", _itop($int_item,0xff)); #Wich item?
  $ret .= pack("h2", _itop($hs->{sort},0xff)); #How to sort
  $ret .= pack("h6");
  $ret .= pack("h8", _itop($hs->{value})); #lval
  $ret .= pack("h2", _itop($mos,0xff));        #MatchOnlySelected (?)
  $ret .= pack("h118");
+
 }
 
 ## GENERAL #################################################################
@@ -252,19 +345,32 @@ sub mk_spldatamhod {
 
  my $anymatch = 1 if $hs->{anymatch};
 
-if(ref($hs->{data}) ne "ARRAY") {
-# warn "iTunesDB.pm: warning: no spldata found in spl, iTunes4-workaround enabled\n";
- push(@{$hs->{data}}, {field=>4,action=>2,string=>""});
-}
+ if(ref($hs->{data}) ne "ARRAY") {
+  push(@{$hs->{data}}, {field=>'ARTIST',action=>'CONTAINS',string=>""});
+ }
 
  my $cr = undef;
  foreach my $chr (@{$hs->{data}}) {
      my $string = undef;
-#Fixme: this is ugly (same as read_spldata)
-     if($chr->{field} =~ /^(2|3|4|8|9|14|18)$/) {
+     my $int_field = undef;
+	 my $action_prefix = undef;
+	 my $action_num    = undef;
+     if($int_field = $SPLREDEF{field}{uc($chr->{field})}) { #String type
         $string = Unicode::String::utf8($chr->{string})->utf16;
-     }
-     else {
+        #String has 0x1 as prefix
+		$action_prefix = 0x01000000;
+		my($is_negative,$real_action) = $chr->{action} =~ /^(NOT_)?(.+)/;
+		
+		#..but a negative string has 0x3 as prefix
+		$action_prefix = 0x03000000 if $is_negative;
+		
+		unless($action_num = $SPLREDEF{string_action}{uc($real_action)}) {
+		 warn "iTunesDB.pm: action $chr->{action} is invalid for $chr->{field} , setting action to IS\n";
+		 $action_num = $SPLREDEF{string_action}{IS};
+		}
+        
+	 }
+     elsif($int_field = $SPLREDEF{field}{lc($chr->{field})}) { #Int type
         my ($from, $to) = $chr->{string} =~ /(\d+):?(\d*)/;
         $to ||=$from; #Set $to == $from is $to is empty
         $string  = pack("H8");
@@ -276,22 +382,31 @@ if(ref($hs->{data}) ne "ARRAY") {
         $string .= pack("H24");
         $string .= pack("H8", _x86itop(1));
         $string .= pack("H40");
-      #  __hd($string);
-     }
+        #int has 0x0 as prefix..
+	    $action_prefix = 0x00000000;
+        my($is_negative,$real_action) = $chr->{action} =~ /^(!)?(.+)/;
+	    #..but negative int action has 0x2
+		$action_prefix = 0x02000000 if $is_negative;
+		
+		unless($action_num = $SPLREDEF{num_action}{lc($real_action)}) {
+		 warn "iTunesDB.pm: action $chr->{action} is invalid for $chr->{field}, setting action to eq\n";
+		 $action_num = $SPLREDEF{num_action}{eq};
+		}
+	 }
+	 else { #Unknown type, this is fatal!
+	  die "iTunesDB.pm: FATAL ERROR: <spl field=\"$chr->{field}\"... is unknown, can't continue!\n";
+	 }
+
+#warn "$chr->{action}  -> $action_prefix / $action_num\n";
 
      if(length($string) > 254) { #length field is limited to 0xfe!
         warn "iTunesDB.pm: splstring to long for iTunes, cropping (yes, that's stupid)\n";
         $string = substr($string,0,254);
      }
      
-  warn "Fixme: not is broken - writing packH6 directly\n";
-  
-  
      $cr .= pack("H6");
-     $cr .= pack("h2", _itop($chr->{field},0xff));
-     $cr .= pack("h6", _itop(($chr->{not}||1),0xffffff));
- 
-     $cr .= pack("h2", _itop($chr->{action},0xff));
+     $cr .= pack("h2", _itop($int_field,0xff));
+	 $cr .= pack("H8",_x86itop($action_num+$action_prefix));
      $cr .= pack("H94");
      $cr .= pack("h2", _itop(length($string),0xff));
      $cr .= $string;
@@ -568,29 +683,38 @@ sub read_spldata {
  
 my $diff = $hr->{start}+160;
 my @ret = ();
-print "***\n";
  for(1..$hr->{htm}) {
-  my $field = get_int($diff+3, 1);
-  my $doesNot = get_int($diff+4,3);
-print "Fixme: not is borken (read and write) hexdump:\n";
-__hd(get_string($diff+4,3)); 
-print "*$doesNot\n"; 
-  my $action= get_int($diff+7, 1);
+  my $field = get_int($diff+3, 1);  #Field
+  my $ftype = get_int($diff+4,1);   #Field TYPE
+  my $action= get_x86_int($diff+5, 3);  #Field ACTION
   my $slen  = get_int($diff+55,1); #Whoa! This is true: string is limited to 0xfe (254) chars!! (iTunes4)
   my $rs    = undef; #ReturnSting
-#Fixme: this is ugly
-   if($field =~ /^(2|3|4|8|9|14|18)$/) { #Is a string type
-    my $string= get_string($diff+56, $slen);
+
+  my $human_exp = $SPLDEF{hprefix}{$ftype};
+
+   if($SPLDEF{is_string}{$ftype}) { #Is a string type
+	my $string= get_string($diff+56, $slen);
     #No byteswap here?? why???
     $rs = Unicode::String::utf16($string)->utf8;
+    $human_exp .= $SPLDEF{string_action}{$action};
+	#Warn about bugs 
+	$SPLDEF{string_action}{$action} or warn "iTunesDB.pm: Unknown s_action $action for $ftype (this is a bug!)\n";
+   
    }
    else { #Is INT (Or range)
     my $xfint = get_x86_int($diff+56+4,4);
     my $xtint = get_x86_int($diff+56+28,4);
     $rs = "$xfint:$xtint";
+	$human_exp .= $SPLDEF{num_action}{$action};
+	$SPLDEF{num_action}{$action} or  warn "iTunesDB.pm: Unknown a_action $action for $ftype (this is a bug!)\n";
    }
+   
   $diff += $slen+56;
-  push(@ret, {not=>$doesNot,field=>$field,action=>$action,string=>$rs});
+  
+  my $human_field = $SPLDEF{field}{$field};
+  $SPLDEF{field}{$field} or warn "iTunesDB.pm: Unknown SPL-Field: $field (this is a bug!)\n";
+  
+  push(@ret, {action=>$human_exp,field=>$human_field,string=>$rs});
  }
  return \@ret;
 }
@@ -609,8 +733,11 @@ sub read_splpref {
  my $sort    =        get_int($hs->{start}+28,1);
  my $limit   =        get_int($hs->{start}+32,4);
     $mos     = 1 if   get_int($hs->{start}+36,1);
+	
+$SPLDEF{limititem}{int($item)} or warn "Bug: limititem $item unknown\n";
+$SPLDEF{checkrule}{int($chklim+($chkrgx*2))} or warn "Bug: Checkrule ".int($chklim+($chkrgx*2))." unknown\n";
  return({live=>$live,
-         value=>$limit, iitem=>$item, isort=>$sort,mos=>$mos,checkrule=>($chklim+($chkrgx*2))});
+         value=>$limit, iitem=>$SPLDEF{limititem}{int($item)}, isort=>$sort,mos=>$mos,checkrule=>$SPLDEF{checkrule}{int($chklim+($chkrgx*2))}});
 }
 
 #################################################
