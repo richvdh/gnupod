@@ -11,7 +11,7 @@ TOC
 7 : Why?
 8 : Do you have any specs about the iTunesDB format?
 9 : How do i report bugs or feature-requests?
-
+10: How can i contribute?
 
 
 
@@ -110,16 +110,20 @@ gnupod_addsong.pl can read this 3 formats.
 GNUpod does (currently) *NOT* support:
 
  - Audible.com files (DRM)
- - Apple MusicStore files (.m4p - DRM AAC)
- - Unsupported formats, like flac / ogg / midi...
+ - Apple MusicStore files (.m4p - DRM AAC) but it does support .m4a
+ - Unsupported formats, like ogg / midi / nsf...
 
-'Support' for ogg,flac,etc.. would be easy:
-gnupod_addsong.pl could convert the format 'on-the-fly'.
-I think we'll see something like this before GNUpod 1.0
-is released. But it's a low priority task.
+gnupod 0.95 can convert FLAC files 'on the fly'.
+You'll have to call gnupod_addsong.pl with the
+--decode switch and 'flac' needs to be in your current
+$PATH. It's somewhat alpha and gnupod will convert the
+flac files into wave files (no, i'm not going to encode
+the files with lame to save space.. flac is loseless, like wave ;) )
 
 DRM-Support maybe harder, because i don't own any DRM-'Protected'
 Music :-)
+
+But gnupod works pretty well with M4A files from allofmp3.com
 
 
 7. Why?
@@ -154,5 +158,19 @@ Just have a look at iTunesDB.pm and tunes2pod.pl+mktunes.pl
 
 Send a mail to <bug-gnupod at nongnu.org>
 ..or <pab at blinkenlights.ch>
+
+
+
+10. How can i contribute?
+-------------------------
+
+Use gnupod and:
+ * Report bugs
+ * Report weird things
+ * Send me patches (better ;) )
+ * Write better documentation
+ * Buy me an iPod-Mini ;)
+
+
 
 *END*

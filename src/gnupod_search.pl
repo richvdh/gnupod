@@ -115,7 +115,7 @@ sub pview {
  $qh{l}{k} = $orf->{album};                     $qh{l}{s} = "ALBUM";
  $qh{g}{k} = $orf->{genre};                     $qh{g}{s} = "GENRE";
  $qh{c}{k} = $orf->{playcount}; $qh{c}{w} = 4;  $qh{c}{s} = "CNT";
- $qh{i}{k} = $orf->{id};        $qh{i}{w} = 3;  $qh{i}{s} = "ID";
+ $qh{i}{k} = $orf->{id};        $qh{i}{w} = 4;  $qh{i}{s} = "ID";
  
  #Prepare view
  
