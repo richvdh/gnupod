@@ -21,7 +21,10 @@ sub getpath {
  $name =~ tr/a-zA-Z0-9./_/c;
 for($path = sprintf("$mountp/iPod_Control/Music/F%02d/%d_$name", int(rand(20)), $i);(-e $path);$i++) 
   {}
+#Remove mountpoint from $path
 $path =~ s/^$mountp(.+)/$1/;
+
+#Convert /'s to :'s
 $path =~ tr/\//:/;
 return $path;
 }

@@ -4,29 +4,31 @@ use strict;
 use GNUpod::iTunesDB;
 use GNUpod::XMLhelper;
 use GNUpod::FooBar;
+use Getopt::Long;
 
-print "tunes2pod.pl Version 0.9-rc0 (C) 2002-2003 Adrian Ulrich\n";
+use vars qw(%opts);
+
+print "tunes2pod.pl Version 0.9-rc1 (C) 2002-2003 Adrian Ulrich\n";
 print "--------------------------------------------------------\n";
 print "This program may be copied only under the terms of the\n";
 print "GNU General Public License v2 or later.\n";
 print "--------------------------------------------------------\n\n";
 
+$opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
-die << "EOF";
-Usage: tunes2pod.pl [-m \$IPOD_MOUNTPOINT | -f iTunesDB] [-chk] [--stdout]
+GetOptions(\%opts, "help|h", "xml|x=s", "itunes|i=s", "mount|m=s");
 
-   -m \$IPOD_MOUNTPOINT : Where you mounted your iPod.
-   -f iTunesDB          : Specify an alternate iTunesDB
-   -chk                 : Only check the iTunesDB, don't write anything
-   -x , --stdout        : Print the XML-File to STDOUT.. bla
 
-EOF;
+usage() if $opts{help};
 
+#Normal operation
 converter();
 
 sub converter {
-my($stat, $in, $out) = GNUpod::FooBar::connect();
-GNUpod::iTunesDB::open_itunesdb($in) or die "FOO\n";
+my($stat, $in, $out) = GNUpod::FooBar::connect(\%opts);
+usage("$stat\n") if $stat;
+
+GNUpod::iTunesDB::open_itunesdb($in) or usage("Could not open $in\n");
 
 
 #Check where the FILES and PLAYLIST part starts..
@@ -58,6 +60,7 @@ print STDOUT "> Found $found_files files, ok\n";
 
 
 #Now get each playlist
+print STDOUT "> Found ".($xpc_pl-1)." playlists:\n";
 for(my $i=0;$i<$xpc_pl;$i++) {
   ($pdi, $href) = GNUpod::iTunesDB::get_pl($pdi);
   if($pdi == -1) {
@@ -84,9 +87,12 @@ for(my $i=0;$i<$xpc_pl;$i++) {
  }
 
 
-
 #Print the new GNUtunesDB to STDERR (debug)
-#print STDERR  XML::Simple::XMLout(\%hout,keeproot=>1,xmldecl=>1);
+
+open(OUT, ">$out") or die "Could not write to $out\n";
+ print OUT  XML::Simple::XMLout(\%hout,keeproot=>1,xmldecl=>1);
+close(OUT);
+
 print STDOUT "\n Done\n";
 }
 
@@ -97,6 +103,20 @@ print STDOUT "\n Done\n";
 
 
 
+
+sub usage {
+my($rtxt) = @_;
+die << "EOF";
+$rtxt
+Usage: tunes2pod.pl [-h] [-m directory | -i iTunesDB | -x GNUtunesDB]
+
+   -h, --help             : This ;)
+   -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
+   -i, --itunes=iTunesDB  : Specify an alternate iTunesDB
+   -x, --xml=file         : GNUtunesDB (XML File)
+
+EOF
+}
 
 
 

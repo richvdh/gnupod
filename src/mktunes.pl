@@ -3,8 +3,11 @@
 use strict;
 use GNUpod::XMLhelper;
 use GNUpod::iTunesDB;
+use GNUpod::FooBar;
+use Getopt::Long;
 
-use vars qw($xmldoc %itb);
+
+use vars qw($xmldoc %itb %opts);
 
 
 print "mktunes.pl Version 0.9-rc0 (C) 2002-2003 Adrian Ulrich\n";
@@ -14,6 +17,10 @@ print "GNU General Public License v2 or later.\n";
 print "------------------------------------------------------\n\n";
 
 
+$opts{mount} = $ENV{IPOD_MOUNTPOINT};
+GetOptions(\%opts, "help|h", "xml|x=s", "itunes|i=s", "mount|m=s");
+
+usage() if $opts{help};
 
 startup();
 
@@ -23,8 +30,12 @@ startup();
 
 
 sub startup {
-$| = 1;
-($xmldoc) = GNUpod::XMLhelper::parsexml('/mnt/ipod/iPod_Control/.gnupod/GNUtunesDB');
+
+my($stat, $itunes, $xml) = GNUpod::FooBar::connect(\%opts);
+
+usage("$stat\n") if $stat;
+($xmldoc) = GNUpod::XMLhelper::parsexml($xml) or usage("Failed to parse $xml\n");
+
  my $quickhash = GNUpod::XMLhelper::build_quickhash($xmldoc);
 
 ## FILE STUFF
@@ -69,7 +80,7 @@ foreach my $xk (keys(%itb)) {
 
 ## FINISH IT :-)
 print "> Writing file...\n";
-open(ITB, ">iTunesDB") or die "** Sorry: Could not write your iTunesDB: $!\n";
+open(ITB, ">$itunes") or die "** Sorry: Could not write your iTunesDB: $!\n";
  binmode(ITB); #Maybe this helps win32? ;)
  print ITB GNUpod::iTunesDB::mk_mhbd($fl);  #Main header
  print ITB $itb{mhsd_1}{_data_};            #Header for FILE part
@@ -264,5 +275,31 @@ my $nhod = undef;
   }
  return $length;
 }
+
+
+
+
+
+
+
+
+
+sub usage {
+my($rtxt) = @_;
+die << "EOF";
+$rtxt
+Usage: mktunes.pl [-h] [-m directory | -i iTunesDB | -x GNUtunesDB]
+
+   -h, --help             : This ;)
+   -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
+   -i, --itunes=iTunesDB  : Specify an alternate iTunesDB
+   -x, --xml=file         : GNUtunesDB (XML File)
+
+EOF
+}
+
+
+
+
 
 
