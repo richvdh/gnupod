@@ -26,7 +26,7 @@ use GNUpod::iTunesDB;
 use GNUpod::XMLhelper;
 use GNUpod::FooBar;
 use Getopt::Long;
-use vars qw(%opts @keeper $ratingref);
+use vars qw(%opts @keeper $plcref);
 
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
@@ -58,13 +58,13 @@ sub go {
 #Read on The Go list written by the iPod
 my @xotg    = GNUpod::iTunesDB::readOTG($con->{onthego});
 
-#ratingref is used by newfile()
+#plcref is used by newfile()
 #so we have to call this before doxml()
-$ratingref  = GNUpod::iTunesDB::readPLC($con->{playcounts});
+$plcref  = GNUpod::iTunesDB::readPLC($con->{playcounts});
 
 
  #Add dummy entry, we start to count at 1, not at 0
- if(int(@xotg) || $ratingref) { #We have to modify
+ if(int(@xotg) || $plcref) { #We have to modify
   push(@keeper, -1);
   #First, we parse the old xml document and create the keeper
   GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}\n");
@@ -105,8 +105,12 @@ my(@xotg) = @_;
 sub newfile {
  my($el) =  @_;
  push(@keeper, int($el->{file}->{id}));
- #Adjust rating
- $el->{file}->{rating} = $ratingref->{int(@keeper)-1} if $ratingref;
+ 
+ if($plcref) { #PlayCountref exists (=v2 ipod) -> adjust
+  #Adjust rating
+  $el->{file}->{rating}    = $plcref->{rating}{int(@keeper)-1};
+  $el->{file}->{playcount} = $plcref->{playcount}{int(@keeper)-1};
+ }
    GNUpod::XMLhelper::mkfile($el);
 }
 

@@ -863,28 +863,39 @@ return({position=>$pos,pdi=>($pos+$pdi),songs=>$songs,playlists=>$pls});
 
 ######################## Other funny stuff #########################
 
+
 ##############################################
-# Read PlayCounts (Only used for rating atm?)
+# Read PlayCounts (We don't read the PLAYTIME)
 sub readPLC {
  my($file) = @_;
  open(RATING, "$file") or return ();
  
- my $os = 108;
+ my $offset = 16*6;
  my $buff;
  my %pcrh = ();
  while(1) {
-  seek(RATING, $os, 0);
-  last unless read(RATING, $buff, 2) == 2;
-  my $xin = GNUpod::FooBar::shx2int($buff);
-  my $xnum = (($os-108)/16+1);
-  $pcrh{$xnum} = $xin if $xin;
-  warn "debug: $xnum has $xin\n" if $xin;
-  $os += 16;
+
+  seek(RATING, $offset+12, 0);
+  last unless read(RATING,$buff,4) ==4;
+  my $rating = GNUpod::FooBar::shx2int($buff);
+  
+  seek(RATING, $offset, 0);
+  read(RATING,$buff,4);
+  my $playc  = GNUpod::FooBar::shx2int($buff);
+  
+  my $songnum = (($offset-(16*6))/16)+1;
+
+  $pcrh{playcount}{$songnum} = $playc if $playc;
+  $pcrh{rating}{$songnum}    = $rating if $rating; 
+  warn "debug: $songnum> $playc / $rating\n" if $playc||$rating;
+
+  $offset += 16;
  }
 
 close(RATING);
  return \%pcrh;
 }
+
 
 ##############################################
 # Read OnTheGo data

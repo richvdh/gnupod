@@ -20,6 +20,8 @@ Summary:
 
 - GNUpod can now handle the 'Rating' set
   on the iPod (2.x Firmware-only-feature)
+  It does also update the Playcounts on v2
+  iPods
 
 - GNUpod checks if the iTunesDB did change and
   runs tunes2pod.pl if it has to run it
