@@ -246,4 +246,55 @@ sub getmd5 {
 }
 
 
+
+########################################################################
+# Parse configuration
+sub GetConfig {
+ my($getopts, $doset, $name) = @_;
+
+  warn "### debug: reading configuration for app $name\n";
+
+  my($topic,$val,$optarget);
+  
+  foreach my $filerc ( ("$ENV{HOME}/.gnupodrc", "$getopts->{mount}/iPod_Control/.gnupod/gnupodrc") ) {
+    open(RCFILE, $filerc) or next;
+     while (my $line = <RCFILE>) {
+      chomp($line);
+      next if !$line or $line =~ /^#/;
+      
+      #Ok, line is not a comment and has some content, read it..
+      unless(($topic,$val) = $line =~ /^(\S+)\s*=\s*(.+)$/) {
+       warn "warning: Invalid line '$line' found in $filerc\n";
+       next;
+      }
+      
+      #We matched and got $topic + $val, check it $topic has a
+      #specific target (like 'mktunes.volume')
+      if($topic =~ /^([^.]+)\.(.+)/) {
+       $optarget = $1;
+       $topic    = $2;
+      }
+      else { #No target found
+       $optarget = undef;
+      }
+
+      warn "### PARSE($line): *$topic* -> *$val*\n";
+      warn "### $topic with target $optarget\n";
+      
+         if ($optarget&&$name&&$name ne $optarget) { warn "d: $topic not for $name\n"; next}
+      elsif ($getopts->{$topic})      { warn "d: skipping duplicate entry $topic\n"; next}
+      elsif ($doset->{$topic} eq "s") { $getopts->{$topic} = $val }
+      elsif ($doset->{$topic} eq "i") { $getopts->{$topic} = int($val) }
+      elsif ($doset->{$topic} eq "b") { $getopts->{$topic} = 1 if($val && $val ne "no") }
+     }
+     close(RCFILE);
+     warn "** Parser finished $filerc\n";
+  }
+  
+  foreach(keys(%$getopts)) {
+ print "*$_* => *$getopts->{$_}*\n";
+}
+  
+  return 1;
+}
 1;

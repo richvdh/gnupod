@@ -33,6 +33,8 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "top4secret");
+#GNUpod does NOT read configuration because it's called from
+#other scripts. They'll have to setup a correct ENV
 
 if($opts{top4secret}) {
  go();

@@ -34,6 +34,7 @@ print "tunes2pod.pl Version 0.94 (C) 2002-2004 Adrian Ulrich\n";
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
 GetOptions(\%opts, "force", "help|h", "mount|m=s");
+GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', force=>'b'}, "tunes2pod");
 
 
 usage() if $opts{help};

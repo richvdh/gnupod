@@ -44,7 +44,12 @@ print "mktunes.pl Version 0.95 (C) 2002-2004 Adrian Ulrich\n";
 
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
-GetOptions(\%opts, "help|h", "mount|m=s", "volume|v=i");
+GetOptions(\%opts, "help|h", "ipod-name|n=s", "mount|m=s", "volume|v=i", "energy|e");
+GNUpod::FooBar::GetConfig(\%opts, {'ipod-name'=>'s', mount=>'s', volume=>'i', energy=>'b'}, "mktunes");
+
+$opts{'ipod-name'} ||= "GNUpod 0.95-20040327";
+
+warn "iPodname set to ".$opts{'ipod-name'}."\n";
 
 usage() if $opts{help};
 
@@ -155,7 +160,7 @@ if(ref($spl) eq "HASH") { #We got splpref!
 sub genpls {
 
  #Create mainPlaylist and set PlayListCount to 1
- my ($pldata,undef) = r_mpl("GNUpod 0.95-20040327", 1,\@MPLcontent);
+ my ($pldata,undef) = r_mpl($opts{'ipod-name'}, 1,\@MPLcontent);
  my $plc = 1;
  
 #CID is now used by r_mpl, dont use it yourself anymore
@@ -180,11 +185,16 @@ sub build_mhit {
  my %chr = %{$xh};
  $chr{id} = $oid;
 my ($nhod,$cmhod,$cmhod_count) = undef;
+
  foreach(keys(%chr)) {
   next unless $chr{$_}; #Dont create empty fields
+
+  #Crop title if enabled
+  $chr{$_} = substr($chr{$_},0,18) if $_ eq "title" && $opts{energy};
   $nhod = GNUpod::iTunesDB::mk_mhod({stype=>$_, string=>$chr{$_}});
+  next unless $nhod; #mk_mhod refused work, go to next item
   $cmhod .= $nhod;
-  $cmhod_count++ if defined $nhod;
+  $cmhod_count++;
  }
  
   push(@MPLcontent,$oid);
@@ -198,6 +208,7 @@ my ($nhod,$cmhod,$cmhod_count) = undef;
         print "$chr{volume}% for id $chr{id}\n";
       }
      }
+     
      
      #Ok, we created the mhod's for this item, now we have to create an mhit
      my $mhit = GNUpod::iTunesDB::mk_mhit({size=>length($cmhod), count=>$cmhod_count, fh=>\%chr}).$cmhod;
@@ -322,8 +333,10 @@ Usage: mktunes.pl [-h] [-m directory] [-v VALUE]
 
    -h, --help             : This ;)
    -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
+   -n, --ipod-name=NAME   : iPod Name (Only for HFS+ iPods)
    -v, --volume=VALUE     : Adjust volume +-VALUE% (example: -v -20)
                             (Works with Firmware 1.x and 2.x!)
+   -e, --energy           : Save energy (= Disable scrolling title)
 
 EOF
 }

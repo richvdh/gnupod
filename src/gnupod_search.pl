@@ -33,7 +33,8 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "help|h", "mount|m=s", "artist|a=s",
                    "album|l=s", "title|t=s", "id|i=s",
-        		   "genre|g=s", "once|o", "delete", "RMME|d");
+        		   "genre|g=s", "match-once|o", "delete", "RMME|d");
+GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', 'match-once'=>'b'}, "gnupod_search");
 
 usage() if $opts{help};
 
@@ -63,16 +64,16 @@ print "==================================\n";
 sub newfile {
  my($el) =  @_;
 my $matched;
-my $ntm = keys(%opts)-1-$opts{once}-$opts{delete};
+my $ntm = keys(%opts)-1-$opts{'match-once'}-$opts{delete};
 
   foreach my $opx (keys(%opts)) {
-   next if $opx =~ /mount|once|delete/; #Skip this
+   next if $opx =~ /mount|match-once|delete/; #Skip this
    if($el->{file}->{$opx} =~ /$opts{$opx}/i) {
     $matched++;
    }
   }
 
-  if(($opts{once} && $matched) || $ntm == $matched) {
+  if(($opts{'match-once'} && $matched) || $ntm == $matched) {
     print "[RM] " if $opts{delete};
     print "$el->{file}->{id}";
     print " " x (10-length($el->{file}->{id})-($opts{delete}*5));
@@ -121,7 +122,7 @@ Usage: gnupod_search.pl [-h] [-m directory] File1 File2 ...
    -l, --album=ALBUM      : print songs by Album
    -i, --id=ID            : print songs by ID
    -g, --genre=GENRE      : print songs by Genre
-   -o, --once             : Search doesn't need to match multiple times (eg. -a & -l)
+   -o, --match-once       : Search doesn't need to match multiple times (eg. -a & -l)
        --delete           : REMOVE (!) matched songs
 
 Note: Argument for title/artist/album.. has to be UTF8 encoded, *not* latin1!

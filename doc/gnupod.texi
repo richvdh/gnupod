@@ -415,6 +415,7 @@ But please don't blame me if your iPod dies...
 @chapter Using GNUpod
 @menu
 * Preparation::                     How to mount and prepare the iPod for GNUpod
+* Configuration::                   Learn about the Configuartion File
 * Add files::                       How to add MP3 files to the iPod
 * Search files::                    How to search for files on the iPod
 * Remove files::                    How to delete files on the iPod
@@ -447,6 +448,17 @@ if you would like to enable the 'EU-Volume-Limit' (=decrase max. volume).
 This only works for iPods running Firmware 1.x
 
 Your iPod is now ready for GNUpod!
+
+@node Configuration
+@section Configuration
+
+(Note: You don't need to bother about the Configfile. GNUpod works fine
+ without it, but it could make your life easier)
+
+GNUpod >= 0.95 can read a simple Configfile.
+An example comes with GNUpod, see doc/gnupodrc.example
+
+Edit this file and save it as ~/.gnupodrc or on your iPod (iPod_Control/.gnupod/gnupodrc)
 
 
 @node Add files

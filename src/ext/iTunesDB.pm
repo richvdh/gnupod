@@ -285,9 +285,13 @@ if(ref($hs->{data}) ne "ARRAY") {
         $string = substr($string,0,254);
      }
      
+     my $xNot = 1;                # == $action
+        $xNot = 3 if ($chr->{not});  # != $action
+
      $cr .= pack("H6");
      $cr .= pack("h2", _itop($chr->{field},0xff));
-     $cr .= pack("H6", reverse("010000"));
+     $cr .= pack("h2", _itop($xNot,0xff));
+     $cr .= pack("H4");
      $cr .= pack("h2", _itop($chr->{action},0xff));
      $cr .= pack("H94");
      $cr .= pack("h2", _itop(length($string),0xff));
@@ -568,6 +572,7 @@ my @ret = ();
 
  for(1..$hr->{htm}) {
   my $field = get_int($diff+3, 1);
+  my $doesNot = 1 if (get_int($diff+4,1) == 0x3);
   my $action= get_int($diff+7, 1);
   my $slen  = get_int($diff+55,1); #Whoa! This is true: string is limited to 0xfe (254) chars!! (iTunes4)
   my $rs    = undef; #ReturnSting
@@ -583,7 +588,7 @@ my @ret = ();
     $rs = "$xfint:$xtint";
    }
   $diff += $slen+56;
-  push(@ret, {field=>$field,action=>$action,string=>$rs});
+  push(@ret, {not=>$doesNot,field=>$field,action=>$action,string=>$rs});
  }
  return \@ret;
 }

@@ -73,6 +73,9 @@ RATING         : 23
 [2] SPL 'action'
 ---------------------------
 IS             : 01
+CONTAINS       : 02
+STARTS WITH    : 04
+ENDS WITH      : 08
 
 
 [3]SPL 'field'

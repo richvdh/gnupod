@@ -23,36 +23,3 @@ to view GNUpod's info page.
 An HTML Version of the info-page is also
 included in this package (see doc/)
 
-
-FAQ
----
-
-Q: How about a GUI?
-A: GNUpod will never (?) have a GUI,
-   if you wan't one, use gtkpod
-   (http://gtkpod.sf.net), it's a
-   'rewrite' of the old GNUpod in C
-
-   ..but GNUpod can easy be (ab-)used
-   as a 'backend' for an GUI ;)
-
-Q: What about 'SmartPlaylists' ?
-A: See 'README.smartplaylists'
-   but GNUpod has a much more powerful
-   Feature: 'regex' and 'iregex' playlists.
-   Read the docs :)
-
-Q: How about HFS+ on GNU/Linux?
-A: http://www.ardistech.com/hfsplus/ :)
-   Still in beta-stage (like GNUpod ;) )
-   but looks interesting..
-
-Q: What file-types are supported?
-A: GNUpod can read/understand/add:
-   - MP3 Files
-   - Apple AAC Files (.m4a)
-   - PCM Files (.wav)
-
-Q: I found a bug (feature ;) )
-A: mailto:pab@blinkenlights.ch
-

@@ -23,8 +23,8 @@ File: gnupod.info,  Node: Top,  Next: Requirements,  Up: (dir)
 GNUpod
 ******
 
-   This edition of the `GNUpod Manual', last updated 14. Feb. 2004,
-documents GNUpod Version 0.94
+   This edition of the `GNUpod Manual', last updated 18. April. 2004,
+documents GNUpod Version 0.95
 
 * Menu:
 
@@ -386,6 +386,7 @@ Using GNUpod
 * Menu:
 
 * Preparation::                     How to mount and prepare the iPod for GNUpod
+* Configuration::                   Learn about the Configuartion File
 * Add files::                       How to add MP3 files to the iPod
 * Search files::                    How to search for files on the iPod
 * Remove files::                    How to delete files on the iPod
@@ -395,7 +396,7 @@ Using GNUpod
 * Coexistence::                     iTunes/Music Match/xtunes/Ehpod user? Read this!
 
 
-File: gnupod.info,  Node: Preparation,  Next: Add files,  Up: Using GNUpod
+File: gnupod.info,  Node: Preparation,  Next: Configuration,  Up: Using GNUpod
 
 Preparation
 ===========
@@ -420,7 +421,22 @@ volume).  This only works for iPods running Firmware 1.x
    Your iPod is now ready for GNUpod!
 
 
-File: gnupod.info,  Node: Add files,  Next: Search files,  Prev: Preparation,  Up: Using GNUpod
+File: gnupod.info,  Node: Configuration,  Next: Add files,  Prev: Preparation,  Up: Using GNUpod
+
+Configuration
+=============
+
+   (Note: You don't need to bother about the Configfile. GNUpod works
+fine  without it, but it could make your life easier)
+
+   GNUpod >= 0.95 can read a simple Configfile.  An example comes with
+GNUpod, see doc/gnupodrc.example
+
+   Edit this file and save it as ~/.gnupodrc or on your iPod
+(iPod_Control/.gnupod/gnupodrc)
+
+
+File: gnupod.info,  Node: Add files,  Next: Search files,  Prev: Configuration,  Up: Using GNUpod
 
 Add files
 =========
@@ -1142,26 +1158,27 @@ permit their use in free software.
 
 Tag Table:
 Node: Top851
-Node: Requirements1439
-Node: Installing GNUpod1961
-Node: Installation of GNUpod2384
-Node: Using FireWire with GNU/Linux3497
-Node: Convert your Mac iPod6906
-Node: Firmware update11978
-Node: Using GNUpod13751
-Node: Preparation14503
-Node: Add files15226
-Node: Search files16344
-Node: Remove files16825
-Node: Creating playlists17130
-Node: Unplug the iPod18325
-Node: Recovering files19229
-Node: Coexistence19932
-Node: Problems21395
-Node: GNUtunesDB21774
-Node: Get rid of '-m'23275
-Node: Known bugs and limitations23555
-Node: Reporting Bugs23838
-Node: GNU Free Documentation License24278
+Node: Requirements1441
+Node: Installing GNUpod1963
+Node: Installation of GNUpod2386
+Node: Using FireWire with GNU/Linux3499
+Node: Convert your Mac iPod6908
+Node: Firmware update11980
+Node: Using GNUpod13753
+Node: Preparation14576
+Node: Configuration15303
+Node: Add files15756
+Node: Search files16876
+Node: Remove files17357
+Node: Creating playlists17662
+Node: Unplug the iPod18857
+Node: Recovering files19761
+Node: Coexistence20464
+Node: Problems21927
+Node: GNUtunesDB22306
+Node: Get rid of '-m'23807
+Node: Known bugs and limitations24087
+Node: Reporting Bugs24370
+Node: GNU Free Documentation License24810
 
 End Tag Table

@@ -33,6 +33,7 @@ print "gnupod_addsong.pl Version 0.94 (C) 2002-2004 Adrian Ulrich\n";
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "help|h", "mount|m=s", "disable-convert|d", "france|f");
+#gnupod_INIT does not read configuration files!
 
 usage() if $opts{help};
 

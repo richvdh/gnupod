@@ -34,6 +34,8 @@ print "gnupod_addsong.pl Version 0.94 (C) 2002-2004 Adrian Ulrich\n";
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "help|h", "mount|m=s", "restore|r", "duplicate|d", "disable-v2", "disable-v1");
+GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', duplicate=>'b', 'disable-v1'=>'b', 'disable-v2'=>'b'},
+                          "gnupod_addsong");
 
 usage() if $opts{help};
 
