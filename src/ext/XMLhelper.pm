@@ -1,23 +1,47 @@
 package GNUpod::XMLhelper;
+#  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
+#  Part of the gnupod-tools collection
+#
+#  URL: http://www.gnu.org/software/gnupod/
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# iTunes and iPod are trademarks of Apple
+#
+# This product is not supported/written/published by Apple!
 
 use strict;
 
 use XML::Simple;
+use Unicode::String;
 $XML::Simple::PREFERRED_PARSER = "XML::Parser";
 
-##
-## (C) 2003 Adrian Ulrich
-## Release 20030823
-## -----------------------------------------------
-##
-##
+## Release 20030824
 
 my @idpub;
 my $xid = 1; #The ipod doesn't like ID 0
 
 
-#We need todo some 'workarounds' on non-perl 5.8
+##############################################
+# Convert an ipod path to unix
 
+sub realpath {
+ my($mountp, $ipath) = @_;
+ $ipath =~ tr/:/\//;
+return "$mountp/$ipath";
+}
 ###############################################
 # Get an iPod-safe path for filename
 sub getpath {
@@ -56,6 +80,9 @@ if($opts{cleanit}) { #We create a clean XML file
 }
 elsif(-r $xmlin) { #Parse the oldone..
  $doc = XML::Simple::XMLin($xmlin, keeproot => 1, keyattr => [], forcearray=>1); 
+#We need to do some workarounds on perl 5.8
+#We should add an 'bugdetector' and skip this if we don't have
+#to run it.. would speedup things..
  cleandoc($doc);
  
  #Create the IDPUB (Free IDs)
@@ -135,7 +162,7 @@ sub write_xml {
 
  open(OUT, ">$out") or die "Could not write to $out : $!\n";
  binmode(OUT);
- print OUT XML::Simple::XMLout($href,keeproot=>1);
+ print OUT XML::Simple::XMLout($href,keeproot=>1,xmldecl=>1);
  close(OUT);
 }
 
@@ -143,9 +170,11 @@ sub write_xml {
 ######################################################
 # XML::Parser on perl 5.8 seems to have a bug:
 # SOMETIMES, it returns latin1 stuff.. SOMETIMES utf8
-# -> We go to the doctree and convert latin1 to utf8
+# -> We scan the doctree and convert latin1 to utf8
 #   if XML::Parser freaked out..
-#  ..yes: this is slow.. but better than fu*king up the doc
+#  ..yes: this is slow.. but better than fu*king up the dochash
+#  with 2 charsets..
+
 sub cleandoc {
  my ($r, $base, $xref) = @_;
  if(ref($r) eq "HASH") {
@@ -159,16 +188,14 @@ sub cleandoc {
   }
  }
  elsif(ref($r) eq "") {
-  if($r =~ /ö|ä|ü|Ö|Ä|Ü|é|è|à|Ô|Â|Ê|Û|â|ê|û|ô/) { #Broken input
-   print "ICONV:: $r ->";
-    my $us = Unicode::String->new($r);
-    $r = $us->as_string;
-   print "$r ** FIXME: This is *BROKEN*\n";
-  }
+  my $bfx = Unicode::String::utf8($r)->utf8;
+  $r = $bfx if $bfx ne $r; #SOMETIMES, we got weird input from XML::parser..
+                           #Unicode::String (utf8 to utf8?) fixes this.. don't know why *g*
+  
   $xref->{$base} = $r;
  }
  else {
-  die "Bug in cleandoc: i can't handle ".ref($r)."\n";
+  die "*** Bug in sub cleandoc: i can't handle ".ref($r)." .. sorry!\n";
  }
 }
 

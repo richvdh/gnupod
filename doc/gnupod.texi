@@ -49,7 +49,7 @@ documents GNUpod Version @value{VERSION}
 * Requirements::                    What you will need to use GNUpod
 * Installing GNUpod::               How to install GNUpod and setup FireWire
 * Using GNUpod::                    How to use the GNUpod-tools
-* Problems::                        ..and solutions
+* Problems and Questions::          The FAQ
 
 
 
@@ -234,7 +234,7 @@ If you own a Win-iPod, you can skip this section.
 The first step is to upgrade your iPod to Firmware 1.1.0 or newer.
 (YES: 1.1.0 can read FAT32, but Apple never shipped FAT32 formatted iPods with 1.1.0. 
 Firmware 1.1.0 seems to use less power (has 1.20 a rtc problem?), but the name of the 
-iPod won't show up in the 'Info' menu... ;-) ) 
+iPod won't show up in the 'Info' menu and it may crash on very large MP3 files. 
 
 You can do this with Mac OSX using the Apple Firmware upgrader, it's aviable from:
 http://www.apple.com/ipod/download/
@@ -243,7 +243,7 @@ If you don't own Mac OSX you can update the Mac-iPod using Linux.
 Have a look at the next section to learn how to do this.
 
 Also note that you will need a fdisk for DOS-Style partitions. The kernel you are running has also to support 
-DOS-Style partitions.
+DOS-Style partitions (to access the device after you converted it) and Mac partitions (to read the firmware).
 If you are using GNU/Linux on x86, your fdisk should be fine, but if you are running GNU/Linux on 
 (for example) PowerPC you may have to get a suitable fdisk from the util-linux package wich can
 be retrieved from: ftp://ftp.kernel.org/pub/linux/utils/util-linux/
@@ -348,6 +348,12 @@ Unplug the iPod and pray. If everything went well, the iPod boots up :).
 If not, reread this section, if you are lost, feel free to drop me a mail: bug-gnupod@@gnu.org
 
 
+It's a good idea to edit @code{@w{/etc/fstab}} and add a line for the iPod:
+@example
+/dev/sda2    /mnt/ipod    vfat    noauto,user  0 0
+@end example
+
+
 
 @node Firmware update
 @section Firmware update
@@ -421,19 +427,13 @@ But please don't blame me if your iPod dies...
 
 Mount the iPod (i assume you mount it at /mnt/ipod) as described in 'Using FireWire with GNUpod'
 
-If the iPod is freshly formatted (= empty - no songs), run
+If the iPod is freshly formatted or you never used GNUpod before with this iPod, run
 @example
-gnupod_INIT -m /mnt/ipod
+gnupod_INIT.pl -m /mnt/ipod
 @end example
 
-
-If the iPod isn't empty and you never used gnuPod before, run
-@example
-mkdir /mnt/ipod/iPod_Control/.gnupod
-touch /mnt/ipod/iPod_Control/.gnupod/GNUtunesDB
-touch /mnt/ipod/iPod_Control/iTunes/iTunesDB
-tunes2pod.pl -m /mnt/ipod
-@end example
+gnupod_INIT.pl will create the default directory tree and creates an empty GNUtunesDB 
+(or if it finds an iTunesDB, it runs tunes2pod.pl to convert the iTunesDB to an GNUtunesDB)
 
 Your iPod is now ready for GNUpod!
 
@@ -629,35 +629,45 @@ The songs are still in the playlists, but the expressions you wrote are 'lost'.
 
 @c ===========================================================================================
 @node Problems, GNU Free Documentation License, Using GNUpod, Top
-@chapter Problems
+@chapter Problems and Questions
 
 @menu
-* RedHat8::                         How to get GNUpod working on RedHat 8
+* GNUtunesDB::                      What is the GNUtunesDB?
 * Get rid of '-m'::                 You don't like the -m switch?
 * Known bugs and limitations::      GNUpod isn't perfect :)
 * Reporting Bugs::                  How to report a Bug
 @end menu
 
-@node RedHat8
-@section RedHat8
+@node GNUtunesDB
+@section GNUtunesDB
 
-If you are using RedHat8, GNUpod may seem to work, but the iPod won't show any songs/playlists.
+We talked alot about the 'GNUtunesDB' and the 'iTunesDB' files, but 
+why do we need this two files and what's the difference ?
 
-The Perl binary included with RedHat8 doesn't work as it should if you enabled UTF8 as locale (default?).
+Well, you can find the iTunesDB on your iPod at @code{@w{iPod_Control/iTunes/iTunesDB}} .
+This file is read by the iPod when you 'boot' the device.
+The iTunesDB is a small Database and stores information about all MP3s on the iPod 
+(Title, Artist, Path, Bitrate...) and all Playlists: everything the iPod needs to know.
 
-Before running any GNUpod command (in particular @code{@w{mktunes.pl}} and @code{@w{tunes2pod.pl}}) execute
-@example
-unset LANG
-@end example
+The iTunesDB is a proprietary file format created by Apple.
 
-Other solutions:
-@itemize @bullet
-@item Recompile Perl
-@item Install another distribution
-@end itemize
+The GNUtunesDB (@code{@w{iPod_Control/.gnupod/GNUtunesDB}}) holds the same information like 
+the iTunesDB, but it's a simple XML file: easy to understand by humans and easy to edit by hand.
 
-This is NOT a GNUpod bug. I will not answear any RedHat8 specific bugreports.
-RedHat8 was your choice. This broken distribution is not my problem.. it's yours.. sorry
+Everytime you run @code{@w{tunes2pod.pl}}, the iTunesDB will get parsed and converted into an 
+XML File (the GNUtunesDB). 
+@code{@w{mktunes.pl}} does the opposite: it parses the XML file and creates an iTunesDB (for the 
+iPod and iTunes)
+
+Only mktunes.pl and tunes2pod.pl have to worry about the iTunesDB format: all other tools 
+(gnupod_addsong.pl for example) only have to deal with the XML file called GNUtunesDB.
+
+It's important to keep the iTunesDB and GNUtunesDB 'in sync', so everytime you changed the 
+GNUtunesDB (by hand or using gnupod_something.pl) you'll have to run @code{@w{mktunes.pl}}.
+
+If 'you' changed the iTunesDB (using gtkPod/iTunes/Ehpod), run @code{@w{tunes2pod.pl}} *before* 
+using any other GNUpod commands.
+
 
 @node Get rid of '-m'
 @section Get rid of '-m'

@@ -58,4 +58,11 @@
  <add id="3" />
 </playlist>
 
+<!-- this is XML .. feel free to use UTF8 encoded text
+ Yudit (www.yudit.org) is a nice editor for UNICODE documents
+//-->
+<playlist name="劇場版"> <!-- i don't know what this text means ;) //->
+ <iregex album="Eva" />
+</playlist>
+
 </gnuPod>
