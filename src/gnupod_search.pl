@@ -53,7 +53,7 @@ sub go {
  
  GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}\n");
  #XML::Parser finished, write new file
- GNUpod::XMLhelper::writexml($con->{xml}) if $opts{delete};
+ GNUpod::XMLhelper::writexml($con) if $opts{delete};
 
 
 }

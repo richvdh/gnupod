@@ -118,6 +118,7 @@ close(ITB);
 
 print "> Updating Sync-Status\n";
 GNUpod::FooBar::setsync_itunesdb($con);
+GNUpod::FooBar::setvalid_otgdata($con);
 
 print "You can now umount your iPod. [Files: $itb{INFO}{FILES}]\n";
 print " - May the iPod be with you!\n\n";

@@ -62,27 +62,33 @@ sub go {
   die "gnupod_otgsync.pl: Bug detected! You need to run tunes2pod.pl -> Sync broken!\n";
  }
 
-
-
- #Read on The Go list written by the iPod
- my @xotg    = GNUpod::iTunesDB::readOTG($con->{onthego});
-
- #plcref is used by newfile()
- #so we have to call this before doxml()
- $plcref  = GNUpod::iTunesDB::readPLC($con->{playcounts});
-
-
- #Add dummy entry, we start to count at 1, not at 0
- if(int(@xotg) || $plcref) { #We have to modify
-  push(@keeper, -1);
-  #First, we parse the old xml document and create the keeper
-  GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}\n");
-  mkotg(@xotg) if int(@xotg);
-  GNUpod::XMLhelper::writexml($con->{xml});
+ ##Check if GNUtunesDB <-> iTunesDB is really in-sync
+ if(GNUpod::FooBar::_otgdata_broken($con)) { #Ok, On-The-Go data is ** BROKEN **
+   warn "gnupod_otgsync.pl: Error: You forgot to run mktunes.pk, On-The-Go data broken, can't sync\n";
+   #Remove broken data.. live is hard..
+   unlink($con->{onthego}) or warn "Could not remove $con->{onthego}, $!\n";
+   unlink($con->{playcounts}) or warn "Could not remove $con->{playcounts}, $!\n"; 
  }
- 
- #SetSync for *ALL*
- GNUpod::FooBar::setsync($con);
+ else {
+   #Read on The Go list written by the iPod
+   my @xotg    = GNUpod::iTunesDB::readOTG($con->{onthego});
+
+   #plcref is used by newfile()
+   #so we have to call this before doxml()
+   $plcref  = GNUpod::iTunesDB::readPLC($con->{playcounts});
+
+
+   #Add dummy entry, we start to count at 1, not at 0
+   if(int(@xotg) || $plcref) { #We have to modify
+     push(@keeper, -1);
+     #First, we parse the old xml document and create the keeper
+     GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}\n");
+     mkotg(@xotg) if int(@xotg);
+     GNUpod::XMLhelper::writexml($con);
+   }
+  #SetSync for *ALL*
+  GNUpod::FooBar::setsync($con);
+ }
  
 }
 

@@ -156,7 +156,7 @@ sub startup {
  
  if($addcount) { #We have to modify the xmldoc
   print "> Writing new XML File, added $addcount file(s)\n";
-  GNUpod::XMLhelper::writexml($con->{xml});
+  GNUpod::XMLhelper::writexml($con);
  }
  
  print "\n Done\n";

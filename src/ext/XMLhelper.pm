@@ -25,7 +25,7 @@ package GNUpod::XMLhelper;
 use strict;
 use XML::Parser;
 use Unicode::String;
-
+use GNUpod::FooBar;
 
 ## Release 20040531
 
@@ -271,7 +271,9 @@ return $p;
 ######################################################
 # Write the XML File
 sub writexml {
- my($out) = @_;
+ my($rr) = @_;
+ 
+ my $out = $rr->{xml};
  
  my $tmp_out = $out."_tmp_".time();
  
@@ -317,7 +319,7 @@ print OUT "</gnuPod>\n";
    }
    rename($tmp_out, $out) or warn "Could not move $tmp_out to $out\n";
  }
-
+GNUpod::FooBar::setINvalid_otgdata($rr);
 }
 
 1;

@@ -109,7 +109,7 @@ EOF
  
  print "> Creating dummy files\n";
  
- GNUpod::XMLhelper::writexml($con->{xml});
+ GNUpod::XMLhelper::writexml($con);
 
  
  if(-e $con->{itunesdb} && !$opts{'disable-convert'}) {

@@ -136,8 +136,9 @@ for(my $i=0;$i<$itinfo->{playlists};$i++) {
 
 
 
-GNUpod::XMLhelper::writexml($con->{xml});
+GNUpod::XMLhelper::writexml($con);
 GNUpod::FooBar::setsync_itunesdb($con);
+GNUpod::FooBar::setvalid_otgdata($con);
 
 #The iTunes is now set to clean .. maybe we have to
 #update the otg..
