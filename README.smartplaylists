@@ -23,6 +23,14 @@ Please note that you have to set liveupdate="1" or the Playlist will be empty :)
 [Because GNUpod can only do liveupdates atm..]
 
 
+It's a bit complicated, maybe you should have a look at
+http://blinkenlights.ch/gnupod/mkspl.html
+ [or doc/mkspl.html]
+You can use Mozilla (needs JS & DOM) to create
+SmartPlaylists via Klickibunti interface ;)
+
+
+
 ##### SMARTPLAYLIST
 CHECKRULE:
  limit (Only match <smartplaylist ... stuff, don't watch <spl.. entries)

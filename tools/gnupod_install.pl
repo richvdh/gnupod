@@ -27,6 +27,7 @@ if($opts{MODE} eq "INSTALL") {
  print "done!\n";
 }
 elsif($opts{MODE} eq "REMOVE") {
+ print "Removing GNUpod...\n";
  remove_scripts("src/*.pl", $opts{bindir});
  remove_pm("src/ext/*.pm", "GNUpod");
  remove_docs("gnupod", $opts{infodir});
@@ -178,3 +179,4 @@ sub fof
  my(@dull) = split(/\//, $path);
  return $dull[int(@dull)-1];
 }
+
