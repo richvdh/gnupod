@@ -9,7 +9,7 @@ perlbinary   = @PERL@
 
 
 install:
-	cd tools && $(perlbinary) gnupod_install.pl "$(perlbinary)" "$(bindir)" "$(infodir)" "$(mandir)"
+	echo "Broken!"
 
 test:
 	cd tools && $(perlbinary) gnupod_testit.pl "$(perlbinary)"

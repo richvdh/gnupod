@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0">
 <gnuPod>
 <files>
  <file id="1" bitrate="192" time="305200" path=":iPod_Control:Music:F01:Track_08___Kanon_D_dur__normal_.mp3" genre="Soundtrack" filesize="7324948" album="S2_INC" artist="Soundtrack" title="Kanon D-dur (normal)" year="1997" />
@@ -8,6 +8,18 @@
  <file id="5" bitrate="128" time="242920" path=":iPod_Control:Music:F17:02___Zankoku_Na_Tenshi_No_These.mp3" filesize="3886856" album="Refrain" artist="Soundtrack" comment="Evangelion Refrain" title="Cruel Angel&apos;s Thesis - Ambiv" year="1997" />
  <file id="6" bitrate="192" time="20100"  path=":iPod_Control:Music:F04:Track_04___Violin_Tuning.mp3" genre="Soundtrack" filesize="482538" album="S2_INC" artist="Soundtrack" title="Violin Tuning" id="1265" year="1997" />
  <file id="7" bitrate="192" time="107192" path=":iPod_Control:Music:F16:Track_05___OP_1_Strings__Tenpo_c.mp3" genre="Soundtrack" filesize="2572752" album="S2_INC" artist="Soundtrack" comment="The Heady Feeling of Freedom" title="OP-1 Strings &quot;Tenpo chi&quot;" year="1998" />
+
+ <!-- You can also change the Volume of a song :) //-->
+ <file id="8" bitrate="123" time="345" path="foo" volume="70" />  <!-- +70% volume //-->
+ <file id="9" bitrate="123" time="345" path="bar" volume="-90" /> <!-- -90% volume //-->
+
+ <!-- Rating + Playcount are also supported //-->
+ <file id="10" bitrate="256" time="2332" rating="4" playcount="33" path="blubb" /> <!-- 4 stars rated + playcount = 33 //-->
+
+
+ <!-- You can also set the start/stop time of a song //-->
+ <file id="11" bitrate="256" time="5000" starttime="50" stoptime="4555" />
+
 </files>
 
 

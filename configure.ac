@@ -1,4 +1,4 @@
-AC_INIT(gnupod, 0.40-rc1, bug-gnupod@nongnu.org)
+AC_INIT(gnupod, 0.8, bug-gnupod@nongnu.org)
 AC_PATH_PROGS(PERL, perl-5.8 perl-5.6 perl)
 
 if test $PERL; then
