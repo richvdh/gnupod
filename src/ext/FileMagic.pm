@@ -137,12 +137,13 @@ sub __is_qt {
  
  my $cf = ((split(/\//,$file))[-1]);
  
- $rh{time}     = int($ret->{time});
- $rh{filesize} = int($ret->{filesize});
- $rh{fdesc}    = getutf8($ret->{fdesc});
- $rh{artist}   = getutf8($ret->{artist} || "Unknown Artist");
- $rh{album}    = getutf8($ret->{album}  || "Unknown Album");
- $rh{title}    = getutf8($ret->{title}  || $cf || "Unknown Title");
+ $rh{time}      = int($ret->{time});
+ $rh{filesize}  = int($ret->{filesize});
+ $rh{fdesc}     = getutf8($ret->{fdesc});
+ $rh{artist}    = getutf8($ret->{artist} || "Unknown Artist");
+ $rh{album}     = getutf8($ret->{album}  || "Unknown Album");
+ $rh{title}     = getutf8($ret->{title}  || $cf || "Unknown Title");
+ $rh{soundcheck}= _parse_iTunNORM($ret->{iTunNORM});
  return  \%rh;
 }
 
@@ -228,9 +229,16 @@ sub __is_mp3 {
  $h = MP3::Info::get_mp3tag($file,1)     unless $flags->{'noIDv1'};  #Get the IDv1 tag
  $hs = MP3::Info::get_mp3tag($file, 2,1) unless $flags->{'noIDv2'};  #Get the IDv2 tag
 
+
  #The IDv2 Hashref may return arrays.. kill them :)
  foreach my $xkey (keys(%$hs)) {
-   $hs->{$xkey} = (@{$hs->{$xkey}})[-1] if ref($hs->{$xkey}) eq "ARRAY";
+   if( ref($hs->{$xkey}) eq "ARRAY" ) {
+     my $deArray = undef;
+     foreach(@{$hs->{$xkey}}) {
+	  $deArray .= ":".$_;
+	 }
+    $hs->{$xkey} = substr($deArray,1);
+   } 
  }
 
 
@@ -251,7 +259,7 @@ sub __is_mp3 {
      $rh{comment} =  getutf8($hs->{COMM} || $hs->{COM} || $h->{COMMENT} || "");
      $rh{composer} = getutf8($hs->{TCOM} || $hs->{TCM} || "");
      $rh{playcount}= int(getutf8($hs->{PCNT} || $hs->{CNT})) || 0;
-
+     $rh{soundcheck} = _parse_iTunNORM(getutf8($hs->{COMM} || $hs->{COM} || $h->{COMMENT}));
  return \%rh;
 }
 
@@ -301,6 +309,15 @@ sub getutf8 {
  return $in;
 }
 
+sub _parse_iTunNORM {
+ my($string) = @_;
+ 
+ if($string =~ /^(engiTunNORM\s|\s)(\S{8})\s(\S{8})\s/) {
+  return oct("0x".$3);
+ }
+ return undef;
+ 
+}
 
 
 1;

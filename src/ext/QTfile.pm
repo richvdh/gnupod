@@ -148,9 +148,13 @@ sub get_atom {
    $reth{cdnum} = GNUpod::FooBar::shx2_x86_int(substr($dat,2,2));
    $reth{cds}   = GNUpod::FooBar::shx2_x86_int(substr($dat,4,2));
   }
+  elsif($parent eq "----" && length($dat) == 90 && $dat =~ /^\s(\S{8})\s(\S{8})\s/) { #This is the iTunNorm field
+    $reth{iTunNORM} = $dat;
+  }
   elsif($parent eq "----" or $parent eq "disk") {
    #Do nothing.. iTunes does this fields and we
    #don't need to warn about this..
+   #warn "Debug: $parent / $dat\n";
   }
   else {
    warn "QTfile warning: Skipping $typ -> $parent [<-- unknown field]\n";

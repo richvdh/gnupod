@@ -131,7 +131,7 @@ sub mk_mhbd {
     $ret .= pack("h8", _itop($hr->{size}+104));     #size of the whole mhdb
     $ret .= pack("H8", "01");                       #?
     $ret .= pack("H8", "01");                       #? - changed to 2 from itunes2 to 3 .. version? We are iTunes version 1 ;)
-    $ret .= pack("H8", "02");                       #?
+    $ret .= pack("H8", "02");                       # (Maybe childs?)
     $ret .= pack("H160", "00");                     #dummy space
  return $ret;
 }
@@ -212,7 +212,7 @@ sub mk_mhit {
     $ret .= pack("h8", _itop($vol));                          #Volume
     $ret .= pack("h8", _itop($file_hash{starttime}));         #Start time?
     $ret .= pack("h8", _itop($file_hash{stoptime}));          #Stop time?
-    $ret .= pack("H8");                                       #FIXME: Soundcheck
+    $ret .= pack("h8", _itop($file_hash{soundcheck}));        #Soundcheck from iTunesNorm
     $ret .= pack("h8", _itop($file_hash{playcount}));
     $ret .= pack("H8");                                       #Sometimes eq playcount .. ?!
     $ret .= pack("h8", _itop($file_hash{lastplay}));          #Last playtime..
@@ -221,8 +221,10 @@ sub mk_mhit {
     $ret .= pack("H8");                                       #hardcoded space ?
     $ret .= pack("h8", _itop($file_hash{addtime}));           #File added @
     $ret .= pack("H16");
-    $ret .= pack("H8");                                       #??
-    $ret .= pack("h8", _itop(($file_hash{prerating}/20)*oct('0x140000')));      #This is also stupid: the iTunesDB has a rating history
+    $ret .= pack("H12");                                       #??
+    $ret .= pack("h4", _itop($file_hash{bpm},0xffff));         #BPM
+#Fixme: this was wrong.. so i removed it now..
+#    $ret .= pack("h8", _itop(($file_hash{prerating}/20)*oct('0x140000')));      #This is also stupid: the iTunesDB has a rating history
     $ret .= pack("H8");                                       # ???
     $ret .= pack("H56");  
                          
@@ -915,26 +917,29 @@ if(get_string($sum, 4) eq "mhit") { #Ok, its a mhit
 
 my %ret     = ();
 #Infos stored in mhit
-$ret{id}       = get_int($sum+16,4);
+$ret{id}         = get_int($sum+16,4);
 $ret{changetime} = get_int($sum+32,4);
-$ret{filesize} = get_int($sum+36,4);
-$ret{time}     = get_int($sum+40,4);
-$ret{cdnum}    = get_int($sum+92,4);
-$ret{cds}      = get_int($sum+96,4);
-$ret{songnum}  = get_int($sum+44,4);
-$ret{songs}    = get_int($sum+48,4);
-$ret{year}     = get_int($sum+52,4);
-$ret{bitrate}  = get_int($sum+56,4);
-$ret{srate}    = get_int($sum+62,2); #What is 60-61 ?!!
-$ret{volume}   = get_int($sum+64,4);
-$ret{starttime}= get_int($sum+68,4);
-$ret{stoptime} = get_int($sum+72,4);
-$ret{playcount} = get_int($sum+80,4); #84 has also something to do with playcounts. (Like rating + prerating?)
-$ret{lastplay} = get_int($sum+88,4);
-$ret{rating}    = int((get_int($sum+28,4)-256)/oct('0x14000000')) * 20;
-$ret{addtime}   = get_int($sum+104,4);
-$ret{prerating} = int(get_int($sum+120,4) / oct('0x140000')) * 20;
+$ret{filesize}   = get_int($sum+36,4);
+$ret{time}       = get_int($sum+40,4);
+$ret{cdnum}      = get_int($sum+92,4);
+$ret{cds}        = get_int($sum+96,4);
+$ret{songnum}    = get_int($sum+44,4);
+$ret{songs}      = get_int($sum+48,4);
+$ret{year}       = get_int($sum+52,4);
+$ret{bitrate}    = get_int($sum+56,4);
+$ret{srate}      = get_int($sum+62,2); #What is 60-61 ?!!
+$ret{volume}     = get_int($sum+64,4);
+$ret{starttime}  = get_int($sum+68,4);
+$ret{stoptime}   = get_int($sum+72,4);
+$ret{soundcheck} = get_int($sum+76,4);
+$ret{playcount}  = get_int($sum+80,4); #84 has also something to do with playcounts. (Like rating + prerating?)
+$ret{lastplay}   = get_int($sum+88,4);
+$ret{rating}     = int((get_int($sum+28,4)-256)/oct('0x14000000')) * 20;
+$ret{addtime}    = get_int($sum+104,4);
+$ret{bpm} = get_int($sum+122,2);
 
+#$ret{prerating}  = int(get_int($sum+120,4) / oct('0x140000')) * 20;
+#__hd(get_string($sum+120,4));
 
 ####### We have to convert the 'volume' to percent...
 ####### The iPod doesn't store the volume-value in percent..
