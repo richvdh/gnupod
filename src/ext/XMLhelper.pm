@@ -131,7 +131,9 @@ sub getpl_names {
 # Call events
 sub eventer {
  my($href, $el, @it) = @_;
+ return undef unless $href->{Context}[0] eq "gnuPod";
   if($href->{Context}[1] eq "files") {
+    warn "** XMLhelper: Found <file ../> item *after* a <playlist ..>, that's bad\n" if getpl_names();
     my $xh = mkh($el,@it);
     @idpub[$xh->{file}->{id}] = 1;
     main::newfile($xh);

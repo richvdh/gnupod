@@ -1,3 +1,4 @@
+#!/usr/bin/perl-5.6
 #!/usr/bin/perl
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
@@ -44,64 +45,6 @@ startup();
 
 
 
-
-sub newfile {
- my($el) = @_;
- $cid++;
- $itb{mhit}{_len_} += build_mhit($cid, $el->{file}); 
-
-##Create the gnuPod 0.2x like memeater
- #$meat{KEY}{VAL} = id." ";
- foreach(keys(%{$el->{file}})) {
-  $meat{$_}{$el->{file}->{$_}} .= $el->{file}->{id}." ";
-  $cmeat{$_}{lc($el->{file}->{$_})} .= $cid." ";
- }
-}
-
-sub newpl   {
- my($el, $name) = @_;
-  
-   foreach my $action (keys(%$el)) {
-     if($action eq "add") {
-       my $ntm;
-       my %mk;
-       foreach my $xrn (keys(%{$el->{$action}})) {
-         foreach(split(/ /,$cmeat{$xrn}{lc($el->{$action}->{$xrn})})) {
-          $mk{$_}++;
-         }
-         $ntm++;
-       }
-       foreach(keys(%mk)) {
-        push(@{$pldb{$name}}, $_) if $mk{$_} >= $ntm;
-       }
-       
-     }
-     elsif($action eq "regex" || $action eq "iregex") {
-      my $ntm;
-      my %mk;
-      my $mval;
-       foreach my $xrn (keys(%{$el->{$action}})) {
-        $ntm++;
-        my $regex = $el->{$action}->{$xrn};
-         foreach my $val (keys(%{$meat{$xrn}})) {
-           if($val =~ /$regex/) {
-            $mval = $val;
-           }
-           elsif($action eq "iregex" && $val =~ /$regex/i) {
-            $mval = $val;
-           }
-           ##get the keys
-           foreach(split(/ /,$meat{$xrn}{$mval})) {
-            $mk{$_}++;
-           }
-         }
-       }
-       foreach(keys(%mk)) {
-        push(@{$pldb{$name}}, $_) if $mk{$_} >= $ntm;
-       }
-     }
-   }
-}
 
 sub startup {
 
@@ -166,6 +109,8 @@ print " - May the iPod be with you!\n\n";
 
 
 
+#########################################################################
+# Create a single playlist
 sub r_mpl {
  my($name, $type, @xid) = @_;
 my $pl = undef;
@@ -180,20 +125,24 @@ my $fc = 0;
 }
 
 
+#########################################################################
+# Generate playlists from %pldb (+MPL)
 sub genpls {
  my ($pldata,undef) = r_mpl("gnuPod", 1,(1..$cid));
  my $plc = 1;
  
   foreach(GNUpod::XMLhelper::getpl_names()) {
-    print ">> Added Playlist '$_'";
+    print ">> Adding Playlist '$_...'";
     $plc++;
     my($pl, $xc) = r_mpl($_, 0, @{$pldb{$_}});
     $pldata .= $pl;
-    print " with $xc files\n";
+    print "\r>> Added Playlist '$_' with $xc file"; print "s" if $xc != 1;
+    print "\n";
   }
  
  return GNUpod::iTunesDB::mk_mhlp($plc).$pldata;
 }
+
 
 #########################################################################
 # Create the file index (like <files>)
@@ -229,9 +178,74 @@ return $length;
 
 
 
+#########################################################################
+# EventHandler for <file items
+sub newfile {
+ my($el) = @_;
+ $cid++;
+##Create the gnuPod 0.2x like memeater
+ #$meat{KEY}{VAL} = id." ";
+ foreach(keys(%{$el->{file}})) {
+  $meat{$_}{$el->{file}->{$_}} .= $cid." ";
+  $cmeat{$_}{lc($el->{file}->{$_})} .= $cid." ";
+ }
+ 
+ #Warning: build_mhit will change $el->{file}->{id}
+ #Don't trust $el->{file} after build_mhit() ;-)
+ $itb{mhit}{_len_} += build_mhit($cid, $el->{file}); 
+}
 
 
+#########################################################################
+# EventHandler for <playlist childs
+sub newpl   {
+ my($el, $name) = @_;
+  
+   foreach my $action (keys(%$el)) {
+     if($action eq "add") {
+       my $ntm;
+       my %mk;
+       foreach my $xrn (keys(%{$el->{$action}})) {
+         foreach(split(/ /,$cmeat{$xrn}{lc($el->{$action}->{$xrn})})) {
+          $mk{$_}++;
+         }
+         $ntm++;
+       }
+       foreach(keys(%mk)) {
+        push(@{$pldb{$name}}, $_) if $mk{$_} == $ntm;
+       }
+       
+     }
+     elsif($action eq "regex" || $action eq "iregex") {
+      my $ntm;
+      my %mk;
+       foreach my $xrn (keys(%{$el->{$action}})) {
+        $ntm++;
+        my $regex = $el->{$action}->{$xrn};
+         foreach my $val (keys(%{$meat{$xrn}})) {
+          my $mval;
+           if($val =~ /$regex/) {
+            $mval = $val;
+           }
+           elsif($action eq "iregex" && $val =~ /$regex/i) {
+            $mval = $val;
+           }
+           ##get the keys
+           foreach(split(/ /,$meat{$xrn}{$mval})) {
+            $mk{$_}++;
+           }
+         }
+       }
+       foreach(keys(%mk)) {
+        push(@{$pldb{$name}}, $_) if $mk{$_} == $ntm;
+       }
+     }
+   }
+}
 
+
+#########################################################################
+# Usage information
 sub usage {
 my($rtxt) = @_;
 die << "EOF";

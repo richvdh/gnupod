@@ -70,11 +70,14 @@ my $ntm = keys(%opts)-1-$opts{once}-$opts{delete};
   }
 
   if(($opts{once} && $matched) || $ntm == $matched) {
+    print "[RM] " if $opts{delete};
     print "$el->{file}->{id}";
-    print " " x (8-length($el->{file}->{id}));
+    print " " x (10-length($el->{file}->{id})-($opts{delete}*5));
     print ": $el->{file}->{artist} / ";
     print "$el->{file}->{album} / ";
     print "$el->{file}->{title}\n";
+    unlink(GNUpod::XMLhelper::realpath($opts{mount},$el->{file}->{path}))
+    or warn "[!!] Remove failed: $!\n" if $opts{delete};
   }
   elsif($opts{delete}) { #Did not match, keep this item..
    GNUpod::XMLhelper::mkfile($el);
