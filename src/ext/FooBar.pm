@@ -49,6 +49,8 @@ if(-d $opth->{mount}) {
   $rr->{onthego}        = "$rr->{mountpoint}/iPod_Control/iTunes/OTGPlaylistInfo";
   $rr->{status}         = undef;
 
+  _check_casesensitive($rr->{mountpoint}); #Check if somebody mounted the iPod caseSensitive
+      
  #Do an iTunesDB Sync if not disabled and needed
   do_itbsync($rr) if(!$opth->{_no_it_sync} && !$opth->{_no_sync} && _itb_needs_sync($rr));
  
@@ -60,6 +62,33 @@ elsif($opth->{mount}) {
 }
 
  return $rr
+}
+
+#######################################################################
+# Check if someone mounted the iPod CaseSensitive
+sub _check_casesensitive {
+ my($target) = @_;
+ 
+ if(open(CSTEST,">$target/csTeSt")) {
+   my $inode_a = (stat("$target/csTeSt"))[1]; #Get inode of just-creaded file
+   my $inode_b = (stat("$target/CStEsT"))[1]; #Get inode of another file..
+   unlink("$target/csTeSt"); #Boom!
+  
+   if($inode_a != $inode_b) { #Whops, different inodes? -> case sensitive fs
+     #Nerv the user
+     warn "warning: $target seems to be mounted *CASE SENSITIVE*\n";
+     warn "         Mounting VFAT/HFS+ like this is a VERY BAD(tm) idea,\n";
+     warn "         strange things may happen... GNUpod may not work correctly!\n";
+     warn "         Please mount the Filesystem CASE *IN*SENSITIVE\n";
+     warn "         (use 'mount ... -o check=r' for VFAT)\n";
+     warn "         [Ignore this message if $target isn't a\n";
+     warn "          VFAT or HFS+ Filesystem ;) ]\n";
+   }
+  
+ }
+ else {
+   warn "warning: Could not write to $target, iPod mounted read-only? ($!)\n";
+ }
 }
 
 #######################################################################

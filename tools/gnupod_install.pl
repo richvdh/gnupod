@@ -30,6 +30,9 @@ if($opts{MODE} eq "INSTALL") {
  killold("$opts{bindir}/gnupod_delete.pl") if -e "$opts{bindir}/gnupod_delete.pl";
  print "done!\n";
 }
+elsif($opts{MODE} eq "MKPKG") {
+ install_scripts("src/*.pl", $opts{bindir});
+}
 elsif($opts{MODE} eq "REMOVE") {
  print "Removing GNUpod $VINSTALL...\n";
  remove_scripts("src/*.pl", $opts{bindir});

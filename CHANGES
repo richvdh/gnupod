@@ -51,8 +51,7 @@ Summary
 - I changed the 'build' system. Btw, you can now uninstall
   GNUpod using 'make uninstall' .. but why? :)
 
-- gnupod_addsong.pl works now on case sensitive (=broken vfat)
-  filesystems
+- GNUpod warns about case-sensitive mounted filesystems
 
 *** OLD STUFF ***
 

@@ -1,10 +1,10 @@
-AC_INIT(GNUpod, 0.95test1, bug-gnupod@nongnu.org)
+AC_INIT(GNUpod, 0.95test2, bug-gnupod@nongnu.org)
 
-echo -n $PACKAGE_VERSION > .gnupod_version
+echo $ECHO_N $PACKAGE_VERSION > .gnupod_version
 
 if test -d CVS; then
  echo " *** THIS IS A CVS VERSION OF GNUPOD ***"
- echo -n "-CVS" >> .gnupod_version
+ echo $ECHO_N "-CVS" >> .gnupod_version
 fi
 
 AC_PATH_PROGS(PERL, perl-5.8 perl-5.6 perl)
@@ -60,19 +60,20 @@ echo
 echo
 echo "Settings:"
 echo
-echo -n "Release:        "
+echo $ECHO_N "Release:        "
  cat .gnupod_version
 echo
 
-echo -n "Perl Version:   "
+echo $ECHO_N "Perl Version:   "
  $PERL tools/getVERSION.pl
 echo
 
 
 echo    "Prefix:         $prefix";
 
-echo -n "Perl INC:       "
+echo $ECHO_N "Perl INC:       "
  $PERL tools/getINC.pl
+ XPINC=`$PERL tools/getINC.pl`;
 echo
 
 

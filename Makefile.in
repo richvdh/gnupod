@@ -6,6 +6,9 @@ bindir       = @bindir@
 infodir      = @infodir@
 mandir       = @mandir@
 perlbinary   = @PERL@
+pkgver       = @PACKAGE_VERSION@
+pkgfname     = gnupod-@PACKAGE_VERSION@
+pkgdir       = gnupod-@PACKAGE_VERSION@-noarch-1adrian
 
 all:
 	# Use 'make install' to install GNUpod
@@ -15,3 +18,19 @@ uninstall:
 	${perlbinary} tools/gnupod_install.pl REMOVE  "${perlbinary}" "${bindir}" "${infodir}" "${mandir}"
 release:
 	mkdir ../GNUPOD_R && find . | grep -v CVS | grep -v \.\#| cpio -pvmd ../GNUPOD_R && cd ../GNUPOD_R && autoconf && rm Makefile && rm config.log config.status && rm -rf autom4te.cache testcases && echo DONE
+slack:
+	mkdir -p ../${pkgdir}/install
+	echo "gnupod: gnupod ${pkgver}" > ../${pkgdir}/install/slack-desc
+	cat  doc/slack-desc_RAW >> ../${pkgdir}/install/slack-desc
+	mkdir -p ../${pkgdir}/usr/doc/${pkgfname}/
+	cp AUTHORS ../${pkgdir}/usr/doc/${pkgfname}/
+	cp BUGS ../${pkgdir}/usr/doc/${pkgfname}/
+	cp CHANGES ../${pkgdir}/usr/doc/${pkgfname}/
+	cp COPYING ../${pkgdir}/usr/doc/${pkgfname}/
+	cp FAQ ../${pkgdir}/usr/doc/${pkgfname}/
+	cp README* ../${pkgdir}/usr/doc/${pkgfname}/
+	cp TODO ../${pkgdir}/usr/doc/${pkgfname}/
+	cp doc/*.* ../${pkgdir}/usr/doc/${pkgfname}/
+	mkdir -p ../${pkgdir}/usr/bin
+	${perlbinary} tools/gnupod_install.pl MKPKG "/usr/bin/perl" "../${pkgdir}/usr/bin" "${infodir}" "${mandir}"			
+    echo "FIXME: This is broken/incomplete"
