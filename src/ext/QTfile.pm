@@ -25,10 +25,16 @@ package GNUpod::QTfile;
 
 # A poor QT Parser, can (sometimes ;) ) read m4a files written
 # by iTunes
+#
+# Note: I didn't read/have any specs...
+# It's written using 'try and error'
+#
 
 use strict;
 use GNUpod::FooBar;
 use vars qw(%hchild %reth @LEVELA);
+
+use constant SOUND_ITEM => 'soun';
 
 #Some static def
 $hchild{'moov'} = 8;
@@ -68,7 +74,7 @@ sub parsefile {
  
  open(QTFILE, $qtfile) or return undef;
 
- my $fsize = -s "$qtfile";
+ my $fsize = -s "$qtfile" or return undef; #Hey.. VFS borken?
  my $pos = 0;
  my $level = 1;
  my %lx = ();
@@ -84,10 +90,10 @@ sub parsefile {
  while($pos<$fsize) {
   my($clevel, $len) = get_atom($level, $pos, \%lx);
   unless($len) {
-    warn "** Unexpected data found at $pos!\n";
-    warn "** You found a bug! Please send a bugreport\n";
-    warn "** to pab\@blinkenlights.ch\n";
-    warn "** GIVING UP PARSING\n";
+    warn "QTfile.pm: ** Unexpected data found at $pos!\n";
+    warn "QTfile.pm: ** You found a bug! Please send a bugreport\n";
+    warn "QTfile.pm: ** to pab\@blinkenlights.ch\n";
+    warn "QTfile.pm: ** GIVING UP PARSING **\n";
     last;
   }
   $pos+=$len;
@@ -96,7 +102,21 @@ sub parsefile {
  close(QTFILE);
  
  
+ 
+ 
+ 
 ########### Now we build the chain #######################################
+
+#Search the Sound-Stream
+my $sound_index = get_sound_index($lx{metadat}{'::moov::trak::mdia::hdlr'});
+
+if($sound_index < 0) {
+ warn "QTfile.pm: No 'sound' data found in file!\n";
+ return undef;
+}
+
+#print "::moov::trak::mdia::hdlr  -> $sound_index\n";
+
 my @METADEF = ("album",   "\xA9alb",
                "comment", "\xA9cmt",
                "genre",   "\xA9gen",
@@ -111,50 +131,71 @@ my @METADEF = ("album",   "\xA9alb",
 ###All STRING fields..
  for(my $i = 0;$i<int(@METADEF);$i+=2) {
   my $cKey = "::moov::udta::meta::ilst::".$METADEF[$i+1]."::data";
-  if($lx{metadat}{$cKey}[0]) {
-   $reth{$METADEF[$i]} = $lx{metadat}{$cKey}[0];
+  if($lx{metadat}{$cKey}[$sound_index]) {
+   $reth{$METADEF[$i]} = $lx{metadat}{$cKey}[$sound_index];
   }
  }
 
 ###INT and such fields are here:
  
- if( my $cDat = $lx{metadat}{'::moov::udta::meta::ilst::tmpo::data'}[0] ) {
+ if( my $cDat = $lx{metadat}{'::moov::udta::meta::ilst::tmpo::data'}[$sound_index] ) {
   $reth{bpm} = GNUpod::FooBar::shx2_x86_int($cDat);
  }
  
- if( my $cDat = $lx{metadat}{'::moov::udta::meta::ilst::trkn::data'}[0]) {
+ if( my $cDat = $lx{metadat}{'::moov::udta::meta::ilst::trkn::data'}[$sound_index]) {
    $reth{tracknum} = GNUpod::FooBar::shx2_x86_int(substr($cDat,2,2));
    $reth{tracks}   = GNUpod::FooBar::shx2_x86_int(substr($cDat,4,2));  
  }
 
- if( my $cDat = $lx{metadat}{'::moov::udta::meta::ilst::disk::data'}[0]) {
+ if( my $cDat = $lx{metadat}{'::moov::udta::meta::ilst::disk::data'}[$sound_index]) {
    $reth{cdnum} = GNUpod::FooBar::shx2_x86_int(substr($cDat,2,2));
    $reth{cds}   = GNUpod::FooBar::shx2_x86_int(substr($cDat,4,2));  
  }
  
 
- if( my $cDat = $lx{metadat}{'::moov::mvhd'}[0] ) {
+ if( my $cDat = $lx{metadat}{'::moov::mvhd'}[$sound_index] ) {
  #Calculate the time... 
  $reth{time} = int( get_string_oct(8,4,$cDat)/
                     get_string_oct(4,4,$cDat)*1000 );
  }
  
- #Get FX-Apple iTunNORM field
- if(ref($lx{metadat}{'::moov::udta::meta::ilst::----::data'}) eq "ARRAY") { #Exists!
-  for(my $i=0; $i<int(@{$lx{metadat}{'::moov::udta::meta::ilst::----::data'}});$i++) {
-     if($lx{metadat}{'::moov::udta::meta::ilst::----::mean'}[$i] eq "apple.iTunes" &&
-        $lx{metadat}{'::moov::udta::meta::ilst::----::name'}[$i] eq "NORM") {
-       $reth{iTunNORM} = $lx{metadat}{'::moov::udta::meta::ilst::----::data'}[$i];
-     }
-  }
+
+ if($lx{metadat}{'::moov::udta::meta::ilst::----::mean'}[$sound_index] eq "apple.iTunes" &&
+    $lx{metadat}{'::moov::udta::meta::ilst::----::name'}[$sound_index] eq "NORM") {
+       $reth{iTunNORM} = $lx{metadat}{'::moov::udta::meta::ilst::----::data'}[$sound_index];
  }
  
- if( my $cDat = $lx{metadat}{'::moov::trak::mdia::minf::stbl::stsd'}[0] ) {
+ if( my $cDat = $lx{metadat}{'::moov::trak::mdia::minf::stbl::stsd'}[$sound_index] ) {
   $reth{_CODEC} = substr($cDat,4,4);
   $reth{srate}  = get_string_oct(32,2,$cDat);
-  #Fixme: Bitrate should be in stsd
+  $reth{channels}  = get_string_oct(24,2,$cDat);
+  $reth{bit_depth}  = get_string_oct(26,2,$cDat);
  }
  $reth{filesize} = $fsize;
+ 
+ #Fixme: This is ugly.. bitrate is somewhere found in esds / stsd
+ $reth{bitrate} = int( ($reth{filesize}*8/1024)/(1+$reth{time})*1000 );
+
+=head
+print "* ************ FINISHED PARSER ***********************\n";
+foreach(keys(%{$lx{metadat}})) {
+ print "-> $_\n";
+}
+use GNUpod::iTunesDB;
+while(<STDIN>) {
+ chomp;
+ my $x = 0;
+ foreach(@{$lx{metadat}{$_}}) {
+ 
+ print "==============> $x <==================\n";
+ GNUpod::iTunesDB::__hd($_);
+  $x++;
+  
+ }
+}
+=cut
+
+
  return \%reth;
 }
 
@@ -195,8 +236,21 @@ sub get_atom {
  return($level,$len);
 }
 
-
-
+############################################
+# Search the 'soun' item
+sub get_sound_index {
+ my($ref) = @_;
+ my $sid = 0;
+ my $sound_index = -1;
+ foreach(@$ref) {
+  if( substr($_,0,4) eq SOUND_ITEM ) {
+   $sound_index = $sid;
+   last;
+  }
+  $sid++;
+ }
+ return $sound_index;
+}
 
 ###################################################
 # Get INT vaules

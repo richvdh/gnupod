@@ -164,6 +164,7 @@ sub __is_qt {
  $rh{songnum}   = int($ret->{tracknum});
  $rh{srate}     = int($ret->{srate});
  $rh{time}      = int($ret->{time});
+ $rh{bitrate}   = int($ret->{bitrate});
  $rh{filesize}  = int($ret->{filesize});
  $rh{fdesc}     = getutf8($ret->{fdesc});
  $rh{artist}    = getutf8($ret->{artist} || "Unknown Artist");
