@@ -1,4 +1,4 @@
-# iTunesDB.pm - Version 20030723
+# iTunesDB.pm - Version 20030728
 #
 # (C) 2003 Adrian Ulrich <pab@blinkenlights.ch>
 #
@@ -116,11 +116,16 @@ elsif($vol < 0 && $vol >= -255) {            #Convert value
  $vol = oct("0xFFFFFFFF") + $vol; 
 }
 else {
- print "Warning: ID $file_hash{id} has volume set to $file_hash{volume} percent. Ignoring value\n";
+ print STDERR "Warning: ID $file_hash{id} has volume set to $file_hash{volume} percent. Ignoring value\n";
  $vol = 0; #We won't nuke the iPod with an ultra high volume setting..
 }
 
-#print ">> $vol // $file_hash{volume}%\n" if $vol;
+foreach( ("rating", "prerating") ) {
+ if($file_hash{$_} < 0 || $file_hash{$_} > 5) {
+  print STDERR "Warning: Song $file_hash{id} has an invalid $_: $file_hash{$_}\n";
+  $file_hash{$_} = 0;
+ }
+}
 
 my $ret = "mhit";
    $ret .= pack("h8", _itop(156));                           #header size
@@ -129,7 +134,8 @@ my $ret = "mhit";
    $ret .= pack("h8", _itop($file_hash{id}));                 #Song index number
    $ret .= pack("h8", _itop(1));                             #?
    $ret .= pack("H8");                                      #dummyspace
-   $ret .= pack("h8", _itop(256));                           #type
+   $ret .= pack("h8", _itop(256+(oct('0x14000000')
+                            *$file_hash{rating})));           #type+rating .. this is very STUPID..
    $ret .= pack("h8", _mactime());                           #timestamp (we create a dummy timestamp, iTunes doesn't seem to make use of this..?!)
    $ret .= pack("h8", _itop($file_hash{filesize}));          #filesize
    $ret .= pack("h8", _itop($file_hash{time}));              #seconds of song
@@ -144,16 +150,15 @@ my $ret = "mhit";
    $ret .= pack("H8");
    $ret .= pack("h8", _itop($file_hash{playcount}));
    $ret .= pack("H8");                                      #Sometimes eq playcount .. ?!
-   $ret .= pack("h8", _mactime());                          #Last playtime.. FIXME
-#   $ret .= pack("H32");                                     #dummyspace
+   $ret .= pack("h8");                                      #Last playtime.. FIXME
    $ret .= pack("h8", _itop($file_hash{cdnum}));            #cd number
    $ret .= pack("h8", _itop($file_hash{cds}));              #number of cds
    $ret .= pack("H8");                                      #hardcoded space 
    $ret .= pack("h8", _mactime());                          #dummy timestamp again...
    $ret .= pack("H16");
-   $ret .= pack("H8", "BBF85D87");                          #??
-   $ret .= pack("h8", _itop($file_hash{rating}*5120));      #rating, FIXME: doesn't work
-   $ret .= pack("H8", "0000FFFF");                          # ???
+   $ret .= pack("H8");                          #??
+   $ret .= pack("h8", _itop($file_hash{prerating}*oct('0x140000')));      #This is also stupid: the iTunesDB has a rating history
+   $ret .= pack("H8");                          # ???
    $ret .= pack("H56");                                     #
 return $ret;
 }
@@ -170,7 +175,7 @@ sub mk_mhod
 #4   - interpret
 #5   - genre
 #6   - filetype
-#7   - ??? (EQ?)
+#7   - EQ Setting
 #8   - comment
 #12  - composer
 #50  - SPL Stuff
@@ -564,8 +569,9 @@ $ret{volume}   = get_int($sum+64,4);
 $ret{starttime}= get_int($sum+68,4);
 $ret{stoptime} = get_int($sum+72,4);
 $ret{playcount} = get_int($sum+80,4); #84 has also something to do with playcounts.
-$ret{rating}   = int(get_int($sum+120,4) / 5120); #We would like to write 'rating="1"', not
-                                               #rating='5120' to the GNUtunesDB
+
+$ret{rating}    = int((get_int($sum+28,4)-256)/oct('0x14000000'));
+$ret{prerating} = int(get_int($sum+120,4) / oct('0x140000'));
 
 
 ####### We have to convert the 'volume' to percent...
