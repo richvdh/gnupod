@@ -80,10 +80,14 @@ my $addcount = 0;
 
 #We are ready to copy each file..
  foreach my $file (@files) {
+    #Skip dirs..
+    next if -d $file;
+    
     #Get the filetype
     my $fh = GNUpod::FileMagic::wtf_is($file);
+    
     unless($fh) {
-     print STDERR "*** Skipping '$file'\n";
+     print STDERR "* Skipping '$file', unknown file type\n";
      next;
     }
    
@@ -119,6 +123,7 @@ sub newfile {
  $dupdb{"$_[0]->{file}->{bitrate}/$_[0]->{file}->{time}/$_[0]->{file}->{filesize}"}= $_[0]->{file}->{id}||-1;
  GNUpod::XMLhelper::mkfile($_[0],{addid=>1});
 }
+
 sub newpl {
  GNUpod::XMLhelper::mkfile($_[0],{$_[2]."name"=>$_[1]});
 }

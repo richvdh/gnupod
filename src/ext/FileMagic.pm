@@ -37,7 +37,14 @@ BEGIN {
 #Try to discover the file format (mp3 or QT (AAC) )
 sub wtf_is {
  my($file) = @_;
-  if(my $h = __is_mp3($file)) {
+  
+  if(-d $file) { #Don't add dirs
+   warn "FileMagic.pm: '$file' is a directory!\n";
+  }
+  elsif(!-r $file) {
+   warn "FileMagic.pm: Can't read '$file'\n";
+  }
+  elsif(my $h = __is_mp3($file)) {
    return $h;
   }
   elsif(my $h = __is_pcm($file)) {
@@ -46,8 +53,7 @@ sub wtf_is {
   elsif(my $h = __is_qt($file)) {
    return $h
   }
-
-   print "I Unknown file type: $file\n";  
+#Still no luck..
    return undef;
 }
 

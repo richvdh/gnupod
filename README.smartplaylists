@@ -37,9 +37,9 @@ Fields:
  <smartplaylist..
 
 name           : Playlist name
-limititem      : Limit has to match this item
+limititem[1]   : Limit has to match this item
 limitval       : Limit to VALUE 'limititem' sort by 'limitsort'
-limitsort      : Sort by
+limitsort[4]   : Sort by
 checkrule      : 1=only match 'limit'
                  2=only match '<spl' items
                  3=match both
@@ -47,20 +47,34 @@ matchany       : Match any '<spl' field
 moselected     : Match only marked songs (?)
 liveupdate     : Do a liveupdate
 
+ <spl...
+
+action[2]      : action ;)
+field[3]       : match this field
+string         : String, use '10:20' to specify a range (10-20)
 
 Key/Val list: INCOMPLETE
 
-SMARTPLAYLIST 'limititem'
-------------------------
+[1]SMARTPLAYLIST 'limititem'
+----------------------------
 MINUTES        : 01
 HOURS          : 04
 MB             : 02
 GB             : 05
 SONGS          : 03
 
+[4]SMARTPLAYLIST 'limitsort'
+---------------------------
+RATING         : 23
 
-SPL 'field'
-------------------------
+
+[2] SPL 'action'
+---------------------------
+IS             : 01
+
+
+[3]SPL 'field'
+---------------------------
 ALBUM          : 03
 ARTIST         : 04
 BPM            : 35
@@ -81,4 +95,18 @@ SONGNAME       : 02
 TIME           : 13
 TRACKNUMBER    : 11
 YEAR           : 07
+
+
+
+
+Example:
+<!-- only match 'limit' (checkrule) and limit to 25 (limitval) songs(limititem), sort by rating (limitsort) //-->
+ <smartplaylist checkrule="1" limititem="3" limitsort="23" limitval="25" liveupdate="1" matchany="0" moselected="" name="25rand_rating" >
+ </smartplaylist>
+
+<!-- Match both only <spl..> (so: limititem/limitsort/limitval are IGNORED!) //-->
+ <smartplaylist checkrule="2" limititem="3" limitsort="2" limitval="25" liveupdate="1" matchany="0" moselected="" name="spl_20" >
+   <spl action="1" field="25" string="20:20" /> <!-- RATING (field) IS (action) 20:20 (string: it's a range: from 20-20)
+                                                     This matches all songs with 1 star! (star * 20 = rating) -->
+ </smartplaylist>
 

@@ -309,7 +309,7 @@ sub usage {
 my($rtxt) = @_;
 die << "EOF";
 $rtxt
-Usage: mktunes.pl [-h] [-m directory | -i iTunesDB | -x GNUtunesDB] [-v VALUE]
+Usage: mktunes.pl [-h] [-m directory] [-v VALUE]
 
    -h, --help             : This ;)
    -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT

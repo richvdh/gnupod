@@ -174,7 +174,7 @@ sub usage {
 my($rtxt) = @_;
 die << "EOF";
 $rtxt
-Usage: tunes2pod.pl [-h] [-m directory | -i iTunesDB | -x GNUtunesDB]
+Usage: tunes2pod.pl [-h] [-m directory]
 
    -h, --help             : This ;)
    -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT

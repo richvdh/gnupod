@@ -53,6 +53,9 @@ if(-d $opth->{mount}) {
  #Do an OTG Sync if not disabled and needed
   do_otgsync($rr) if(!$opth->{_no_otg_sync} && !$opth->{_no_sync} && _otg_needs_sync($rr));
 }
+elsif($opth->{mount}) {
+ $rr->{status} = "$opth->{mount} is not a directory";
+}
 
  return $rr
 }
@@ -70,7 +73,7 @@ if(-x $XBIN) {
    print "> GNUtunesDB sync needed...\n";
     if(system("$XBIN > /dev/null")) {
       die "Unexpected die of $XBIN\n
-      You can disable auto-sanc (=autorun of $XBIN)
+      You can disable auto-sync (=autorun of $XBIN)
       by removing '$con->{etc}/.itunesdb_md5'\n";
     }
     
@@ -140,7 +143,7 @@ sub shx2_x86_int {
 # Returns '1' if we MAY have to sync..
 sub _itb_needs_sync {
  my($rr) = @_;
-warn "debug: havetosync call ($$)\n";
+warn "debug: _itb_needs_sync called($$)\n";
  if(-r $rr->{itunesdb_md5} && -r $rr->{itunesdb}) {
    my $itmd = getmd5($rr->{itunesdb});
    my $otmd = getmd5line($rr->{itunesdb_md5});
@@ -154,7 +157,7 @@ warn "debug: havetosync call ($$)\n";
 # Checks if we need to do an OTG-Sync
 sub _otg_needs_sync {
  my($rr) = @_;
-warn "debug: otgsync need?\n";
+warn "debug: otgsync need? (request from $$)\n";
  #OTG Sync needed
  return 1 if(GNUpod::iTunesDB::readOTG($rr->{onthego}));
  
@@ -196,6 +199,7 @@ sub setsync {
 # Set only playcounts in sync
 sub setsync_playcounts {
 my($rr) = @_;
+warn "**** playcounts setsync call $$\n";
 #We also create an MD5 sum of the playcounts file
  if(-r $rr->{playcounts}) { #Test this, because getmd5 would die
   open(MDX,">$rr->{playcounts_md5}") or die "Can't write pc-md5-sum, $!\n";
@@ -211,6 +215,7 @@ my($rr) = @_;
 # Set only itunesdb sync
 sub setsync_itunesdb {
 my($rr) = @_;
+warn "***** itunesdb setsync call $$\n";
  if(-r $rr->{itunesdb}) {
  #Write the file with md5sum content
  open(MDX,">$rr->{itunesdb_md5}") or die "Can't write md5-sum, $!\n";
