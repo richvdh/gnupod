@@ -86,6 +86,7 @@ sub startup {
  }
 
  if ($opts{playlist}) { #Create this playlist
+  print "> Adding songs to Playlist '$opts{playlist}'\n";
   GNUpod::XMLhelper::addpl($opts{playlist}); #Fixme: this may printout a warning..
  } 
 

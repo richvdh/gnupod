@@ -3,6 +3,9 @@ GNUpod 0.96 - codename
 Summary
 -------
 
+- Added --playlist switch to gnupod_addsong.pl
+  This adds
+  (Thanks to Bob Cotton)
 - Write tracknum for AAC/ALAC files (doh!)
 - Support for Bookmarks (Just rename .m4a files into .m4b)
 

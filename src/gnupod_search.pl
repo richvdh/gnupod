@@ -92,7 +92,7 @@ sub newpl {
  my ($el, $name, $plt) = @_;
  if($plt eq "pl" && ref($el->{add}) eq "HASH") { #Add action
   if(defined($el->{add}->{id}) && int(keys(%{$el->{add}})) == 1) { #Only id
-   return unless($keeplist[$el->{add}->{id}]); #ID not on keeplist. dropt it
+   return unless($keeplist[$el->{add}->{id}]); #ID not on keeplist. drop it
   }
  }
  elsif($plt eq "spl" && ref($el->{splcont}) eq "HASH") { #spl content

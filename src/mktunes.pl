@@ -49,7 +49,7 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 GetOptions(\%opts, "version", "help|h", "ipod-name|n=s", "mount|m=s", "volume|v=i", "energy|e");
 GNUpod::FooBar::GetConfig(\%opts, {'ipod-name'=>'s', mount=>'s', volume=>'i', energy=>'b'}, "mktunes");
 
-$opts{'ipod-name'} ||= "GNUpod 0.95-20040531 aka rc1";
+$opts{'ipod-name'} ||= "###__VERSION__###";
 
 
 usage() if $opts{help};
