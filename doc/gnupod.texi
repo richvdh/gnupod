@@ -495,7 +495,7 @@ gnupod_addsong.pl -m /mnt/ipod myfile.flac myfile.ogg --decode=mp3
 @end example
 
 (Note: To use all features of --decode, you will have to install
- Audio::FLAC, Ogg::Vorbis::Header::PurePerl, lame, flac, oggenc and faac)
+ Audio::FLAC::Header, Ogg::Vorbis::Header::PurePerl, lame, flac, oggenc and faac)
 
 
 gnupod_addsong.pl tries to 'auto-detect' the encoding of the ID3 Tag. 

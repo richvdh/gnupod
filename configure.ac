@@ -20,7 +20,7 @@ fi
 
 dnl Basic modules
 ALL_MODULES="Digest::MD5 XML::Parser Unicode::String MP3::Info File::Copy"
-OPT_MODULES="Audio::FLAC Ogg::Vorbis::Header::PurePerl"
+OPT_MODULES="Audio::FLAC::Header Ogg::Vorbis::Header::PurePerl"
 
 dnl Ugly check for modules
 IFS=" "
@@ -56,6 +56,17 @@ do
   echo
  fi
 done
+
+#Test if user installed both
+ $PERL -e "use Audio::FLAC" 2> /dev/null
+ if test $? = 0; then
+   echo "NOTE: 'Audio::FLAC' is installed, looks like this module is"
+   echo "      depricated and got renamed into 'Audio::FLAC::Header'"
+   echo "      GNUpod still works with 'Audio::FLAC' but maybe it would"
+   echo "      be a good idea to replace the 'Audio::FLAC' installation"
+   echo "      with 'Audio::FLAC::Header'"
+ fi
+
 
 
 $PERL -e "use MP3::Info; exit(1) if(\$MP3::Info::VERSION < 1.01); exit(0);"
