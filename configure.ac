@@ -1,4 +1,4 @@
-AC_INIT(gnupod, 0.27, bug-gnupod@gnu.org)
+AC_INIT(gnupod, 0.28, bug-gnupod@nongnu.org)
 AC_PATH_PROGS(PERL, perl-5.8 perl-5.6 perl)
 SKIP_CONTRIB="no"
 
