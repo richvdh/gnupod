@@ -2,7 +2,7 @@ use strict;
 use MP3::Info qw(:all);
 use File::Copy;
 use XML::Parser;
-use Getopt::Mixed qw(nextOption);
+use Getopt::Long;
 use Unicode::String qw(latin1 utf8) ;
 
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
@@ -30,7 +30,7 @@ use Unicode::String qw(latin1 utf8) ;
 
 use vars qw($out $max_id @duphelper %opts);
 
-print "gnupod addsong 0.8-rc1 (C) 2002-2003 Adrian Ulrich\n";
+print "gnupod addsong 0.8-rc1b (C) 2002-2003 Adrian Ulrich\n";
 print "Part of the gnupod-tools collection\n";
 print "This tool copies files to your iPod and updates the GNUtunesDB\n\n";
 
@@ -38,18 +38,14 @@ print "This tool copies files to your iPod and updates the GNUtunesDB\n\n";
 
 
 $opts{m} = $ENV{IPOD_MOUNTPOINT};
-Getopt::Mixed::init("help h>help gui g>gui debug d>debug\
-                     mount=s m>mount rebuild r>rebuild nocheck n>nocheck\
-		     quiet q>quiet");
 
-while(my($goption, $gvalue)=nextOption()) {
- $gvalue = 1 if !$gvalue;
- $opts{substr($goption, 0,1)} = $gvalue;
-}
+GetOptions ('help|h' => \$opts{h}, 'gui|g' => \$opts{g}, 'debug|d' => \$opts{d},
+            'mount|m=s' => \$opts{m}, 'rebuild|r' => \$opts{r}, 'nocheck|n' => \$opts{n}, 'quiet|q' => \$opts{q});
+
 #A Rebuild shouldn't check for dups..
 $opts{n} = 1 if $opts{r};
 
-Getopt::Mixed::cleanup();
+
 &chck_opts;
 &stdtest;
 

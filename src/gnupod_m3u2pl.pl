@@ -1,6 +1,6 @@
 use strict;
 
-use Getopt::Mixed qw(nextOption);
+use Getopt::Long;
 use Unicode::String qw(utf8);
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
@@ -32,14 +32,9 @@ print "This tool re-converts playlists written by gnupod_mkm3u.pl (EXPERIMENTAL)
 use vars qw(%opts);
 
 $opts{m} = $ENV{IPOD_MOUNTPOINT};
-Getopt::Mixed::init("help h>help debug d>debug\
-                     mount=s m>mount");
 
-while(my($goption, $gvalue)=nextOption()) {
- $gvalue = 1 if !$gvalue;
- $opts{substr($goption, 0,1)} = $gvalue;
-}
-Getopt::Mixed::cleanup();
+GetOptions ('help|h' => \$opts{h}, 'debug|d' => \$opts{d});
+
 
 
 chck_opts(); #check getopts

@@ -1,7 +1,7 @@
 use strict;
 
 use XML::Parser;
-use Getopt::Mixed qw(nextOption);
+use Getopt::Long;
 
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
@@ -31,7 +31,7 @@ use Getopt::Mixed qw(nextOption);
 use vars qw(%opts %dull_helper %mem_eater %plists %paratt %ids);
 
 
-print "gnupod_mkm3u 0.6 (C) 2002-2003 Adrian Ulrich\n";
+print "gnupod_mkm3u 0.6b (C) 2002-2003 Adrian Ulrich\n";
 print "Part of the gnupod-tools collection\n";
 print "This tool converts your GNUtunesDB to an M3U file (useable for xmms and co.) (EXPERIMENTAL)\n\n";
 
@@ -39,16 +39,11 @@ print "This tool converts your GNUtunesDB to an M3U file (useable for xmms and c
 
 $opts{m} = $ENV{IPOD_MOUNTPOINT};
 $opts{o} = "./";
-Getopt::Mixed::init("help h>help debug d>debug\
-                     mount=s m>mount odir=s o>odir");
-
-while(my($goption, $gvalue)=nextOption()) {
- $gvalue = 1 if !$gvalue;
- $opts{substr($goption, 0,1)} = $gvalue;
-}
-Getopt::Mixed::cleanup();
 
 
+GetOptions ('help|h' => \$opts{h}, 'debug|d' => \$opts{d},
+            'odir|o=s' => \$opts{o}, 'mount|m=s' => \$opts{m});
+	    
 chck_opts(); #check getopts
 go("$opts{m}/iPod_Control/.gnupod/GNUtunesDB");
 

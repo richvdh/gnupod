@@ -1,5 +1,5 @@
 use strict;
-use Getopt::Mixed qw(nextOption);
+use Getopt::Long;
 
 
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
@@ -27,18 +27,13 @@ use Getopt::Mixed qw(nextOption);
 
 use vars qw(%opts);
 
-print "gnupod INIT 0.8-rc1 (C) 2002-2003 Adrian Ulrich\n";
+print "gnupod INIT 0.8-rc1b (C) 2002-2003 Adrian Ulrich\n";
 print "Part of the gnupod-tools collection\n";
 print "This tool creates the default directory-tree for your iPod\n\n";
 
 $opts{m} = $ENV{IPOD_MOUNTPOINT};
-Getopt::Mixed::init("help h>help gui g>gui mount=s m>mount");
 
-while(my($goption, $gvalue)=nextOption()) {
- $gvalue = 1 if !$gvalue;
- $opts{substr($goption, 0,1)} = $gvalue;
-}
-Getopt::Mixed::cleanup();
+GetOptions ('help|h' => \$opts{h}, 'gui|g' => \$opts{g}, 'mount|m=s' => \$opts{m});
 
 chck_opts();
 

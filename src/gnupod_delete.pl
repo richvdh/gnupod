@@ -1,7 +1,7 @@
 
 use strict;
 use XML::Parser;
-use Getopt::Mixed qw(nextOption);
+use Getopt::Long;
 use Unicode::String qw(utf8);
 
 
@@ -36,14 +36,11 @@ print "This tool removes files from your iPod and updates the gnuPod file\n\n";
 
 
 $opts{m} = $ENV{IPOD_MOUNTPOINT};
-Getopt::Mixed::init("help h>help gui g>gui debug d>debug\
-                     mount=s m>mount");
 
-while(my($goption, $gvalue)=nextOption()) {
- $gvalue = 1 if !$gvalue;
- $opts{substr($goption, 0,1)} = $gvalue;
-}
-Getopt::Mixed::cleanup();
+GetOptions ('help|h' => \$opts{h}, 'gui|g' => \$opts{g}, 'debug|d' => \$opts{d},
+            'mount|m=s' => \$opts{m});
+
+
 
 
 chck_opts(); #check getopts
