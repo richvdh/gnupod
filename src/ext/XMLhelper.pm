@@ -26,9 +26,11 @@ use strict;
 
 use XML::Simple;
 use Unicode::String;
+
+#Force XML::Parser -> XML::Sax maybe SLOOOW (with the 100% perl parser)
 $XML::Simple::PREFERRED_PARSER = "XML::Parser";
 
-## Release 20030824
+## Release 20030914
 
 my @idpub;
 my $xid = 1; #The ipod doesn't like ID 0
@@ -80,7 +82,7 @@ if($opts{cleanit}) { #We create a clean XML file
 }
 elsif(-r $xmlin) { #Parse the oldone..
  $doc = XML::Simple::XMLin($xmlin, keeproot => 1, keyattr => [], forcearray=>1); 
-#We need to do some workarounds on perl 5.8
+#We need to do some workarounds on perl 5.6 versus 5.8
 #We should add an 'bugdetector' and skip this if we don't have
 #to run it.. would speedup things..
  cleandoc($doc);
@@ -131,7 +133,7 @@ my %rhash = ();
 	   unless(defined($thash{id})) {
 	    print STDERR "FATAL XML ERROR: 'file' element without 'id' found! ($thash{path})\n";
             print STDERR "Please remove this file (from your iPod and the GNUtunesDB) and\n";
-	    print STDERR "try again... This shouldn't happen :-/\n";
+	    print STDERR "try again... This shouldn't happen :-/ .. bye\n";
 	    exit(2);
 	   }
 	   $rhash{$thash{id}} = \%thash;
@@ -162,6 +164,8 @@ sub write_xml {
 
  open(OUT, ">$out") or die "Could not write to $out : $!\n";
  binmode(OUT);
+ #Perl 5.6 bug? ReCleanup the doc (FORCED)
+ cleandoc($href, undef, undef, 1);
  print OUT XML::Simple::XMLout($href,keeproot=>1,xmldecl=>1);
  close(OUT);
 }
@@ -176,22 +180,21 @@ sub write_xml {
 #  with 2 charsets..
 
 sub cleandoc {
- my ($r, $base, $xref) = @_;
+ my ($r, $base, $xref, $always) = @_;
  if(ref($r) eq "HASH") {
   foreach(keys(%$r)) {
-    cleandoc(${$r}{$_}, $_, $r);
+    cleandoc(${$r}{$_}, $_, $r, $always);
   }
  }
  elsif(ref($r) eq "ARRAY") {
   foreach(@$r) {
-   cleandoc($_);
+   cleandoc($_, undef, undef, $always);
   }
  }
  elsif(ref($r) eq "") {
   my $bfx = Unicode::String::utf8($r)->utf8;
-  $r = $bfx if $bfx ne $r; #SOMETIMES, we got weird input from XML::parser..
+  $r = $bfx if $always || $bfx ne $r; #SOMETIMES, we got weird input from XML::parser..
                            #Unicode::String (utf8 to utf8?) fixes this.. don't know why *g*
-  
   $xref->{$base} = $r;
  }
  else {
