@@ -2,12 +2,14 @@ package GNUpod::iTunesDB;
 use strict;
 use Unicode::String;
 
-use vars qw(%mhod_id);
+use vars qw(%mhod_id @mhod_array);
 
-BEGIN {
- %mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "comment", 8, "composer", 12) ;
-}
 
+%mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "comment", 8, "composer", 12, "PLTHING", 100) ;
+
+ foreach(keys(%mhod_id)) {
+  $mhod_array[$mhod_id{$_}] = $_;
+ }
 
 ## GENERAL #########################################################
 # create an iTunesDB header
@@ -76,7 +78,7 @@ return $ret;
 
 sub mk_mhod
 {
-# - type id
+##   - type id
 #1   - titel
 #2   - ipod filename
 #3   - album
@@ -86,7 +88,9 @@ sub mk_mhod
 #7   - ??? (EQ?)
 #8   - comment
 #12  - composer
-#100 - Playlist item
+#50  - SPL Stuff
+#51  - SPL Stuff
+#100 - Playlist item or/and PlaylistLayout (used for trash? ;))
 
 my ($type_string, $string, $fqid) = @_;
 
@@ -99,6 +103,7 @@ my $mod = 40;
 if(!$fqid) { 
   #normal mhod, default fqid
   $fqid = 1; 
+  $fqid = 1397519220 if $type == 51; #Fixme: are spl mhods no pl mhods?
 }
 else {
  #pl mhod's are longer... fix size
@@ -115,8 +120,10 @@ $ret .= pack("h8", _itop(24));                     #size of header
 $ret .= pack("h8", _itop(length($string)+$mod));   # size of header+body
 $ret .= pack("h8", _itop("$type"));                #type of the entry
 $ret .= pack("H16");                              #dummy space
-$ret .= pack("h8", _itop($fqid));                  #Referst to this id if a PL item
-                                                  #else -> always 1
+$ret .= pack("h8", _itop($fqid));                  #Refers to this id if a PL item
+                                                  #else ->  1
+						  #for spl -> 534C7374 (SLst)
+						  #FIXME: this sub can't create spl items
 $ret .= pack("h8", _itop(length($string)));        #size of string
 
 
@@ -298,5 +305,207 @@ $ret .= pack("H912", "00");
 # But we write it (to make iTunes happy)
 return $ret
 }
+
+
+## END WRITE FUNCTIONS ##
+
+
+
+
+### Here are the READ sub's used by tunes2pod.pl
+
+###########################################
+# Get a INT value
+sub get_int {
+my($start, $anz) = @_;
+
+my($buffer, $xx, $xr) = undef;
+# paranoia checks
+$start = int($start);
+$anz = int($anz) || 1;
+
+#seek to the given position
+seek(FILE, $start, 0);
+#start reading
+read(FILE, $buffer, $anz);
+   foreach(split(//, $buffer)) {
+    $xx = sprintf("%02X", ord($_));
+   $xr = "$xx$xr";
+  }
+  $xr = oct("0x".$xr);
+ return $xr;
+}
+
+
+
+###########################################
+#get a SINGLE mhod entry:
+# return+seek = new_mhod should be there
+sub get_mhod {
+my ($seek) = @_;
+
+my $id  = get_string($seek, 4);          #are we lost?
+my $ml  = get_int($seek+8, 4);           #Length of this mhod
+my $mty = get_int($seek+12, 4);          #type number
+my $xl  = get_int($seek+28,4);           #String length
+
+if($id eq "mhod") { #Seek was okay
+   my $foo = get_string($seek+40, $xl); #string of the entry            #maybe a 'no conv' flag would be better
+    #$foo is now UTF16 (Swapped), but we need an utf8
+    $foo = Unicode::String::byteswap2($foo);
+    $foo = Unicode::String::utf16($foo)->utf8;
+ if(!$mhod_array[$mty]) {
+  print STDOUT "WARNING: unknown type: $mty, returning RAW data (SmartPlaylist's aren't supportet atm..)\n";
+  $foo = get_string($seek+40, $xl);
+ }
+  return ($ml, $foo, $mty);
+}
+
+#Was no mhod, return -1
+return -1;
+}
+
+
+
+##############################################
+# get an mhip entry
+sub get_mhip {
+ my($pos) = @_;
+ if(get_string($pos, 4) eq "mhip") {
+  my $oof = get_int($pos+4, 4);
+  my($oid) = get_mhod($pos+$oof);
+  return -1 if $oid == -1; #fatal error..
+   my $px = get_int($pos+6*4, 4);
+  return ($oid+$oof, $px);
+ }
+
+#we are lost
+ return -1;
+}
+
+
+###########################################
+# Reads a string
+sub get_string {
+my ($start, $anz) = @_;
+my($buffer) = undef;
+$start = int($start);
+$anz = int($anz) || 1;
+seek(FILE, $start, 0);
+#start reading
+read(FILE, $buffer, $anz);
+ return $buffer;
+}
+
+
+
+
+#############################################
+# Get a playlist
+sub get_pl {
+ my($pos) = @_;
+ my %ret_hash = ();
+ my @pldata = ();
+ 
+  if(get_string($pos, 4) eq "mhyp") { #Ok, its an mhyp
+   my $pl_type    = get_int($pos+20, 4); #Is it a main playlist?
+   my $header_len = get_int($pos+4, 4);
+   
+   $pos += $header_len; #set pos to start of first mhod
+  
+   #We can now read the name of the Playlist
+   #Ehpod is buggy and writes the playlist name 2 times.. well catch both of them
+   #MusicMatch is also stupid and doesn't create a playlist mhod
+   #for the mainPlaylist
+   my ($oid, $plt, $type, $plname, $itt) = undef;
+   
+   while($oid != -1) {
+    $pos += $oid;
+    ($oid, $plt, $type) = get_mhod($pos);
+    $plname = $plt if $type == 1;
+    #1 = name
+    #100 = style
+    #50  = ??
+    #51  = ??
+   }
+   $ret_hash{name} = $plname;
+   $ret_hash{type} = $pl_type;
+   
+   #Now get the items
+   $oid = 0; #clean oid
+   while($oid != -1) {
+    $pos += $oid;
+    ($oid, $itt) = get_mhip($pos);
+     push(@pldata, $itt) if $itt;
+   }
+   $ret_hash{content} = \@pldata;
+   return ($pos, \%ret_hash);   
+  }
+ 
+ #Seek was wrong
+ return -1;
+}
+
+
+
+###########################################
+# Get mhits
+sub get_mhits {
+my ($sum) = @_;
+if(get_string($sum, 4) eq "mhit") { #Ok, its a mhit
+
+my %ret     = ();
+
+#Infos stored in mhit
+$ret{id}       = get_int($sum+16,4);
+$ret{filesize} = get_int($sum+36,4);
+$ret{time}     = get_int($sum+40,4);
+$ret{cdnum}    = get_int($sum+92,4);
+$ret{cds}      = get_int($sum+96,4);
+$ret{songnum}  = get_int($sum+44,4);
+$ret{songs}    = get_int($sum+48,4);
+$ret{year}     = get_int($sum+52,4);
+$ret{bitrate}  = get_int($sum+56,4);
+
+ #Now get the mhods from this mhit
+$sum += get_int($sum+4,4);
+ my ($next_start, $txt, $type) = undef;
+    while($next_start != -1) {
+     $sum += $next_start; 
+     ($next_start, $txt, $type) = get_mhod($sum);    #returns the number where its guessing the next mhod, -1 if it's failed
+       #Convert ID to XML Name
+       my $xml_name = $mhod_array[$type];
+       if($xml_name) { #add known name to hash
+        $ret{$xml_name} = $txt;
+       }
+ 
+    }
+    
+return ($sum,\%ret);          #black magic, returns next (possible?) start of the mhit
+}
+#Was no mhod
+ return -1;
+}
+
+
+
+#########################################################
+# Returns start of part1 (files) and part2 (playlists)
+sub get_starts {
+#Get start of first mhit:
+my $mhbd_s     = get_int(4,4);
+my $pdi        = get_int($mhbd_s+8,4); #Used to calculate start of playlist
+my $mhsd_s     = get_int($mhbd_s+4,4);
+my $mhlt_s     = get_int($mhbd_s+$mhsd_s+4,4);
+my $pos = $mhbd_s+$mhsd_s+$mhlt_s; #pos is now the start of the first mhit (always 292?);
+
+return($pos, ($pos+$pdi));
+}
+
+
+sub open_itunesdb {
+ open(FILE, $_[0]) or die "Failed and FIXME\n";
+}
+
 
 1;

@@ -39,7 +39,6 @@ return $doc;
 # Same as quickhash, but for playlist items
 sub build_plarr {
  my($xmldoc) = @_;
- print "Building plh\n";
  my @ra = ();
   foreach my $gnupod (@{$xmldoc->{gnuPod}}) {
    push(@ra, @{$gnupod->{playlist}});
