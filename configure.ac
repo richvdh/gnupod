@@ -1,4 +1,4 @@
-AC_INIT(GNUpod, 0.95rc2b, bug-gnupod@nongnu.org)
+AC_INIT(GNUpod, 0.95test1, bug-gnupod@nongnu.org)
 
 echo -n $PACKAGE_VERSION > .gnupod_version
 
@@ -44,6 +44,14 @@ do
 
 done
 
+$PERL -e "use MP3::Info; exit(1) if(\$MP3::Info::VERSION < 1.01); exit(0);"
+ if test $? = 0; then
+echo "MP3::Info works okay"
+ else
+  echo " ** PLEASE UPGRADE MP3::Info TO VERSION 1.01 OR NEWER ** "
+  echo " ** YOU CAN USE GNUPOD WITH YOUR CURRENT VERSION BUT  ** "
+  echo " ** UTF8 SUPPORT FOR MP3 FILES WILL BE BROKEN !       **"
+ fi
 
 AC_SUBST(PERL)
 AC_OUTPUT(Makefile)
