@@ -1,5 +1,5 @@
 ###__PERLBIN__###
-#  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
+#  Copyright (C) 2002-2005 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
 #  URL: http://www.gnu.org/software/gnupod/
@@ -30,7 +30,11 @@ my $file  = $ARGV[0] or exit(1);
 my $gimme = $ARGV[1];
 
 
-if($gimme eq "GET_META") {
+if(!(-r $file)) {
+ warn "$file is not readable!\n";
+ exit(1);
+}
+elsif($gimme eq "GET_META") {
  my $ftag = undef;
  ## This is a UGLY trick to cheat perl!
  ## 1. Create a string

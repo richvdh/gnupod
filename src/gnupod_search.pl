@@ -209,7 +209,9 @@ Usage: gnupod_search.pl [-h] [-m directory] File1 File2 ...
                             u = UnixPath n = Songnum
        --rename=KEY=VAL    Change tags on found songs. Example: --rename="ARTIST=Foo Bar"
 
-Note: Argument for title/artist/album.. has to be UTF8 encoded, *not* latin1!
+Note: * Argument for title/artist/album/etc has to be UTF8 encoded, *not* latin1!
+      * All arguments are handled as regular expressions! If you want to search for
+        eg. ID '3' (excluding 13,63,32..), you would have to write: --id="^3\$"
 
 Report bugs to <bug-gnupod\@nongnu.org>
 EOF

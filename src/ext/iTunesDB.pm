@@ -1,5 +1,5 @@
-# iTunesDB.pm - Version 20040618
-#  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
+# iTunesDB.pm - Version 20050205
+#  Copyright (C) 2002-2005 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
 #  URL: http://blinkenlights.ch/cgi-bin/fm.pl?get=ipod

@@ -68,7 +68,7 @@ sub startup {
 	print "! Volume-adjust set to $opts{volume} percent\n" if defined($opts{volume});
 
 	#Open the iTunesSD and write a dummy header
-	open(ITS, ">$con->{itunessd}") or die "*** Sorry: Could not write your iTunesSD: $!\n";
+	open(ITS, ">$con->{itunessd}") or die "*** Sorry: Could not write your iTunesSD: $!, did you run gnupod_INIT.pl ?\n";
 	syswrite(ITS,GNUpod::iTunesDB::mk_itunes_sd_header());
 	
 	print "> Parsing XML and creating FileDB\n";

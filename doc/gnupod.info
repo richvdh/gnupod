@@ -24,8 +24,8 @@ File: gnupod.info,  Node: Top,  Next: Requirements,  Up: (dir)
 1 GNUpod
 ********
 
-This edition of the `GNUpod Manual', last updated 12. Oct. 2004,
-documents GNUpod Version 0.97
+This edition of the `GNUpod Manual', last updated 5. Feb. 2004,
+documents GNUpod Version 0.98
 
 * Menu:
 
@@ -1232,28 +1232,28 @@ permit their use in free software.
 
 Tag Table:
 Node: Top855
-Node: Requirements1444
-Node: Installing GNUpod1967
-Node: Installation of GNUpod2394
-Node: Using FireWire with GNU/Linux3512
-Node: Convert your Mac iPod6926
-Node: Firmware update12155
-Node: Using GNUpod13933
-Node: Preparation14822
-Node: Configuration15554
-Node: Add files16011
-Node: Search files17485
-Node: Remove files17971
-Node: Edit tags18272
-Node: Creating playlists18817
-Node: Unplug the iPod21292
-Node: Recovering files22201
-Node: Coexistence23096
-Node: Problems24566
-Node: GNUtunesDB24949
-Node: Get rid of '-m'26455
-Node: Known bugs and limitations26740
-Node: Reporting Bugs27031
-Node: GNU Free Documentation License27479
+Node: Requirements1443
+Node: Installing GNUpod1966
+Node: Installation of GNUpod2393
+Node: Using FireWire with GNU/Linux3511
+Node: Convert your Mac iPod6925
+Node: Firmware update12154
+Node: Using GNUpod13932
+Node: Preparation14821
+Node: Configuration15553
+Node: Add files16010
+Node: Search files17484
+Node: Remove files17970
+Node: Edit tags18271
+Node: Creating playlists18816
+Node: Unplug the iPod21291
+Node: Recovering files22200
+Node: Coexistence23095
+Node: Problems24565
+Node: GNUtunesDB24948
+Node: Get rid of '-m'26454
+Node: Known bugs and limitations26739
+Node: Reporting Bugs27030
+Node: GNU Free Documentation License27478
 
 End Tag Table
