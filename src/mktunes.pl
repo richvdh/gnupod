@@ -33,7 +33,12 @@ use vars qw($cid %pldb %spldb %itb %opts %meat %cmeat @MPLcontent);
 #pldb{name}  = array with id's
 #spldb{name} = '<spl' prefs
 #itb         = buffer
-#MPLcontent  = MasterPlaylist content (all songs without hide=true)
+#MPLcontent  = MasterPlaylist content (all songs)
+#              Note: if you don't add ALL songs to MPLcontent,
+#                    you'd break OTG and Rating AND the iPod
+#                    wouldn't boot if it finds a hidden-id in the
+#                    OTGPlaylist!!
+
 $| = 1;
 print "mktunes.pl Version 0.95 (C) 2002-2004 Adrian Ulrich\n";
 
@@ -57,7 +62,7 @@ usage("$con->{status}\n") if $con->{status};
 print "! Volume-adjust set to $opts{volume} percent\n" if defined($opts{volume});
 
 print "> Parsing XML and creating FileDB\n";
-GNUpod::XMLhelper::doxml($con->{xml});
+GNUpod::XMLhelper::doxml($con->{xml}) or usage("Could not read $con->{xml}, did you run gnupod_INIT.pl ?");
 
 
 # Create header for mhits
@@ -182,13 +187,7 @@ my ($nhod,$cmhod,$cmhod_count) = undef;
   $cmhod_count++ if defined $nhod;
  }
  
- #check if hidden-flag is set to TRUE
- if($chr{hide}) {
-  print "! File $chr{path} will *not* appear in Browser -> 'hide' set to TRUE\n";
- }
- else { #Not true, add oid to MPLcontent (= Showup in Browser)
   push(@MPLcontent,$oid);
- }
  
      #Volume adjust
      if($opts{volume}) {

@@ -108,13 +108,13 @@ sub newfile {
  # (GNUtunesDB_id <-> iTunesDB_id)
  # in mktunes.pl, every <file.. will create a new
  # id, like here :)
+ 
  push(@keeper, int($el->{file}->{id}));
  
  if($plcref) { #PlayCountref exists (=v2 ipod) -> adjust
   #Adjust rating
   $el->{file}->{rating}    = $plcref->{rating}{int(@keeper)-1};
   $el->{file}->{playcount} += $plcref->{playcount}{int(@keeper)-1};
- # print "$el->{file}->{id} > INC:".$plcref->{playcount}{int(@keeper)-1}."\n" if $plcref->{playcount}{int(@keeper)-1};
  }
  #Add content
    GNUpod::XMLhelper::mkfile($el);

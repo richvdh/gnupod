@@ -30,6 +30,7 @@ use GNUpod::FooBar;
 use vars qw(%mhod_id @mhod_array);
 
 #mk_mhod() will take care of lc() entries
+#fixme: checkout 13.. is it language?
 %mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, "comment", 8, "composer", 12);# "SPLPREF",50, "SPLDATA",51, "PLTHING", 100) ;
  foreach(keys(%mhod_id)) {
   $mhod_array[$mhod_id{$_}] = $_;
@@ -109,7 +110,7 @@ my $ret = "mhit";
    $ret .= pack("h8", _itop(int($hr->{size})+156));           #len of this entry
    $ret .= pack("h8", _itop($hr->{count}));                     #num of mhods in this mhit
    $ret .= pack("h8", _itop($c_id));                 #Song index number
-   $ret .= pack("h8", _itop(1));                             #?
+   $ret .= pack("h8", _itop(1));                             #debug flag? - the ipod stops parsing if this isnt == 1
    $ret .= pack("H8");                                      #dummyspace
    $ret .= pack("h8", _itop(256+(oct('0x14000000')
                             *($file_hash{rating}/20))));     #type+rating .. this is very STUPID..
@@ -131,7 +132,7 @@ my $ret = "mhit";
    $ret .= pack("h8");                                      #Last playtime.. FIXME
    $ret .= pack("h8", _itop($file_hash{cdnum}));            #cd number
    $ret .= pack("h8", _itop($file_hash{cds}));              #number of cds
-   $ret .= pack("H8");                                      #hardcoded space 
+   $ret .= pack("H8");                                      #hardcoded space ?
    $ret .= pack("h8", _mactime());                          #dummy timestamp again...
    $ret .= pack("H16");
    $ret .= pack("H8");                          #??
@@ -709,7 +710,7 @@ sub get_pl {
       $ret_hash{type} = get_int($pos+20, 4); #Is it a main playlist?
    my $scount         = get_int($pos+16, 4); #How many songs should we expect?
    my $header_len     = get_int($pos+4, 4);  #Size of the header
-   my $mhyp_len     = get_int($pos+8, 4);   #Size of mhyp
+   my $mhyp_len       = get_int($pos+8, 4);   #Size of mhyp
    my $mhods          = get_int($pos+12,4); #How many mhods we have here
 #Its a MPL, do a fast skip
 if($ret_hash{type}) {
@@ -728,7 +729,7 @@ if($ret_hash{type}) {
     print STDERR "*** but i failed to get nr. $i\n";
     print STDERR "*** Please send your iTuneDB to:\n";
     print STDERR "*** pab\@blinkenlights.ch\n";
-    print STDERR "!!! iTunesDB.pm panic!\n";
+    print STDERR "!!! iTunesDB.pm panic, can't continue!\n";
     exit(1);
    }
    $pos+=$mhh->{size};
@@ -753,7 +754,7 @@ if($ret_hash{type}) {
        print STDERR "*** Your iTunesDB maybe corrupt or you found\n";
        print STDERR "*** a bug in GNUpod. Please send this\n";
        print STDERR "*** iTunesDB to pab\@blinkenlights.ch\n\n";
-       print STDERR "!!! iTunesDB.pm panic!\n";
+       print STDERR "!!! iTunesDB.pm panic, can't continue!\n";
        exit(1);
     }
     $pos += $mhih->{size};
@@ -823,7 +824,7 @@ $sum += get_int($sum+4,4);
      print STDERR "** but i failed to get nr $i\n";
      print STDERR "*** Please send your iTuneDB to:\n";
      print STDERR "*** pab\@blinkenlights.ch\n";
-     print STDERR "!!! iTunesDB.pm panic!\n";     
+     print STDERR "!!! iTunesDB.pm panic, can't continue!\n";     
      exit(1);
     }
     $sum+=$mhh->{size};
@@ -832,7 +833,7 @@ $sum += get_int($sum+4,4);
       $ret{$xml_name} = $mhh->{string};
     }
     else {
-     warn "iTunesDB.pm: found unhandled mhod type '$mhh->{type}'\n";
+     warn "\niTunesDB.pm: found unhandled mhod type '$mhh->{type}' (content: $mhh->{string})\n";
     }
  }
 return ($sum,\%ret);          #black magic, returns next (possible?) start of the mhit
@@ -895,7 +896,6 @@ sub readPLC {
   $playc  = GNUpod::FooBar::shx2int($buff);
  
   if($chunksize >= 16) { #12+4 - v2 firmware? 
-  warn "rmme: v2 feature reading at $offset\n";
    seek(RATING, $offset+12, 0);
    read(RATING, $buff,4) or warn "readPLC bug, read failed! Please send a bugreport to pab\@blinkenlights.ch!\n";
    $rating = GNUpod::FooBar::shx2int($buff);
