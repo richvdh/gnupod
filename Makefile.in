@@ -13,6 +13,8 @@ pkgdir       = gnupod-@PACKAGE_VERSION@-noarch-1adrian
 all:
 	# Use 'make install' to install GNUpod
 install:
+	${SHELL} ./mkinstalldirs ${bindir}
+	${SHELL} ./mkinstalldirs ${mandir}/man1
 	${perlbinary} tools/gnupod_install.pl INSTALL "${perlbinary}" "${bindir}" "${infodir}" "${mandir}"
 uninstall:
 	${perlbinary} tools/gnupod_install.pl REMOVE  "${perlbinary}" "${bindir}" "${infodir}" "${mandir}"
@@ -31,6 +33,8 @@ slackpkg:
 	cp README* ../${pkgdir}/usr/doc/${pkgfname}/
 	cp TODO ../${pkgdir}/usr/doc/${pkgfname}/
 	cp doc/*.* ../${pkgdir}/usr/doc/${pkgfname}/
+	mkdir -p ../${pkgdir}/usr/man/man1
+	cp man/*.gz ../${pkgdir}/usr/man/man1/
 	mkdir -p ../${pkgdir}/usr/bin
 	ln -s ../${pkgdir} Z0NK
 	${perlbinary} tools/mkINC.pl Z0NK

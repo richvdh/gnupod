@@ -140,7 +140,7 @@ Usage: gnupod_INIT.pl [-h] [-m directory]
    -h, --help              display this help and exit
        --version           output version information and exit
    -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
-   -d, --disable-convert   Don't try to convert an exiting iTunesDB
+   -d, --disable-convert   Don't try to convert an existing iTunesDB
    -f, --france            Limit volume to 100dB (For French-Law/People)
                            Maximal-volume without this is ~104dB (VERY LOUD)
                            *WARNING* This works only for iPods running

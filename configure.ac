@@ -1,4 +1,4 @@
-AC_INIT(GNUpod, 0.95, bug-gnupod@nongnu.org)
+AC_INIT(GNUpod, 0.95snapshot040630, bug-gnupod@nongnu.org)
 
 echo $ECHO_N $PACKAGE_VERSION > .gnupod_version
 
@@ -8,8 +8,6 @@ if test -d CVS; then
 fi
 
 AC_PATH_PROGS(PERL, perl-5.8 perl-5.6 perl)
-
-
 
 
 if test $PERL; then

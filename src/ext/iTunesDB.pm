@@ -1142,18 +1142,18 @@ sub readPLC {
  for my $chunknum (1..$chunks) {
   
   seek(RATING, $offset, 0);
-  if (read(RATING,$buff,4) != 4) { _itBUG("Read failed at $offset while reading PLAYCOUNT",1) }
+  if (read(RATING,$buff,4) != 4) { _itBUG("Read failed at $offset while reading PLAYCOUNT ($chunks/$chunksize)"); last; }
   $playc  = GNUpod::FooBar::shx2int($buff);
  
   seek(RATING,$offset+4,0);
-  if (read(RATING,$buff,4) != 4) { _itBUG("Read failed at $offset while reading LASTPLAY",1) }
+  if (read(RATING,$buff,4) != 4) { _itBUG("Read failed at $offset while reading LASTPLAY ($chunks/$chunksize)"); last; }
   $lastply = GNUpod::FooBar::shx2int($buff);
   
   #8 is always zero atm?!
 
   if($chunksize >= 16) { #12+4 - v2 firmware? 
    seek(RATING, $offset+12, 0);
-   if (read(RATING, $buff,4) != 4) { _itBUG("Read failed at $offset while reading RATING",1) }
+   if (read(RATING, $buff,4) != 4) { _itBUG("Read failed at $offset while reading RATING ($chunks/$chunksize)"); last; }
    $rating = GNUpod::FooBar::shx2int($buff);
   }
   

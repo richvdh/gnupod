@@ -8,15 +8,15 @@
 use strict; #of course :)
 
 my %opts = ();
-$opts{MODE}         = $ARGV[0];
-$opts{perlbin}      = $ARGV[1];
-$opts{bindir}       = $ARGV[2];
-$opts{infodir}      = $ARGV[3];
-$opts{mandir}       = $ARGV[4];
+$opts{MODE}         = $ARGV[0];  #INSTALL MKPGK or REMOVE
+$opts{perlbin}      = $ARGV[1];  #Path to perl
+$opts{bindir}       = $ARGV[2];  #Bindir
+$opts{infodir}      = $ARGV[3];  #Infodir
+$opts{mandir}       = $ARGV[4];  #Mandir
 
+my $VINSTALL = `cat .gnupod_version`; #Version of this release
 
-my $VINSTALL = `cat .gnupod_version`;
-
+#Check if everything looks okay..
 die "File .gnupod_version does not exist, did you run configure?\n" unless $VINSTALL;
 die "Expected 5 arguments, got ".int(@ARGV)."\n make will run me, not you! stupid human!" if !$opts{mandir} || $ARGV[5];
 die "Strange Perl installation, no \@INC! Can't install Perl-Module(s), killing myself..\n" if !$INC[0];
@@ -26,11 +26,12 @@ if($opts{MODE} eq "INSTALL") {
  print "Installing GNUpod $VINSTALL using gnupod_install 0.24\n";
  install_scripts("src/*.pl", $opts{bindir});
  install_pm("src/ext", "GNUpod", $opts{perlbin}, "/");
- install_docs("doc/gnupod.info", $opts{infodir});
- killold("$opts{bindir}/gnupod_delete.pl") if -e "$opts{bindir}/gnupod_delete.pl";
+ install_info("doc/gnupod.info", $opts{infodir});
+ install_man("man/*.gz", $opts{mandir}."/man1");
+ killold("$opts{bindir}/gnupod_delete.pl") if -e "$opts{bindir}/gnupod_delete.pl"; #Kill legacy apps.. ;)
  print "done!\n";
 }
-elsif($opts{MODE} eq "MKPKG") {
+elsif($opts{MODE} eq "MKPKG") { #Creates a slackpkg.. this just installs the scripts (we need ncp()) and the modules
  install_scripts("src/*.pl", $opts{bindir});
  install_pm("src/ext", "GNUpod", $opts{perlbin}, "Z0NK");
 }
@@ -39,6 +40,7 @@ elsif($opts{MODE} eq "REMOVE") {
  remove_scripts("src/*.pl", $opts{bindir});
  remove_pm("src/ext/*.pm", "GNUpod");
  remove_docs("gnupod", $opts{infodir});
+ remove_mandocs("man/*.gz", $opts{mandir}."/man1");
 }
 else {
  die "Unknown mode: $opts{MODE}\n";
@@ -66,9 +68,9 @@ sub killold {
 
 ##########################
 #Install Docs
-sub install_docs {
+sub install_info {
 my($file, $infodir) = @_;
-print "Installing documentation\n";
+print "Installing info-documentation\n";
 if(system("install-info" ,"--info-dir=$infodir", $file)) {
  print "** install-info failed, documentation *NOT* installed\n";
  print "** See 'doc/gnupod.html' for an HTML version...\n";
@@ -79,6 +81,21 @@ else {
  print " Installed info file, use 'info gnupod' to read the documentation.\n";
 }
 
+}
+
+######################################
+# Install manual pages
+sub install_man {
+ my($glob, $dest) = @_;
+ my $file = undef;
+ print "Installing manual pages\n";
+ foreach(glob($glob)) {
+  $file = fof($_);
+  my $destfile = "$dest/$file";
+  print " > $_ --> $destfile\n";
+  ncp($_, $destfile);
+  chmod 0644, $destfile;
+ }
 }
 
 ##########################
@@ -95,6 +112,19 @@ sub remove_docs {
   print " > Documentation removed\n"; 
   
  }
+}
+
+
+sub remove_mandocs {
+ my($glob, $mandir) = @_;
+ 
+ foreach(glob($glob)) {
+  my $file = fof($_);
+  my $xkill = "$mandir/$file";
+  print "   -> Removing $xkill  ";
+  killold($xkill);
+ }
+ print " > Manualpages removed\n";
 }
 
 ##########################
@@ -139,26 +169,28 @@ return undef;
 }
 
 
-
+########################################################
+# Install Perl modules
 sub install_pm {
 my($basedir, $modi, $perlbin, $pfix) = @_;
 
-mkdir("$pfix"."$INC[0]/$modi", 0755);
+mkdir("$pfix"."$INC[0]/$modi", 0755); #Create $INC[0]/GNUpod
 print "Installing Modules at $pfix$INC[0]/$modi\n";
 
  foreach my $file (glob("$basedir/*.pm")) {
   my $dest = "$pfix"."$INC[0]/$modi/".fof($file);
   print " > $file --> $dest\n";
   ncp($file, $dest);
-  chmod 0444, $dest;
+  chmod 0444, $dest; #Try to chown and chmod .. root should be owner of this modules..
   chown 0, 0, $dest;
  }
 }
 
-
+########################################################
+# Install source from src/*
 sub install_scripts {
-my ($glob, $dest) = @_;
-my $file = undef;
+ my ($glob, $dest) = @_;
+ my $file = undef;
 
  foreach(glob($glob)) 
  {
@@ -167,7 +199,7 @@ my $file = undef;
    ncp($_,"$dest/$file");
    #'fix' premissions...
    chmod 0755, "$dest/$file";
-   # root shall be the owner (or whoever has uid/gid 0)
+   #Try to chown 0:0 .. just try
    chown 0, 0, "$dest/$file";
  }
 
