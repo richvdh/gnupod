@@ -154,7 +154,7 @@ warn "debug: havetosync call ($$)\n";
 # Checks if we need to do an OTG-Sync
 sub _otg_needs_sync {
  my($rr) = @_;
-
+warn "debug: otgsync need?\n";
  #OTG Sync needed
  return 1 if(GNUpod::iTunesDB::readOTG($rr->{onthego}));
  
@@ -203,6 +203,7 @@ my($rr) = @_;
   close(MDX);
   return undef;
  }
+ warn "Can't set sync for playcounts to true: file not found\n";
  return 1;
 }
 
@@ -210,12 +211,15 @@ my($rr) = @_;
 # Set only itunesdb sync
 sub setsync_itunesdb {
 my($rr) = @_;
- die "FATAL: Unable to read iTunesDB\n" unless (-r $rr->{itunesdb});
+ if(-r $rr->{itunesdb}) {
  #Write the file with md5sum content
  open(MDX,">$rr->{itunesdb_md5}") or die "Can't write md5-sum, $!\n";
   print MDX getmd5($rr->{itunesdb})."\n";
  close(MDX);
  return undef;
+ }
+ warn "Can't set sync for iTunesDB to true: file not found\n";
+ return 1;
 }
 
 

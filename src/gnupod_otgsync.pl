@@ -70,8 +70,12 @@ $ratingref  = GNUpod::iTunesDB::readPLC($con->{playcounts});
   GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}\n");
   mkotg(@xotg) if int(@xotg);
   GNUpod::XMLhelper::writexml($con->{xml});
-  unlink($con->{onthego}) or warn "Failed to unlink $con->{onthego} , $!\n";
+  unlink($con->{onthego});
  }
+ 
+ #OnTheGo and playcounts is now ok, set sync for it to true
+ GNUpod::FooBar::setsync_playcounts($rr);
+ 
 }
 
 #############################################
