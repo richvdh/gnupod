@@ -337,8 +337,8 @@ my $int_item    = $SPLREDEF{limititem}{lc($hs->{item})};
 #Build SORT Flags
 my $sort = $SPLREDEF{limitsort}{lc($hs->{sort})};
 if($sort == 0) {
- warn "Unknown limitsort value ($hs->{sort}) , setting sort to 'random'\n";
- $sort = $SPLREDEF{limitsort}{random};
+ warn "Unknown limitsort value ($hs->{sort})\n";
+ return undef;
 }
 elsif($sort < 0) {
  $sort_low = 1; #Set LOW flag
@@ -347,13 +347,13 @@ elsif($sort < 0) {
 
 #Check checkrule range
 if($checkrule < 1 || $checkrule > 3) {
- warn "iTunesDB.pm: error: 'checkrule' ($hs->{checkrule}) invalid. Value set to 'limit')\n";
- $checkrule = $SPLREDEF{checkrule}{limit};
+ warn "iTunesDB.pm: error: 'checkrule' ($hs->{checkrule}) invalid.\n";
+ return undef;
 }
 
 if($int_item < 1) {
- warn "iTunesDB.pm: error: 'item' ($hs->{item}) invalid. Value set to 'minute'\n";
- $int_item = $SPLREDEF{limititem}{minute};
+ warn "iTunesDB.pm: error: 'item' ($hs->{item}) invalid.\n";
+ return undef;
 }
 
 #lim-only = 1 / match only = 2 / both = 3
@@ -393,6 +393,8 @@ sub mk_spldatamhod {
  }
 
  my $cr = undef;
+ my $CHTM = 0; #Count HasToMatch...
+ 
  foreach my $chr (@{$hs->{data}}) {
      my $string = undef;
      my $int_field = undef;
@@ -409,8 +411,8 @@ sub mk_spldatamhod {
         $action_prefix = 0x03000000 if $is_negative;
 		
         unless($action_num = $SPLREDEF{string_action}{uc($real_action)}) {
-         warn "iTunesDB.pm: action $chr->{action} is invalid for $chr->{field} , setting action to ".$is_negative."IS\n";
-         $action_num = $SPLREDEF{string_action}{IS};
+         warn "iTunesDB.pm: action $chr->{action} is invalid for $chr->{field} , skipping rule\n";
+         next;
         }
      
      }
@@ -423,8 +425,8 @@ sub mk_spldatamhod {
         $action_prefix = 0x02000000 if $is_negative;
 		
         unless($action_num = $SPLREDEF{num_action}{lc($real_action)}) {
-          warn "iTunesDB.pm: action $chr->{action} is invalid for $chr->{field}, setting action to ".$is_negative."eq\n";
-          $action_num = $SPLREDEF{num_action}{eq};
+          warn "iTunesDB.pm: action $chr->{action} is invalid for $chr->{field}, skipping rule\n";
+          next;
         }
         
         my ($within_magic_a, $within_magic_b, $within_range, $within_key) = undef;
@@ -438,7 +440,14 @@ sub mk_spldatamhod {
          
          $within_magic_b = 0xffffffff;        #Isn't magic.. but we are not 64 bit..
          ($within_range, $within_key) = $chr->{string} =~ /(\d+)_(\S+)/;
-         $within_key = $SPLREDEF{within_key}{lc($within_key)};
+         
+         if($SPLREDEF{within_key}{lc($within_key)}) {
+           $within_key = $SPLREDEF{within_key}{lc($within_key)}; #Known
+         }
+         else {
+          warn "Invalid value for 'within' action: '$chr->{string}', skipping rule\n";
+          next;
+         }
          $within_range-- if $within_range > 0; #0x..ff = 1.. 
         }
         else { #Fallback for normal stuff
@@ -456,10 +465,10 @@ sub mk_spldatamhod {
         $string .= pack("H24");
         $string .= pack("H8", _x86itop(1));
         $string .= pack("H40");
-        #__hd($string);die;
 	}
 	else { #Unknown type, this is fatal!
-	  die "iTunesDB.pm: FATAL ERROR: <spl field=\"$chr->{field}\"... is unknown, can't continue!\n";
+	  warn "iTunesDB.pm: ERROR: <spl field=\"$chr->{field}\"... is unknown, skipping SPL\n";
+      next;
 	}
 
      if(length($string) > 0xfe) { #length field is limited to 0xfe!
@@ -473,8 +482,10 @@ sub mk_spldatamhod {
      $cr .= pack("H94");
      $cr .= pack("h2", _itop(length($string),0xff));
      $cr .= $string;
+     $CHTM++; #Ok, we got a complete SPL
  }
 
+ return undef unless $CHTM; #Ouch, EVERYTHING failed. Refuse to create an empty SPL
 
  my $ret = "mhod";
  $ret .= pack("h8", _itop(24));    #Size of header
@@ -484,7 +495,7 @@ sub mk_spldatamhod {
  $ret .= "SLst";                   #Magic
  $ret .= pack("H8", reverse("00010001")); #?
  $ret .= pack("h6");
- $ret .= pack("h2", _itop(int(@{$hs->{data}}),0xff));     #HTM (Childs from cr) FIXME: is this really limited to 0xff childs?
+ $ret .= pack("h2", _itop($CHTM,0xff));     #HTM (Childs from cr) FIXME: is this really limited to 0xff childs?
  $ret .= pack("h6");
  $ret .= pack("h2", _itop($anymatch,0xff));     #anymatch rule on or off
  $ret .= pack("h240");

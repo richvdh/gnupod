@@ -1,4 +1,4 @@
-** THIS IS GNUPOD 0.95 RC1 **
+** THIS IS GNUPOD 0.95 RC2 **
 PLEASE NOTE: THE SMARTPLAYLIST SYNTAX CHANGED (AND IS STILL INCOMPLETE)
              READ DOCUMENTATION ABOUT THE NEW SMARTPLAYLIST SYNTAX
              (and see src/ext/iTunesDB.pm for all fields...)
@@ -13,6 +13,9 @@ Summary
 
 - GNUpod has now a configuration file! Read the docs or/and
   see doc/gnupodrc.example
+
+- Added funky SmartPlaylist creator, see doc/mkspl.html
+  (Needs JavaScript + DOM => Mozilla)
 
 - gnupod_addsong.pl can now add FLAC files.
   'flac' needs to be in your $PATH and it's disabled
@@ -44,6 +47,9 @@ Summary
   playtime
 
 - Added gnupod_check.pl, it check's for 'lost' files
+
+- I changed the 'build' system. Btw, you can now uninstall
+  GNUpod using 'make uninstall' .. but why? :)
 
 *** OLD STUFF ***
 

@@ -137,8 +137,9 @@ my $mhp = 0;
 if(ref($spl) eq "HASH") { #We got splpref!
  $pl .= GNUpod::iTunesDB::mk_splprefmhod({item=>$spl->{limititem},sort=>$spl->{limitsort},mos=>$spl->{moselected}
                                           ,liveupdate=>$spl->{liveupdate},value=>$spl->{limitval},
-                                          checkrule=>$spl->{checkrule}});
- $pl .= GNUpod::iTunesDB::mk_spldatamhod({anymatch=>$spl->{matchany},data=>$spldb{$name}});
+                                          checkrule=>$spl->{checkrule}}) || return undef;
+                                           
+ $pl .= GNUpod::iTunesDB::mk_spldatamhod({anymatch=>$spl->{matchany},data=>$spldb{$name}}) || return undef;
  $mhp=2; #Add a mhod
 }
 
@@ -168,13 +169,22 @@ sub genpls {
  
 #CID is now used by r_mpl, dont use it yourself anymore
   foreach(GNUpod::XMLhelper::getpl_names()) {
-    my $splh = GNUpod::XMLhelper::get_splpref($_);
-    $plc++; #PLcount
-       my($pl, $xc) = r_mpl($_, 0, $pldb{$_}, $splh);
-       $pldata .= $pl;
-       my $plxt = "Smart-" if $splh;
-       print ">> Created $plxt"."Playlist '$_' with $xc file"; print "s" if $xc !=1;
-     print "\n";
+    
+    my $splh = GNUpod::XMLhelper::get_splpref($_); #Get SPL Prefs
+    
+    my($pl, $xc) = r_mpl($_, 0, $pldb{$_}, $splh); #Kick Playlist creator
+    
+       if($pl) { #r_mpl got data, we can create a playlist..
+        $plc++;         #INC Playlist count
+        $pldata .= $pl; #Append data
+        #GUI Stuff
+        my $plxt = "Smart-" if $splh;
+        print ">> Created $plxt"."Playlist '$_' with $xc file"; print "s" if $xc !=1;
+        print "\n";
+       }
+       else {
+        warn "!! SKIPPED Playlist '$_', something went wrong...\n";
+       }     
   }
  
  return GNUpod::iTunesDB::mk_mhlp({playlists=>$plc}).$pldata;
@@ -268,10 +278,10 @@ sub xmk_newspl {
   push(@{$spldb{$name}}, $xr);
  }
 
- if(GNUpod::XMLhelper::get_splpref($name)->{liveupdate}) {
-  warn "mktunes.pl: warning: (pl: $name) Liveupdate enabled, but mktunes.pl doesn't support this atm. keeping songs\n";
+ unless(GNUpod::XMLhelper::get_splpref($name)->{liveupdate}) {
+  warn "mktunes.pl: warning: (pl: $name) Liveupdate disabled. Please set liveupdate=\"1\" if you don't want an empty playlist";
  }
- #elsif
+
  if(my $id = $el->{splcont}->{id}) { #We found an old id with disalbed liveupdate
     foreach(sort {$a <=> $b} split(/ /,$meat{id}{$id})) { push(@{$pldb{$name}}, $_); }
  }
