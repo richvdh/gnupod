@@ -243,10 +243,14 @@ sub __is_mp3 {
    } 
  }
 
+#foreach(keys(%$hs)) {
+# print "$_ -> $hs->{$_}\n";
+#}
+
 
 #IDv2 is stronger than IDv1..
  #Try to parse things like 01/01
- my @songa = pss(getutf8($hs->{TRCK} || $h->{TRACKNUM}));
+ my @songa = pss(getutf8($hs->{TRCK} || $hs->{TRK} || $h->{TRACKNUM}));
  my @cda   = pss(getutf8($hs->{TPOS}));
  
      $rh{songs}    = int($songa[1]);
