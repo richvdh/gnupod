@@ -16,7 +16,7 @@ $opts{skip_contrib} = $ARGV[4];
 
 die "Expected 5 arguments, got ".int(@ARGV)."\n make will run me, not you! stupid human!" if !$opts{skip_contrib} || $ARGV[5];
 
-#ok, we are still alive...
+#ok, we are still alive, let's blow up the system ;)
 print "Installing GNUpod-base using gnupod_install 0.21\n";
 install_scripts("../src/*.pl", $opts{bindir}, $opts{perlbin});
 
@@ -38,7 +38,8 @@ sub install_docs {
 my($file, $infodir) = @_;
 print "Installing documentation\n";
 if(system("install-info --info-dir=$infodir $file")) {
- print "install-info failed, documentation *NOT* installed\n";
+ print "** install-info failed, documentation *NOT* installed\n";
+ print "** See 'doc/gnupod.html' for an HTML version...\n";
 }
 else {
 

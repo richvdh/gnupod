@@ -28,7 +28,7 @@ Unicode::String->stringify_as('utf8');
 # This product is not supported/written/published by Apple!
 
 use vars qw($filedata %pldata $trash %paratt %opts %dull_helper @playlist_pos);
-print "gnupod delete 0.6 (C) 2002-2003 Adrian Ulrich\n";
+print "gnupod delete 0.7 (C) 2002-2003 Adrian Ulrich\n";
 print "Part of the gnupod-tools collection\n";
 print "This tool removes files from your iPod and updates the gnuPod file\n\n";
 
@@ -160,29 +160,31 @@ sub rm_o_matic
       $zipfel{$el[$i]} = $value;
      }
    
-	    for(my $j=0;$j<int(@ARGV);$j++)
+      for(my $j=0;$j<int(@ARGV);$j++)
       {
        if($ARGV[$j] == $zipfel{id})
         {
-	  			$kill = 1; #this ID is on the kill list!
-					last;
-				}
+	  $kill = 1; #this ID is on the kill list!
+	  last;
+        }
       }
  
    
-	if(!$kill) #we have to keep this entry
-  {
-    $ok_line = " <$type ";
-	  foreach (keys(%zipfel))
+    if(!$kill) #we have to keep this entry
+    {
+       $ok_line = " <$type ";
+       $ok_line .= "id=\"$zipfel{id}\" " if $zipfel{id}; #Add 'id' as first element
+	  foreach (reverse(keys(%zipfel)))
 	  {
+	        next if $_ eq "id"; #Drop the ID element.. we added it above..
 	  	$ok_line .= "$_=\"".$zipfel{$_}."\" ";
 	  }
 	  	$ok_line .="/>\n";
-  }
-  elsif($type eq "file") #found on kill-list... we don't keep this entry..
-  {
+    }
+    elsif($type eq "file") #found on kill-list... we don't keep this entry..
+    {
     	my($podpath);
-	  	$podpath = $zipfel{path};
+	    $podpath = $zipfel{path};
 	    $podpath =~ tr/:/\//;
 	     if($podpath)
 	     {
@@ -199,7 +201,7 @@ sub rm_o_matic
 	    {
 	      print "ID ".$zipfel{id}." removed from GNUtunesDB, but file won't get deleted (no 'path=' found...)\n";
 	    }
-  }
+    }
       
 return $ok_line;
 }

@@ -142,7 +142,7 @@ die << "EOF";
      
 Content is sent to STDERR:
  $0 foobar.m3u 2> out
-Is very usefull for big playlists.
+Is very usefull for big playlists. (and smallones ;))
 EOF
 }
 

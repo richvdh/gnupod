@@ -22,7 +22,7 @@ List GnuPod tunes database.
   -t --titles            :  list titles
   -g --genres            :  list genres
   -m --mount=directory   :  iPod mountpoint, default is \$IPOD_MOUNTPOINT
-  -h  --help             :  print this summary and exit
+  -h --help             :  print this summary and exit
 END_USAGE
 }
 

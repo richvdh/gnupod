@@ -44,7 +44,7 @@ $sid = $dull_helper{files};
 
 
 
-print "mktunes.pl 0.6 (C) 2002-2003 Adrian Ulrich\n";
+print "mktunes.pl 0.7 (C) 2002-2003 Adrian Ulrich\n";
 print "Part of the gnupod-tools collection\n";
 print "This tool updates your iTunesDB with the content of the gnuPodDB\n\n";
 
@@ -82,7 +82,7 @@ sub go
 {
 my($file) = @_;
 
-$| = 1;
+$| = 1; #Turn off buffering of stdout
 
 
 print "\r> Parsing '$file' (time to pray!)\n";
@@ -91,22 +91,25 @@ $parser->setHandlers(Start => \&start_handler, End => \&end_handler);
 $parser->parsefile($file);
 
 
-
-
-my ($ta, $tb);
-
 print "\r> Creating File Database..\n";
-$ta = mk_mhsd(mk_mhlt($hsd_a, ($dull_helper{files}-$sid)), 1);
+
+#add header to 'files' part..
+$dull_helper{_f_data} = mk_mhlt(($dull_helper{files}-$sid)).$dull_helper{_f_data};
+$dull_helper{_f_data} = mk_mhsd(length($dull_helper{_f_data})
+                         , 1).$dull_helper{_f_data};
 
 print "\r> Creating Playlists..\n";
-$tb = pl_generator();
-
+$dull_helper{_pl_data} = pl_generator();
+$dull_helper{_pl_data} = mk_mhsd(length($dull_helper{_pl_data}),2).$dull_helper{_pl_data};
 
 
 
 print "\r> Packing file\n";
 open(ITUNES, "> $opts{m}/iPod_Control/iTunes/iTunesDB") or die "Failed to open: $!\n";
- print ITUNES mk_mhbd($ta.$tb);
+ binmode(ITUNES); #Try to be nice to RedHat8 perl..
+ print ITUNES mk_mhbd(length($dull_helper{_f_data}.$dull_helper{_pl_data}));
+ print ITUNES $dull_helper{_f_data};
+ print ITUNES $dull_helper{_pl_data};
 close(ITUNES);
 
 print "\r> Correcting timestamps...\n";
@@ -157,7 +160,7 @@ if($el[0] eq "playlist"){
     push(@playlist_pos, $el[2]) if !search_array($el[2], @playlist_pos);
   }
   else {
-   die "FATAL ERROR: Playlist without name found!\n";
+   die "FATAL ERROR: Playlist without name found!\n Correct Syntax: <playlist name=\"FooBar\">\n";
   }
 }
 elsif($el[0] eq "file" && $parent eq "files")
@@ -174,7 +177,7 @@ elsif(($el[0] eq "regex" || $el[0] eq "iregex") && $parent eq "playlist")
  }
 else 
 {
- print "* Ignoring element $el[0] with parent *$parent*\n" if $opts{d};
+ print "*WARNING* Ignoring element $el[0] with parent *$parent*\n" if $opts{d};
 }
 
 #set some parent info for next element
@@ -273,7 +276,6 @@ print "> Generating playlists, found ". int(@playlist_pos)."\n";
       foreach my $i (@plidx)
       {
        print "\r $i" if $opts{s};
-  #     print ">>> FQID: [$i]\n" if $opts{d};
          $pl_content .= mk_mhip(($i));
          $pl_content .= mk_mhod(100, "", ($i));
       }
@@ -281,7 +283,10 @@ print "> Generating playlists, found ". int(@playlist_pos)."\n";
    $ret .= mk_mhyp($pl_content, $_, 0, scalar(@plidx));
    }
 	 
-return mk_mhsd(mk_mhlp($ret, (int(@playlist_pos)+1)), 2);
+return mk_mhlp($ret, (int(@playlist_pos)+1));
+
+#return mk_mhsd(mk_mhlp($ret, (int(@playlist_pos)+1)), 2);
+
 }
 
 
@@ -349,9 +354,11 @@ $ret .= pack("h8", itop($file_hash{cds}));               #number of cds
 $ret .= pack("H8");                                      #hardcoded space 
 $ret .= pack("h8", mactime());                           #dummy timestamp again...
 $ret .= pack("H96");                                     #dummy space
-$hsd_a = $hsd_a.$ret.$hod_data;
 
 $dull_helper{files}++;
+
+$dull_helper{_f_data} .= $ret.$hod_data;
+return 0;
 }
 
 
@@ -363,12 +370,12 @@ my($ret, $dullme);
 ($dullme) = @_;
 $ret = "mhbd";
 $ret .= pack("h8", itop(104));                  #Header Size
-$ret .= pack("h8", itop(length($dullme)+104));  #size of the whole mhdb
+$ret .= pack("h8", itop($dullme+104));  #size of the whole mhdb
 $ret .= pack("H8", "01");                       #?
 $ret .= pack("H8", "01");                       #? - changed to 2 from itunes2 to 3 .. version? We are iTunes version 1 ;)
 $ret .= pack("H8", "02");                       #?
 $ret .= pack("H160", "00");                     #dummy space
-$ret .= $dullme;
+return $ret;
 }
 
 
@@ -393,13 +400,13 @@ return $ret.$dull;
 sub mk_mhlt
 {
 my($dull, $ret, $songnum,$xsongnum);
-($dull, $songnum) = @_;
+($songnum) = @_;
 
 $ret = "mhlt";
 $ret .= pack("h8", itop(92)); 		#Header size (static)
 $ret .= pack("h8", itop($songnum));     #songs in this itunesdb
 $ret .= pack("H160", "00");             #dummy space
-return $ret.$dull;
+return $ret;
 }
 
 
@@ -476,13 +483,12 @@ sub mk_mhsd
 {
 my($ret, $whole_file, $siz, $type);
 ($whole_file, $type) = @_;
-$siz = reverse(sprintf("%08X",length($whole_file)+96));
 $ret = "mhsd";
 $ret .= pack("h8", itop(96));           		     #Headersize, static
-$ret .= pack("h8", itop((length($whole_file))+96));          #size
+$ret .= pack("h8", itop($whole_file+96));                   #size
 $ret .= pack("h8", itop($type));      			     #type .. 1 = song .. 2 = playlist
 $ret .= pack("H160", "00");         			     #dummy space
-return $ret.$whole_file;
+return $ret;
 }
 
 
@@ -502,6 +508,7 @@ sub mk_mhod
 #4   - interpret
 #5   - genre
 #6   - filetype
+#7   - ??? (EQ?)
 #8   - comment
 #12  - composer
 #100 - Playlist item
@@ -587,7 +594,6 @@ sub itop
 {
 my($int) = @_;
 $int =~ /(\d+)/; 
-#print "[$int]->[$1]\n" if $opts{d};
 $int = $1;
 return scalar(reverse(sprintf("%08X", $int)));
 }
@@ -629,8 +635,8 @@ $ret .= pack("H912", "00");
 
 # Every playlist has such an mhod, it tells iTunes (and other programs?) how the
 # the playlist shall look (visible coloums.. etc..)
-# But are using always the same layout.. we don't support this mhod type..
-
+# But we are using always the same layout static.. we don't support this mhod type..
+# But we write it (to make iTunes happy)
 return $ret
 }
 
@@ -707,7 +713,7 @@ die << "EOF";
      -f  --force            : do not check timestamps
      -d  --debug            : display debug messages
      -s  --status           : display status
-     -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
+     -m  --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
 
 EOF
 }

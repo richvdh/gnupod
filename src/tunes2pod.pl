@@ -46,7 +46,7 @@ $mhod_id[12] = "composer";
 $ipodmagic = "6d 68 62 64 68 00 00 00";
 
 
-print "tunes2pod 0.6 (C) 2002-2003 Adrian Ulrich\n";
+print "tunes2pod 0.7 (C) 2002-2003 Adrian Ulrich\n";
 print "Part of the gnupod-tools collection\n";
 print "This tool converts a iTunesDB to a GNUpodDB file\n\n";
 
@@ -86,43 +86,40 @@ my($now, $qq, $c, $mpl, $cont, $plname);
 	open(FILE,"$opts{m}/iPod_Control/iTunes/iTunesDB") or die "Could not open old iTunesDB: $!\n"; 
 	binmode(FILE); #for Non-Unix systems..
 	
-	open(GNUTUNES, "> $opts{m}/iPod_Control/.gnupod/GNUtunesDB") or die "Could not write to GNUtunesDB: $!\n";
-
 	#check the header
 	if(getfoo(0, (length($ipodmagic)+2)/3) ne $ipodmagic)
 	{
-	die "err: could open the file, but:\nI don't think, thats an ipod - tunes db!\n";
+	  die "** ERROR ** : Could open your iTunesDB, but: Wrong Header found..\n";
 	}
+
+	
+	open(GNUTUNES, "> $opts{m}/iPod_Control/.gnupod/GNUtunesDB") or die "Could not write to GNUtunesDB: $!\n";
 
    $now = (time()-1);
    utime ($now, $now, "$opts{m}/iPod_Control/iTunes/iTunesDB"); #touch the iTunesDB, it has to be older than the gnuPod file
 	    
-$qq = 292; #the magic number!! (the HARDCODED start of the first mhit)
-
 # gnutunes header
 print GNUTUNES "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n<gnuPod>\n<files>\n";
 
+
+$qq = 292; #the HARDCODED start of the first mhit #FIXME .. shouldn't be hardcooded...
 # get every <file entry
 while($qq != -1) {
-$qq = get_nod_a($qq); #get_nod_a returns wher it's guessing the next MHIT, if it fails, it returns '-1'
-$c++;
+ $qq = get_nod_a($qq); #get_nod_a returns wher it's guessing the next MHIT, if it fails, it returns '-1'
+ $c++;
 }
 
 print GNUTUNES "</files>\n\n";
 
 ## search PL start
 $qq = getshoe(112, 4)+292;
-print "PL starts at: $qq\n" if $opts{d};
+
 #get every playlist (no items)
-
 while($qq != -1) {
-($qq, $mpl, $cont, $plname) = get_pl($qq); #get_nod_a returns wher it's guessing the next MHIT, if it fails, it returns '-1'
-$c++;
-
-print "Got a MPL, ignoring\n" if $opts{d} && $mpl;
-
+ ($qq, $mpl, $cont, $plname) = get_pl($qq); #get_nod_a returns wher it's guessing the next MHIT, if it fails, it returns '-1'
+ $c++;
+ print "Got a MPL, ignoring\n" if $opts{d} && $mpl;
  print GNUTUNES "<playlist name=\"$plname\">\n$cont</playlist>\n\n" if(!$mpl && $plname);
-
 }
 
 #end of gnutunes file
@@ -134,46 +131,60 @@ close(GNUTUNES);
 
 
 
-
+#The new *super* rewritten get_pl code..
+#Gets a whole playlist.. you'll only have to tell it where it can find a PL :-p
 sub get_pl
 {
-my ($sum) = @_;
-my($elx, $otxt, $zip, $plname, $oid, $mpl, $ret);
- if(getfoo($sum+20, 1) == 1)
- {
-  $mpl=1; #main playlist, we ignore the MPL
+my($offset) = @_;
+my($is_mpl, $oid, $mht, $plname, $px, $ret) = undef;
+  if(getstr($offset,4) eq "mhyp") {
+   $is_mpl = getshoe($offset+20, 4);
+   $offset+=getshoe($offset+4, 4);
+    
+    #Get the name of the playlist...
+    #You would think that a playlist only has one name.. forget it!
+    #Ehpod does funny things here and writes the playlist name two times.. *plenk*
+    #MusicMatch does also funny things here (Like writing *no* plname for the MPL)
+      
+     while($oid != -1) {
+      $offset+=$oid;
+      ($oid, $mht, $px) = get_mhod($offset);
+      $plname = xmlstring($px) if $mht == 1;
+     }
+     
+     #Now get the PL items..
+      $oid = undef;
+     while($oid != -1) {
+      $offset+=$oid;
+      ($oid, $px) = get_mhip($offset);
+      $ret .= "  <add id=\"$px\" />\n" if $px;
+     }
+    return ($offset, $is_mpl, $ret, $plname);
+  }
+ return -1;
+}
+
+
+
+# get an mhip entry
+sub get_mhip {
+ my($sum) = @_;
+ if(getfoo($sum, 4) eq "6d 68 69 70") {
+  my $oof = getshoe($sum+4, 4);
+  my($oid, $mht, $txt) = get_mhod($sum+$oof);
+  return -1 if $oid == -1; #fatal error..
+  my $px = getshoe($sum+$oof-52, 4);
+  return ($oid+$oof, $px);
  }
 
-$sum = $sum+680+76;
-
-($oid, undef, $plname) = get_mhod($sum);
-
-if($mpl && !$plname) {
- print "Whoops! Detected 'funny' iTunesDB!\n->'Musicmatch bug' workaround enabled\n";
- $plname="buggy"; #give a fake name and don't seek
+#we are lost
+ return -1;
 }
-else {
-$sum+=$oid;
-}
-print "PLN: '$plname'\n" if $opts{d};
- while($zip !=-1)
- {
-  $sum = $zip+$sum+76;
-  ($zip, undef, $otxt) = get_mhod($sum);
-  $elx = getshoe($sum-52, 4);                 #ugly hack, get a PL  item
-   $ret .= "  <add id=\"$elx\"/>\n" if $elx && getfoo($sum, 4) eq "6d 68 6f 64";
- }
-
-if($plname)
-{ return (($sum-76), $mpl, $ret, $plname); }
-else { return -1;}
-}
-
 
 
 #get a mhod entry
 #
-# get_nod_a(START) - returns possibly START of next mhod!
+# get_nod_a(START) - Get mhits..
 sub get_nod_a {
 my(@jerk, $sum, $zip, $state, $sa, $sl, $sb, $sid, $cdnum, $cdanz, $songnum, $songanz, $year);
 my($sbr, $oid, $otxt);
@@ -197,13 +208,11 @@ $sbr = getshoe($sum+56,4);
     while($zip != -1) {
      $sum = $zip+$sum; 
      ($zip, $oid, $otxt) = get_mhod($sum);    #returns the number where its guessing the next mhod, -1 if it's failed
-		 print "Z: $zip / OID: $oid / OTXT: $otxt\n" if $opts{d};
       $jerk[$oid] = xmlstring($otxt);
     }
 
 
 print GNUTUNES "  <file id=\"$sid\" bitrate=\"$sbr\" time=\"$sl\" filesize=\"$sa\" ";
-
 print GNUTUNES "songnum=\"$songnum\" " if $songnum;
 print GNUTUNES "songs=\"$songanz\" " if $songanz;
 print GNUTUNES "cdnum=\"$cdnum\" " if $cdnum;
@@ -243,46 +252,30 @@ return $ret;
 
 
 
-
-
-
-
-
-
-
 #get a SINGLE mhod entry:
 #
 # get_mhod(START_OF_MHOD);
 #
 # return+seek = new_mhod should be there
 sub get_mhod() {
-my($seek, $xl, $ml, $mty, $foo, $id);
-($seek) = @_;
+my($seek, $xl, $ml, $mty, $foo, $id, $dbg);
+($seek, $dbg) = @_;
 
 $id = getfoo($seek, 4);                    #are we lost?
-
-#print GNUTUNES "ID: ".getstr($seek, 4)."\n";
 
 $ml = getshoe($seek+8, 4);
 $mty = getshoe($seek+12, 4);         #genre number
 $xl = getshoe($seek+28,4);           #Entrylength
 
 
-  if($id ne "6d 68 6f 64") { $ml = -1;} #is the id INcorrect??
- 
+  if($id ne "6d 68 6f 64") { $ml = -1;} #is the id INcorrect?? 
   else {
   #get the TYPE of the DB-Entry
-
-
-$foo = getstr($seek+40, $xl); #string of the entry
-$foo =~ tr/\0//d; #we have many \0.. killem!
-
+  $foo = getstr($seek+40, $xl); #string of the entry
+  $foo =~ tr/\0//d; #we have many \0.. killem!
   return ($ml, $mty, $foo);
  }
 }
-
-
-
 
 
 
@@ -332,10 +325,6 @@ read(FILE, $buffer, $anz);
   $xr = oct("0x".$xr);
  return $xr;
 }
-
-
-
-
 
 
 

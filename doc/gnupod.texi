@@ -77,6 +77,7 @@ To use GNUpod, the follwing is needed:
 @item Write support for HFS+ or FAT32
 @item Perl 5.6 or 5.8
 @item The Perl modules MP3::Info, File::Copy, Unicode::String, XML::Parser and Getopts::Mixed
+@item The Perl module XML::Simple if you are going to use the 'gnupod extensions' (recommended)
 @item Basic knowledge of the shell
 @end itemize
 
@@ -99,6 +100,7 @@ GNUpod is known to run on GNU/Linux, FreeBSD, Darwin (Mac OSX) and Solaris 9.
 
 @node Installation of GNUpod
 @section Installation of GNUpod
+@cindex installation
 
 The installation of GNUpod is very simple:
 
@@ -409,6 +411,7 @@ But please don't blame me if your iPod dies...
 * Remove files::                    How to delete files on the iPod
 * Creating playlists::              How to create a playlist
 * Unplug the iPod::                 How to unplug the iPod (Not a joke.. read it)
+* Recovering files::                How to rebuild the Database if you lost the iTunesDB & GNUtunesDB
 * Coexistence::                     iTunes/Music Match/xtunes/Ehpod user? Read this!
 @end menu
 
@@ -552,6 +555,25 @@ rmmod sbp2
 Added songs won't be visible on the iPod if you did not run mktunes.pl before umounting the iPod. 
 (If you forgot to run @code{@w{mktunes.pl}} before unpluging/umounting, simply mount the iPod again and run it)
 
+
+@node Recovering files
+@section Recovering files
+
+If you lost your iTunesDB and your GNUtunesDB, your iPod won't know anymore wich songs are on it, this 
+very good ;)
+
+You can 'rebuild' an GNUtunesDB using @code{gnupod_addsong.pl}
+
+@example
+gnupod_INIT.pl -m /mnt/ipod
+gnupod_addsong.pl --rebuild -m /mnt/ipod
+@end example
+
+First, @code{gnupod_INIT.pl} will create a clean, empty GNUtunesDB, it won't delete any songs on the iPod.
+@code{gnupod_addsong.pl --rebuild} will re-create a GNUtunesDB including the Songs wich are on the iPod
+
+I think nobody will ever have to do this.. but it maybe usefull to know that it's possible
+(Note: Of course you'll lose your Playlists)
 
 @node Coexistence
 @section Coexistence
