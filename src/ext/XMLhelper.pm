@@ -1,5 +1,5 @@
 package GNUpod::XMLhelper;
-#  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
+#  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
 #  URL: http://www.gnu.org/software/gnupod/
@@ -27,7 +27,7 @@ use XML::Parser;
 use Unicode::String;
 use GNUpod::FooBar;
 
-## Release 20040531
+## Release 20040807
 
 my $cpn = undef; #Current PlaylistName
 my @idpub = ();
@@ -169,8 +169,8 @@ sub addpl {
 
  my %rh = ();
     %rh = %{$opt} if ref($opt) eq "HASH"; #Copy if we got data 
- $rh{name} = $name; #Force the name
- $rh{plid} = int(rand(99999));
+ $rh{name} = $name;            #Force the name
+ $rh{plid} = int(rand(99999)); #We create our own id
  push(@plorder, {name=>$name,plid=>$rh{plid}});
  
  $XDAT->{playlists}->{pref}->{$name} = \%rh;
@@ -190,8 +190,8 @@ sub addspl {
 
  my %rh = ();
     %rh = %{$opt} if ref($opt) eq "HASH"; #Copy if we got data 
- $rh{name} = $name; #Force the name
- $rh{plid} ||= int(rand(99999));
+ $rh{name} = $name;              #Force the name
+ $rh{plid} ||= int(rand(99999)); #We create our own id
  push(@plorder, {name=>$name,plid=>$rh{plid}});
   
  $XDAT->{spls}->{pref}->{$name} = \%rh;
@@ -199,7 +199,7 @@ sub addspl {
 
 
 ##############################################################
-#Get all playlists
+#Get all playlists {name, plid}
 sub getpl_attribs {
  return @plorder;
 }

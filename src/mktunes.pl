@@ -42,7 +42,8 @@ use vars qw($cid %pldb %spldb %itb %opts %meat %cmeat @MPLcontent);
 
 $| = 1;
 
-use constant MPL_UID => 1234567890;
+use constant MPL_UID => 1234567890; #This is the MasterPlaylist ID
+
 print "mktunes.pl ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
@@ -50,7 +51,7 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 GetOptions(\%opts, "version", "help|h", "ipod-name|n=s", "mount|m=s", "volume|v=i", "energy|e");
 GNUpod::FooBar::GetConfig(\%opts, {'ipod-name'=>'s', mount=>'s', volume=>'i', energy=>'b'}, "mktunes");
 
-$opts{'ipod-name'} ||= "###__VERSION__###";
+$opts{'ipod-name'} ||= "GNUpod ###__VERSION__###";
 
 
 usage() if $opts{help};
@@ -156,7 +157,6 @@ if(ref($spl) eq "HASH") { #We got splpref!
   $pl .= $cmhip.$cmhod;
  }
  my $plSize = length($pl);
-print ">> $name\n";
   #mhyp appends a listview to itself
   return(GNUpod::iTunesDB::mk_mhyp({size=>$plSize,name=>$name,type=>$type,files=>$fc,
                                     mhods=>$mhp, plid=>$plid}).$pl,$fc);

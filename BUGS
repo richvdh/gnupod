@@ -1,8 +1,8 @@
 * the iTunesDB format is not 'open' (no specification provided)
   We don't support all features
-* GNUpod doesn't like duplicate id's
+* GNUpod doesn't like duplicate id's in the GNUtunesDB.xml (<file id="...)
 * Smartplaylist support isn't tested very well
 * GNUpod doen't like audible.com files (I'll have to look at this later...)
 * gnupod_addsong.pl --restore doesn't remove the '\d+_' prefix from
-  files without name
+  files without tags
 See -> TODO
