@@ -5,6 +5,8 @@ Summary:
 - Nobody did buy me a 40gb iPod with Firmware 2.x
 - I bought one myself
 - Added support for On-The-Go playlists!
+- GNUpod can now handle the 'Rating' set
+  on the iPod (2.x Firmware-only-feature)
 - GNUpod checks if the iTunesDB did change and
   runs tunes2pod.pl if it has to run it
 - You'll have to install Digest::MD5

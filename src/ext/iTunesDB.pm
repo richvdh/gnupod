@@ -854,6 +854,27 @@ return({position=>$pos,pdi=>($pos+$pdi),songs=>$songs,playlists=>$pls});
 
 ######################## Other funny stuff #########################
 
+##############################################
+# Read PlayCounts (Only used for rating atm?)
+sub readPLC {
+ my($file) = @_;
+ open(RATING, "$file") or return ();
+ 
+ my $os = 108;
+ my $buff;
+ my %pcrh = ();
+ while(1) {
+  seek(RATING, $os, 0);
+  last unless read(RATING, $buff, 2) == 2;
+  my $xin = GNUpod::FooBar::shx2int($buff);
+  my $xnum = (($os-108)/16+1);
+  $pcrh{$xnum} = ($xin/20) if $xin;
+  $os += 16;
+ }
+
+close(RATING);
+ return \%pcrh;
+}
 
 ##############################################
 # Read OnTheGo data

@@ -42,14 +42,13 @@ usage() if $opts{help};
 converter();
 
 sub converter {
-#We ARE doing the sync, don't let connect() call us again!
 $opts{_no_sync} = 1;
 my $con = GNUpod::FooBar::connect(\%opts);
 usage("$con->{status}\n") if $con->{status};
 
 #We disabled all autosyncing (_no_sync set to 1), so we do a test
 #ourself
-if(!$opts{force} && !(GNUpod::FooBar::havetosync($con))) {
+if(!$opts{force} && !(GNUpod::FooBar::_itb_needs_sync($con))) {
  print "I don't think that you have to run tunes2pod.pl\n";
  print "The GNUtunesDB looks up-to-date\n";
  print "\n";
@@ -131,6 +130,11 @@ for(my $i=0;$i<$itinfo->{playlists};$i++) {
 
 GNUpod::XMLhelper::writexml($con->{xml});
 GNUpod::FooBar::setsync($con);
+
+#The iTunes is now set to clean .. maybe we have to
+#update the otg..
+$opts{_no_sync} = 0;
+GNUpod::FooBar::connect(\%opts);
 
 print STDOUT "\n Done\n";
 exit(0);

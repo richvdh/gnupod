@@ -40,16 +40,42 @@ unless(!$opth->{mount} && (!$opth->{itunes} || !$opth->{xml})) {
   $rr->{xml}        = $opth->{xml} || $opth->{mount}."/iPod_Control/.gnupod/GNUtunesDB";
   $rr->{mountpoint} = $opth->{mount};
   $rr->{onthego}    = "$rr->{mountpoint}/iPod_Control/iTunes/OTGPlaylistInfo";
+  $rr->{playcounts} = "$rr->{mountpoint}/iPod_Control/iTunes/Play Counts";
   $rr->{status}     = undef;
 
-
-#1. Check if we have to write a new GNUtunesDB with the content of the iTunesDB
- handle_it_sync($rr) unless $opth->{_no_sync}; 
-#2. Try to parse the OTG list (if found..) and ReWrite the XMLdoc (again?!)
- handle_otg_sync($rr) if !$opth->{_no_sync} && int(GNUpod::iTunesDB::readOTG($rr->{onthego}));
+ #Do an iTunesDB Sync if not disabled and needed
+  do_itbsync($rr) if(!$opth->{_no_it_sync} && !$opth->{_no_sync} && _itb_needs_sync($rr));
+ 
+ #Do an OTG Sync if not disabled and needed
+  do_otgsync($rr) if(!$opth->{_no_otg_sync} && !$opth->{_no_sync} && _otg_needs_sync($rr));
 }
 
  return $rr
+}
+
+#######################################################################
+# Call tunes2pod
+sub do_itbsync {
+ my($con) = @_;
+ $ENV{IPOD_MOUNTPOINT} = $con->{mountpoint};
+ 
+ if(system("tunes2pod.pl > /dev/null")) {
+  die "** FATAL **: tunes2pod.pl died!\n
+  You can disable auto-sync (= autorun of tunes2pod.pl)
+  by removing '$con->{etc}/.itunesdb_md5'\n";
+ }
+ print "> GNUtunesDB sync done!\n";
+}
+
+######################################################################
+# Call gnupod_otgsync.pl
+sub do_otgsync {
+ my($con) = @_;
+ $ENV{IPOD_MOUNTPOINT} = $con->{mountpoint};
+ if(system("gnupod_otgsync.pl --top4secret")) {
+  warn "** UUUPS **: gnupod_otgsync.pl died!\n";
+ }
+ print "> On-The-Go Playlist synced\n";
 }
 
 
@@ -66,8 +92,9 @@ sub shx2int {
 
 ######################################################################
 # Returns '1' if we MAY have to sync..
-sub havetosync {
+sub _itb_needs_sync {
  my($rr) = @_;
+warn "debug: havetosync call ($$)\n";
  if(-r "$rr->{etc}/.itunesdb_md5") {
    my $itmd = getmd5($rr->{itunesdb});
    open(MDX,"$rr->{etc}/.itunesdb_md5");
@@ -80,44 +107,31 @@ sub havetosync {
 }
 
 ######################################################################
-# Check up to date status
-sub handle_it_sync {
+# Checks if we need to do an OTG-Sync
+# Note: If we need an update, we are going to parse
+# the otg twice: i know, that's ugly.. but it's so fast that it
+# doesn't matter..
+sub _otg_needs_sync {
  my($rr) = @_;
-  if(havetosync($rr)) {
-    warn "*** GNUtunesDB outdated, running tunes2pod.pl to fix it...\n";
-    $ENV{IPOD_MOUNTPOINT} = $rr->{mountpoint};
-    if(system("tunes2pod.pl --force > /dev/null")) {
-     die "tunes2pod.pl died, can't continue!\n";
-    }
-    warn "*** done!\n";
-  }
+ if(GNUpod::iTunesDB::readOTG($rr->{onthego}) ||
+    GNUpod::iTunesDB::readPLC($rr->{playcounts})) {
+  warn "debugn: returning 'otg sync needed'\n";
+  return 1;    
+ }
 }
 
-######################################################################
-# Call gnupod_otgsync to update OnTheGo lists
-sub handle_otg_sync {
- my($rr) = @_;
- $ENV{IPOD_MOUNTPOINT} = $rr->{mountpoint};
- if(system("gnupod_otgsync.pl --top4secret")) {
-  warn "gnupod_otgsync.pl failed. On-The-Go playlist *NOT* Synced!\n";
- }
- else {
-  print "> Synced On-The-Go playlist\n";
- }
-}
 
 ######################################################################
 # Call this to set GNUtunesDB <-> iTuneDB 'in-sync'
 sub setsync {
  my($rr) = @_;
- 
  die "FATAL: Unable to read iTunesDB\n" unless (-r $rr->{itunesdb});
  #Write the file with md5sum content
  open(MDX,">$rr->{etc}/.itunesdb_md5") or die "Can't write md5-sum, $!\n";
   print MDX getmd5($rr->{itunesdb})."\n";
  close(MDX);
- 
 }
+
 
 ######################################################################
 # Get the MD5 sum of a file
