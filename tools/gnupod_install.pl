@@ -17,7 +17,7 @@ $opts{skip_contrib} = $ARGV[4];
 die "Expected 5 arguments, got ".int(@ARGV)."\n make will run me, not you! stupid human!" if !$opts{skip_contrib} || $ARGV[5];
 
 #ok, we are still alive, let's blow up the system ;)
-print "Installing GNUpod-base using gnupod_install 0.21\n";
+print "Installing GNUpod-base using gnupod_install 0.22\n";
 install_scripts("../src/*.pl", $opts{bindir}, $opts{perlbin});
 
 if($opts{skip_contrib} eq "no") {

@@ -27,7 +27,7 @@ if($opts{restore}) {
  print " Hit ENTER to continue or CTRL+C to abort\n\n";
  <STDIN>;
  $opts{duplicate} = 1; #Don't skip dups on restore
- startup(glob("$opts{mount}/iPod_Control/Music/F*/*"));
+ startup(glob("$opts{mount}/iPod_Control/Music/*/*"));
 }
 else {
  startup(@ARGV);

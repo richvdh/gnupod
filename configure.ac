@@ -1,4 +1,4 @@
-AC_INIT(gnupod, 0.8, bug-gnupod@nongnu.org)
+AC_INIT(gnupod, 0.9rc0, bug-gnupod@nongnu.org)
 AC_PATH_PROGS(PERL, perl-5.8 perl-5.6 perl)
 
 if test $PERL; then
@@ -10,7 +10,8 @@ exit 1
 fi
 
 dnl Basic modules
-ALL_MODULES="XML::Simple Unicode::String"
+dnl We need XML::Parser because we force XML::Simple to use it (no XML::SAX)
+ALL_MODULES="XML::Parser XML::Simple Unicode::String"
 
 
 dnl Ugly check for modules

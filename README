@@ -1,10 +1,4 @@
-This version is BROKEN at the moment.
-
-The last CVS version is known as gnupod0.29-rc1 and
-can be found on ftp.gnu.org (and many mirrors)
-
-
-#Blabla FIXME.. write a better README file..
+** THIS IS A PRERELEASE ! **
 
 What is GNUpod?
 ---------------
@@ -19,8 +13,6 @@ Running
  #./configure
  #make install
 should be enough.
-
-FIXME: gnuPod doku updaten und hierhin kopieren..
 
 
 Using GNUpod
@@ -65,3 +57,6 @@ Q: How about HFS+ on GNU/Linux?
 A: http://www.ardistech.com/hfsplus/ :)
    Still in beta-stage (like GNUpod ;) )
    but looks interesting..
+
+Q: I found a bug (feature ;) )
+A: Tell me more about it ;) mailto:pab@blinkenlights.ch

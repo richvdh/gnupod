@@ -7,10 +7,3 @@ infodir      = @infodir@
 mandir       = @mandir@
 perlbinary   = @PERL@
 
-
-install:
-	echo "Broken!"
-
-test:
-	cd tools && $(perlbinary) gnupod_testit.pl "$(perlbinary)"
-

@@ -44,7 +44,7 @@ sub go {
  }
  
  print "> Music folders:\n";
- for(0..20) {
+ for(0..19) {
    my $path = sprintf("$opts{mount}/iPod_Control/Music/F%02d", $_);
    next if -d $path;
    mkdir("$path") or die "Could not create $path ($!)\n";

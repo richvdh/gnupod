@@ -1,18 +1,27 @@
 package GNUpod::XMLhelper;
 
 use strict;
-use XML::Parser;
 
+use XML::Simple;
+$XML::Simple::PREFERRED_PARSER = "XML::Parser";
 
 ##
 ## (C) 2003 Adrian Ulrich
-## Release 20030525
+## Release 20030823
 ## -----------------------------------------------
 ##
 ##
 
 my @idpub;
 my $xid = 1; #The ipod doesn't like ID 0
+
+
+#We need todo some 'workarounds' on non-perl 5.8
+my $douni = undef; $douni = 1 if($] >=5.008);
+if($douni) {
+ eval 'use encoding "utf8"';
+}
+
 ###############################################
 # Get an iPod-safe path for filename
 sub getpath {
@@ -50,11 +59,19 @@ if($opts{cleanit}) { #We create a clean XML file
   $doc->{gnuPod}->[0]->{files} = ();
 }
 elsif(-r $xmlin) { #Parse the oldone..
- $doc = gnupod_xmlin($xmlin, keeproot => 1, keyattr => [], forcearray=>1); 
+ $doc = XML::Simple::XMLin($xmlin, keeproot => 1, keyattr => [], forcearray=>1); 
  #Create the IDPUB (Free IDs)
   foreach(@{$doc->{gnuPod}->[0]->{files}->[0]->{file}}) {
    $idpub[$_->{id}]++;
   }
+=head
+  my $dbg = $doc->{gnuPod}->[0]->{files}->[0]->{file}->[0]->{title};
+  print length($dbg)."//$dbg\n";
+   foreach(split(//,$dbg)) {
+    print ord($_). "$_\n";
+   }
+   print "Is it 228 for ae??\n";
+=cut
 }
 else { #XML does not exist?
  return undef;
@@ -125,20 +142,16 @@ sub addfile {
 # Write the XML File
 sub write_xml {
  my($out, $href) = @_;
- open(OUT, ">$out") or die "Could not open $out : $!\n";
-#XML::Simple::XMLout has a strange encoding on some versions.. we fix this (ugly!)
- # print OUT Unicode::String::utf8(XML::Simple::XMLout($href,keeproot=>1,xmldecl=>1));
-print OUT gnupodxml_out($href,keeproot=>1);
+
+#### How to handle utf8 in 5.6 and 5.8
+if($douni) {
+ open(OUT, ">:utf8", "$out") or die "Could write to $out : $!\n";}
+else { #perl 5.6
+ open(OUT, ">$out") or die "Could not write to $out : $!\n";}
+#### 
+ 
+ print OUT XML::Simple::XMLout($href,keeproot=>1);
  close(OUT);
-}
-
-
-sub gnupodxml_in {
- die "Write me!\n";
-}
-
-sub gnupodxml_out {
- die "Write me!\n";
 }
 
 
