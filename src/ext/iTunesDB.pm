@@ -86,7 +86,7 @@ $SPLDEF{field}{14} = "COMMENT";
 $SPLDEF{field}{16} = "addtime";
 $SPLDEF{field}{18} = "COMPOSER";
 $SPLDEF{field}{22} = "playcount";
-$SPLDEF{field}{23} = "playtime";
+$SPLDEF{field}{23} = "lastplay";
 $SPLDEF{field}{24} = "cdnum";
 $SPLDEF{field}{25} = "rating";
 $SPLDEF{field}{31} = "compilation";
@@ -345,7 +345,7 @@ elsif($sort < 0) {
  $sort *= -1;   #Get positive value
 }
 
-
+#Check checkrule range
 if($checkrule < 1 || $checkrule > 3) {
  warn "iTunesDB.pm: error: 'checkrule' ($hs->{checkrule}) invalid. Value set to 'limit')\n";
  $checkrule = $SPLREDEF{checkrule}{limit};
@@ -356,9 +356,9 @@ if($int_item < 1) {
  $int_item = $SPLREDEF{limititem}{minute};
 }
 
+#lim-only = 1 / match only = 2 / both = 3
 $chkrgx = 1 if $checkrule>1;
 $chklim = $checkrule-$chkrgx*2;
-#lim-only = 1 / match only = 2 / both = 3
 
  my $ret = "mhod";
  $ret .= pack("h8", _itop(24));    #Size of header
@@ -467,7 +467,7 @@ sub mk_spldatamhod {
         $string = substr($string,0,254);
      }
      
-     $cr .= pack("H6");
+     $cr .= pack("H6"); #Add data in for() loop... (= new chunk)
      $cr .= pack("h2", _itop($int_field,0xff));
      $cr .= pack("H8",_x86itop($action_num+$action_prefix)); #Yepp.. everything here is x86! ouch
      $cr .= pack("H94");
@@ -488,9 +488,7 @@ sub mk_spldatamhod {
  $ret .= pack("h6");
  $ret .= pack("h2", _itop($anymatch,0xff));     #anymatch rule on or off
  $ret .= pack("h240");
-
-
- $ret .= $cr;
+ $ret .= $cr; #add data
 return $ret;
 }
 
@@ -743,22 +741,21 @@ sub read_spldata {
 my $diff = $hr->{start}+160;
 my @ret = ();
  for(1..$hr->{htm}) {
-  my $field = get_int($diff+3, 1);  #Field
-  my $ftype = get_int($diff+4,1);   #Field TYPE
-  my $action= get_x86_int($diff+5, 3);  #Field ACTION
-  my $slen  = get_int($diff+55,1); #Whoa! This is true: string is limited to 0xfe (254) chars!! (iTunes4)
-  my $rs    = undef; #ReturnSting
-#__hd(get_string($diff+56,69));
-#__hd(get_string($diff+56,96));
+  my $field = get_int($diff+3, 1);       #Field
+  my $ftype = get_int($diff+4,1);        #Field TYPE
+  my $action= get_x86_int($diff+5, 3);   #Field ACTION
+  my $slen  = get_int($diff+55,1);       #Whoa! This is true: string is limited to 0xfe (254) chars!! (iTunes4)
+  my $rs    = undef;                     #ReturnSting
 
 
-  my $human_exp = $SPLDEF{hprefix}{$ftype};
+  my $human_exp = $SPLDEF{hprefix}{$ftype}; #Set NOT for $ftype
  
    if($SPLDEF{is_string}{$ftype}) { #Is a string type
 	my $string= get_string($diff+56, $slen);
     #No byteswap here?? why???
     $rs = Unicode::String::utf16($string)->utf8;
-    $human_exp .= $SPLDEF{string_action}{$action};
+    #Translate $action to a human field
+    $human_exp .= $SPLDEF{string_action}{$action}; 
 	#Warn about bugs 
 	$SPLDEF{string_action}{$action} or _itBUG("Unknown s_action $action for $ftype (= GNUpod doesn't understand this SmartPlaylist)");
    }
@@ -766,6 +763,8 @@ my @ret = ();
          && get_x86_int($diff+56+8,4) == 0xffffffff
          && get_x86_int($diff+56,4)   == 0x2dae2dae) {
      ## Within type is handled different... ask apple why...
+     
+     #Get the value (Bug: we are 32 bit.. this looks 64 bit)
      $rs = (0xffffffff-get_x86_int($diff+56+12,4)+1);
   
      $human_exp .= $SPLDEF{num_action}{$action}; #Set human exp
@@ -775,7 +774,7 @@ my @ret = ();
      }
      else {
       _itBUG("Can't handle within_SPL_FIELD - unknown within_key, using 1_day");
-      $rs = "1_day";
+      $rs = "1_day"; #Default fallback
      }
    }
    else { #Is INT (Or range)
@@ -817,9 +816,9 @@ sub read_splpref {
 $sort *= -1 if $sort_low;
 
  if($SPLDEF{limitsort}{$sort}) {
-  $sort = $SPLDEF{limitsort}{$sort};
+  $sort = $SPLDEF{limitsort}{$sort}; #Convert it to a human word
  }
- else {
+ else { #Hups, unknown field, random is our fallback
   _itBUG("Don't know how to handle SPLSORT '$sort', setting sort to RANDOM",);
   $sort = "random";
  }

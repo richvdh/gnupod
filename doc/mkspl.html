@@ -1,0 +1,179 @@
+<html>
+ <head>
+  <title>SmartPlaylist generator</title>
+  
+  <script language="JavaScript">
+   var current_id = -1;
+   var STRINGOPT = new Array();
+   STRINGOPT[0] = new Option('is',               'IS');
+   STRINGOPT[1] = new Option('is not',           'NOT_IS');
+   STRINGOPT[2] = new Option('contains',         'CONTAINS');
+   STRINGOPT[3] = new Option('does not contain', 'NOT_CONTAINS');
+   STRINGOPT[4] = new Option('starts with', 'STARTWITH');
+   STRINGOPT[5] = new Option('does not start with', 'NOT_STARTWITH');
+   STRINGOPT[6] = new Option('ends with', 'ENDWITH');
+   STRINGOPT[7] = new Option('does not end with', 'NOT_ENDWITH');            
+   
+   var INTOPT = new Array();
+   INTOPT[0] = new Option('==',    'eq');
+   INTOPT[1] = new Option('!=',    '!eq');
+   INTOPT[2] = new Option('>',     'gt');
+   INTOPT[3] = new Option('not >', '!gt');
+   INTOPT[4] = new Option('<', 'lt');
+   INTOPT[5] = new Option('not <', '!lt');
+   INTOPT[6] = new Option('range (use "from:to")', 'range');      
+   INTOPT[7] = new Option('not in range (use "from:to")', '!range');    
+   
+   function mkspl() {
+    var liveupdate = 1;
+    
+    var limitval = document.spling.limitval.value;
+    var limititem =document.spling.limititem.value;
+    var limitsort =document.spling.limitsort.value;
+    var name = document.spling.name.value;
+    
+    
+    var splLine = "<smartplaylist name=\""+name+"\" checkrule=FIXME liveupdate=\""+liveupdate+"\" limititem=\""+
+                  limititem+"\" limitval=\""+limitval+"\" limitsort=\""+limitsort+"\" >\n";
+   
+    var spl_field;
+    var spl_action;
+    var spl_value;
+    var evalme;
+    for(var i=0;i<=current_id;i++) {
+     evalme =  "spl_field = document.spling.field_"+i+".value;";
+     evalme += "spl_action = document.spling.action_"+i+".value;";
+     evalme += "spl_value  = document.spling.value_"+i+".value;";           
+     eval(evalme);
+     spl_field = spl_field.substr(1);
+     splLine += "  <spl action=\""+spl_action+"\" field=\""+spl_field+"\" value=\""+spl_value+"\" />\n";
+    }
+     splLine += "</smartplaylist>";
+    document.spling.FINISHED.value=splLine;
+   }
+  
+
+  /* Handle a change of the FIELD item 
+    - Set the current ACTION
+    - Set the current value vield */
+  function xChange(fID) {
+   var changedto = -1;
+   var current_array = new Array();
+   var evalme = "changedto = document.spling.field_"+fID+".value.substr(0,1)";
+   eval(evalme); /* Set changedto */
+   
+
+   
+   if(changedto == "S") {
+    current_array = STRINGOPT;
+   }
+   else if(changedto == "I") {
+    current_array = INTOPT;
+   }
+   else {
+    alert("Unknown changedto "+changedto);
+    return -1;
+   }
+   
+    
+//   evalme = "document.spling.action_"+(fID)+".options[0]=foo[0];";
+//   eval(evalme);
+   for(var i=0;i<3;i++) {
+    eval("document.spling.action_"+fID+".options[0] = current_array[0];");
+   }
+
+  }
+  
+  
+  function addMatch() {
+   current_id++;
+   x = document.getElementById('splmatcher');
+
+x.innerHTML += current_id+' <select name="field_'+current_id+'" onChange="xChange('+current_id+')">\
+   <option value="Stitle">Title</option>\
+   <option value="Salbum">Album</option>\
+   <option value="Sartist">Artist</option>\
+   <option value="Sgenre">Genre</option>\
+   <option value="Sfdesc">Description</option>\
+   <option value="Scomment">Comment</option>\
+   <option value="Scomposer">Composer</option>\
+   <option value="Sgroup">Group</option>\
+   <option value="Ibitrate">Bitrate</option>\
+   <option value="Israte">Sampling Rate</option>\
+   <option value="Iyear">Year</option>\
+   <option value="Dchangetime">Changetime</option>\
+   <option value="Itracknum">Tracknumber</option>\
+   <option value="Isize">Size</option>\
+   <option value="Itime">Playtime</option>\
+   <option value="Daddtime">Addtime</option>\
+   <option value="Iplaycount">Playcount</option>\
+   <option value="Dlastplay">Last played</option>\
+   <option value="Icdnum">CD Number</option>\
+   <option value="Xrating">Rating</option>\
+   <option value="Bcompilation">Compilation</option>\
+   <option value="Ibpm">BPM</option>\
+  </select>\
+  <select name="action_'+current_id+'"><option>'+current_id+'</select>\
+  <input name="value_'+current_id+'">\
+  <br>';
+//  xChange(current_id);
+  }
+  </script>
+  
+ </head>
+ 
+ <body>
+ 
+ <form name="spling">
+ <table border=1>
+ <tr><td>
+  <input type="text" name="name" value="SmartPlaylist Name"><br>
+ </td></tr>
+ 
+ <tr><td>
+  <div id="splmatcher">
+  </div>
+  
+
+
+  <a href="#" onClick="javascript:addMatch()">ADD</a>
+  
+  
+ </td></tr>
+ 
+ <tr><td>
+ <input type="checkbox" name="do_limit"> Limit to <input type=text name=limitval> 
+ 
+ <select name="limititem">
+  <option value="minute">Minutes</option>
+  <option value="hour">Hours</option>
+  <option value="song">Songs</option>
+  <option value="megabyte">Mb.</option>
+  <option value="gigabyte">Gb.</option>
+ </select>
+ 
+ sort by 
+ <select name="limitsort">
+  <option value="random">Random</option>
+  <option value="title">Title</option>
+  <option value="album">Album</option>
+  <option value="artist">Artist</option>
+  <option value="genre">Genre</option>
+  <option value="addtime_high">Added recent</option>
+  <option value="addtime_low">Added long ago</option>
+  <option value="playcount_high">Played often</option>
+  <option value="playcount_low">Seldom played</option>
+  <option value="lastplay_high">Played recent</option>
+  <option value="lastplay_low">Played long ago</option>
+  <option value="rating_high">Highest rating</option>
+  <option value="rating_low">Lowest rating</option>
+ </select>
+ </td></tr>
+ </table>
+
+ <a href="#" onClick="mkspl()">Create SPL</a>
+ <br>
+ <textarea rows=7 cols=80 name=FINISHED></textarea>
+ </form> 
+ </body>
+</html>

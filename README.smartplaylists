@@ -1,123 +1,91 @@
-*********** THIS FILE IS OUTDATED ******************
-*********** FIXME **********************************
-****************************************************
-
 About SmartPlaylist-Support
 ===========================
 
-GNUpod 0.92 'supports' smartplaylists:
-It can READ and WRITE SmartPlaylists, but it *can't*
-do a 'liveupdate' (=Adding new songs/matching..)
+GNUpod can read and write SmartPlaylists.
+Please note that this feature isn't supported
+for iPods running Firmware 1.x
+(Because GNUpod can only do 'liveupdates' at the moment..)
 
-If you create a smartplaylist with GNUpod, you'll see
-the SPL (=SmartPlayList) on iTunes (and on iPods with
-Firmware version 2.x!) with the correct fields set, 
-but GNUpod doesn't add any songs to this SPL 
-(iTunes will do it if you set 'liveupdate="1"')
+Use the <regex.. stuff if you own a 1.x iPod.
 
-If you convert an iTunesDB written by iTunes4 with
-SPL's, you'll not  loose the songs in the SPL:
-GNUpod set's '<splcont id=..' to keep the IDs.
+Smartplaylists are powerful but it's ugly to create them.
 
+An example for a SmartPlaylist:
 
-Ok, again:
-GNUpod 0.92 supports SPL's but it can't do a
-liveupdate
+   <smartplaylist checkrule="both" limititem="song" limitsort="random" limitval="55" liveupdate="1" name="Example SPL1" >
+     <spl action="gt" field="bitrate" string="189" />
+   </smartplaylist>
 
+This Playlist includes 55 songs (limitval/limititem) sort by random (limitsort)
+with a Bitrate > 189 (<spl field)
 
-Example of a smartplaylist:
-
-*****************************************************************
-*NOTE: This may change.. spl support is still 'beta             *
-*Don't create spl's yourself (wouldn't make sense, because      *
-*liveupdate doesn't work..) only let tunes2pod.pl create them :)*
-*****************************************************************
-
-<smartplaylist name="Example" limititem="5" checkrule="2" moselected="1" limitval="1" matchany="1" liveupdate="0" limitsort="2">
- <spl action="1" field="4" string="TestoStado" />
- <spl action="1" field="4" string="Foo" />
-</smartplaylist>
-
-Fields:
- <smartplaylist..
-
-name           : Playlist name
-limititem[1]   : Limit has to match this item
-limitval       : Limit to VALUE 'limititem' sort by 'limitsort'
-limitsort[4]   : Sort by
-checkrule      : 1=only match 'limit'
-                 2=only match '<spl' items
-                 3=match both
-matchany       : Match any '<spl' field
-moselected     : Match only marked songs (?)
-liveupdate     : Do a liveupdate
-
- <spl...
-
-action[2]      : action ;)
-field[3]       : match this field
-string         : String, use '10:20' to specify a range (10-20)
-
-Key/Val list: INCOMPLETE
-
-[1]SMARTPLAYLIST 'limititem'
-----------------------------
-MINUTES        : 01
-HOURS          : 04
-MB             : 02
-GB             : 05
-SONGS          : 03
-
-[4]SMARTPLAYLIST 'limitsort'
----------------------------
-
-RATING         : 23
-PLAYCOUNT      : 20
-NEWEST ADDTIME : 16
-NEWEST PLAYTIME: 21
-
-[2] SPL 'action'
----------------------------
-IS             : 01
-CONTAINS       : 02
-STARTS WITH    : 04
-ENDS WITH      : 08
+Please note that you have to set liveupdate="1" or the Playlist will be empty :)
+[Because GNUpod can only do liveupdates atm..]
 
 
-[3]SPL 'field'
----------------------------
-ALBUM          : 03
-ARTIST         : 04
-BPM            : 35
-BITRATE        : 05
-COMMENT        : 14
-COMPILATION    : 31
-COMPOSER       : 18
-TIME ADDED     : 16
-LAST MODIFY    : 10
-GENRE          : 08
-KIND           : 09
-LAST PLAYED    : 23
-RATING         : 25
-PLAYCOUNT      : 22
-SAMPLING-RATE  : 06
-SIZE           : 12
-SONGNAME       : 02
-TIME           : 13
-TRACKNUMBER    : 11
-YEAR           : 07
+##### SMARTPLAYLIST
+CHECKRULE:
+ limit (Only match <smartplaylist ... stuff, don't watch <spl.. entries)
+ spl   (Only match <spl entries, don't limit or sort)
+ both  (Match both items)
+ 
+LIMITITEM:
+ minute
+ megabyte
+ song
+ hour
+ gigabyte
+ 
+LIMITSORT:
+ random
+ title
+ album
+ artist
+ genre
+ addtime_high
+ addtime_low
+ playcount_high
+ playcount_low
+ lastplay_high
+ lastplay_low
+ rating_high
+ rating_low
 
+##### SPL
+FIELD for use with action IS/CONTAINS/STARTWITH/ENDWITH (use NOT_ for 'not' -> 'NOT_IS'   [STRINGS]
+ TITLE
+ ALBUM
+ ARTIST
+ GENRE
+ FDESC
+ COMMENT
+ COMPOSER
+ GROUP
 
+FIELD for use with action eq/gt/lt/range (Use ! for 'not' -> '!eq') [NUM]
+ bitrate
+ srate
+ year
+ changetime (MAC TIMESTAMP!)
+ tracknum
+ size
+ time
+ addtime (MAC TIMESTAMP!)
+ playcount
+ lastplay (MAC TIMESTAMP!)
+ cdnum
+ rating (20 = 1 star / 60 = 3 starts ...-> STARTS*20 = Value)
+ compilation (0 or 1)
+ bpm
 
-
-More examples:
-<!-- only match 'limit' (checkrule) and limit to 25 (limitval) songs(limititem), sort by rating (limitsort) //-->
- <smartplaylist checkrule="1" limititem="3" limitsort="23" limitval="25" liveupdate="1" matchany="0" moselected="" name="25rand_rating" >
- </smartplaylist>
-
-<!-- Match both only <spl..> (so: limititem/limitsort/limitval are IGNORED!) //-->
- <smartplaylist checkrule="2" limititem="3" limitsort="2" limitval="25" liveupdate="1" matchany="0" moselected="" name="spl_20" >
-   <spl action="1" field="25" string="20:20" /> <!-- RATING (field) IS (action) 20:20 (string: it's a range: from 20-20)
-                                                     This matches all songs with 1 star! (star * 20 = rating) -->
- </smartplaylist>
-
+There is also a 'within' field for use with
+ changetime
+ addtime
+ lastplay
+ 
+ The 'value' of a within field needs a suffix: _day / _week / _month
+ So you could write 
+   <spl action="within" field="lastplay" value="2_month"/> 
+ to add all songs played within the last 2 months.
+ You could also use a ! to invert the result: (=NOT within)
+   <spl action="!within" field="lastplay" value="2_month"/> 
