@@ -133,7 +133,7 @@ sub getutf8 {
     $in = $bfx;
    }
    #Remove all 00's
-   $in =~ tr/\0000//d;
+   $in =~ tr/\00//d;
  }
  return $in;
 }
