@@ -1019,6 +1019,7 @@ if(get_string($sum, 4) eq "mhit") { #Ok, its a mhit
 my %ret     = ();
 #Infos stored in mhit
 $ret{id}         = get_int($sum+16,4);
+$ret{rating}     = int((get_int($sum+28,4)-256)/oct('0x14000000')) * 20;
 $ret{changetime} = get_int($sum+32,4);
 $ret{filesize}   = get_int($sum+36,4);
 $ret{time}       = get_int($sum+40,4);
@@ -1035,7 +1036,6 @@ $ret{stoptime}   = get_int($sum+72,4);
 $ret{soundcheck} = get_int($sum+76,4);
 $ret{playcount}  = get_int($sum+80,4); #84 has also something to do with playcounts. (Like rating + prerating?)
 $ret{lastplay}   = get_int($sum+88,4);
-$ret{rating}     = int((get_int($sum+28,4)-256)/oct('0x14000000')) * 20;
 $ret{addtime}    = get_int($sum+104,4);
 $ret{bpm} = get_int($sum+122,2);
 
@@ -1150,6 +1150,10 @@ sub readPLC {
   $lastply = GNUpod::FooBar::shx2int($buff);
   
   #8 is always zero atm?!
+  seek(RATING,$offset+8,0);
+  read(RATING,$buff,4);
+  my $bookmark = GNUpod::FooBar::shx2int($buff);
+  warn "FIXME :bookmark: $chunknum has $bookmark !\n" if $bookmark;
 
   if($chunksize >= 16) { #12+4 - v2 firmware? 
    seek(RATING, $offset+12, 0);
