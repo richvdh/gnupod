@@ -44,12 +44,12 @@ print "mktunes.pl Version 0.95 (C) 2002-2004 Adrian Ulrich\n";
 
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
+
 GetOptions(\%opts, "help|h", "ipod-name|n=s", "mount|m=s", "volume|v=i", "energy|e");
 GNUpod::FooBar::GetConfig(\%opts, {'ipod-name'=>'s', mount=>'s', volume=>'i', energy=>'b'}, "mktunes");
 
 $opts{'ipod-name'} ||= "GNUpod 0.95-20040509";
 
-warn "iPodname set to ".$opts{'ipod-name'}."\n";
 
 usage() if $opts{help};
 
@@ -128,9 +128,11 @@ print " - May the iPod be with you!\n\n";
 # Create a single playlist
 sub r_mpl {
  my($name, $type, $xidref, $spl) = @_;
+
 my $pl = undef;
 my $fc = 0;
 my $mhp = 0;
+
 if(ref($spl) eq "HASH") { #We got splpref!
  $pl .= GNUpod::iTunesDB::mk_splprefmhod({item=>$spl->{limititem},sort=>$spl->{limitsort},mos=>$spl->{moselected}
                                           ,liveupdate=>$spl->{liveupdate},value=>$spl->{limitval},
@@ -160,8 +162,7 @@ if(ref($spl) eq "HASH") { #We got splpref!
 sub genpls {
 
  #Create mainPlaylist and set PlayListCount to 1
- warn "Fixme: ipod-name maybe non-utf8 input!\n";
- my ($pldata,undef) = r_mpl($opts{'ipod-name'}, 1,\@MPLcontent);
+ my ($pldata,undef) = r_mpl(Unicode::String::utf8($opts{'ipod-name'})->utf8, 1,\@MPLcontent);
  my $plc = 1;
  
 #CID is now used by r_mpl, dont use it yourself anymore

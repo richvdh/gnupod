@@ -252,8 +252,6 @@ sub getmd5 {
 sub GetConfig {
  my($getopts, $doset, $name) = @_;
 
-#  warn "### debug: reading configuration for app $name\n";
-
   my($topic,$val,$optarget);
   
   foreach my $filerc ( ("$ENV{HOME}/.gnupodrc", "$getopts->{mount}/iPod_Control/.gnupod/gnupodrc") ) {
@@ -282,7 +280,7 @@ sub GetConfig {
   #    warn "### $topic with target $optarget\n";
       
          if ($optarget&&$name&&$name ne $optarget) { next}
-      elsif ($getopts->{$topic})      { warn "skipping duplicate entry '$topic' from file $filerc\n";next}
+      elsif ($getopts->{$topic})      { next } #this is a dup 
       elsif ($doset->{$topic} eq "s") { $getopts->{$topic} = $val }
       elsif ($doset->{$topic} eq "i") { $getopts->{$topic} = int($val) }
       elsif ($doset->{$topic} eq "b") { $getopts->{$topic} = 1 if($val && $val ne "no") }
@@ -291,9 +289,6 @@ sub GetConfig {
  #    warn "** Parser finished $filerc\n";
   }
   
-  foreach(keys(%$getopts)) {
-# print "*$_* => *$getopts->{$_}*\n";
-}
   
   return 1;
 }

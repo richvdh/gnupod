@@ -26,13 +26,12 @@ use Unicode::String;
 use MP3::Info qw(:all);
 use GNUpod::FooBar;
 use GNUpod::QTfile;
-use Audio::FLAC; #Fixme: remove this.. 
+use Audio::FLAC;
 
 BEGIN {
  MP3::Info::use_winamp_genres();
  MP3::Info::use_mp3_utf8(0);
- warn "*** REMOVE Audio::FLAC -> replace this thing!\n";
- open(NULLFH, "> /dev/null") or die "Could not open /dev/null, $!\n";
+  open(NULLFH, "> /dev/null") or die "Could not open /dev/null, $!\n";
 }
 
 ########################################################################
@@ -94,13 +93,15 @@ sub __is_flac {
  $rh{fdesc}    = getutf8($ftag->{VENDOR} || "FLAC file without vendor");
  
  my $tmpout = undef;
+ 
+ #I know, this is a 'security' problem.. but GNUpod isn't setuid-root
  while($tmpout = sprintf("/tmp/%d_%d_gnupod_flac%d",int(time()), $$,int(rand(99)))) {
   last unless (-e $tmpout);
  }
  
  my $xrun = system('flac', '-d', $file, '-o', $tmpout, "-s");
  if($xrun) {
-  warn "FileMagic.pm : 'flac' exited with $xrun, maybe i couldn't run it (set doflac=0 to disable converting)\n";
+  warn "FileMagic.pm : 'flac' exited with $xrun, maybe you didn't install flac or '$file' is broken?\n";
   unlink($tmpout); #maybe...
   return undef;
  }
@@ -120,6 +121,7 @@ sub __is_flac {
  
 return ({ref=>\%rh, newout=>$tmpout});
 }
+
 
 #######################################################################
 # Check if the QTparser thinks, it's a QT-AAC (= m4a) file
