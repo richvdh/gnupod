@@ -27,7 +27,7 @@ use XML::Parser;
 use Unicode::String;
 
 
-## Release 20030930
+## Release 20040531
 
 my $cpn = undef; #Current PlaylistName
 my @idpub = ();
@@ -49,35 +49,34 @@ sub getpath {
  my($mountp, $filename, $opts) = @_;
  my $path = undef;
 
-if($opts->{keepfile}) { #Don't create a new filename..
-  $path = $filename;
+ if($opts->{keepfile}) { #Don't create a new filename..
+   $path = $filename;
  }
-else { #Default action.. new filename to create 
- my $test_extension = $opts->{extension} || $opts->{format}; #Test extension
- my $name = (split(/\//, $filename))[-1];                    #Name
- my $i = 0;                                                  #Count
- $name =~ tr/a-zA-Z0-9\./_/c;                                #CleanName
+ else { #Default action.. new filename to create 
+   my $test_extension = $opts->{extension} || $opts->{format}; #Test extension
+   my $name = (split(/\//, $filename))[-1];                    #Name
+   my $i = 0;                                                  #Count
+   $name =~ tr/a-zA-Z0-9\./_/c;                                #CleanName
 
- #Hups, current filename has a wrong extension...
- if($opts->{format} && $test_extension && ($name !~ /\.($test_extension)$/i)) {
-  my($ext) = $name =~ /\.([^.]*)$/;          #Get the current extension (maybe null)
-  warn "Warning: File '$name' has a wrong extension [$ext], changed extension to $opts->{format}\n";
-  $name =~ s/\.?$ext$/.$opts->{format}/;  #Replace current extension with newone
- }
+   #Hups, current filename has a wrong extension...
+   if($opts->{format} && $test_extension && ($name !~ /\.($test_extension)$/i)) {
+     my($ext) = $name =~ /\.([^.]*)$/;          #Get the current extension (maybe null)
+     warn "Warning: File '$name' has a wrong extension [$ext], changed extension to $opts->{format}\n";
+     $name =~ s/\.?$ext$/.$opts->{format}/;  #Replace current extension with newone
+   }
  
-#Search a place for the MP3 file
-  while($path = sprintf("$mountp/iPod_Control/Music/F%02d/%d_$name", int(rand(20)), $i++)) {
-   if( !(-e $path) && open(TESTFILE,">",$path) ) {
-    close(TESTFILE);
-    unlink($path); #Maybe it's a dup.. we don't create empty files
-    last;
+   #Search a place for the MP3 file
+   while($path = sprintf("$mountp/iPod_Control/Music/F%02d/%d_$name", int(rand(20)), $i++)) {
+     if( !(-e $path) && open(TESTFILE,">",$path) ) {
+       close(TESTFILE);
+       unlink($path); #Maybe it's a dup.. we don't create empty files
+       last;
+     }
+     elsif($i > 2000) { #nuff!
+       warn "getpath(): Could not write $name anywhere! [$!]\n";
+       return undef;
+     }
    }
-   elsif($i > 2000) { #nuff!
-    warn "getpath(): Could not write $name anywhere! [$!]\n";
-    return undef;
-   }
-   
-  }
  }
  
 #Remove mountpoint from $path
@@ -96,17 +95,17 @@ sub xescaped {
  my ($ret) = @_;
  
 
-$ret =~ s/&/&amp;/g;
-$ret =~ s/"/&quot;/g;
-$ret =~ s/</&lt;/g;
-$ret =~ s/>/&gt;/g;
+ $ret =~ s/&/&amp;/g;
+ $ret =~ s/"/&quot;/g;
+ $ret =~ s/</&lt;/g;
+ $ret =~ s/>/&gt;/g;
 
-my $xutf = Unicode::String::utf8($ret)->utf8;
+ my $xutf = Unicode::String::utf8($ret)->utf8;
 
-#Remove 0x00 - 0x1f chars (we don't need them)
-$xutf =~ tr/\000-\037//d;
+ #Remove 0x00 - 0x1f chars (we don't need them)
+ $xutf =~ tr/\000-\037//d;
 
-return $xutf;
+ return $xutf;
 }
 
 
@@ -119,7 +118,8 @@ return $xutf;
 sub mkfile {
  my($hr, $magic) = @_;
  my $r = undef;
-  foreach my $base (keys %$hr) {
+ 
+ foreach my $base (keys %$hr) {
    $r .= "<".xescaped($base)." ";
    
    #Copy the has, because we do something to it
@@ -131,13 +131,15 @@ sub mkfile {
      $hcopy{id} = $xid;
      $idpub[$xid] = 1;
    }
-     foreach (sort(keys %hcopy)) {
-      $r .= xescaped($_)."=\"".xescaped($hcopy{$_})."\" ";
-     }
+   
+   #Build $r
+   foreach (sort(keys %hcopy)) {
+     $r .= xescaped($_)."=\"".xescaped($hcopy{$_})."\" ";
+   }
 
-    if($magic->{noend}) { $r .= ">" }
-    else                { $r .= "/>"}
-  }
+   if($magic->{noend}) { $r .= ">" }
+   else                { $r .= "/>"}
+ }
   
   if($magic->{return}) { return $r; }
   elsif($magic->{plname}) { #Create a playlist item
@@ -156,19 +158,16 @@ sub mkfile {
 # This thing doesn't create xml-encoded output!
 sub addpl {
  my($name, $opt) = @_;
+ 
  if(ref($XDAT->{playlists}->{pref}->{$name}) eq "HASH") {
-  warn "XMLhelper.pm: Playlist '$name' is a duplicate, skipping addpl()\n";
-  return;
+   warn "XMLhelper.pm: Playlist '$name' is a duplicate, skipping addpl()\n";
+   return;
  }
- push(@plorder, $name);
 
- #Escape the prefs
- my %rh = ();
- $rh{name} = $name;
- #Create the hash and the xml header
-  foreach (keys(%$opt)) {
-   $rh{$_} = $opt->{$_};
-  }
+ push(@plorder, $name);
+ my %rh = %{$opts};
+ $rh{name} = $name; #Force the name
+ 
  $XDAT->{playlists}->{pref}->{$name} = \%rh;
 }
 
@@ -177,19 +176,16 @@ sub addpl {
 # Like addpl(), 'output' isn't xml-encoded
 sub addspl {
  my($name, $opt) = @_;
+ 
  if(ref($XDAT->{spls}->{pref}->{$name}) eq "HASH") {
-  warn "XMLhelper.pm: Playlist '$name' is a duplicate, skipping addspl()\n";
-  return;
+   warn "XMLhelper.pm: Playlist '$name' is a duplicate, skipping addspl()\n";
+   return;
  }
 
  push(@plorder, $name);
- my %rh = ();
- $rh{name} = $name;
- #Create the hash and the xml header
-  foreach (keys(%$opt)) {
-   $rh{$_} = $opt->{$_};
-  }
-  
+ my %rh = %{$opts};
+ $rh{name} = $name; #Force the name
+ 
  $XDAT->{spls}->{pref}->{$name} = \%rh;
 }
 
@@ -262,9 +258,9 @@ sub mkh {
 # Parses the XML File and do events
 sub doxml {
  my($xmlin, %opts) = @_;
-return undef unless (-r $xmlin);
-my $p = new XML::Parser(Handlers=>{Start=>\&eventer});
-   $p->parsefile($xmlin);
+ return undef unless (-r $xmlin);
+ my $p = new XML::Parser(Handlers=>{Start=>\&eventer});
+    $p->parsefile($xmlin);
 return $p;
 }
 
@@ -275,15 +271,14 @@ return $p;
 sub writexml {
  my($out) = @_;
  
- my $tmp_out = $out.".tmp_".time();
+ my $tmp_out = $out."_tmp_".time();
  
-
  open(OUT, ">$tmp_out") or die "Could not write to '$tmp_out' : $!\n";
+ 
  binmode(OUT);
-
  print OUT "<?xml version='1.0' standalone='yes'?>\n";
  print OUT "<gnuPod>\n <files>\n";
-#Do file part, it's present as XML
+ #Do file part, it's present as XML
  foreach(@{$XDAT->{files}}) {
   print OUT "  $_\n";
  }
@@ -313,11 +308,14 @@ sub writexml {
   }
  }
 print OUT "</gnuPod>\n";
-
- if(close(OUT)) {
-  rename($tmp_out,$out) or warn "Could not move $tmp_out to $out, $!\n";
- }
  
+ if(close(OUT)) {
+   if(-e $out) { #Backup old out file
+    rename($out, $out.".old") or warn "Could not move $out to $out.old\n";
+   }
+   rename($tmp_out, $out) or warn "Could not move $tmp_out to $out\n";
+ }
+
 }
 
 1;

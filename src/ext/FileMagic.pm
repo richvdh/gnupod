@@ -59,7 +59,7 @@ sub wtf_is {
   }
 
 #Still no luck..
-   return (undef, undef);
+   return (undef, undef, undef);
 }
 
 #######################################################################
