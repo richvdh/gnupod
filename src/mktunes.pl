@@ -30,7 +30,7 @@ use Getopt::Long;
 
 
 use vars qw($cid %pldb %itb %opts %meat %cmeat);
-$cid=52;
+
 $| = 1;
 print "mktunes.pl Version 0.91 (C) 2002-2003 Adrian Ulrich\n";
 
