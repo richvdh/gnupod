@@ -1,5 +1,3 @@
-#!/usr/bin/perl-5.6
-#!/usr/bin/perl
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
@@ -119,10 +117,11 @@ my $mhp = 0;
 
 if(ref($spl->{pref}) eq "HASH") { #We got splpref!
 print "\nwarning: mktunes.pl: writing prefs ok.. but you'll lose splmhod's (creating dummy)\n";
-my @da = ({field=>4,action=>2,string=>"test"});
+my @da = ({field=>4,action=>2,string=>"test"},{field=>2,action=>1,string=>"test2"});
  $pl .= GNUpod::iTunesDB::mk_splprefmhod({item=>$spl->{pref}->{limititem},sort=>$spl->{pref}->{limitsort},mos=>$spl->{pref}->{moselected}
-                                          ,liveupdate=>$spl->{pref}->{liveupdate},value=>$spl->{pref}->{limitval},chkrgx=>1,chklim=>1});
- $pl .= GNUpod::iTunesDB::mk_spldatamhod({anymatch=>0,data=>\@da});
+                                          ,liveupdate=>$spl->{pref}->{liveupdate},value=>$spl->{pref}->{limitval},
+                                          chkrgx=>$spl->{pref}->{matchomatic},chklim=>$spl->{pref}->{limitomatic}});
+ $pl .= GNUpod::iTunesDB::mk_spldatamhod({anymatch=>$spl->{pref}->{matchany},data=>\@da});
  $mhp=2; #Add a mhod
 }
 
