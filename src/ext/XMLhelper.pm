@@ -76,12 +76,19 @@ return ($ipath, $path);
 # Escape chars
 sub xescaped {
  my ($ret) = @_;
+ 
+
 $ret =~ s/&/&amp;/g;
 $ret =~ s/"/&quot;/g;
 $ret =~ s/</&lt;/g;
 $ret =~ s/>/&gt;/g;
 
-return Unicode::String::utf8($ret)->utf8;
+my $xutf = Unicode::String::utf8($ret)->utf8;
+
+#Remove 0x00 - 0x1f chars (we don't need them)
+$xutf =~ tr/\000-\037//d;
+
+return $xutf;
 }
 
 

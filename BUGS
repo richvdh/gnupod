@@ -4,5 +4,6 @@
 * Smartplaylist support isn't tested very well
 * GNUpod doen't like audible.com files (I'll have to look at this later...)
 * QTfile.pm (=QuickTime parser) isn't tested very well
-
+* gnupod_addsong.pl --restore doesn't remove the '\d+_' prefix from
+  files without name
 See -> TODO

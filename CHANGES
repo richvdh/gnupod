@@ -9,7 +9,7 @@ Summary:
 - gnupod_addsong.pl understands .m4a files
   (= AAC Files written by iTunes)
   I don't know if it works with DRM files (.m4p?)
-  I don't have DRM files and i'm not interested
+  I don't have any DRM files and i'm not interested
   in DRM files...
   If you like to see support for DRM files, send
   me a patch ;-)

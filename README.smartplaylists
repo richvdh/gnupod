@@ -6,9 +6,10 @@ It can READ and WRITE SmartPlaylists, but it *can't*
 do a 'liveupdate' (=Adding new songs/matching..)
 
 If you create a smartplaylist with GNUpod, you'll see
-the SPL (=SmartPlayList) on iTunes with the correct
-fields set, but GNUpod doesn't add any songs to this
-SPL (iTunes will do it if you set 'liveupdate="1"')
+the SPL (=SmartPlayList) on iTunes (and on iPods with
+Firmware version 2.x!) with the correct fields set, 
+but GNUpod doesn't add any songs to this SPL 
+(iTunes will do it if you set 'liveupdate="1"')
 
 If you convert an iTunesDB written by iTunes4 with
 SPL's, you'll not  loose the songs in the SPL:
@@ -65,6 +66,7 @@ SONGS          : 03
 
 [4]SMARTPLAYLIST 'limitsort'
 ---------------------------
+
 RATING         : 23
 
 
@@ -99,7 +101,7 @@ YEAR           : 07
 
 
 
-Example:
+More examples:
 <!-- only match 'limit' (checkrule) and limit to 25 (limitval) songs(limititem), sort by rating (limitsort) //-->
  <smartplaylist checkrule="1" limititem="3" limitsort="23" limitval="25" liveupdate="1" matchany="0" moselected="" name="25rand_rating" >
  </smartplaylist>
