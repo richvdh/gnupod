@@ -16,11 +16,14 @@ iTunesDB.pm and co:
    (newer) MusicMatch releases.. this should fix the issue :)
  * Don't parse MasterPlaylists, do a seek()
    -> Speeds up parsing
- * Read and Write SamplingRate (Helps audible.com files?)
+ * Read and Write SamplingRate (Helps audible.com files? ..no)
 
 FileMagic.pm
  * Fixed (Again?) ID3 reading (Charset handling still broken?!)
  * Read SamplingRate for MP3 Files
+
+XMLhelper.pm
+ * Output is sorted
 
 
 

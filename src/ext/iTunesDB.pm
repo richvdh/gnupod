@@ -256,6 +256,7 @@ if(ref($hs->{data}) ne "ARRAY") {
  my $cr = undef;
  foreach my $chr (@{$hs->{data}}) {
      my $string = undef;
+#Fixme: this is ugly (same as read_spldata)
      if($chr->{field} =~ /^(2|3|4|8|9|14|18)$/) {
         $string = Unicode::String::utf8($chr->{string})->utf16;
      }
@@ -415,8 +416,6 @@ return $utf8string;
 ## _INTERNAL ##################################################
 #returns a (dummy) timestamp in MAC time format
 sub _mactime {
-#my $x  = time();
-#my   $x = 2082844800;
 my $x =    1234567890;
 return sprintf("%08X", $x);
 }
@@ -555,14 +554,13 @@ my @ret = ();
   my $action= get_int($diff+7, 1);
   my $slen  = get_int($diff+55,1); #Whoa! This is true: string is limited to 0xfe (254) chars!! (iTunes4)
   my $rs    = undef; #ReturnSting
+#Fixme: this is ugly
    if($field =~ /^(2|3|4|8|9|14|18)$/) { #Is a string type
     my $string= get_string($diff+56, $slen);
     #No byteswap here?? why???
     $rs = Unicode::String::utf16($string)->utf8;
    }
    else { #Is INT (Or range)
-#    print "*** $field is a int val with  ($slen?)\n";
-#    __hd(get_string($diff+56, $slen));
     my $xfint = get_x86_int($diff+56+4,4);
     my $xtint = get_x86_int($diff+56+28,4);
     $rs = "$xfint:$xtint";
@@ -850,6 +848,34 @@ $sseek = $mhbd_s + $pdi;
 $sseek += get_int($sseek+4,4);
 my $pls = get_int($sseek+8,4);
 return({position=>$pos,pdi=>($pos+$pdi),songs=>$songs,playlists=>$pls});
+}
+
+
+
+######################## Other funny stuff #########################
+
+
+##############################################
+# Read OnTheGo data
+sub readOTG {
+ my($file) = @_;
+ 
+ my $buff = undef;
+ open(OTG, "$file") or return ();
+  seek(OTG, 12, 0);
+  read(OTG, $buff, 4);
+  
+  my $items = GNUpod::FooBar::shx2int($buff); 
+
+  my @content = ();
+  my $offst = 20;
+  for(1..$items) {
+   seek(OTG, $offst, 0);
+   read(OTG, $buff, 4);
+   push(@content, GNUpod::FooBar::shx2int($buff));
+   $offst+=4;
+  }
+  return @content;
 }
 
 

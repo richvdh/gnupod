@@ -95,14 +95,20 @@ sub mkfile {
  my $r = undef;
   foreach my $base (keys %$hr) {
    $r .= "<".xescaped($base)." ";
-     foreach (keys %{$hr->{$base}}) {
-      $r .= xescaped($_)."=\"".xescaped($hr->{$base}->{$_})."\" ";
+   
+   #Copy the has, because we do something to it
+   my %hcopy = %{$hr->{$base}};
+   
+   #Create the id item if requested
+   if($magic->{addid} && int($hcopy{id}) < 1) {
+     while($idpub[$xid]) { $xid++; }
+     $hcopy{id} = $xid;
+     $idpub[$xid] = 1;
+   }
+     foreach (sort(keys %hcopy)) {
+      $r .= xescaped($_)."=\"".xescaped($hcopy{$_})."\" ";
      }
-     if($magic->{addid} && int($hr->{$base}->{id}) < 1) {
-      while($idpub[$xid]) { $xid++; }
-      $r .= "id=\"$xid\" ";
-      $idpub[$xid] = 1;
-     }
+
     if($magic->{noend}) { $r .= ">" }
     else                { $r .= "/>"}
   }

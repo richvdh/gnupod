@@ -45,6 +45,9 @@ sub converter {
 my($stat, $in, $out) = GNUpod::FooBar::connect(\%opts);
 usage("$stat\n") if $stat;
 
+
+
+
 GNUpod::iTunesDB::open_itunesdb($in) or usage("Could not open $in\n");
 
 
@@ -110,7 +113,8 @@ for(my $i=0;$i<$itinfo->{playlists};$i++) {
   }
 
 
- }
+}
+
 
 
 

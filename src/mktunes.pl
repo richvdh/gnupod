@@ -91,7 +91,7 @@ foreach my $xk (keys(%itb)) {
 
 
 ## FINISH IT :-)
-print "> Writing file...\n";
+print "> Writing iTunesDB...\n";
 open(ITB, ">$itunes") or die "** Sorry: Could not write your iTunesDB: $!\n";
  binmode(ITB); #Maybe this helps win32? ;)
  print ITB GNUpod::iTunesDB::mk_mhbd({size=>$fl});  #Main header
@@ -208,6 +208,8 @@ sub newfile {
   $meat{$_}{$el->{file}->{$_}} .= $cid." ";
   $cmeat{$_}{lc($el->{file}->{$_})} .= $cid." ";
  }
+ 
+# print "Building $el->{file}->{id} with iTunesID $cid\n";
  
  $itb{mhit}{_len_} += build_mhit($cid, $el->{file}); 
 }

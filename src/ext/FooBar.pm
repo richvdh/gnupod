@@ -34,9 +34,14 @@ unless(!$opth->{mount} && (!$opth->{itunes} || !$opth->{xml})) {
   $mp = $opth->{mount};
   $stat = undef;
 }
- 
- return ($stat, $itb, $xml, $mp);
+
+
+ my $otg = "$mp/iPod_Control/iTunes/OTGPlaylistInfo";
+ $otg = undef unless(-r $otg);
+
+ return ($stat, $itb, $xml, $mp, $otg);
 }
+
 
 
 sub shx2int {
@@ -48,5 +53,7 @@ sub shx2int {
   return hex($buff);
    
 }
+
+
 
 1;

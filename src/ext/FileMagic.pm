@@ -69,15 +69,19 @@ sub __is_pcm {
    read(PCM, $rty, 4);
    
    return undef unless($gid eq "RIFF" && $rty eq "WAVE");
-
+#Ok, maybe a wave file.. try to get BPS and SRATE
+   my $size = -s $file;
+   return undef if ($size < 32); #File to small..
+   
    my ($bs) = undef;
    seek(PCM, 24,0);
    read(PCM, $bs, 4);
    my $srate = GNUpod::FooBar::shx2int($bs);
-   seek(PCM, 28,0); #srate .. bps ist auf 28
+
+   seek(PCM, 28,0); 
    read(PCM, $bs, 4);
    my $bps = GNUpod::FooBar::shx2int($bs);
-   my $size = -s $file;
+
 
 
   #Check if something went wrong..
@@ -85,7 +89,9 @@ sub __is_pcm {
     warn "FileMagic.pm: Looks like '$file' is a crazy pcm-file: bps: *$bps* // srate: *$srate* -> skipping!!\n";
     return undef;
    }
-   
+
+#fixme
+warn "FileMagic: debug: bps -> *$bps* / srate -> *$srate*\n";   
   my %rh = ();
   $rh{bitrate}  = $bps;
   $rh{filesize} = $size;
@@ -93,10 +99,12 @@ sub __is_pcm {
   $rh{time}     = int(1000*$size/$bps);
   $rh{fdesc}    = "RIFF Audio File";
  
-  #This maybe wrong.. but maybe it's okay sometimes ;)
+  #No id3 tags for us.. but mmmmaybe...
+  #We use getuft8 because you could use umlauts and such things :)  
   $rh{title}    = getutf8(((split(/\//, $file))[-1]) || "Unknown Title");
   $rh{album} =    getutf8(((split(/\//, $file))[-2]) || "Unknown Album");
   $rh{artist} =   getutf8(((split(/\//, $file))[-3]) || "Unknown Artist");
+
 
 return \%rh;
 }
@@ -123,7 +131,7 @@ sub __is_mp3 {
  $rh{time}     = int($h->{SECS}*1000);
  $rh{fdesc}    = "MPEG ${$h}{VERSION} layer ${$h}{LAYER} file";
  my $h = MP3::Info::get_mp3tag($file,1);  #Get the IDv1 tag
- my $hs = MP3::Info::get_mp3tag($file, 2,1); #Get the IDv2 tag ### BROKEN! FIXME
+ my $hs = MP3::Info::get_mp3tag($file, 2,1); #Get the IDv2 tag
 
 
 #IDv2 is stronger than IDv1..
@@ -143,11 +151,6 @@ sub __is_mp3 {
      $rh{comment} =  getutf8($hs->{COMM} || $h->{COMMENT} || "");
      $rh{composer} = getutf8($hs->{TCOM} || "");
      $rh{playcount}= int(getutf8($hs->{PCNT})) || 0;
-
-#EasterEgg :)
-#Jeder Mensch darf 15 Minuten in seinem Leben im Rampenlicht stehen..
-#..davon hast du, Rene, sicher gerade 14 verbraucht!
-     $rh{artist} = "Rene van Bevern" if $rh{artist} eq "Rene Van Bevern";
 
  return \%rh;
 }
