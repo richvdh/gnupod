@@ -10,7 +10,7 @@ Summary
   (Idea and original patch from <daniel at kefa.co.uk>)
 
 - GNUpod can now also convert OGG-Vorbis files
-  (Use --decode=XXX , same as FLAC)
+  (Use --decode=XXX, same as FLAC)
 
 - Added --playlist=STRING switch to gnupod_addsong.pl
   This creates the playlist 'STRING' and adds all songs

@@ -53,8 +53,9 @@ if($opts{restore}) {
  print "If you use --restore, you'll *lose* your playlists\n";
  print " Hit ENTER to continue or CTRL+C to abort\n\n";
  <STDIN>;
- delete($opts{decode}); #We don't decode anything
- $opts{duplicate} = 1;  #Don't skip dups on restore
+ delete($opts{decode});    #We don't decode anything
+ $opts{duplicate} = 1;     #Don't skip dups on restore
+ $opts{decode}    = undef; #Do not encode, only native files are on an iPod
  startup(glob("$opts{mount}/iPod_Control/Music/*/*"));
 }
 elsif($ARGV[0] eq "-" && @ARGV == 1) {
@@ -111,9 +112,9 @@ sub startup {
      next;
     }
     
-   my $wtf_ftyp = $media_h->{ftyp};
-   my $wtf_frmt = $media_h->{format};
-   my $wtf_ext  = $media_h->{extension};
+   my $wtf_ftyp = $media_h->{ftyp};      #'codec' .. maybe ALAC
+   my $wtf_frmt = $media_h->{format};    #container ..maybe M4A
+   my $wtf_ext  = $media_h->{extension}; #Possible extensions (regexp!)
    
    #wtf_is found a filetype, override data if needed
    $fh->{artist}    = $opts{'set-artist'}    if $opts{'set-artist'};
@@ -121,9 +122,10 @@ sub startup {
    $fh->{genre}     = $opts{'set-genre'}     if $opts{'set-genre'};
    $fh->{rating}    = $opts{'set-rating'}    if $opts{'set-rating'};
    $fh->{playcount} = $opts{'set-playcount'} if $opts{'set-playcount'};
-   
    #Set the addtime to unixtime(now)+MACTIME (the iPod uses mactime)
    $fh->{addtime} = time()+MACTIME;
+
+
    #Check for duplicates
    if(!$opts{duplicate} && (my $dup = checkdup($fh,$converter))) {
     print "! [!!!] '$file' is a duplicate of song $dup, skipping file\n";
@@ -135,7 +137,7 @@ sub startup {
 
    
    if($converter) {
-    print "> Converting '$file' into $opts{decode}, please wait...\n";
+    print "> Converting '$file' from $wtf_ftyp into $opts{decode}, please wait...\n";
     my $path_of_converted_file = GNUpod::FileMagic::kick_convert($converter,$file, uc($opts{decode}), $con);
     unless($path_of_converted_file) {
      print "! [!!!] Could not convert $file\n";
@@ -143,7 +145,7 @@ sub startup {
     }
 
     #Ok, we got a converted file, fillout the gaps
-    my($conv_fh, $conv_media_h) = GNUpod::FileMagic::wtf_is($path_of_converted_file);
+    my($conv_fh, $conv_media_h) = GNUpod::FileMagic::wtf_is($path_of_converted_file, undef, $con);
     
     unless($conv_fh) {
      warn "* [***] Internal problem: $converter did not produce valid data.\n";
@@ -156,9 +158,9 @@ sub startup {
     $fh->{bitrate}  = $conv_fh->{bitrate};
     $fh->{srate}    = $conv_fh->{srate};        
     $fh->{filesize} = $conv_fh->{filesize};   
-    $wtf_frmt = $conv_media_h->{format};    #Set the new format
-    $wtf_ext  = $conv_media_h->{extension}; #Set the new extension
-    #BUT KEEP ftyp!
+    $wtf_frmt = $conv_media_h->{format};    #Set the new format (-> container)
+    $wtf_ext  = $conv_media_h->{extension}; #Set the new possible extension
+    #BUT KEEP ftyp! (= codec)
     
     $file = $path_of_converted_file; #Point $file to new file
    }
@@ -176,9 +178,7 @@ sub startup {
      printf("+ [%-4s][%3d] %-32s | %-32s | %-24s\n",
 	    uc($wtf_ftyp),1+$addcount, $fh->{title}, $fh->{album},$fh->{artist});
      
-	 my $fmh;
-     $fmh->{file} = $fh;
-     my $id = GNUpod::XMLhelper::mkfile($fmh,{addid=>1}); #Try to add an id
+     my $id = GNUpod::XMLhelper::mkfile({file=>$fh},{addid=>1}); #Try to add an id
      create_playlist_now($opts{playlist}, $id);
      $addcount++; #Inc. addcount
    }

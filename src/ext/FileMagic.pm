@@ -49,6 +49,7 @@ BEGIN {
 
 ########################################################################
 #Try to discover the file format (mp3 or QT (AAC) )
+# Returns: (FILE_HASH{artist,album..}, MEDIA_HASH{ftyp,format,extension}, DECODER_SCALAR)
 sub wtf_is {
  my($file, $flags, $con) = @_;
   
@@ -58,10 +59,10 @@ sub wtf_is {
   elsif(!-r $file) {
    warn "FileMagic.pm: Can't read '$file'\n";
   }
-  elsif(my $xflac = __is_flac($file,$flags,$con)) {
+  elsif(my $xflac = __is_flac($file,$flags,$con)) {             ## NON NATIVE
    return($xflac->{ref}, {ftyp=>"FLAC"}, $xflac->{encoder});
   }
-  elsif(my $xflac = __is_ogg($file,$flags,$con)) {
+  elsif(my $xflac = __is_ogg($file,$flags,$con)) {              ## NON NATIVE
    return($xflac->{ref}, {ftyp=>"OGG"}, $xflac->{encoder});
   }
   elsif(my $xqt = __is_qt($file,$flags)) {
@@ -120,10 +121,10 @@ sub __is_ogg {
  
  return undef unless $flags->{decode}; #Decoder is OFF per default!
  
- open(TFLAC, $file) or return undef;
+ open(TOGG, $file) or return undef;
   my $oggbuff = undef;
-  read(TFLAC,$oggbuff,4);
- close(TFLAC);
+  read(TOGG,$oggbuff,4);
+ close(TOGG);
  
  #Check if file has a ogg header
  return undef if($oggbuff ne "OggS");
@@ -158,7 +159,7 @@ sub __is_qt {
  
  my %rh = ();
  if($ret->{time} < 1) {
-  warn "QTfile parsing failed, invalid time!\n";
+  warn "QTfile parsing failed, (expected $ret->{time} >= 0)!\n";
   warn "You found a bug - send an email to: pab\@blinkenlights.ch\n";
   return undef;
  }
@@ -355,7 +356,7 @@ sub kick_convert {
 
  $prog = "$con->{bindir}/$prog";
 
- open(KICKOMATIC, "-|") or exec($prog, $file, "GET_$format") or die "kick_convert: Could not exec $prog\n";
+ open(KICKOMATIC, "-|") or exec($prog, $file, "GET_$format") or die "FileMagic::kick_convert: Could not exec $prog\n";
   my $newP = <KICKOMATIC>;
   chomp($newP);
  close(KICKOMATIC);
