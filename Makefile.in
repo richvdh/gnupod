@@ -5,12 +5,11 @@ exec_prefix  = @exec_prefix@
 bindir       = @bindir@
 infodir      = @infodir@
 mandir       = @mandir@
-skip_contrib = @SKIP_CONTRIB@
 perlbinary   = @PERL@
 
 
 install:
-	cd tools && $(perlbinary) gnupod_install.pl "$(perlbinary)" "$(bindir)" "$(infodir)" "$(mandir)" $(skip_contrib)
+	cd tools && $(perlbinary) gnupod_install.pl "$(perlbinary)" "$(bindir)" "$(infodir)" "$(mandir)"
 
 test:
 	cd tools && $(perlbinary) gnupod_testit.pl "$(perlbinary)"

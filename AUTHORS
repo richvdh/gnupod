@@ -7,7 +7,7 @@ Adrian Ulrich
 Eric C. Cooper
  <ecc@cmu.edu>
 
- Contributed:
+ Contributed to the 'old' GNUpod:
  - gnupod_list.pl
  - gnupod_renumber.pl
  - gnupod_search.pl (Most important tool ;) )
@@ -17,5 +17,5 @@ And also many thanks to the many other people
 providing bug-reports, small patches and good ideas
 (See CHANGES)
 
-Thanks to my employer Bluewin (www.bluewin.ch)
+Thanks to my employer Bluewin (http://www.bluewin.ch)
 for providing me bandwith and free Tea ;-)

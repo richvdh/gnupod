@@ -1,6 +1,5 @@
-AC_INIT(gnupod, 0.29-rc1, bug-gnupod@nongnu.org)
+AC_INIT(gnupod, 0.40-rc1, bug-gnupod@nongnu.org)
 AC_PATH_PROGS(PERL, perl-5.8 perl-5.6 perl)
-SKIP_CONTRIB="no"
 
 if test $PERL; then
 echo "GNUpod will use $PERL"
@@ -11,16 +10,7 @@ exit 1
 fi
 
 dnl Basic modules
-PERL_NEED="MP3::Info File::Copy XML::Parser Getopt::Long Unicode::String"
-dnl Modules for extensions
-ALL_MODULES="$PERL_NEED XML::Simple"
-
-AC_ARG_ENABLE(contrib,
-[  --disable-contrib       Do not install search/list and renumber],
- [if test x$enableval != xyes; then
-    ALL_MODULES=$PERL_NEED
-    SKIP_CONTRIB="all"
- fi])
+ALL_MODULES="XML::Simple Unicode::String"
 
 
 dnl Ugly check for modules
@@ -42,7 +32,6 @@ do
 done
 
 
-AC_SUBST(SKIP_CONTRIB)
 AC_SUBST(PERL)
 AC_OUTPUT(Makefile)
 

@@ -2,3 +2,67 @@ This version is BROKEN at the moment.
 
 The last CVS version is known as gnupod0.29-rc1 and
 can be found on ftp.gnu.org (and many mirrors)
+
+
+#Blabla FIXME.. write a better README file..
+
+What is GNUpod?
+---------------
+With GNUpod, you can use your iPod on GNU/Linux and
+many other Operating Systems (with a useable Port
+of Perl5 + FireWire / USB2 Support)
+
+
+Installing GNUpod
+-----------------
+Running
+ #./configure
+ #make install
+should be enough.
+
+FIXME: gnuPod doku updaten und hierhin kopieren..
+
+
+Using GNUpod
+------------
+After installing GNUpod, you can use
+#info gnupod
+
+to view GNUpod's info page.
+
+An HTML Version of the info-page is also
+included in this package (see doc/)
+
+
+Why?
+----
+I wrote GNUpod, because i had to kill
+my OSX Partition (small HardDisk ;) ) and
+wanted to use the iPod without Dual-booting..
+(..and iTunes sucks)
+
+
+FAQ
+---
+
+Q: How about a GUI?
+A: GNUpod will never (?) have a GUI,
+   if you wan't one, use gtkpod
+   (http://gtkpod.sf.net), it's a
+   'rewrite' of the old GNUpod in C
+
+   ..but GNUpod can easy be (ab-)used
+   as a 'backend' for an GUI ;)
+
+
+Q: What about 'SmartPlaylists' ?
+A: I'm working on support for SPL's,
+   but GNUpod has a much more powerful
+   Feature: 'regex' and 'iregex' playlists.
+   Read the docs :)
+
+
+Q: How about HFS+ on GNU/Linux?
+A: http://www.ardistech.com/hfsplus/ :)
+   Still in beta-stage (like GNUpod ;) )
+   but looks interesting..
