@@ -30,16 +30,16 @@ use Getopt::Long;
 
 use vars qw(%opts);
 $| = 1;
-print "tunes2pod.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
+#print "tunes2pod.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
-GetOptions(\%opts, "force", "help|h", "mount|m=s");
+GetOptions(\%opts, "version", "force", "help|h", "mount|m=s");
 GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', force=>'b'}, "tunes2pod");
 
 
 usage() if $opts{help};
-
+version() if $opts{version};
 #Normal operation
 converter();
 
@@ -185,9 +185,22 @@ die << "EOF";
 $rtxt
 Usage: tunes2pod.pl [-h] [-m directory]
 
-   -h, --help             : This ;)
-   -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
-       --force            : Disable 'sync' checking
+   -h, --help              display this help and exit
+       --version           output version information and exit
+   -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
+       --force             Disable 'sync' checking
+
+Report bugs to <bug-gnupod\@nongnu.org>
+EOF
+}
+
+sub version {
+die << "EOF";
+tunes2pod.pl (gnupod) ###__VERSION__###
+Copyright (C) Adrian Ulrich 2002-2004
+
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EOF
 }

@@ -29,14 +29,15 @@ use Getopt::Long;
 use vars qw(%opts);
 
 
-print "gnupod_INIT.pl ###__VERSION__### (C) Adrian Ulrich\n";
+#print "gnupod_INIT.pl ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
-GetOptions(\%opts, "help|h", "mount|m=s", "disable-convert|d", "france|f");
+GetOptions(\%opts, "version", "help|h", "mount|m=s", "disable-convert|d", "france|f");
 #gnupod_INIT does not read configuration files!
 
 usage() if $opts{help};
+version() if $opts{version};
 
 go();
 
@@ -136,16 +137,28 @@ die << "EOF";
 $rtxt
 Usage: gnupod_INIT.pl [-h] [-m directory]
 
-   -h, --help             : This ;)
-   -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
-   -d, --disable-convert  : Don't try to convert an exiting iTunesDB
-   -f, --france           : Limit volume to 100dB (For French-People)
-                            Maximal-volume without this is ~104dB (VERY LOUD)
-			    *WARNING* This works only for iPods running
-			    Firmware 1.x (1st & 2nd generation)
-                You can also use mktunes.pl '--volume PERCENT'
-                to adjust the volume (Works with Firmware 1.x AND 2.x)
+   -h, --help              display this help and exit
+       --version           output version information and exit
+   -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
+   -d, --disable-convert   Don't try to convert an exiting iTunesDB
+   -f, --france            Limit volume to 100dB (For French-Law/People)
+                           Maximal-volume without this is ~104dB (VERY LOUD)
+                           *WARNING* This works only for iPods running
+                           Firmware 1.x (1st & 2nd generation)
+                           You can also use mktunes.pl '--volume PERCENT'
+                           to adjust the volume (Works with Firmware 1.x AND 2.x)
 
+Report bugs to <bug-gnupod\@nongnu.org>
 EOF
 }
 
+sub version {
+die << "EOF";
+gnupod_INIT.pl (gnupod) ###__VERSION__###
+Copyright (C) Adrian Ulrich 2002-2004
+
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+EOF
+}

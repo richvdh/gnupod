@@ -32,19 +32,19 @@ use File::Copy;
 use constant MACTIME => 2082931200; #Mac EPOCH offset
 use vars qw(%opts %dupdb $int_count);
 
-print "gnupod_addsong.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
+#print "gnupod_addsong.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
 
 $int_count = 3; #The user has to send INT (Ctrl+C) x times until we stop
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
-GetOptions(\%opts, "help|h", "mount|m=s", "decode", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
+GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
                    "set-artist=s", "set-album=s", "set-genre=s", "set-rating=i", "set-playcount=i");
 GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'b', mount=>'s', duplicate=>'b', 'disable-v1'=>'b', 'disable-v2'=>'b'},
                           "gnupod_addsong");
 
 usage() if $opts{help};
-
+version() if $opts{version};
 
 $SIG{'INT'} = \&handle_int;
 if($opts{restore}) {
@@ -210,20 +210,32 @@ die << "EOF";
 $rtxt
 Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
 
-   -h, --help              : This ;)
-   -m, --mount=directory   : iPod mountpoint, default is \$IPOD_MOUNTPOINT
-   -r, --restore           : Restore the iPod (create a new GNUtunesDB from scratch)
-   -d, --duplicate         : Allow duplicate files
-       --disable-v1        : Do not read ID3v1 Tags (MP3 Only)
-       --disable-v2        : Do not read ID3v2 Tags (MP3 Only)
-       --decode            : Convert FLAC Files to WAVE 'onthefly'
-       --set-artist=string : Set Artist (Override ID3 Tag)
-       --set-album=string  : Set Album  (Override ID3 Tag)
-       --set-genre=string  : Set Genre  (Override ID3 Tag)
-       --set-rating=int    : Set Rating
-       --set-playcount=int : Set Playcount
+   -h, --help               display this help and exit
+       --version            output version information and exit
+   -m, --mount=directory    iPod mountpoint, default is \$IPOD_MOUNTPOINT
+   -r, --restore            Restore the iPod (create a new GNUtunesDB from scratch)
+   -d, --duplicate          Allow duplicate files
+       --disable-v1         Do not read ID3v1 Tags (MP3 Only)
+       --disable-v2         Do not read ID3v2 Tags (MP3 Only)
+       --decode             Convert FLAC Files to WAVE 'onthefly'
+       --set-artist=string  Set Artist (Override ID3 Tag)
+       --set-album=string   Set Album  (Override ID3 Tag)
+       --set-genre=string   Set Genre  (Override ID3 Tag)
+       --set-rating=int     Set Rating
+       --set-playcount=int  Set Playcount
 
+Report bugs to <bug-gnupod\@nongnu.org>
 EOF
 }
 
+sub version {
+die << "EOF";
+gnupod_addsong.pl (gnupod) ###__VERSION__###
+Copyright (C) Adrian Ulrich 2002-2004
+
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+EOF
+}
 

@@ -28,14 +28,15 @@ use GNUpod::FooBar;
 use Getopt::Long;
 use vars qw(%opts %TRACKER);
 
-print "gnupod_check.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
+#print "gnupod_check.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
-GetOptions(\%opts, "help|h", "mount|m=s");
+GetOptions(\%opts, "version", "help|h", "mount|m=s");
 GNUpod::FooBar::GetConfig(\%opts, {mount=>'s'}, "gnupod_check");
 
 usage() if $opts{help};
+version() if $opts{version};
 
 go();
 
@@ -93,7 +94,7 @@ sub newfile {
  my $rp = GNUpod::XMLhelper::realpath($opts{mount},$el->{file}->{path});
  my $id = $el->{file}->{id};
  
- my $HINT = "Remove this zombie using 'gnupod_search --delete -i \"^$id\$\"'";
+ my $HINT = "Remove this zombie using 'gnupod_search.pl --delete -i \"^$id\$\"'";
 
  $TRACKER{SIZE}+=int($el->{file}->{filesize});
  $TRACKER{TIME}+=int($el->{file}->{time});
@@ -142,11 +143,25 @@ my($rtxt) = @_;
 die << "EOF";
 $rtxt
 Usage: gnupod_check.pl [-h] [-m directory]
+gnupod_check.pl checks for 'lost' files
 
-   -h, --help             : This ;)
-   -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
+   -h, --help              display this help and exit
+       --version           output version information and exit
+   -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
 
- gnupod_check.pl checks for 'lost' files
+Report bugs to <bug-gnupod\@nongnu.org>
+EOF
+}
+
+
+
+sub version {
+die << "EOF";
+gnupod_check.pl (gnupod) ###__VERSION__###
+Copyright (C) Adrian Ulrich 2002-2004
+
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EOF
 }

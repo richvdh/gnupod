@@ -41,18 +41,19 @@ use vars qw($cid %pldb %spldb %itb %opts %meat %cmeat @MPLcontent);
 #                    OTGPlaylist!!
 
 $| = 1;
-print "mktunes.pl ###__VERSION__### (C) Adrian Ulrich\n";
 
+#print "mktunes.pl ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
-GetOptions(\%opts, "help|h", "ipod-name|n=s", "mount|m=s", "volume|v=i", "energy|e");
+GetOptions(\%opts, "version", "help|h", "ipod-name|n=s", "mount|m=s", "volume|v=i", "energy|e");
 GNUpod::FooBar::GetConfig(\%opts, {'ipod-name'=>'s', mount=>'s', volume=>'i', energy=>'b'}, "mktunes");
 
 $opts{'ipod-name'} ||= "GNUpod 0.95-20040531 aka rc1";
 
 
 usage() if $opts{help};
+version() if $opts{version};
 
 startup();
 
@@ -345,12 +346,25 @@ die << "EOF";
 $rtxt
 Usage: mktunes.pl [-h] [-m directory] [-v VALUE]
 
-   -h, --help             : This ;)
-   -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
-   -n, --ipod-name=NAME   : iPod Name (For unlabeled iPods)
-   -v, --volume=VALUE     : Adjust volume +-VALUE% (example: -v -20)
+   -h, --help              display this help and exit
+       --version           output version information and exit
+   -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
+   -n, --ipod-name=NAME    iPod Name (For unlabeled iPods)
+   -v, --volume=VALUE      Adjust volume +-VALUE% (example: -v -20)
                             (Works with Firmware 1.x and 2.x!)
-   -e, --energy           : Save energy (= Disable scrolling title)
+   -e, --energy            Save energy (= Disable scrolling title)
+
+Report bugs to <bug-gnupod\@nongnu.org>
+EOF
+}
+
+sub version {
+die << "EOF";
+mktunes.pl (gnupod) ###__VERSION__###
+Copyright (C) Adrian Ulrich 2002-2004
+
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EOF
 }

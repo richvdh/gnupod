@@ -28,16 +28,17 @@ use GNUpod::FooBar;
 use Getopt::Long;
 use vars qw(%opts @keeplist);
 
-print "gnupod_search.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
+#print "gnupod_search.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
-GetOptions(\%opts, "help|h", "mount|m=s", "artist|a=s",
+GetOptions(\%opts, "version", "help|h", "mount|m=s", "artist|a=s",
                    "album|l=s", "title|t=s", "id|i=s",
                    "view=s","genre|g=s", "match-once|o", "delete", "RMME|d");
 GNUpod::FooBar::GetConfig(\%opts, {view=>'s', mount=>'s', 'match-once'=>'b'}, "gnupod_search");
 
 usage() if $opts{help};
+version() if $opts{version};
 usage("\n-d was removed, use '--delete'\n") if $opts{RMME};
 $opts{view} ||= 'ialt'; #Default view
 
@@ -155,22 +156,35 @@ die << "EOF";
 $rtxt
 Usage: gnupod_search.pl [-h] [-m directory] File1 File2 ...
 
-   -h, --help             : This ;)
-   -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
-   -t, --title=TITLE      : search songs by Title
-   -a, --artist=ARTIST    : search songs by Artist
-   -l, --album=ALBUM      : search songs by Album
-   -i, --id=ID            : search songs by ID
-   -g, --genre=GENRE      : search songs by Genre
-   -o, --match-once       : Search doesn't need to match multiple times (eg. -a & -l)
-       --delete           : REMOVE (!) matched songs
-       --view=ialt        : Modify output, default=ialt
+   -h, --help              display this help and exit
+       --version           output version information and exit
+   -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
+   -t, --title=TITLE       search songs by Title
+   -a, --artist=ARTIST     search songs by Artist
+   -l, --album=ALBUM       search songs by Album
+   -i, --id=ID             search songs by ID
+   -g, --genre=GENRE       search songs by Genre
+   -o, --match-once        Search doesn't need to match multiple times (eg. -a & -l)
+       --delete            REMOVE (!) matched songs
+       --view=ialt         Modify output, default=ialt
                             t = title    a = artist   r = rating      p = path
                             l = album    g = genre    c = playcount   i = id
 
 Note: Argument for title/artist/album.. has to be UTF8 encoded, *not* latin1!
 
+Report bugs to <bug-gnupod\@nongnu.org>
 EOF
 }
 
+
+sub version {
+die << "EOF";
+gnupod_search.pl (gnupod) ###__VERSION__###
+Copyright (C) Adrian Ulrich 2002-2004
+
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+EOF
+}
 
