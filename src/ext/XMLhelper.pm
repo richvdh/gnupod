@@ -66,7 +66,7 @@ sub getpath {
    }
  
    #Search a place for the MP3 file
-   while($path = sprintf("$mountp/iPod_Control/Music/F%02d/%d_$name", int(rand(20)), $i++)) {
+   while($path = sprintf("$mountp/iPod_Control/Music/%c%02d/%d_$name", 70+(32*int(rand(2))), int(rand(20)), $i++)) {
      if( !(-e $path) && open(TESTFILE,">",$path) ) {
        close(TESTFILE);
        unlink($path); #Maybe it's a dup.. we don't create empty files

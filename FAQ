@@ -8,10 +8,11 @@ TOC
 4 : How about a GUI?
 5 : Does GNUpod support feature $foobar ?
 6 : Can i add File-Format $foobar ?
-7 : Why?
-8 : Do you have any specs about the iTunesDB format?
-9 : How do i report bugs or feature-requests?
-10: How can i contribute?
+7 : How can i add files recursive?
+8 : Why?
+9 : Do you have any specs about the iTunesDB format?
+10: How do i report bugs or feature-requests?
+11: How can i contribute?
 
 
 
@@ -125,7 +126,17 @@ Music :-)
 But gnupod works pretty well with M4A files from allofmp3.com
 
 
-7. Why?
+7. How can i add files recursive?
+---------------------------------
+
+gnupod_addsong.pl can read from stdin :)
+
+$ find blabla/ | gnupod_addsong.pl -
+
+(note the '-')
+
+
+8. Why?
 -------
 
 I wanted an iPod and after buying one, i realized that
@@ -137,7 +148,7 @@ i did it myself :)
 ..And i had enough free time to do it :)
 
 
-8. Do you have any specs about the iTunesDB format?
+9. Do you have any specs about the iTunesDB format?
 ---------------------------------------------------
 
 I didn't create a 'whitepaper' or something like this.
@@ -152,15 +163,15 @@ Just have a look at iTunesDB.pm and tunes2pod.pl+mktunes.pl
 <pab at blinkenlights.ch>
 
 
-9. How do i report bugs or feature-requests?
---------------------------------------------
+10. How do i report bugs or feature-requests?
+---------------------------------------------
 
 Send a mail to <bug-gnupod at nongnu.org>
 ..or <pab at blinkenlights.ch>
 
 
 
-10. How can i contribute?
+11. How can i contribute?
 -------------------------
 
 Use gnupod and:
