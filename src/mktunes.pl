@@ -1,8 +1,7 @@
-
 use strict;
 
 use XML::Parser;
-use Getopt::Mixed qw(nextOption);
+use Getopt::Long;
 use Unicode::String qw(utf8 utf16 byteswap2);
          
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
@@ -41,22 +40,15 @@ $sid = $dull_helper{files};
 
 
 
-print "mktunes.pl 0.8-rc1 (C) 2002-2003 Adrian Ulrich\n";
+print "mktunes.pl 0.8-rc1b (C) 2002-2003 Adrian Ulrich\n";
 print "Part of the gnupod-tools collection\n";
 print "This tool updates your iTunesDB with the content of the gnuPodDB\n\n";
 
 
 
 $opts{m} = $ENV{IPOD_MOUNTPOINT};
-Getopt::Mixed::init("help h>help gui g>gui debug d>debug status s>status\
-                     mount=s m>mount force f>force");
-
-while(my($goption, $gvalue)=nextOption()) {
- $gvalue = 1 if !$gvalue;
- $opts{substr($goption, 0,1)} = $gvalue;
-}
-Getopt::Mixed::cleanup();
-
+GetOptions ('help|h' => \$opts{h}, 'gui|g' => \$opts{g}, 'debug|d' => \$opts{d},
+            'status|s' => \$opts{s}, 'force|f' => \$opts{f}, 'mount|m=s' => \$opts{m});
 
 chck_opts(); #check getopts
 stdtest(); #test if setup is sane
