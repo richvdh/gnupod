@@ -24,7 +24,6 @@ package GNUpod::FooBar;
 
 use strict;
 use Digest::MD5;
-use GNUpod::iTunesDB;
 
 #####################################################################
 # Get paths / files
@@ -160,7 +159,7 @@ sub _otg_needs_sync {
  my($rr) = @_;
 #warn "debug: otgsync need? (request from $$)\n";
  #OTG Sync needed
- return 1 if(GNUpod::iTunesDB::readOTG($rr->{onthego}));
+ return 1 if( (-e $rr->{onthego}) && (-s $rr->{onthego}) > 0 );
  
  if(-e $rr->{playcounts}) { #PlayCounts file exists..
   return 1;

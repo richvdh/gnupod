@@ -29,6 +29,8 @@ use GNUpod::FooBar;
 
 use vars qw(%mhod_id @mhod_array %SPLDEF);
 
+use constant ITUNESDB_MAGIC => 'mhdb';
+
 #mk_mhod() will take care of lc() entries
 %mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, "comment", 8, "composer", 12, "group", 13);# "SPLPREF",50, "SPLDATA",51, "PLTHING", 100) ;
  foreach(keys(%mhod_id)) {
@@ -100,6 +102,8 @@ $SPLDEF{limititem}{5} = "gigabyte";
 
 
 my %SPLREDEF = _r_spldef();
+
+_itBUG("Hm.. This should be in a BEGIN block!");
 
 ##########################################
 #ReConvert the SPLDEF hash
@@ -557,7 +561,7 @@ my($int) = $in =~ /(\d+)/;
 $checkmax ||= 0xffffffff;
 
 if($int > $checkmax or $int < 0) {
- die "iTunesDB.pm: FATAL: $int > $checkmax (<- maximal value), can't continue!\n"
+ _itBUG("_itop: FATAL: $int > $checkmax (<- maximal value)",1);
 }
 
 return scalar(reverse(sprintf("%08X", $int )));
@@ -573,7 +577,7 @@ my($int) = $in =~ /(\d+)/;
 $checkmax ||= 0xffffffff;
 
 if($int > $checkmax) {
- die "iTunesDB.pm: FATAL: $int > $checkmax (<- maximal value), can't continue!\n"
+ _itBUG("_x86itop: FATAL: $int > $checkmax (<- maximal value)",1);
 }
 
 
@@ -701,7 +705,7 @@ my @ret = ();
     $rs = Unicode::String::utf16($string)->utf8;
     $human_exp .= $SPLDEF{string_action}{$action};
 	#Warn about bugs 
-	$SPLDEF{string_action}{$action} or warn "iTunesDB.pm: Unknown s_action $action for $ftype (this is a bug!)\n";
+	$SPLDEF{string_action}{$action} or _itBUG("Unknown s_action $action for $ftype");
    
    }
    else { #Is INT (Or range)
@@ -709,13 +713,13 @@ my @ret = ();
     my $xtint = get_x86_int($diff+56+28,4);
     $rs = "$xfint:$xtint";
 	$human_exp .= $SPLDEF{num_action}{$action};
-	$SPLDEF{num_action}{$action} or  warn "iTunesDB.pm: Unknown a_action $action for $ftype (this is a bug!)\n";
+	$SPLDEF{num_action}{$action} or  _itBUG("Unknown a_action $action for $ftype");
    }
    
   $diff += $slen+56;
   
   my $human_field = $SPLDEF{field}{$field};
-  $SPLDEF{field}{$field} or warn "iTunesDB.pm: Unknown SPL-Field: $field (this is a bug!)\n";
+  $SPLDEF{field}{$field} or _itBUG("Unknown SPL-Field: $field");
   
   push(@ret, {action=>$human_exp,field=>$human_field,string=>$rs});
  }
@@ -805,7 +809,7 @@ sub get_mhip {
 
   for(my $i=0;$i<$mhods;$i++) {
    my $mhs = get_mhod($pos+$oof)->{size};
-   die "Fatal seek error in get_mhip, can't continue\n" if $mhs == -1;
+   _itBUG("Fatal seek error in get_mhip, can't continue!",1) if $mhs == -1;
    $oid+=$mhs;
   }
 
@@ -863,12 +867,7 @@ if($ret_hash{type}) {
  for(my $i=0;$i<$mhods;$i++) {
    my $mhh = get_mhod($pos);
    if($mhh->{size} == -1) {
-    print STDERR "*** FATAL: Expected to find $mhods mhods,\n";
-    print STDERR "*** but i failed to get nr. $i\n";
-    print STDERR "*** Please send your iTuneDB to:\n";
-    print STDERR "*** pab\@blinkenlights.ch\n";
-    print STDERR "!!! iTunesDB.pm panic, can't continue!\n";
-    exit(1);
+    _itBUG("Failed to get $i mhod of $mhods (plpart)",1);
    }
 
    $pos+=$mhh->{size};
@@ -888,13 +887,7 @@ if($ret_hash{type}) {
  for(my $i = 0; $i<$scount;$i++) {
     my $mhih = get_mhip($pos);
     if($mhih->{size} == -1) {
-       print STDERR "*** FATAL: Expected to find $scount songs,\n";
-       print STDERR "*** but i failed to get nr. $i\n";
-       print STDERR "*** Your iTunesDB maybe corrupt or you found\n";
-       print STDERR "*** a bug in GNUpod. Please send this\n";
-       print STDERR "*** iTunesDB to pab\@blinkenlights.ch\n\n";
-       print STDERR "!!! iTunesDB.pm panic, can't continue!\n";
-       exit(1);
+       _itBUG("Failed to parse Song $i of $scount songs",1);
     }
     $pos += $mhih->{size};
      push(@pldata, $mhih->{sid}) if $mhih->{sid};
@@ -938,8 +931,10 @@ $ret{rating}     = int((get_int($sum+28,4)-256)/oct('0x14000000')) * 20;
 $ret{addtime}    = get_int($sum+104,4);
 $ret{bpm} = get_int($sum+122,2);
 
+#Fixme: prerating is invalid.. rerere..
 #$ret{prerating}  = int(get_int($sum+120,4) / oct('0x140000')) * 20;
 #__hd(get_string($sum+120,4));
+
 
 ####### We have to convert the 'volume' to percent...
 ####### The iPod doesn't store the volume-value in percent..
@@ -951,9 +946,7 @@ $ret{volume} = sprintf("%.0f",($ret{volume}/2.55));
 
 ## Paranoia check
 if(abs($ret{volume}) > 100) {
- print " *** BUG *** .. Volume is $ret{volume} percent.. this is impossible :)\n";
- print "Please send this iTunesDB to pab\@blinkenlights.ch .. thanks :)\n";
- print ">> Volume set to 0 percent..\n";
+ _itBUG("Volume is $ret{volume} percent. Impossible Value! -> Volume set to 0 percent!");
  $ret{volume} = 0;
 }
 
@@ -965,12 +958,7 @@ $sum += get_int($sum+4,4);
  for(my $i=0;$i<$mhods;$i++) {
     my $mhh = get_mhod($sum);
     if($mhh->{size} == -1) {
-     print STDERR "** FATAL: Expected to find $mhods mhods,\n";
-     print STDERR "** but i failed to get nr $i\n";
-     print STDERR "*** Please send your iTuneDB to:\n";
-     print STDERR "*** pab\@blinkenlights.ch\n";
-     print STDERR "!!! iTunesDB.pm panic, can't continue!\n";     
-     exit(1);
+     _itBUG("Failed to parse mhod $i of $mhods",1);
     }
     $sum+=$mhh->{size};
     my $xml_name = $mhod_array[$mhh->{type}];
@@ -978,7 +966,7 @@ $sum += get_int($sum+4,4);
       $ret{$xml_name} = $mhh->{string};
     }
     else {
-     warn "\niTunesDB.pm: found unhandled mhod type '$mhh->{type}' (content: $mhh->{string})\n";
+     _itBUG("found unhandled mhod type '$mhh->{type}' (content: $mhh->{string})");
     }
  }
 return ($sum,\%ret);          #black magic, returns next (possible?) start of the mhit
@@ -993,7 +981,10 @@ return ($sum,\%ret);          #black magic, returns next (possible?) start of th
 #########################################################
 # Returns start of part1 (files) and part2 (playlists)
 sub get_starts {
-#Get start of first mhit:
+#Get magic
+my $magic      = get_string(0,4);
+return undef if $magic ne ITUNESDB_MAGIC;
+
 my $mhbd_s     = get_int(4,4);
 my $pdi        = get_int($mhbd_s+8,4); #Used to calculate start of playlist
 my $mhsd_s     = get_int($mhbd_s+4,4);
@@ -1009,6 +1000,7 @@ $sseek = $mhbd_s + $pdi;
 $sseek += get_int($sseek+4,4);
 my $pls = get_int($sseek+8,4);
 return({position=>$pos,pdi=>($pos+$pdi),songs=>$songs,playlists=>$pls});
+
 }
 
 
@@ -1100,6 +1092,36 @@ sub open_itunesdb {
 sub close_itunesdb {
  close(FILE);
 }
+
+
+
+#########################################################
+# Default Bugreport view
+sub _itBUG {
+ my($info, $fatal) = @_;
+ 
+ warn "\n"; #Make sure to get a newline
+ warn "iTunesDB.pm: Ups, something bad happened, you found a bug in GNUpod!\n";
+ warn "====================================================================\n";
+ warn $info."\n";
+ warn "====================================================================\n";
+ warn "> Please write a Bugreport to <pab\@blinkenlights.ch>\n";
+ warn "> - Please send me the complete Output of the program\n";
+ warn "> - Please create a backup of the iTunesDB file, because i may ask you\n";
+ warn ">   to send me this file. Thanks.\n";
+ 
+ if($fatal) {
+  warn " *** THIS ERROR IS FATAL, I CAN'T CONTINUE, SORRY!\n";
+  exit(1);
+ }
+ else {
+  warn " *** THIS ERROR IS NOT FATAL, BUT GNUPOD MAYBE GET CONFUSED %-)\n";
+ }
+ 
+ 
+}
+
+
 
 
 1;

@@ -48,15 +48,16 @@ sub wtf_is {
   elsif(my $xflac = __is_flac($file,$flags)) {
    return($xflac->{ref}, {ftyp=>"FLAC", format=>"wav"}, $xflac->{newout});
   }
+  elsif(my $h = __is_qt($file,$flags)) {
+   return ($h, {ftyp=>"AAC", format=>"m4a"});
+  }
   elsif(my $h = __is_mp3($file,$flags)) {
    return ($h, {ftyp=>"MP3", format=>"mp3"});
   }
   elsif(my $h = __is_pcm($file,$flags)) {
    return ($h, {ftyp=>"PCM", format=>"wav"});
   }
-  elsif(my $h = __is_qt($file,$flags)) {
-   return ($h, {ftyp=>"AAC", format=>"m4a"});
-  }
+
 #Still no luck..
    return (undef, undef);
 }
@@ -308,9 +309,11 @@ sub getutf8 {
  return $in;
 }
 
+##############################
+# Parse iTunNORM string
+# FIXME: result isn't the same as iTunes sometimes..
 sub _parse_iTunNORM {
  my($string) = @_;
- 
  if($string =~ /^(engiTunNORM\s|\s)(\S{8})\s(\S{8})\s/) {
   return oct("0x".$3);
  }

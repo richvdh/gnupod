@@ -29,7 +29,7 @@ use Getopt::Long;
 
 use vars qw(%opts);
 $| = 1;
-print "tunes2pod.pl Version 0.94 (C) 2002-2004 Adrian Ulrich\n";
+print "tunes2pod.pl Version 0.95 (C) 2002-2004 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
@@ -65,6 +65,12 @@ GNUpod::iTunesDB::open_itunesdb($con->{itunesdb}) or usage("Could not open $con-
 #Check where the FILES and PLAYLIST part starts..
 #..and how many files are in this iTunesDB
 my $itinfo = GNUpod::iTunesDB::get_starts();
+
+if(!defined($itinfo)) {
+  warn "File '$con->{itunesdb}' is not an iTunesDB, wrong magic in header!\n";
+  exit(1);
+}
+
 #This 2 will change while running..
 my $pos = $itinfo->{position};
 my $pdi = $itinfo->{pdi};

@@ -68,8 +68,10 @@ sub parsefile {
  my $pos = 0;
  my $level = 1;
  my %lx = ();
+    %reth = (); #Cleanup
 
  if($fsize < 16 || rseek(4,4) ne "ftyp") {
+  close(QTFILE);
   return undef;
  }
 
@@ -85,6 +87,7 @@ sub parsefile {
   $pos+=$len;
   $level = $clevel;
  }
+ close(QTFILE);
  $reth{filesize} = $fsize;
  return \%reth;
 }
