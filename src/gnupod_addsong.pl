@@ -30,7 +30,7 @@ use Getopt::Long;
 use File::Copy;
 
 use constant MACTIME => 2082931200; #Mac EPOCH offset
-use vars qw(%opts %dupdb $int_count);
+use vars qw(%opts %dupdb_normal %dupdb_lazy $int_count);
 
 print "gnupod_addsong.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
 
@@ -38,11 +38,13 @@ $int_count = 3; #The user has to send INT (Ctrl+C) x times until we stop
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
-GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
+GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode=s", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
                    "set-artist=s", "set-album=s", "set-genre=s", "set-rating=i", "set-playcount=i", "playlist|p=s");
-GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'b', mount=>'s', duplicate=>'b', 'disable-v1'=>'b', 'disable-v2'=>'b'},
+GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b', 'disable-v1'=>'b', 'disable-v2'=>'b'},
                           "gnupod_addsong");
 
+
+usage("\n--decode takes 'pcm' 'mp3' 'aac' -> '--decode=mp3'\n") if $opts{decode} && $opts{decode} !~ /^(mp3|aac|pcm|crashme)$/;
 usage() if $opts{help};
 version() if $opts{version};
 
@@ -100,11 +102,12 @@ sub startup {
     next if -d $file;
     
     #Get the filetype
-    my ($fh,$media_h,$converted) =  GNUpod::FileMagic::wtf_is($file, {noIDv1=>$opts{'disable-v1'}, 
+    my ($fh,$media_h,$converter) =  GNUpod::FileMagic::wtf_is($file, {noIDv1=>$opts{'disable-v1'}, 
                                                                       noIDv2=>$opts{'disable-v2'},
-								                                      decode=>$opts{'decode'}});
+								                                      decode=>$opts{'decode'}},$con);
+
     unless($fh) {
-     warn "* [****] Skipping '$file', unknown file type\n";
+    warn "* [****] Skipping '$file', unknown file type\n";
      next;
     }
     
@@ -121,22 +124,43 @@ sub startup {
    
    #Set the addtime to unixtime(now)+MACTIME (the iPod uses mactime)
    $fh->{addtime} = time()+MACTIME;
+   #Check for duplicates
+   if(!$opts{duplicate} && (my $dup = checkdup($fh,$converter))) {
+    print "! [!!!] '$file' is a duplicate of song $dup, skipping file\n";
+    create_playlist_now($opts{playlist}, $dup); #We also add duplicates to a playlist..
+    next;
+   }
+
+   ## Ok, file is not a duplicate
+
+   
+   if($converter) {
+    print "> Converting '$file' into $opts{decode}, please wait...\n";
+    my $path_of_converted_file = GNUpod::FileMagic::kick_convert($converter,$file, uc($opts{decode}), $con);
+    unless($path_of_converted_file) {
+     print "! [!!!] Could not convert $file\n";
+     next;
+    }
+
+    #Ok, we got a converted file, fillout the gaps
+    my($conv_fh, $conv_media_h) = GNUpod::FileMagic::wtf_is($path_of_converted_file);
+    #We didn't know things like 'filesize' before...
+    $fh->{time}     = $conv_fh->{time};
+    $fh->{bitrate}  = $conv_fh->{bitrate};
+    $fh->{srate}    = $conv_fh->{srate};        
+    $fh->{filesize} = $conv_fh->{filesize};   
+    $wtf_frmt = $conv_media_h->{format};    #Set the new format
+    $wtf_ext  = $conv_media_h->{extension}; #Set the new extension
+    #BUT KEEP ftyp!
+    
+    $file = $path_of_converted_file; #Point $file to new file
+   }
+
+
    #Get a path
    (${$fh}{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file, 
                                                            {format=>$wtf_frmt, extension=>$wtf_ext, keepfile=>$opts{restore}});
-   #Check for duplicates
-   if(!$opts{duplicate} && (my $dup = checkdup($fh))) {
-    print "! [!!!] '$file' is a duplicate of song $dup, skipping file\n";
-    create_playlist_now($opts{playlist}, $dup); #We also add duplicates to a playlist..
-    unlink($converted) if $converted; #Unlink file, if we converted it.. (tmp)
-    next;
-   }
-   
 
-
-  
-   #ReSet filename if we did a convert
-   $file = $converted if $converted;
    
    if(!defined($target)) {
     warn "*** FATAL *** Skipping '$file' , no target found!\n";
@@ -154,11 +178,7 @@ sub startup {
    else { #We failed..
      warn "*** FATAL *** Could not copy '$file' to '$target': $!\n";
    }
-   
-   #Now we unlink leftover converted files even if we couldn't
-   #copy the file to the iPod
-   unlink($converted) if $converted;
-   
+   unlink($file) if $converter; #File is in $tmp if $converter is set...
  }
 
  
@@ -196,7 +216,11 @@ sub create_playlist_now {
 
 ## XML Handlers ##
 sub newfile {
- $dupdb{lc($_[0]->{file}->{title})."/$_[0]->{file}->{bitrate}/$_[0]->{file}->{time}/$_[0]->{file}->{filesize}"}= $_[0]->{file}->{id}||-1;
+ $dupdb_normal{lc($_[0]->{file}->{title})."/$_[0]->{file}->{bitrate}/$_[0]->{file}->{time}/$_[0]->{file}->{filesize}"}= $_[0]->{file}->{id}||-1;
+
+#This is worse than _normal, but the only way to detect dups *before* re-encoding...
+ $dupdb_lazy{lc($_[0]->{file}->{title})."/".lc($_[0]->{file}->{album})."/".lc($_[0]->{file}->{artist})}= $_[0]->{file}->{id}||-1;
+
  GNUpod::XMLhelper::mkfile($_[0],{addid=>1});
 }
 
@@ -209,8 +233,12 @@ sub newpl {
 ###############################################################
 # Check if the file is a duplicate
 sub checkdup {
- my($fh) = @_;
- return $dupdb{lc($fh->{title})."/$fh->{bitrate}/$fh->{time}/$fh->{filesize}"};
+ my($fh, $from_lazy) = @_;
+ 
+ return  $dupdb_lazy{lc($_[0]->{title})."/".lc($_[0]->{album})."/".lc($_[0]->{artist})}
+   if $from_lazy;
+   
+ return $dupdb_normal{lc($fh->{title})."/$fh->{bitrate}/$fh->{time}/$fh->{filesize}"};
 }
 
 
@@ -235,20 +263,20 @@ die << "EOF";
 $rtxt
 Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
 
-   -h, --help               display this help and exit
-       --version            output version information and exit
-   -m, --mount=directory    iPod mountpoint, default is \$IPOD_MOUNTPOINT
-   -r, --restore            Restore the iPod (create a new GNUtunesDB from scratch)
-   -d, --duplicate          Allow duplicate files
-   -p, --playlist=string    Add songs to this playlist
-       --disable-v1         Do not read ID3v1 Tags (MP3 Only)
-       --disable-v2         Do not read ID3v2 Tags (MP3 Only)
-       --decode             Convert FLAC Files to WAVE 'onthefly'
-       --set-artist=string  Set Artist (Override ID3 Tag)
-       --set-album=string   Set Album  (Override ID3 Tag)
-       --set-genre=string   Set Genre  (Override ID3 Tag)
-       --set-rating=int     Set Rating
-       --set-playcount=int  Set Playcount
+   -h, --help                display this help and exit
+       --version             output version information and exit
+   -m, --mount=directory     iPod mountpoint, default is \$IPOD_MOUNTPOINT
+   -r, --restore             Restore the iPod (create a new GNUtunesDB from scratch)
+   -d, --duplicate           Allow duplicate files
+   -p, --playlist=string     Add songs to this playlist
+       --disable-v1          Do not read ID3v1 Tags (MP3 Only)
+       --disable-v2          Do not read ID3v2 Tags (MP3 Only)
+       --decode=pcm|mp3|aac  Convert FLAC Files to WAVE/MP3 or AAC 'on-the-fly'
+       --set-artist=string   Set Artist (Override ID3 Tag)
+       --set-album=string    Set Album  (Override ID3 Tag)
+       --set-genre=string    Set Genre  (Override ID3 Tag)
+       --set-rating=int      Set Rating
+       --set-playcount=int   Set Playcount
 
 Report bugs to <bug-gnupod\@nongnu.org>
 EOF
