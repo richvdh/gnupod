@@ -1,7 +1,7 @@
 package GNUpod::XMLhelper;
 
 use strict;
-use XML::Simple;
+use XML::Parser;
 
 
 ##
@@ -45,14 +45,12 @@ return ($ipath, $path);
 # Parses the XML File
 sub parsexml {
  my($xmlin, %opts) = @_;
- my $xls = XML::Simple->new();
- 
  my $doc = undef;
 if($opts{cleanit}) { #We create a clean XML file
   $doc->{gnuPod}->[0]->{files} = ();
 }
 elsif(-r $xmlin) { #Parse the oldone..
- $doc = $xls->XMLin($xmlin, keeproot => 1, keyattr => [], forcearray=>1); 
+ $doc = gnupod_xmlin($xmlin, keeproot => 1, keyattr => [], forcearray=>1); 
  #Create the IDPUB (Free IDs)
   foreach(@{$doc->{gnuPod}->[0]->{files}->[0]->{file}}) {
    $idpub[$_->{id}]++;
@@ -127,9 +125,22 @@ sub addfile {
 # Write the XML File
 sub write_xml {
  my($out, $href) = @_;
- open(OUT, ">$out") or die "Could not write to $out, $!\n";
-  print OUT XML::Simple::XMLout($href,keeproot=>1,xmldecl=>1);
+ open(OUT, ">$out") or die "Could not open $out : $!\n";
+#XML::Simple::XMLout has a strange encoding on some versions.. we fix this (ugly!)
+ # print OUT Unicode::String::utf8(XML::Simple::XMLout($href,keeproot=>1,xmldecl=>1));
+print OUT gnupodxml_out($href,keeproot=>1);
  close(OUT);
 }
+
+
+sub gnupodxml_in {
+ die "Write me!\n";
+}
+
+sub gnupodxml_out {
+ die "Write me!\n";
+}
+
+
 
 1;
