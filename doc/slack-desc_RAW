@@ -3,8 +3,8 @@ gnupod: gnuPod is a collection of tools which allow you to
 gnupod: use your iPod with Linux and other UNIX- like operating systems.
 gnupod: All iPod-models are supported.
 gnupod:
-gnupod:
-gnupod:
-gnupod:
+gnupod: gnuPod needs Unicode::String, you can install it running
+gnupod: #perl -MCPAN -e 'install Unicode::String'
+gnupod: as root
 gnupod:
 gnupod: Package Created By: Adrian Ulrich <pab@blinkenlights.ch>

@@ -127,7 +127,8 @@ sub startup {
    $fh->{songnum}   = 1+$addcount            if $opts{'set-songnum'};
    
    #Set the addtime to unixtime(now)+MACTIME (the iPod uses mactime)
-   $fh->{addtime} = time()+MACTIME;
+	 #This breaks perl < 5.8 if we don't use int(time()) !
+   $fh->{addtime} = int(time())+MACTIME;
 
 
    #Check for duplicates

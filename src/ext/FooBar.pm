@@ -1,5 +1,5 @@
 package GNUpod::FooBar;
-#  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
+#  Copyright (C) 2002-2005 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
 #  URL: http://www.gnu.org/software/gnupod/
@@ -173,7 +173,7 @@ sub shx2_x86_int {
 # Returns '1' if we MAY have to sync..
 sub _itb_needs_sync {
  my($rr) = @_;
-#warn "debug: _itb_needs_sync called($$)\n";
+
  if(-r $rr->{itunesdb_md5} && -r $rr->{itunesdb}) {
    my $itmd = getmd5($rr->{itunesdb});
    my $otmd = getmd5line($rr->{itunesdb_md5});

@@ -310,7 +310,7 @@ sub doxml {
 sub writexml {
 	my($rr) = @_;
 	my $out = $rr->{xml};
-	my $tmp_out = $out."_tmp_".time();
+	my $tmp_out = $out."_tmp_".int(time());
 
 	open(OUT, ">$tmp_out") or die "Could not write to '$tmp_out' : $!\n";
 	binmode(OUT);

@@ -1,5 +1,5 @@
 ###__PERLBIN__###
-#  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
+#  Copyright (C) 2002-2005 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
 #  URL: http://www.gnu.org/software/gnupod/
@@ -64,10 +64,11 @@ sub go {
 
  ##Check if GNUtunesDB <-> iTunesDB is really in-sync
  if(GNUpod::FooBar::_otgdata_broken($con)) { #Ok, On-The-Go data is ** BROKEN **
-   warn "gnupod_otgsync.pl: Error: You forgot to run mktunes.pk, On-The-Go data broken, can't sync\n";
+   warn "gnupod_otgsync.pl: Error: You forgot to run mktunes.pl, wiping broken On-The-Go data...\n";
    #Remove broken data.. live is hard..
    unlink($con->{onthego}) or warn "Could not remove $con->{onthego}, $!\n";
    unlink($con->{playcounts}) or warn "Could not remove $con->{playcounts}, $!\n"; 
+	 warn "Done!\n";
  }
  else {
    #Read on The Go list written by the iPod

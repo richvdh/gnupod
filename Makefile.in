@@ -8,7 +8,7 @@ mandir       = @mandir@
 perlbinary   = @PERL@
 pkgver       = @PACKAGE_VERSION@
 pkgfname     = gnupod-@PACKAGE_VERSION@
-pkgdir       = gnupod-@PACKAGE_VERSION@-noarch-1adrian
+pkgdir       = gnupod-@PACKAGE_VERSION@-noarch-1au
 
 all:
 	# Use 'make install' to install GNUpod

@@ -85,7 +85,7 @@ exit(0);
 sub get_u_path {
  my($prefix, $ext) = @_;
  my $dst = undef;
- while($dst = sprintf("%s_%d_%d.$ext",$prefix, time(), int(rand(99999)))) {
+ while($dst = sprintf("%s_%d_%d.$ext",$prefix, int(time()), int(rand(99999)))) {
   last unless -e $dst;
  }
  return $dst;

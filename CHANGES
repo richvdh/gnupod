@@ -1,4 +1,13 @@
-GNUpod 0.97 - codename
+GNUpod 0.98 - codename
+
+Summary
+
+- Workaround for perl5.6 feature/bug
+  'addtime' shouldn't be below zero anymore
+
+*** OLD STUFF ***
+
+GNUpod 0.97 - codename guezli
 
 Summary
 
@@ -28,9 +37,6 @@ Summary
 
 - Added tools/fwpatch.pl. Allows you to convert an
   EU-iPod into an US-iPod (Make it louder)
-
-
-*** OLD STUFF ***
 
 
 GNUpod 0.96 - codename 'kartoffelsaft'
