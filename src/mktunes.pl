@@ -34,7 +34,7 @@ use vars qw($cid %pldb %spldb %itb %opts %meat %cmeat);
 #spldb{name} = '<spl' prefs
 #itb         = buffer
 $| = 1;
-print "mktunes.pl Version 0.92 (C) 2002-2003 Adrian Ulrich\n";
+print "mktunes.pl Version 0.93 (C) 2002-2003 Adrian Ulrich\n";
 
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
@@ -128,7 +128,7 @@ if(ref($spl) eq "HASH") { #We got splpref!
  
  foreach(@{$xidref}) {
   $cid++; #Whoo! We ReUse the global CID.. first plitem = last file item+1 (or maybe 2 ;) )
-  my $cmhip = GNUpod::iTunesDB::mk_mhip({plid=>$cid, sid=>$_});
+  my $cmhip = GNUpod::iTunesDB::mk_mhip({childs=>1,plid=>$cid, sid=>$_});
   my $cmhod = GNUpod::iTunesDB::mk_mhod({fqid=>$_});
   next unless (defined($cmhip) && defined($cmhod)); #mk_mhod needs to be ok
   $fc++;

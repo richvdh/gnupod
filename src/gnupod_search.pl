@@ -27,7 +27,7 @@ use GNUpod::FooBar;
 use Getopt::Long;
 use vars qw(%opts @keeplist);
 
-print "gnupod_search.pl Version 0.92 (C) 2002-2003 Adrian Ulrich\n";
+print "gnupod_search.pl Version 0.93 (C) 2002-2003 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
@@ -123,6 +123,9 @@ Usage: gnupod_search.pl [-h] [-m directory | -x GNUtunesDB] File1 File2 ...
    -g, --genre=GENRE      : print songs by Genre
    -o, --once             : Search doesn't need to match multiple times (eg. -a & -l)
        --delete           : REMOVE (!) matched songs
+
+Note: Argument for title/artist/album.. has to be UTF8 encoded, *not* latin1!
+
 EOF
 }
 

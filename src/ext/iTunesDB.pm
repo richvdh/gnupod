@@ -383,7 +383,7 @@ my ($hr) = @_;
 my $ret = "mhip";
    $ret .= pack("h8", _itop(76));
    $ret .= pack("h8", _itop(76));
-   $ret .= pack("h8", _itop(1));
+   $ret .= pack("h8", _itop($hr->{childs})); #Mhod childs !
    $ret .= pack("H8", "00");
    $ret .= pack("h8", _itop($hr->{plid})); #ORDER id
    $ret .= pack("h8", _itop($hr->{sid}));   #song id in playlist
@@ -650,11 +650,17 @@ else {
 # get an mhip entry
 sub get_mhip {
  my($pos) = @_;
- 
+ my $oid = 0;
  if(get_string($pos, 4) eq "mhip") {
   my $oof = get_int($pos+4, 4);
-  my $oid = get_mhod($pos+$oof)->{size};
-  return ({size=>-1}) if $oid == -1; #fatal error..
+  my $mhods=get_int($pos+12,4);
+
+  for(my $i=0;$i<$mhods;$i++) {
+   my $mhs = get_mhod($pos+$oof)->{size};
+   die "Fatal seek error in get_mhip, can't continue\n" if $mhs == -1;
+   $oid+=$mhs;
+  }
+
    my $plid = get_int($pos+5*4,4);
    my $sid  = get_int($pos+6*4, 4);
   return({size=>($oid+$oof),sid=>$sid,plid=>$plid});
@@ -693,14 +699,19 @@ sub get_pl {
       $ret_hash{type} = get_int($pos+20, 4); #Is it a main playlist?
    my $scount         = get_int($pos+16, 4); #How many songs should we expect?
    my $header_len     = get_int($pos+4, 4);  #Size of the header
+   my $mhyp_len     = get_int($pos+8, 4);   #Size of mhyp
    my $mhods          = get_int($pos+12,4); #How many mhods we have here
+#Its a MPL, do a fast skip
+if($ret_hash{type}) {
+ warn "Debug: MPL Found, doing a fast skip..\n";
+# return ($pos+$mhyp_len, {type=>1}) 
+}
    $pos += $header_len; #set pos to start of first mhod
    #We can now read the name of the Playlist
    #Ehpod is buggy and writes the playlist name 2 times.. well catch both of them
    #MusicMatch is also stupid and doesn't create a playlist mhod
    #for the mainPlaylist
    my ($oid, $plname, $itt) = undef;
-
  for(my $i=0;$i<$mhods;$i++) {
    my $mhh = get_mhod($pos);
    if($mhh->{size} == -1) {
@@ -712,7 +723,6 @@ sub get_pl {
     exit(1);
    }
    $pos+=$mhh->{size};
-   
    if($mhh->{type} == 1) {
      $ret_hash{name} = $mhh->{string};
    }

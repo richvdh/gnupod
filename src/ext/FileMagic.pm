@@ -21,7 +21,7 @@ package GNUpod::FileMagic;
 # iTunes and iPod are trademarks of Apple
 #
 # This product is not supported/written/published by Apple!
-
+use strict;
 use MP3::Info qw(:all);
 
 
@@ -70,9 +70,9 @@ sub __is_mp3 {
  $rh{filesize} = $h->{SIZE};
  $rh{time}     = int($h->{SECS}*1000);
  $rh{fdesc}    = "MPEG ${$h}{VERSION} layer ${$h}{LAYER} file";
- $h = MP3::Info::get_mp3tag($file,1);  #Get the IDv1 tag
- $hs = MP3::Info::get_mp3tag($file, 2,1); #Get the IDv2 tag ### BROKEN! FIXME
- 
+ my $h = MP3::Info::get_mp3tag($file,1);  #Get the IDv1 tag
+ my $hs = MP3::Info::get_mp3tag($file, 2,1); #Get the IDv2 tag ### BROKEN! FIXME
+
 
 #IDv2 is stronger than IDv1..
  #Try to parse things like 01/01
@@ -91,6 +91,12 @@ sub __is_mp3 {
      $rh{comment} =  getutf8($hs->{COMM} || $h->{COMMENT} || "");
      $rh{composer} = getutf8($hs->{TCOM} || "");
      $rh{playcount}= int($hs->{PCNT}) || 0;
+
+#EasterEgg :)
+#Jeder Mensch darf 15 Minuten in seinem Leben im Rampenlicht stehen..
+#..davon hast du, Rene, sicher gerade 14 verbraucht!
+     $rh{artist} = "Rene van Bevern" if $rh{artist} eq "Rene Van Bevern";
+
  return \%rh;
 }
 
@@ -115,26 +121,25 @@ sub getutf8 {
  $in =~ s/^(.)//;
  my $encoding = $1;
 
- if($encoding eq "\001" || $encoding eq "\002") {
-  #From MP3::Info
-  my $u = Unicode::String::utf16($data);
-  $data = $u->utf8;
-  $data =~ s/^\xEF\xBB\xBF//;
+ if(ord($encoding) > 0 && ord($encoding) < 32) {
+   warn "FileMagic.pm: warning: unsupportet ID3 Encoding found: ".ord($encoding)."\n";
+   warn "                       send a bugreport to pab\@blinkenlights.ch\n";
+   return undef;
  }
  else { #AutoGuess (We accept invalid id3tags)
   $in = $encoding.$in;
   #Remove all 00's
-  $in =~ tr/\00//d;
-  
+  $in =~ tr/\0//d;
   my $oldstderr = *STDERR; #Kill all utf8 warnings.. this is uuugly
   *STDERR = "NULLFH";
   my $bfx = Unicode::String::utf8($in)->utf8;
   *STDERR = $oldstderr;    #Restore old filehandle
    if($bfx ne $in) {
     #Input was no valid utf8, assume latin1 input
+    $in =~  s/[\000-\037]//gm; #Kill stupid chars..
     $in = Unicode::String::latin1($in)->utf8
    }
-   else {
+   else { #Return the unicoded input
     $in = $bfx;
    }
  }

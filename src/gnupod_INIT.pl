@@ -28,7 +28,7 @@ use Getopt::Long;
 use vars qw(%opts);
 
 
-print "gnupod_addsong.pl Version 0.92 (C) 2002-2003 Adrian Ulrich\n";
+print "gnupod_addsong.pl Version 0.93 (C) 2002-2003 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
@@ -96,9 +96,12 @@ if($opts{france}) {
   print LIMIT "216\n"; #Why?
  close(LIMIT);
 }
-else {
+elsif(-e "$opts{mount}/iPod_Control/Device/Limit") {
  print "> Removing 'Limit' file (because you didn't use --france)\n";
  unlink("$opts{mount}/iPod_Control/Device/Limit");
+}
+else {
+ print "> No 'Limit' file created or deleted..\n";
 }
  
  print "> Creating dummy files\n";
@@ -132,10 +135,12 @@ Usage: gnupod_INIT.pl [-h] [-m directory]
    -h, --help             : This ;)
    -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
    -d, --disable-convert  : Don't try to convert an exiting iTunesDB
-   -f, --france           : Limit Volume to 100dB (For French-People)
+   -f, --france           : Limit volume to 100dB (For French-People)
                             Maximal-volume without this is ~104dB (VERY LOUD)
 			    *WARNING* This works only for iPods running
 			    Firmware 1.x (1st & 2nd generation)
+                You can also use mktunes.pl '--volume PERCENT'
+                to adjust the volume (Works with Firmware 1.x AND 2.x)
 
 EOF
 }
