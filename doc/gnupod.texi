@@ -348,7 +348,7 @@ rmmod sbp2
 @end example
 
 Unplug the iPod and pray. If everything went well, the iPod boots up :).
-If not, reread this section, if you are lost, feel free to drop me a mail: bug-gnupod@@gnu.org
+If not, reread this section, if you are lost, feel free to drop me a mail: bug-gnupod@@nongnu.org
 
 
 It's a good idea to edit @code{@w{/etc/fstab}} and add a line for the iPod:
@@ -713,7 +713,7 @@ export IPOD_MOUNTPOINT="/mnt/ipod"
 @node Reporting Bugs
 @section Reporting Bugs
 
-To report a bug, send a mail to bug-gnupod@@gnu.org
+To report a bug, send a mail to bug-gnupod@@nongnu.org
 
 Include as much information as possible.
 

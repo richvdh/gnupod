@@ -322,7 +322,7 @@ like. After mkfs.vfat is done, we remove sbp2:
 
    Unplug the iPod and pray. If everything went well, the iPod boots up
 :).  If not, reread this section, if you are lost, feel free to drop me
-a mail: bug-gnupod@gnu.org
+a mail: bug-gnupod@nongnu.org
 
    It's a good idea to edit `/etc/fstab' and add a line for the iPod:
      /dev/sda2    /mnt/ipod    vfat    noauto,user  0 0
@@ -705,7 +705,7 @@ File: gnupod.info,  Node: Reporting Bugs,  Prev: Known bugs and limitations,  Up
 Reporting Bugs
 ==============
 
-   To report a bug, send a mail to bug-gnupod@gnu.org
+   To report a bug, send a mail to bug-gnupod@nongnu.org
 
    Include as much information as possible.
 
@@ -1163,22 +1163,22 @@ Node: Installing GNUpod1963
 Node: Installation of GNUpod2386
 Node: Using FireWire with GNU/Linux3499
 Node: Convert your Mac iPod6908
-Node: Firmware update11980
-Node: Using GNUpod13753
-Node: Preparation14576
-Node: Configuration15303
-Node: Add files15756
-Node: Search files16876
-Node: Remove files17357
-Node: Creating playlists17662
-Node: Unplug the iPod18857
-Node: Recovering files19761
-Node: Coexistence20464
-Node: Problems21927
-Node: GNUtunesDB22306
-Node: Get rid of '-m'23807
-Node: Known bugs and limitations24087
-Node: Reporting Bugs24370
-Node: GNU Free Documentation License24810
+Node: Firmware update11983
+Node: Using GNUpod13756
+Node: Preparation14579
+Node: Configuration15306
+Node: Add files15759
+Node: Search files16879
+Node: Remove files17360
+Node: Creating playlists17665
+Node: Unplug the iPod18860
+Node: Recovering files19764
+Node: Coexistence20467
+Node: Problems21930
+Node: GNUtunesDB22309
+Node: Get rid of '-m'23810
+Node: Known bugs and limitations24090
+Node: Reporting Bugs24373
+Node: GNU Free Documentation License24816
 
 End Tag Table
