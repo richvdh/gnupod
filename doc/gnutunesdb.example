@@ -26,8 +26,8 @@
 
 <!-- holds 'Kanon D-dur (normal)' and 'A-15 Tenpo chi' //-->
 <playlist name="IDs">
-<add id="1" />
-<add id="3" />
+ <add id="1" />
+ <add id="3" />
 </playlist>
 
 
@@ -41,6 +41,20 @@
  //-->
  
 <playlist name="Extended">
+ <add bitrate="192" /> <!-- Adds EVERY item with a bitrate=192 (in this example: every song except id 1248 //-->
+ <add genre="Soundtrack" year="1997" /> <!-- Add items with genre=soundtrack AND year=1997 (in this example: every song except id 1266 //-->
+</playlist>
+
+<!-- same as above, but sorted by title //-->
+<playlist name="Extended" sort="title">
+ <add bitrate="192" /> <!-- Adds EVERY item with a bitrate=192 (in this example: every song except id 1248 //-->
+ <add genre="Soundtrack" year="1997" /> <!-- Add items with genre=soundtrack AND year=1997 (in this example: every song except id 1266 //-->
+</playlist>
+
+<!-- again the same.. but sorted by album in REVERSE (z..a) order
+     ..you can use every <file item in sort="".. and simply add a 'reverse '
+     in front to reverse the sorting :) //-->
+<playlist name="Extended" sort="reverse album">
  <add bitrate="192" /> <!-- Adds EVERY item with a bitrate=192 (in this example: every song except id 1248 //-->
  <add genre="Soundtrack" year="1997" /> <!-- Add items with genre=soundtrack AND year=1997 (in this example: every song except id 1266 //-->
 </playlist>
@@ -79,6 +93,11 @@
        <smartplaylist checkrule="spl" liveupdate="1" name="Example SPL2" >
         <spl action="gt" field="bitrate" string="311" />
       </smartplaylist>
+      
+      <!-- add all songs with Rating = 3 starts (3*20 = 60) //-->
+    <smartplaylist name="***" checkrule="spl" liveupdate="1" limititem="minute" limitval="" limitsort="random" matchany="0" >
+      <spl action="eq" field="rating" string="60" />
+    </smartplaylist>
 
 
 </gnuPod>

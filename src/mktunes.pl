@@ -40,7 +40,7 @@ use vars qw($cid %pldb %spldb %itb %opts %meat %cmeat @MPLcontent);
 #                    wouldn't boot if it finds a hidden-id in the
 #                    OTGPlaylist!!
 
-$| = 1;
+$| = 1; #Do not buffer output
 
 use constant MPL_UID => 1234567890; #This is the MasterPlaylist ID
 
@@ -54,7 +54,7 @@ GNUpod::FooBar::GetConfig(\%opts, {'ipod-name'=>'s', mount=>'s', volume=>'i', en
 $opts{'ipod-name'} ||= "GNUpod ###__VERSION__###";
 
 
-usage() if $opts{help};
+usage()   if $opts{help};
 version() if $opts{version};
 
 startup();
@@ -129,14 +129,18 @@ print " - May the iPod be with you!\n\n";
 
 
 
+
+
+
 #########################################################################
 # Create a single playlist
 sub r_mpl {
- my($name, $type, $xidref, $spl, $plid) = @_;
+ my($name, $type, $xidref, $spl, $plid, $sortby) = @_;
 
-my $pl = undef;
-my $fc = 0;
-my $mhp = 0;
+my $pl           = undef;
+my $fc           = 0;
+my $mhp          = 0;
+my $reverse_sort = 0;
 
 if(ref($spl) eq "HASH") { #We got splpref!
  $pl .= GNUpod::iTunesDB::mk_splprefmhod({item=>$spl->{limititem},sort=>$spl->{limitsort},mos=>$spl->{moselected}
@@ -147,6 +151,16 @@ if(ref($spl) eq "HASH") { #We got splpref!
  $mhp=2; #Add a mhod
 }
 
+
+##Check, if user want's sorted stuff
+ if($sortby) {
+   $sortby=lc($sortby); #LC
+   if($sortby =~ /reverse.(.+)/) {
+     $reverse_sort = 1;
+     $sortby=$1;
+   }
+   sort_playlist_by({sortby=>lc($sortby), plref=>$xidref, reverse=>$reverse_sort});
+ }
  
  foreach(@{$xidref}) {
   $cid++; #Whoo! We ReUse the global CID.. first plitem = last file item+1 (or maybe 2 ;) )
@@ -175,7 +189,9 @@ sub genpls {
   foreach my $plref (GNUpod::XMLhelper::getpl_attribs()) {
     my $splh = GNUpod::XMLhelper::get_splpref($plref->{name}); #Get SPL Prefs
     
-    my($pl, $xc) = r_mpl($plref->{name}, 0, $pldb{$plref->{name}}, $splh, $plref->{plid}); #Kick Playlist creator
+    #Note: sort isn't aviable for spl's.. hack addspl()
+    my($pl, $xc) = r_mpl($plref->{name}, 0, $pldb{$plref->{name}}, 
+                         $splh, $plref->{plid}, $plref->{sort}); #Kick Playlist creator
     
        if($pl) { #r_mpl got data, we can create a playlist..
         $plc++;         #INC Playlist count
@@ -183,6 +199,7 @@ sub genpls {
         #GUI Stuff
         my $plxt = "Smart-" if $splh;
         print ">> Created $plxt"."Playlist '$plref->{name}' with $xc file"; print "s" if $xc !=1;
+        print " (sort by '$plref->{sort}')" if $plref->{sort};
         print "\n";
        }
        else {
@@ -285,7 +302,7 @@ sub xmk_newspl {
   warn "mktunes.pl: warning: (pl: $name) Liveupdate disabled. Please set liveupdate=\"1\" if you don't want an empty playlist\n";
  }
 
- if(my $id = $el->{splcont}->{id}) { #We found an old id with disalbed liveupdate
+ if(my $id = $el->{splcont}->{id}) { #We found an old id with disabled liveupdate
     foreach(sort {$a <=> $b} split(/ /,$meat{id}{$id})) { push(@{$pldb{$name}}, $_); }
  }
 
@@ -336,6 +353,71 @@ sub xmk_newpl {
        }
      }
    }
+}
+
+#######################################################################
+#Sort a playlist ($xidref) by $sortby
+#
+#Only used for full playlists atm.. and could need a speedup!
+#
+sub sort_playlist_by {
+ my($hr) = @_;
+ my $sortby = lc($hr->{sortby});  #SortBy
+ my $xidref = $hr->{plref};       #Playlist Reference
+ my $reverse= $hr->{reverse};     #Reverse?
+ my $isInt  = 0;                  #String by default
+ 
+ my %sortbuff = ();
+ my %xidhash  = ();
+ my %sortme   = ();
+ my $sortsub  = sub {};
+ 
+ #Check if $sortby is a string
+ $isInt = $GNUpod::iTunesDB::SPLREDEF{field}{lc($sortby)};
+
+
+ #Create a sub for this search type:
+ if($isInt) {
+   $sortsub = sub { $a <=> $b }; #Num
+   $sortsub = sub { $b <=> $a } if $reverse; #Reverse num
+ }
+ else {
+   $sortsub = sub { uc($a) cmp uc($b)};              #String
+   $sortsub = sub { uc($b) cmp uc($a)} if $reverse;  #Reversed String
+ } 
+
+
+ #Map array into hash
+ %xidhash = map { $_ => 1} @{$xidref};
+ @$xidref = (); #Cleanup (do not use undef!)
+
+ #Walk cmeat... cmeat looks like this:
+ #$cmeat{'year'}{'2014'} = "13 14 15 16 33 ";
+ #We got the value and the 1. key (year) .. now we search all
+ #second keys with matching values.. sounds ugly? it is...
+ foreach my $cmval (keys(%{$cmeat{$sortby}})) {
+   foreach(split(/ /,$cmeat{$sortby}{$cmval})) {
+     next unless $xidhash{$_}; #Nope, we don't search for this
+     delete($xidhash{$_});     #We found the item, delete it from here
+     $sortme{$cmval} .= "$_ "; #Add it..
+   }
+ }
+
+
+ foreach(sort $sortsub keys(%sortme)) {
+  foreach(split(/ /,$sortme{$_})) {
+   push(@$xidref,$_);
+  }
+ }
+
+ #Maybe something didn't have a $sortby value?
+ #We know them: Everything still in %xidhash..
+ #-> Append them to the end (i think the beginning isn't good)
+ foreach(keys(%xidhash)) {
+  push(@$xidref,$_);
+ }
+
+ #No need to return anything.. We modify the hashref directly
 }
 
 

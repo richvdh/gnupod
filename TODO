@@ -1,2 +1,4 @@
 * Fixing bugs ;)
 * Add Audible.com support
+* Add LiveUpdate support for old Firmware and Clock-Bug on iPod-Mini
+* <playlist sort="artist|album|..."> ?

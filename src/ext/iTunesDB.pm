@@ -27,7 +27,7 @@ use strict;
 use Unicode::String;
 use GNUpod::FooBar;
 
-use vars qw(%mhod_id @mhod_array %SPLDEF);
+use vars qw(%mhod_id @mhod_array %SPLDEF %SPLREDEF);
 
 use constant ITUNESDB_MAGIC => 'mhbd';
 
@@ -133,8 +133,7 @@ $SPLDEF{limitsort}{-23} = "rating_low";
 
 
 
-my %SPLREDEF = _r_spldef();
-
+%SPLREDEF = _r_spldef();
 
 
 

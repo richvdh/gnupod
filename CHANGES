@@ -16,6 +16,9 @@ Summary
 - gnupod_search.pl can now RENAME/Edit tags.
   use --rename="artist=New artist Name"
 
+- You can now sort playlists:
+  <playlist .. sort="artist"> or (reverse)
+  <playlist .. sort="reverse title">
 
 
 

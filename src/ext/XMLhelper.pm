@@ -185,7 +185,7 @@ sub addpl {
     %rh = %{$opt} if ref($opt) eq "HASH"; #Copy if we got data 
  $rh{name} = $name;            #Force the name
  $rh{plid} = int(rand(99999)); #We create our own id
- push(@plorder, {name=>$name,plid=>$rh{plid}});
+ push(@plorder, {name=>$name,plid=>$rh{plid},sort=>$rh{sort}});
  
  $XDAT->{playlists}->{pref}->{$name} = \%rh;
 }

@@ -24,7 +24,7 @@ File: gnupod.info,  Node: Top,  Next: Requirements,  Up: (dir)
 1 GNUpod
 ********
 
-This edition of the `GNUpod Manual', last updated 26. Sep. 2004,
+This edition of the `GNUpod Manual', last updated 12. Oct. 2004,
 documents GNUpod Version 0.97
 
 * Menu:
@@ -558,6 +558,20 @@ is case INsensitive) with a bitrate of 256kbit/s.
 
    <regex is case sensitive, use <iregex to do case insensitive
 matching.
+
+   It's also possible to sort a playlist:
+
+     <playlist name="By Album" sort="album">
+      <regex artist="bach" />
+     </playlist>
+
+   This adds all songs from Bach, sorted by album (a..z). You can use
+every `<file ..>' item (id, bitrate, title..) for `sort'.  Add 'reverse
+' at the beginning, to reverse the sorting:
+
+     <playlist name="By Title" sort="reverse title">
+      <regex artist="U2" />
+     </playlist>
 
    You can also use Smart-Playlists with Firmware >= 2.x
 
@@ -1232,14 +1246,14 @@ Node: Search files17485
 Node: Remove files17971
 Node: Edit tags18272
 Node: Creating playlists18817
-Node: Unplug the iPod20870
-Node: Recovering files21779
-Node: Coexistence22674
-Node: Problems24144
-Node: GNUtunesDB24527
-Node: Get rid of '-m'26033
-Node: Known bugs and limitations26318
-Node: Reporting Bugs26609
-Node: GNU Free Documentation License27057
+Node: Unplug the iPod21292
+Node: Recovering files22201
+Node: Coexistence23096
+Node: Problems24566
+Node: GNUtunesDB24949
+Node: Get rid of '-m'26455
+Node: Known bugs and limitations26740
+Node: Reporting Bugs27031
+Node: GNU Free Documentation License27479
 
 End Tag Table

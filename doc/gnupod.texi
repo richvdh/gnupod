@@ -580,6 +580,24 @@ See @code{@w{perldoc perlre}} to learn more about this
 
 <regex is case sensitive, use <iregex to do case insensitive matching.
 
+It's also possible to sort a playlist:
+
+@example
+<playlist name="By Album" sort="album">
+ <regex artist="bach" />
+</playlist>
+@end example
+
+This adds all songs from Bach, sorted by album (a..z). You can use every
+@code{@w{<file ..>}} item (id, bitrate, title..) for @code{@w{sort}}.
+Add 'reverse ' at the beginning, to reverse the sorting:
+
+@example
+<playlist name="By Title" sort="reverse title">
+ <regex artist="U2" />
+</playlist>
+@end example
+
 You can also use Smart-Playlists with Firmware >= 2.x
 
 @example
