@@ -149,6 +149,8 @@ sub get_atom {
    $reth{cds}   = GNUpod::FooBar::shx2_x86_int(substr($dat,4,2));
   }
   elsif($parent eq "----" && length($dat) == 90 && $dat =~ /^\s(\S{8})\s(\S{8})\s/) { #This is the iTunNorm field
+    #Fixme: We should read the 'mean' and 'name' stuff for this..
+    #Guessing like we do now sux
     $reth{iTunNORM} = $dat;
   }
   elsif($parent eq "----" or $parent eq "disk") {

@@ -129,6 +129,9 @@ sub newfile {
   
   if($plcref->{lastplay}{int(@keeper)-1}) {
     $el->{file}->{lastplay}  = $plcref->{lastplay}{int(@keeper)-1};
+    
+#    print "*" x (int($el->{file}->{rating}/20));
+#    print " $el->{file}->{id} has a lastplay of $el->{file}->{lastplay} !\n";
   }
  
  }

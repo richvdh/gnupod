@@ -1051,6 +1051,10 @@ sub readPLC {
   
   my $songnum = (($offset-(16*6))/16)+1;
 
+#print "$songnum] ";
+#print "*" x int($pcrh{rating}{songnum}/20);
+#print " $pcrh{lastplay}{$songnum}\n";
+
   $pcrh{playcount}{$songnum} = $playc if $playc;
   $pcrh{rating}{$songnum}    = $rating if $rating; 
   $pcrh{lastplay}{$songnum}  = $lastply if $lastply;

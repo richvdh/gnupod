@@ -235,11 +235,8 @@ sub __is_mp3 {
  #The IDv2 Hashref may return arrays.. kill them :)
  foreach my $xkey (keys(%$hs)) {
    if( ref($hs->{$xkey}) eq "ARRAY" ) {
-     my $deArray = undef;
-     foreach(@{$hs->{$xkey}}) {
-	  $deArray .= ":".$_;
-	 }
-    $hs->{$xkey} = substr($deArray,1);
+    #Fixme: does this always work?
+    $hs->{$xkey} = join(":", @{$hs->{$xkey}});
    } 
  }
 
