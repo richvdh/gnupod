@@ -77,21 +77,21 @@ sub __is_mp3 {
 
 #IDv2 is stronger than IDv1..
  #Try to parse things like 01/01
- my @songa = pss($hs->{TRCK} || $h->{TRACKNUM});
- my @cda   = pss($hs->{TPOS});
+ my @songa = pss(getutf8($hs->{TRCK} || $h->{TRACKNUM}));
+ my @cda   = pss(getutf8($hs->{TPOS}));
  
      $rh{songs}    = int($songa[1]);
      $rh{songnum} =  int($songa[0]);
      $rh{cdnum}   =  int($cda[0]);
      $rh{cds}    =   int($cda[1]);
      $rh{year} =     getutf8($hs->{TYER} || $h->{YEAR} || 0);
-     $rh{title} =    getutf8($hs->{TPE2} || $h->{TITLE} || $cf || "");
+     $rh{title} =    getutf8($hs->{TIT2} || $h->{TITLE} || $cf || "");
      $rh{album} =    getutf8($hs->{TALB} || $h->{ALBUM} || "Unknown Album");
      $rh{artist} =   getutf8($hs->{TPE1} || $h->{ARTIST}  || "Unknown Artist");
      $rh{genre} =    getutf8(               $h->{GENRE}   || "");
      $rh{comment} =  getutf8($hs->{COMM} || $h->{COMMENT} || "");
      $rh{composer} = getutf8($hs->{TCOM} || "");
-     $rh{playcount}= int($hs->{PCNT}) || 0;
+     $rh{playcount}= int(getutf8($hs->{PCNT})) || 0;
 
 #EasterEgg :)
 #Jeder Mensch darf 15 Minuten in seinem Leben im Rampenlicht stehen..
