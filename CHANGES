@@ -27,6 +27,7 @@ tunes2pod.pl:
 
 mktunes.pl
   * Added INCOMPLETE SPL-Write support
+  * regex-matches are sorted by id
 
 gnupod_addsong.pl:
   * duplicate-checker displayed the

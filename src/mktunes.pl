@@ -229,7 +229,8 @@ sub newpl   {
  }
 }
 
-
+########################################################################
+# Smartplaylist handler
 sub xmk_newspl {
  my($el, $name) = @_;
  my $mpref = GNUpod::XMLhelper::get_splpref($name)->{matchany};
@@ -240,20 +241,18 @@ sub xmk_newspl {
  }
 
  if(GNUpod::XMLhelper::get_splpref($name)->{liveupdate}) {
-  warn "PLAYLIST $name :: Liveupdate doesn't work.. you'll get an empty spl.. sorry! (That's why this code is in CVS ;) )\n";
+  warn "mktunes.pl: warning: (pl: $name) Liveupdate enabled, but mktunes.pl doesn't support this atm. keeping songs\n";
  }
- elsif(my $id = $el->{splcont}->{id}) { #We found an old id with disalbed liveupdate
-    foreach(split(/ /,$meat{id}{$id})) { push(@{$pldb{$name}}, $_); }
+ #elsif
+ if(my $id = $el->{splcont}->{id}) { #We found an old id with disalbed liveupdate
+    foreach(sort {$a <=> $b} split(/ /,$meat{id}{$id})) { push(@{$pldb{$name}}, $_); }
  }
-# else {
-#  print "????????????\n";
-#   foreach(keys(%$el)) { print "?? $_\n" }
-# }
 
 }
 
 
-
+#######################################################################
+# Normal playlist handler
 sub xmk_newpl {
  my($el, $name) = @_;
    foreach my $action (keys(%$el)) {
@@ -266,7 +265,7 @@ sub xmk_newpl {
          }
          $ntm++;
        }
-       foreach(keys(%mk)) {
+       foreach(sort {$a <=> $b} keys(%mk)) {
         push(@{$pldb{$name}}, $_) if $mk{$_} == $ntm;
        }
        
@@ -291,7 +290,7 @@ sub xmk_newpl {
            }
          }
        }
-       foreach(keys(%mk)) {
+       foreach(sort {$a <=> $b} keys(%mk)) {
         push(@{$pldb{$name}}, $_) if $mk{$_} == $ntm;
        }
      }
