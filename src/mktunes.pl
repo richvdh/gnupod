@@ -69,6 +69,7 @@ sub startup {
 
 	#Open the iTunesSD and write a dummy header
 	open(ITS, ">$con->{itunessd}") or die "*** Sorry: Could not write your iTunesSD: $!, did you run gnupod_INIT.pl ?\n";
+	binmode(ITS);
 	syswrite(ITS,GNUpod::iTunesDB::mk_itunes_sd_header());
 	
 	print "> Parsing XML and creating FileDB\n";

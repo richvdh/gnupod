@@ -21,6 +21,8 @@ Summary
 - Internal Change: Removed the ugly _itop and _x86itop..
   I hope i didn't break anything ;)
 
+- Switched from Audio::FLAC to Audio::FLAC::Header
+
 
 *** OLD STUFF ***
 
