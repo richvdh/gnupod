@@ -1,4 +1,7 @@
+ ** NOTE: THIS IS GNUPOD 0.94-pre1 **
+
 GNUpod 0.94 - codename 'aspartam'
+
 
 Summary:
 --------
@@ -46,6 +49,7 @@ FooBar.pm:
 iTunesDB.pm
  * Added 'Play Counts' parser (=Rating)
  * Changed rating Schema
+ * _itop() checks for very big values and dies
 
 QTfile.pm
  * A dirty QuickTime parser

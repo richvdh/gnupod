@@ -1,2 +1,4 @@
 * Fixing bugs ;)
 * Add Audible.com support
+* Att '--only-id3v1 / --only-id3v2' stuff to gnupod_addsong.pl
+* Update documentation for 0.94 final

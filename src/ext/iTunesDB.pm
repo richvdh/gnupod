@@ -1,8 +1,8 @@
-# iTunesDB.pm - Version 20031002
-#  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
+# iTunesDB.pm - Version 20040116
+#  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
-#  URL: http://www.gnu.org/software/gnupod/
+#  URL: http://blinkenlights.ch/cgi-bin/fm.pl?get=ipod
 #
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -118,7 +118,7 @@ my $ret = "mhit";
    $ret .= pack("h8", _itop($file_hash{year}));              #the year
    $ret .= pack("h8", _itop($file_hash{bitrate}));           #bitrate
    $ret .= pack("H4", "00");                                #??
-   $ret .= pack("h4", _itop($file_hash{srate} || 44100));    #Srate (note: h4!)
+   $ret .= pack("h4", _itop( ($file_hash{srate} || 44100),0xffff));    #Srate (note: h4!)
    $ret .= pack("h8", _itop($vol));                         #Volume
    $ret .= pack("h8", _itop($file_hash{starttime}));        #Start time?
    $ret .= pack("h8", _itop($file_hash{stoptime}));          #Stop time?
@@ -231,14 +231,14 @@ $chklim = $checkrule-$chkrgx*2;
  $ret .= pack("h8", _itop(96));
  $ret .= pack("h8", _itop(50));
  $ret .= pack("H16");
- $ret .= pack("h2", _itop($live)); #LiveUpdate ?
- $ret .= pack("h2", _itop($chkrgx)); #Check regexps?
- $ret .= pack("h2", _itop($chklim)); #Check limits?
- $ret .= pack("h2", _itop($hs->{item})); #Wich item?
- $ret .= pack("h2", _itop($hs->{sort})); #How to sort
+ $ret .= pack("h2", _itop($live,0xff)); #LiveUpdate ?
+ $ret .= pack("h2", _itop($chkrgx,0xff)); #Check regexps?
+ $ret .= pack("h2", _itop($chklim,0xff)); #Check limits?
+ $ret .= pack("h2", _itop($hs->{item},0xff)); #Wich item?
+ $ret .= pack("h2", _itop($hs->{sort},0xff)); #How to sort
  $ret .= pack("h6");
  $ret .= pack("h8", _itop($hs->{value})); #lval
- $ret .= pack("h2", _itop($mos));        #mos
+ $ret .= pack("h2", _itop($mos,0xff));        #mos
  $ret .= pack("h118");
 }
 
@@ -282,11 +282,11 @@ if(ref($hs->{data}) ne "ARRAY") {
      }
      
      $cr .= pack("H6");
-     $cr .= pack("h2", _itop($chr->{field}));
+     $cr .= pack("h2", _itop($chr->{field},0xff));
      $cr .= pack("H6", reverse("010000"));
-     $cr .= pack("h2", _itop($chr->{action}));
+     $cr .= pack("h2", _itop($chr->{action},0xff));
      $cr .= pack("H94");
-     $cr .= pack("h2", _itop(length($string)));
+     $cr .= pack("h2", _itop(length($string),0xff));
      $cr .= $string;
  }
 
@@ -298,9 +298,9 @@ if(ref($hs->{data}) ne "ARRAY") {
  $ret .= "SLst";                   #Magic
  $ret .= pack("H8", reverse("00010001")); #?
  $ret .= pack("h6");
- $ret .= pack("h2", _itop(int(@{$hs->{data}})));     #HTM (Childs from cr)
+ $ret .= pack("h2", _itop(int(@{$hs->{data}}),0xff));     #HTM (Childs from cr)
  $ret .= pack("h6");
- $ret .= pack("h2", _itop($anymatch));     #anymatch rule on or off
+ $ret .= pack("h2", _itop($anymatch,0xff));     #anymatch rule on or off
  $ret .= pack("h240");
 
 
@@ -427,8 +427,15 @@ return sprintf("%08X", $x);
 #int to ipod
 sub _itop
 {
-my($in) = @_;
+my($in, $checkmax) = @_;
 my($int) = $in =~ /(\d+)/;
+
+$checkmax |= 0xffffffff;
+
+if($int > $checkmax) {
+ die "iTunesDB.pm: FATAL: $int > $checkmax (<- maximal value), can't continue!\n"
+}
+
 return scalar(reverse(sprintf("%08X", $int )));
 }
 
@@ -436,8 +443,16 @@ return scalar(reverse(sprintf("%08X", $int )));
 #int to x86 ipodval (spl!!)
 sub _x86itop
 {
-my($in) = @_;
+my($in, $checkmax) = @_;
 my($int) = $in =~ /(\d+)/;
+
+$checkmax |= 0xffffffff;
+
+if($int > $checkmax) {
+ die "iTunesDB.pm: FATAL: $int > $checkmax (<- maximal value), can't continue!\n"
+}
+
+
 return scalar((sprintf("%08X", $int )));
 }
 
