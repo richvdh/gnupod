@@ -30,7 +30,7 @@ use Unicode::String;
 #Force XML::Parser -> XML::Sax maybe SLOOOW (with the 100% perl parser)
 $XML::Simple::PREFERRED_PARSER = "XML::Parser";
 
-## Release 20030919
+## Release 20030920
 
 my @idpub;
 my $xid = 1; #The ipod doesn't like ID 0
@@ -192,7 +192,8 @@ sub cleandoc {
    cleandoc($_, undef, undef, $always);
   }
  }
- elsif(ref($r) eq "") {
+ elsif(ref($r) eq "") { 
+ next if !$r; #Dont mess around with nothing
   my $bfx = Unicode::String::utf8($r)->utf8;
   $r = $bfx if $always || $bfx ne $r; #SOMETIMES, we got weird input from XML::parser..
                            #Unicode::String (utf8 to utf8?) fixes this.. don't know why *g*
