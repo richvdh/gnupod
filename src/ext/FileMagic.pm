@@ -123,10 +123,13 @@ sub getutf8 {
  }
  else { #AutoGuess (We accept invalid id3tags)
   $in = $encoding.$in;
-  my $oldstderr = *STDERR; #Kill all utf8 warnings.. bad thing..
+  #Remove all 00's
+  $in =~ tr/\00//d;
+  
+  my $oldstderr = *STDERR; #Kill all utf8 warnings.. this is uuugly
   *STDERR = "NULLFH";
   my $bfx = Unicode::String::utf8($in)->utf8;
-  *STDERR = $oldstderr;
+  *STDERR = $oldstderr;    #Restore old filehandle
    if($bfx ne $in) {
     #Input was no valid utf8, assume latin1 input
     $in = Unicode::String::latin1($in)->utf8
@@ -134,8 +137,6 @@ sub getutf8 {
    else {
     $in = $bfx;
    }
-   #Remove all 00's
-   $in =~ tr/\00//d;
  }
  return $in;
 }
