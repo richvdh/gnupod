@@ -420,6 +420,7 @@ But please don't blame me if your iPod dies...
 * Add files::                       How to add MP3 files to the iPod
 * Search files::                    How to search for files on the iPod
 * Remove files::                    How to delete files on the iPod
+* Edit tags::                       How to change/edit/rename
 * Creating playlists::              How to create a playlist
 * Unplug the iPod::                 How to unplug the iPod (Not a joke.. read it)
 * Recovering files::                How to rebuild the Database if you lost the iTunesDB & GNUtunesDB
@@ -526,6 +527,23 @@ To Remove all files from the artist 'Schlummiguch', run
 @example
 gnupod_search.pl -m /mnt/ipod -a "Schlummiguch" -d
 @end example
+
+
+@node Edit tags
+@section Edit tags
+
+You can use @code{@w{gnupod_search.pl}} to edit tags (like artist, album, etc..)
+
+@example
+gnupod_search.pl --artist="Alfred Neumann" --rename="artist=John Doe" --rename="rating=100"
+@end example
+
+This example searches all files from 'Alfred Neumann', changes the artist into 'Johne Doe' and
+sets the rating to 5 Stars (5*20=100)
+
+Don't forget to run mktunes.pl!
+
+You could also edit the GNUtunesDB.xml with a text editor :-)
 
 
 @node Creating playlists

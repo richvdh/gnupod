@@ -26,7 +26,7 @@ use strict;
 use GNUpod::XMLhelper;
 use GNUpod::FooBar;
 use Getopt::Long;
-use vars qw(%opts @keeplist);
+use vars qw(%opts @keeplist %rename_tags);
 
 use constant DEFAULT_SPACE => 32;
 
@@ -34,8 +34,11 @@ print "gnupod_search.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
+#
+# WARNING: If you add new options wich don't do matching, change newfile()
+#
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "artist|a=s",
-                   "album|l=s", "title|t=s", "id|i=s",
+                   "album|l=s", "title|t=s", "id|i=s", "rename=s@",
                    "view=s","genre|g=s", "match-once|o", "delete", "RMME|d");
 GNUpod::FooBar::GetConfig(\%opts, {view=>'s', mount=>'s', 'match-once'=>'b'}, "gnupod_search");
 
@@ -43,6 +46,18 @@ usage() if $opts{help};
 version() if $opts{version};
 usage("\n-d was removed, use '--delete'\n") if $opts{RMME};
 $opts{view} ||= 'ialt'; #Default view
+
+#Check if input makes sense:
+die "You can't use --delete and --rename together\n" if($opts{delete} && $opts{rename});
+
+#Build %rename_tags
+foreach(@{$opts{rename}}) {
+  my($key,$val) =  split(/=/,$_,2);
+  next unless $key && $val;
+  next if $key eq "id";#Dont allow something like THIS
+  $rename_tags{lc($key)} = $val;
+}
+
 
 go();
 
@@ -55,8 +70,8 @@ sub go {
  pview(undef,1);
  
  GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
- #XML::Parser finished, write new file
- GNUpod::XMLhelper::writexml($con) if $opts{delete};
+ #XML::Parser finished, write new file if we deleted or renamed
+ GNUpod::XMLhelper::writexml($con) if $opts{delete} or defined($opts{rename});
 
 
 }
@@ -66,18 +81,26 @@ sub go {
 sub newfile {
  my($el) =  @_;
 my $matched;
-                      # 2 = mount + view (both are ALWAYS set)
-my $ntm = keys(%opts)-2-$opts{'match-once'}-$opts{delete};
+                    # 2 = mount + view (both are ALWAYS set)
+my $ntm = keys(%opts)-2-$opts{'match-once'}-$opts{delete}-(defined $opts{rename});
+
 
   foreach my $opx (keys(%opts)) {
-   next if $opx =~ /mount|match-once|delete|view/; #Skip this
+   next if $opx =~ /mount|match-once|delete|view|rename/; #Skip this
    if($el->{file}->{$opx} =~ /$opts{$opx}/i) {
     $matched++;
    }
   }
 
+
   if(($opts{'match-once'} && $matched) || $ntm == $matched) {
+    ##Rename HashRef items
+    foreach(keys(%rename_tags)) {
+      $el->{file}->{$_} = $rename_tags{$_};
+    }
+    ##Print it
     pview($el->{file},undef,$opts{delete});
+    ##maybe unlinkit..
     unlink(GNUpod::XMLhelper::realpath($opts{mount},$el->{file}->{path}))
     or warn "[!!] Remove failed: $!\n" if $opts{delete};
   }
@@ -85,12 +108,22 @@ my $ntm = keys(%opts)-2-$opts{'match-once'}-$opts{delete};
    GNUpod::XMLhelper::mkfile($el);
    $keeplist[$el->{file}->{id}] = 1;
   }
+  
+  ##We'll rewrite the xml file: add it  
+  if(!$opts{delete} && defined($opts{rename})) {
+      GNUpod::XMLhelper::mkfile($el);
+      $keeplist[$el->{file}->{id}] = 1;
+  }
+  
 }
 
 ############################################
 # Eventhandler for PLAYLIST items
 sub newpl {
- return unless $opts{delete}; #Just searching
+ return unless $opts{delete} or defined($opts{rename}); #Just searching
+ 
+ # Delete or rename needs to rebuild the XML file
+ 
  my ($el, $name, $plt) = @_;
  if($plt eq "pl" && ref($el->{add}) eq "HASH") { #Add action
   if(defined($el->{add}->{id}) && int(keys(%{$el->{add}})) == 1) { #Only id
@@ -174,6 +207,7 @@ Usage: gnupod_search.pl [-h] [-m directory] File1 File2 ...
                             t = title    a = artist   r = rating      p = iPod Path
                             l = album    g = genre    c = playcount   i = id
                             u = UnixPath n = Songnum
+       --rename=KEY=VAL    Change tags on found songs. Example: --rename="ARTIST=Foo Bar"
 
 Note: Argument for title/artist/album.. has to be UTF8 encoded, *not* latin1!
 

@@ -5,11 +5,16 @@ Summary
 - 0.96 didn't write 'tracknum' for OGG Files, fixed now..
   Thanks to Ed Wandasiewicz for reporting this bug
 
+- Read 'tracknum' on ID3V2 Files with 'TRK' Field
+
 - You can now add MIDI files ;-) (with timidity)
 
 - Added --set-songnum option for gnupod_addsong.pl
 
 - Rewritten ConverterCore.. shouldn't break anything...
+
+- gnupod_search.pl can now RENAME/Edit tags.
+  use --rename="artist=New artist Name"
 
 
 

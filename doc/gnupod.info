@@ -24,8 +24,8 @@ File: gnupod.info,  Node: Top,  Next: Requirements,  Up: (dir)
 1 GNUpod
 ********
 
-This edition of the `GNUpod Manual', last updated 30. Jul. 2004,
-documents GNUpod Version 0.96
+This edition of the `GNUpod Manual', last updated 26. Sep. 2004,
+documents GNUpod Version 0.97
 
 * Menu:
 
@@ -394,6 +394,7 @@ File: gnupod.info,  Node: Using GNUpod,  Next: Problems,  Prev: Installing GNUpo
 * Add files::                       How to add MP3 files to the iPod
 * Search files::                    How to search for files on the iPod
 * Remove files::                    How to delete files on the iPod
+* Edit tags::                       How to change/edit/rename
 * Creating playlists::              How to create a playlist
 * Unplug the iPod::                 How to unplug the iPod (Not a joke.. read it)
 * Recovering files::                How to rebuild the Database if you lost the iTunesDB & GNUtunesDB
@@ -498,7 +499,7 @@ In this case, run
 `gnupod_search.pl --help' for more information.
 
 
-File: gnupod.info,  Node: Remove files,  Next: Creating playlists,  Prev: Search files,  Up: Using GNUpod
+File: gnupod.info,  Node: Remove files,  Next: Edit tags,  Prev: Search files,  Up: Using GNUpod
 
 4.5 Remove files
 ================
@@ -508,9 +509,26 @@ files from the artist 'Schlummiguch', run
      gnupod_search.pl -m /mnt/ipod -a "Schlummiguch" -d
 
 
-File: gnupod.info,  Node: Creating playlists,  Next: Unplug the iPod,  Prev: Remove files,  Up: Using GNUpod
+File: gnupod.info,  Node: Edit tags,  Next: Creating playlists,  Prev: Remove files,  Up: Using GNUpod
 
-4.6 Creating playlists
+4.6 Edit tags
+=============
+
+You can use `gnupod_search.pl' to edit tags (like artist, album, etc..)
+
+     gnupod_search.pl --artist="Alfred Neumann" --rename="artist=John Doe" --rename="rating=100"
+
+   This example searches all files from 'Alfred Neumann', changes the
+artist into 'Johne Doe' and sets the rating to 5 Stars (5*20=100)
+
+   Don't forget to run mktunes.pl!
+
+   You could also edit the GNUtunesDB.xml with a text editor :-)
+
+
+File: gnupod.info,  Node: Creating playlists,  Next: Unplug the iPod,  Prev: Edit tags,  Up: Using GNUpod
+
+4.7 Creating playlists
 ======================
 
 Open the file `iPod_Control/.gnupod/GNUtunesDB' in a editor (It's a XML
@@ -568,7 +586,7 @@ will create and add the listed songs to the named playlist.
 
 File: gnupod.info,  Node: Unplug the iPod,  Next: Recovering files,  Prev: Creating playlists,  Up: Using GNUpod
 
-4.7 Unplug the iPod
+4.8 Unplug the iPod
 ===================
 
 Before umounting the iPod, you have to call `mktunes.pl' which will
@@ -598,7 +616,7 @@ and run it)
 
 File: gnupod.info,  Node: Recovering files,  Next: Coexistence,  Prev: Unplug the iPod,  Up: Using GNUpod
 
-4.8 Recovering files
+4.9 Recovering files
 ====================
 
 If your computer crashed while uploading/deleting songs, you may have
@@ -623,8 +641,8 @@ know that it's possible (Note: Of course you'll lose your Playlists)
 
 File: gnupod.info,  Node: Coexistence,  Prev: Recovering files,  Up: Using GNUpod
 
-4.9 Coexistence
-===============
+4.10 Coexistence
+================
 
 GNUpod can coexist with iTunes and other programs for the iPod.
 
@@ -1207,20 +1225,21 @@ Node: Using FireWire with GNU/Linux3512
 Node: Convert your Mac iPod6926
 Node: Firmware update12155
 Node: Using GNUpod13933
-Node: Preparation14760
-Node: Configuration15492
-Node: Add files15949
-Node: Search files17423
-Node: Remove files17909
-Node: Creating playlists18219
-Node: Unplug the iPod20275
-Node: Recovering files21184
-Node: Coexistence22079
-Node: Problems23547
-Node: GNUtunesDB23930
-Node: Get rid of '-m'25436
-Node: Known bugs and limitations25721
-Node: Reporting Bugs26012
-Node: GNU Free Documentation License26460
+Node: Preparation14822
+Node: Configuration15554
+Node: Add files16011
+Node: Search files17485
+Node: Remove files17971
+Node: Edit tags18272
+Node: Creating playlists18817
+Node: Unplug the iPod20870
+Node: Recovering files21779
+Node: Coexistence22674
+Node: Problems24144
+Node: GNUtunesDB24527
+Node: Get rid of '-m'26033
+Node: Known bugs and limitations26318
+Node: Reporting Bugs26609
+Node: GNU Free Documentation License27057
 
 End Tag Table
