@@ -137,10 +137,9 @@ my $ret = "mhit";
 return $ret;
 }
 
+
 ## GENERAL ##########################################################
 # An mhod simply holds information
-
-
 sub mk_mhod
 {
 ##   - type id
@@ -180,27 +179,24 @@ else { #has a type, default fqid
  $fqid=1;
 }
 
-
 if($type == 7 && $string !~ /#!#\d+#!#/) {
 warn "iTunesDB.pm: warning: wrong format: '$type_string=\"$string\"'\n";
-warn "             value should be like '#!#NUMBER#!#'\n";
+warn "             value should be like '#!#NUMBER#!#', ignoring value\n";
+$string = undef;
 }
 
 $string = _ipod_string($string); #cache data
-
-my $ret = "mhod";                 		  #header
+my $ret = "mhod";                 		           #header
 $ret .= pack("h8", _itop(24));                     #size of header
 $ret .= pack("h8", _itop(length($string)+$mod));   # size of header+body
 $ret .= pack("h8", _itop("$type"));                #type of the entry
-$ret .= pack("H16");                              #dummy space
+$ret .= pack("H16");                               #dummy space
 $ret .= pack("h8", _itop($fqid));                  #Refers to this id if a PL item
-                                                  #else ->  1
-						  #for spl -> 534C7374 (SLst)
-						  #FIXME: this sub can't create spl items
+                                                   #else ->  1
 $ret .= pack("h8", _itop(length($string)));        #size of string
 
 
-if($type < 100){ #no PL mhod
+if($type != 100){ #no PL mhod
  $ret .= pack("h16");           #trash
  $ret .= $string;               #the string
 }
@@ -211,6 +207,29 @@ return $ret;
 }
 
 
+sub mk_splprefmhod {
+ my($hs) = @_;
+ my($live, $chkrgx, $chklim, $mos) = 0;
+ $live   = 1 if $hs->{liveupdate};
+ $chkrgx = 1 if $hs->{chkrgx};
+ $chklim = 1 if $hs->{chklim};
+ $mos    = 1 if $hs->{mos};
+ 
+ my $ret = "mhod";
+ $ret .= pack("h8", _itop(24));    #Size of header
+ $ret .= pack("h8", _itop(96));
+ $ret .= pack("h8", _itop(50));
+ $ret .= pack("H16");
+ $ret .= pack("h2", _itop($live)); #LiveUpdate ?
+ $ret .= pack("h2", _itop($chkrgx)); #Check regexps?
+ $ret .= pack("h2", _itop($chklim)); #Check limits?
+ $ret .= pack("h2", _itop($hs->{item})); #Wich item?
+ $ret .= pack("h2", _itop($hs->{sort})); #How to sort
+ $ret .= pack("h6");
+ $ret .= pack("h8", _itop($hs->{value})); #lval
+ $ret .= pack("h2", _itop($mos));        #mos
+ $ret .= pack("h118");
+}
 
 
 
@@ -261,9 +280,9 @@ my($hr) = @_;
 #We need to create a listview-layout and an mhod with the name..
 my $appnd = __dummy_listview().mk_mhod({stype=>"title", string=>$hr->{name}});   #itunes prefs for this PL & PL name (default PL has  device name as PL name)
 
- 
+#mk_splprefmhod({stype=>"SPLPREF", value=>"20", sort=>2, liveupdate=>1, chkrgx=>1, chklim=>1, mos=>1, item=>1});
 my $ret .= "mhyp";
-   $ret .= pack("h8", _itop(108)); #type?
+   $ret .= pack("h8", _itop(108)); #type
    $ret .= pack("h8", _itop($hr->{size}+108+(length($appnd))));          #size
    $ret .= pack("H8", "02");			      #? 
    $ret .= pack("h8", _itop($hr->{files}));   #songs in pl
@@ -284,7 +303,6 @@ sub mk_mhip
 my ($hr) = @_;
 #sid = SongId
 #plid = playlist order ID
-  print STDERR "MK $hr->{sid} // (order?) $hr->{plid}\n";
 my $ret = "mhip";
    $ret .= pack("h8", _itop(76));
    $ret .= pack("h8", _itop(76));
@@ -435,19 +453,18 @@ read(FILE, $buffer, $anz);
 sub read_spldata {
  my($hr) = @_;
  
- #print "Trying to decode a spl wich has $hr->{htm} items\n";
-
 my $diff = $hr->{start}+160;
 my @ret = ();
 
  for(1..$hr->{htm}) {
-  my $field = get_x86_int($diff, 4);#/16777216;
+  my $field = get_x86_int($diff, 4);
   my $action= get_x86_int($diff+7, 1);
   my $slen  = get_x86_int($diff+52,4);
   my $string= get_string($diff+56, $slen);
   #This sucks! no byteswap here.. apple uses x86 endian.. why??
   #Is this an iTunes bug?!
   $string = Unicode::String::utf16($string)->utf8;
+=head
   my @xr = ();
   $xr[2] = "SongName";
   $xr[4] = "Artist";
@@ -463,6 +480,7 @@ my @ret = ();
   $xm[4] = "STARTS_WITH";
   $xm[8] = "ENDS_WITH";
   $xm[16] = "GTHAN";
+=cut
   $diff += $slen+56;
   push(@ret, {field=>$field,action=>$action,string=>$string});
  }
@@ -474,13 +492,14 @@ my @ret = ();
 # Read SPLpref data
 sub read_splpref {
  my($hs) = @_;
- my $limit = get_int($hs->{start}+32,4);
- my $live = get_int($hs->{start}+24,1);
+ my $live =    get_int($hs->{start}+24,1);
  my $chkrgx  = get_int($hs->{start}+25,1);
  my $chklim  = get_int($hs->{start}+26,1);
- my $item = get_int($hs->{start}+27,1);
- my $sort = get_int($hs->{start}+28,1);
- my $mos   = get_int($hs->{start}+36,1);
+ my $item =    get_int($hs->{start}+27,1);
+ my $sort =    get_int($hs->{start}+28,1);
+ my $limit =   get_int($hs->{start}+32,4);
+ my $mos   =   get_int($hs->{start}+36,1);
+# print "Live: $live / rgx $chkrgx / lim $chklim / val $limit / it $item / sort $sort / mos $mos\n";
  return({live=>$live, matchomatic=>$chkrgx, limitomatic=>$chklim,
          value=>$limit, iitem=>$item, isort=>$sort,mos=>$mos});
 }
@@ -505,13 +524,13 @@ my $mty = get_int($seek+12, 4);          #type number
 my $xl  = get_int($seek+28,4);           #String length
 
 ## That's spl stuff..
-## Apple is very stupid and mixed some things.. puh.
+## Apple seems to have big and little-endian mixed..?!
 my $htm = get_x86_int($seek+32,4); #Only set for 51
 my $anym= get_x86_int($seek+36,4); #Only set for 51
 my $spldata = undef;
 my $splpref = undef;
 
-
+#__hd(get_string($seek,$ml)) if $mty == 100;
 if($id eq "mhod") { #Seek was okay
     my $foo = get_string($seek+($ml-$xl), $xl); #string of the entry            #maybe a 'no conv' flag would be better
     #$foo is now UTF16 (Swapped), but we need an utf8
@@ -522,6 +541,8 @@ if($id eq "mhod") { #Seek was okay
  if($mty == 51) {
    $foo = undef;
    $spldata = read_spldata({start=>$seek, htm=>$htm});
+  __hd(get_string($seek,$ml));
+
  }
  elsif($mty == 50) {
   $foo = undef;
@@ -598,7 +619,6 @@ sub get_pl {
     $pos += $oid;
     my $mhh = get_mhod($pos);
     $oid = $mhh->{size};
-
      if($mhh->{type} == 1) { #We found the PLname
        $ret_hash{name} = $mhh->{string};
      }

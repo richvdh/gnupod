@@ -27,7 +27,7 @@ use XML::Parser;
 use Unicode::String;
 
 
-## Release 20030920
+## Release 20030927
 
 my $cpn = undef; #Current PlaylistName
 my @idpub = ();
@@ -37,12 +37,12 @@ use vars qw($XDAT);
 
 ##############################################
 # Convert an ipod path to unix
-
 sub realpath {
  my($mountp, $ipath) = @_;
  $ipath =~ tr/:/\//;
 return "$mountp/$ipath";
 }
+
 ###############################################
 # Get an iPod-safe path for filename
 sub getpath {
@@ -106,13 +106,13 @@ sub mkfile {
    $r .= "/>";
   }
 
-  if($magic->{plname}) {
+  if($magic->{plname}) { #Create a playlist item
    push(@{$XDAT->{playlists}->{data}->{$magic->{plname}}}, $r);
   }
-  elsif($magic->{splname}) {
+  elsif($magic->{splname}) { #Create a smartplaylist item
    push(@{$XDAT->{spls}->{data}->{$magic->{splname}}}, $r);
   }
-  else {
+  else { #No playlist item? has to be a file
    push(@{$XDAT->{files}}, $r);
   }
 }
@@ -120,8 +120,6 @@ sub mkfile {
 ##############################################################
 # Add a playlist to output
 sub addpl {
-#Check done by eventer
-#die "Playlist has no name, fix your XML-Doc\n" unless $_[0];
  push(@plorder, $_[0]);
 }
 
@@ -129,9 +127,6 @@ sub addpl {
 # Add a SmartPlaylist to output
 sub addspl {
  my($name, $opt) = @_;
-
-#Check done by eventer..
-#die "Smart-Playlist has no name, fix your XML-Doc\n" unless $name;
  push(@plorder, $name);
  $opt->{name} = $name;
  $XDAT->{spls}->{pref}->{$name} = $opt;
@@ -151,31 +146,32 @@ sub eventer {
  my($href, $el, @it) = @_;
  return undef unless $href->{Context}[0] eq "gnuPod";
   if($href->{Context}[1] eq "files") {
+    #add(s)pl() call done before we got all files? that's bad!
     warn "** XMLhelper: Found <file ../> item *after* a <playlist ..>, that's bad\n" if getpl_names();
-    my $xh = mkh($el,@it);
-    @idpub[$xh->{file}->{id}] = 1;
-    main::newfile($xh);
-  }
+    my $xh = mkh($el,@it);         #Create a hash
+    @idpub[$xh->{file}->{id}] = 1; #Promote ID
+    main::newfile($xh);            #call sub
+  } 
   elsif($href->{Context}[1] eq "" && $el eq "playlist") {
-    $cpn = mkh($el,@it)->{$el}->{name};
-    addpl($cpn);
+    $cpn = mkh($el,@it)->{$el}->{name}; #Update current name
+    addpl($cpn); #Add this playlist
   }
   elsif($href->{Context}[1] eq "playlist") {
    die "Fatal XML Error: playlist without name found!\n" if $cpn eq "";
-   main::newpl(mkh($el, @it), $cpn, "pl");
+   main::newpl(mkh($el, @it), $cpn, "pl"); #call sub
   }
   elsif($href->{Context}[1] eq "" && $el eq "smartplaylist") {
-    my $xh = mkh($el,@it);
-    $cpn = $xh->{$el}->{name};
-    addspl($cpn,$xh->{$el});
+    my $xh = mkh($el,@it);     #Create a hash
+    $cpn = $xh->{$el}->{name}; #Get current plname
+    addspl($cpn,$xh->{$el});   #add the pl
   }
   elsif($href->{Context}[1] eq "smartplaylist") {
    die "Fatal XML Error: smartplaylist without name found!\n" if $cpn eq "";
-   main::newpl(mkh($el, @it), $cpn,"spl");  
+   main::newpl(mkh($el, @it), $cpn,"spl"); #Call sub  
   }
-  else {
-   print "?? $href->{Context}[0] // $href->{Context}[1] // $href->{Context}[2] // $el\n";
-  }
+ # else {
+ #  print "?? $href->{Context}[0] // $href->{Context}[1] // $href->{Context}[2] // $el\n";
+ # }
 }
 
 
@@ -210,15 +206,20 @@ sub writexml {
  my($out) = @_;
  open(OUT, ">$out") or die "Could not write to $out : $!\n";
  binmode(OUT);
+
  print OUT "<?xml version='1.0' standalone='yes'?>\n";
  print OUT "<gnuPod>\n <files>\n";
+#Do file part
  foreach(@{$XDAT->{files}}) {
   print OUT "  $_\n";
  }
-print OUT " </files>\n";
+ print OUT " </files>\n";
+#End file part
+
+#Print all playlists
  foreach(@plorder) {
   #addspl() will create {pref}->{$_}->{name} .. so this 'if' is safe
-  if(my $shr = $XDAT->{spls}->{pref}->{$_}) {
+  if(my $shr = $XDAT->{spls}->{pref}->{$_}) { #prefs present = is a spl
       print OUT "\n <smartplaylist ";
          foreach(keys(%$shr)) { print OUT "$_=\"$shr->{$_}\" "; }
       print OUT ">\n";    
@@ -229,7 +230,7 @@ print OUT " </files>\n";
        ###
       print OUT " </smartplaylist>\n";
   }
-  else {
+  else { #No prefs -> normal playlist
       print OUT "\n <playlist name=\"$_\">\n";
        foreach(@{$XDAT->{playlists}->{data}->{$_}}) {
         print OUT "   $_\n";

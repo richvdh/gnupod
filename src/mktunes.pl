@@ -117,10 +117,11 @@ my $pl = undef;
 my $fc = 0;
  foreach(@xid) {
   $cid++; #Whoo! We ReUse the global CID.. first plitem = last file item+1 (or maybe 2 ;) )
-  $pl .= GNUpod::iTunesDB::mk_mhip({plid=>$cid, sid=>$_});
-  print "MKX $_\n";
-  $pl .= GNUpod::iTunesDB::mk_mhod({fqid=>$_});
+  my $cmhip = GNUpod::iTunesDB::mk_mhip({plid=>$cid, sid=>$_});
+  my $cmhod = GNUpod::iTunesDB::mk_mhod({fqid=>$_});
+  next unless (defined($cmhip) && defined($cmhod));
   $fc++;
+  $pl .= $cmhip.$cmhod;
  }
  my $plSize = length($pl);
   return(GNUpod::iTunesDB::mk_mhyp({size=>$plSize,name=>$name,type=>$type,files=>$fc}).$pl,$fc);
@@ -130,7 +131,7 @@ my $fc = 0;
 #########################################################################
 # Generate playlists from %pldb (+MPL)
 sub genpls {
- my ($pldata,undef) = r_mpl("gnuPod", 1,(1..$cid));
+ my ($pldata,undef) = r_mpl("gnuPod-0.92", 1,(1..$cid));
  my $plc = 1;
  
   foreach(GNUpod::XMLhelper::getpl_names()) {

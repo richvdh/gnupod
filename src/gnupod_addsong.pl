@@ -111,7 +111,7 @@ if($addcount) {
 }
 
 sub newfile {
- $dupdb{"$_[0]->{file}->{bitrate}/$_[0]->{file}->{time}/$_[0]->{file}->{filesize}"}=($_[0]->{file}->{id}|-1);
+ $dupdb{"$_[0]->{file}->{bitrate}/$_[0]->{file}->{time}/$_[0]->{file}->{filesize}"}= $_[0]->{file}->{id}||-1;
  GNUpod::XMLhelper::mkfile($_[0],{addid=>1});
 }
 
