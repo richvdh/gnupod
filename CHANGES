@@ -9,6 +9,8 @@ Summary
   gnupod_addsong.pl (Disable parsing of ID3TAG version X)
 - GNUpod has now a configuration file! Read the docs or/and
   see doc/gnupodrc.example
+- Fixed small bug with .m4a files.
+  gnupod_addsong.pl can now read AAC files from www.allofmp3.com
 
 
 

@@ -88,7 +88,7 @@ sub get_atom {
 
  my $len = getoct($pos,4);
  #Error
- return(undef, undef) if $len < 16;
+ return(undef, undef) if $len < 1;
  my $typ = rseek($pos+4,4);
  
  $level = $lt->{ltrack}->{$pos} if $lt->{ltrack}->{$pos};
@@ -99,6 +99,7 @@ sub get_atom {
 #print " parent : ".$lt->{"topic_".($level-1)}."\n";
 
  if($typ eq "data") {
+  return(undef,undef) if $len < 16;
   my $parent =$lt->{topic}->{$level-1};
   my $dat = rseek($pos+16,$len-16);
   if($parent eq "©alb") {
@@ -113,8 +114,12 @@ sub get_atom {
   elsif($parent eq "©too") {
    $reth{fdesc} = $dat;
   }
+  elsif($parent eq "----" or $parent eq "disk") {
+   #Do nothing.. iTunes does this fields and we
+   #don't need to warn about this..
+  }
   else {
-   warn "Skipping $typ -> $parent\n";
+   warn "QTfile warning: Skipping $typ -> $parent [<-- unknown field]\n";
   }
  }
  elsif($typ eq "mvhd") {

@@ -37,10 +37,10 @@ GNUpod::FooBar::GetConfig(\%opts, {nosync=>'b'}, "otgsync");
 #otgsync does just red nosync.. DONT add mount and such funny things!
 
 
-if($opts{top4secret}) {
+if($opts{top4secret} && !$opts{nosync}) {
  go();
 }
-elsif($opts{nosync}) {
+elsif($opts{top4secret}) { #&& $opts{nosync}
  print "> On-The-Go sync disabled by configuration, skipping work...\n";
  exit(0);
 }

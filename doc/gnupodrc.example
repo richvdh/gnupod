@@ -17,6 +17,10 @@
 
 ##### NON GLOBAL OPTIONS ######
 
+# *** on the go sync (V2 Firmware) ***
+## Uncomment this to skip 'on-the-go' sync
+#otgsync.nosync = 1
+
 # *** tunes2pod.pl ***
 ## Uncomment to set '--force' switch to true (DANGEROUS)
 #tunes2pod.force = 1
