@@ -1,0 +1,72 @@
+gnuPod 0.27 codename 'codename'
+- We are now on gnu.org
+- Fixed 'creating playlists' sample in documentation.
+- Firmware 1.1.0 can read FAT32, updatet documentation.
+- gnupod_delete.pl doesn't kill regex playlists anymore (ouch)
+- gnupod_search.pl supports -g(enre)
+ (Thanks to Johan Ruttenberg)
+     *** OLD RELEASES ***
+
+gnuPod 0.26
+- We are going to be a GNU package:
+ > Support for LongOpts
+ > Documentation aviable as TexInfo
+ > GNU-Style build system (configure/make)
+- You can now create (mktunes) and convert (tunes2pod)
+  empty playlists (0 songs)
+  This isn't usefull, but iTunes can do it and we should
+  also be able to do it.
+- tunes2pod supports now buggy, ehr. funny playlists
+  written by MusicMatch
+- Playlists are now sorted on the iPod as they are found
+  in the GNUtunesDB - file
+- mktunes.pl no longer accepts <playlist..> when </file> was
+  not found.
+- gnupod_addsong.pl handles long filenames now better
+- Timestamp should now be set correct
+  (utime(undef,undef.. didn't work on every OS..)
+- new playist keywords. You can now use <regex ..
+  to create a playlist using regular expressions.
+  <regex is case sensitive, use <iregex if you want case INsensitive
+  checking
+
+
+gnuPod 0.25 (API-Freeze i think ;) )
+- New Syntax (We use getopt)
+- Many small bugfixes
+- Fixed mktunes and tunes2pod 'touch' bug
+- tunes2pod creates now a nicer XML file
+- 'composer' added to gnupod_addsong.pl
+- Fixed 'Genere' - 'genre' typo.. args!
+ (Thanks to Guillaume Leclanche)
+- gnupod_addsong.pl knows now winamp genres (NOT generes!! *doh!*)
+- gnupod_addsong.pl can now read from stdin, for example:
+  find /blabla/foo | gnupod_addsong.pl -gm /mnt/ipod -
+ (note the -g switch (no need to press ENTER) and '-')
+ (Many thanks to Scott Savarese)
+
+gnuPod 0.22 
+- Bugfix in tunes2pod for Perl 5.8
+ (Many thanks to Orion Buckminster Montoya)
+- tunes2pod typo corrected *doh!*
+ (Orion Buckminster Montoya again :) )
+- Support for tracknumbers like "01/18"
+ (Many thanks to Darrell Golliher)
+- Support for 'composer' tag (just in XML/iTunesDB, not ID3)
+ (Thanks to Alexey Marinichev for providing the ID :) )
+ 
+ 
+gnuPod 0.21
+- Fixed stupid tunes2pod.pl bug with big iTunesDBs
+ (Thanks to Ciamac Moallemi for reporting and providing a patch)
+- Support for songnum, songs, cdnum, cds and year
+
+
+gnuPod 0.2
+- Changed to XML as file format
+- Added Playlist support
+- Support for new iTunes attributes
+
+
+gnuPod 0.1
+- First working release!

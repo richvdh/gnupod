@@ -1,0 +1,685 @@
+\input texinfo @c -*-texinfo-*-
+
+@setfilename gnupod.info
+@settitle GNUpod Manual
+@setchapternewpage odd
+@finalout
+@include version.texi
+
+@copying
+Copyright @copyright{} 2002, 2003 Adrian Ulrich
+
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.1 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, with the Front-Cover texts being ``A GNU Manual'',
+and with the Back-Cover Texts as in (a) below.  A copy of the license
+is included in the section entitled ``GNU Free Documentation License''.
+
+(a) The FSF's Back-Cover Text is: ``You have freedom to copy and modify
+this GNU Manual, like GNU software.  Copies published by the Free
+Software Foundation raise funds for GNU development.''
+@end copying
+
+@ifinfo
+@dircategory GNU Packages
+@direntry
+* GNUpod: (gnupod).        Manage your iPod.
+@end direntry
+@end ifinfo
+
+@titlepage
+@title GNUpod
+@subtitle Manage your iPod
+@author Adrian Ulrich
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+
+@node Top, Requirements, , (dir)
+@ifinfo
+@chapter GNUpod
+This edition of the @cite{GNUpod Manual}, last updated @value{UPDATED},
+documents GNUpod Version @value{VERSION}
+@end ifinfo
+
+@menu
+* Requirements::                    What you will need to use GNUpod
+* Installing GNUpod::               How to install GNUpod and setup FireWire
+* Using GNUpod::                    How to use the GNUpod-tools
+* Problems::                        ..and solutions
+
+
+
+Appendices
+
+* GNU Free Documentation License::  This manual is under the GNU Free
+                                    Documentation License.
+
+@end menu
+
+
+
+@c ===========================================================================================
+@node Requirements, Installing GNUpod, Top, Top
+@chapter Requirements
+@cindex requirements
+@cindex Solaris
+@cindex Darwin
+
+To use GNUpod, the follwing is needed:
+
+@itemize @bullet
+@item iPod (HFS+ or FAT32)
+@item Firewire card that is supported by the Operating System
+@item Write support for HFS+ or FAT32
+@item Perl 5.6 or 5.8
+@item The Perl modules MP3::Info, File::Copy, Unicode::String, XML::Parser and Getopts::Mixed
+@item Basic knowledge of the shell
+@end itemize
+
+GNUpod is known to run on GNU/Linux, FreeBSD, Darwin (Mac OSX) and Solaris 9.
+@c ===========================================================================================
+
+
+
+@c ===========================================================================================
+@node Installing GNUpod, Using GNUpod, Requirements, Top
+@chapter Installing GNUpod
+@menu
+* Installation of GNUpod::          How to install the Scripts
+* Using FireWire with GNU/Linux::   Setup FireWire on Linux
+* Convert your Mac iPod::           How to convert an HFS+ formatted iPod
+* Firmware update::                 How to upgrade the Firmware using GNU/Linux
+@end menu
+
+
+
+@node Installation of GNUpod
+@section Installation of GNUpod
+
+The installation of GNUpod is very simple:
+
+@example
+tar -xzvf gnupod-tools-VERSION.tar.gz
+cd gnupod-tools/
+./configure
+make install
+@end example
+
+The @w{@code{configure}} script checks if the desired Perl modules are installed.
+Please note: it is possible to install GNUpod without XML::Simple installed (use @code{@w{--disable-contrib}})
+, but in this case 
+the commands @w{@code{gnupod_search.pl}}, @w{@code{gnupod_list.pl}} and 
+@w{@code{gnupod_renumber.pl}} won't be installed.
+
+On Debian GNU/Linux you'll simply have to run this commands to install the required Perl modules:
+@example
+apt-get install libfile-ncopy-perl
+apt-get install libmp3-info-perl
+apt-get install libunicode-string-perl
+apt-get install libxml-parser-perl
+apt-get install libxml-simple-perl
+@end example
+
+
+If you are using a RPM-based Distribution (Mandrake, RedHat, SuSE..) try http://www.rpmfind.net.
+
+Another way is to install the modules 'by hand'.
+
+http://search.cpan.org 
+
+will help you to find the needed tarballs.
+If you don't know how to install them, please read 
+
+http://cpan.org/misc/cpan-faq.html#How_install_Perl_modules
+
+
+
+@node Using FireWire with GNU/Linux
+@section Using FireWire with GNU/Linux
+
+Of course the Linux kernel must support FireWire. If the one you are using doesn't have FireWire support you'll have 
+to recompile your Kernel. (It's also a good idea to update the Kernel when you are doing this...)
+
+If you don't know how to compile the Linux kernel, please read http://www.kernelnewbies.org/faq/index.php3#compile
+
+
+To get FireWire working, you should configure the Kernel like this:
+
+@itemize @bullet
+@item Code maturity level options - y
+@item IEEE1394 (FireWire)/IEEE 1394 (FireWire) support (Experimental) - y
+@item OHCI-1394 support - m
+@item SBP-2 support - m
+@end itemize
+
+Feel free to build OHCI-1394 into the kernel ('y'), but make sure to compile 
+SBP-2 support as module. It won't work (good) if you say 'y' there!
+If you don't own an OHCI-1394 FireWire card you may need to use the LYNX driver instead.
+But OHCI-1394 is the most common used, please also have a look at http://www.linux1394.org
+
+After you rebootet with the new Kernel, you should now be able to mount the iPod.
+First load the OHCI-1394 module if you did say 'm' to OHCI-1394 support.
+@example
+modprobe ohci1394
+@end example
+
+Now plugin the iPod and wait until you can see the 'hook-symbol' and load the sbp2 module using
+@example
+modprobe sbp2
+@end example
+
+Please keep in mind that FireWire support is still experimental and you may see Kernel Oopses and other nasty things.
+If your system hangs after loading sbp2 or mounting the iPod you may try to load sbp2 like this:
+@example
+modprobe sbp2 sbp2_max_speed=0 sbp2_serialize_io=1 sbp2_force_inquiry_hack=1
+@end example
+
+This will slow down the transfer rate but should act much more stable.
+
+
+After loading sbp2, use @code{@w{dmesg}} to get some information, the output
+should look like this
+
+@example
+SBP-2 module load options:
+- Max speed supported: S400
+- Max sectors per I/O supported: 255
+- Max outstanding commands supported: 8
+- Max outstanding commands per lun supported: 1
+- Serialized I/O (debug): no
+- Exclusive login: yes
+  Vendor: Apple     Model: iPod              Rev: 1.21
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+Attached scsi removable disk sdb at scsi1, channel 0, id 0, lun 0
+SCSI device sdb: 9780750 512-byte hdwr sectors (5008 MB)
+sda: test WP failed, assume Write Enabled
+ sda: sda1 sda2
+@end example
+
+In this case, @code{@w{/dev/sda}} would be your iPod.
+
+
+You can now mount the iPod:
+@example
+mount -t vfat /dev/sda2 /mnt/ipod -o sync
+@end example
+
+It's a good idea to add a line like this to the fstab
+@example
+/dev/sda2   /mnt/ipod   vfat   defaults,user,noauto,sync,umask=000
+@end example
+
+Note: As you can see, we assume an FAT32/VFAT formatted iPod (@code{@w{-t
+vfat}}), if you own a HFS+ formatted iPod (aka. Mac-iPod) please have a look at the 
+next section 'Convert your Mac iPod' before using @code{@w{mount}}.
+
+
+@node Convert your Mac iPod
+@section Convert your Mac iPod
+
+If the Operating System you are running doesn't have write support for HFS+ and your iPod is 
+HFS+ Formatted (aka 'Mac-iPod') you will have to reformat the iPod.
+
+Note: The only Operating System with write support for HFS+ wich i know is Darwin/OSX. If you are using 
+GNU/Linux and own a Mac-iPod you'll have to convert your iPod.
+If you own a Win-iPod, you can skip this section.
+
+
+The first step is to upgrade your iPod to Firmware 1.1.0 or newer.
+(YES: 1.1.0 can read FAT32, but Apple never shipped FAT32 formatted iPods with 1.1.0. 
+Firmware 1.1.0 seems to use less power (has 1.20 a rtc problem?), but the name of the 
+iPod won't show up in the 'Info' menu... ;-) ) 
+
+You can do this with Mac OSX using the Apple Firmware upgrader, it's aviable from:
+http://www.apple.com/ipod/download/
+
+If you don't own Mac OSX you can update the Mac-iPod using Linux.
+Have a look at the next section to learn how to do this.
+
+Also note that you will need a fdisk for DOS-Style partitions. The kernel you are running has also to support 
+DOS-Style partitions.
+If you are using GNU/Linux on x86, your fdisk should be fine, but if you are running GNU/Linux on 
+(for example) PowerPC you may have to get a suitable fdisk from the util-linux package wich can
+be retrieved from: ftp://ftp.kernel.org/pub/linux/utils/util-linux/
+
+Compile and install the pc-fdisk (and only the pc-fdisk!)
+@example
+tar -xjvf util-linux-X.XXx.tar.bz2
+cd util-linux-X.XXx
+./configure
+cd fdisk
+make
+cp fdisk /usr/sbin/pc-fdisk
+@end example
+
+
+We assume your iPod at @code{@w{/dev/sda}}. (No, don't mount the iPod, simply plugin the iPod and make sure it
+got detected with @code{@w{dmesg}}.
+
+Here we go:
+
+First, we 'backup' the current Firmware
+@example
+dd if=/dev/sda2 of=backup_firmware
+@end example
+
+This should result in a ~32Mb big file,now we have to kill the old partition map and force the kernel 
+to re-read the new (empty) map
+@example
+dd if=/dev/zero of=/dev/sda bs=1M count=10
+rmmod sbp2 && insmod sbp2
+@end example
+
+Now we can use 'pc-fdisk' to create a new partition layout:
+@example
+pc-fdisk /dev/sda [start fdisk]
+
+
+Command (m for help): n [make new partition]
+Command action
+   e extended
+   p primary partition (1-4)
+p we want primary
+Partition number (1-4): 1
+First cylinder (1-608, default 1): [just press enter]
+Using default value 1
+Last cylinder or +size or +sizeM or +sizeK (1-608, default 608): 5S [Look out: 5S .. S as in Ship]
+
+Command (m for help): n
+Command action
+   e extended
+   p primary partition (1-4)
+p
+Partition number (1-4): 2
+First cylinder (6-608, default 6): 6 [is okay, or even needed.. just press enter]
+Using default value 6
+Last cylinder or +size or +sizeM or +sizeK (6-608, default 608): [press ENTER]
+Using default value 608 [If you don't own a 5gb iPod, this value will be different, don't care about it]
+
+Command (m for help): t [Modify type]
+Partition number (1-4): 1
+Hex code (type L to list codes): 0 [we don't care about the warning below]
+Type 0 means free space to many systems
+(but not to Linux). Having partitions of
+type 0 is probably unwise. You can delete
+a partition using the `d' command.
+Changed system type of partition 1 to 0 (Empty)
+
+Command (m for help): t
+Partition number (1-4): 2 [this is where data will go]
+Hex code (type L to list codes): b [b=FAT32]
+Changed system type of partition 2 to b (Win95 FAT32)
+
+
+Command (m for help): w [Writing new partition. Can take a while.]
+The partition table has been altered!
+
+Calling ioctl() to re-read partition table.
+Syncing disks.
+@end example
+
+Puh.. this was hard :)
+Now we can rewrite the Firmwarebackup we created above.
+@example
+dd if=backup_firmware of=/dev/sda1
+@end example
+
+You may ask why we now write the Firmware to sda1 while we read it from sda2, the answear is simple:
+Before running fdisk, the iPod was a Mac-iPod with a different Partition layout, but now the iPod is a Win-iPod, belive me: sda1 
+is correct.
+
+After writing back the Firmware we can format the iPod:
+@example
+mkfs.vfat -F 32 -n "LUNIX" /dev/sda2
+@end example
+
+"LUNIX" is the name of the iPod, you can use another name if you like. After mkfs.vfat is done, we remove sbp2:
+@example
+rmmod sbp2
+@end example
+
+Unplug the iPod and pray. If everything went well, the iPod boots up :).
+If not, reread this section, if you are lost, feel free to drop me a mail: bug-gnupod@@gnu.org
+
+
+
+@node Firmware update
+@section Firmware update
+
+** Don't update the Firmware just for fun, only do it if you need a 
+new Firmware or/and the documentation told you to do this **
+
+
+Setup Firewire as described in 'Using FireWire with GNU/Linux', load the modules and make sure sbp2 detected your iPod.
+Do not try to mount the iPod. We assume your iPod at @code{@w{/dev/sda}}.
+
+First you need to get a new Firmware wich you can download from http://www.iweenie.com/ipod.shtml
+
+If you got a FAT32 formatted iPod (..or you plan to 'convert' the iPod after upgrading the Firmware), you'll need 
+Version 1.1.0 or newer.
+
+Let's say, you downloaded the File 121.zip (Firmware version 1.2.1), you'll have now to unzip this file.
+Unzip should be preinstalled on most Systems (if not, you can get it from http://www.info-zip.org/pub/infozip/UnZip.html).
+
+@example
+unzip 121.zip 
+Archive:  121.zip
+  inflating: 121.bin  
+@end example
+
+Ok, we are now ready to write the new firmware to the iPod.
+
+If your iPod is HFS+ Formatted (your kernel supports 'mac-style' partitions??), use
+@example
+dd if=121.bin of=/dev/sda2
+@end example
+
+to upgrade the Firmware. If you own a FAT32 Formatted (your kernel supports 'dos-style' partitions??) iPod, use
+@example
+dd if=121.bin of=/dev/sda1
+@end example
+
+After @code{@w{dd}} finished (it can take some time), remove sbp2
+@example
+rmmod sbp2
+@end example
+
+You can now unplug the iPod and pray ;)
+
+It could be possible to damage the iPod with this action, but the iPod is very clever looking for new Firmware.
+Even if you uploaded 121.zip to the iPod it shouldn't reflash itself with the bad
+Firmware... (because the zip file wouldn't have a correct checksum) 
+
+But please don't blame me if your iPod dies...
+@c ===========================================================================================
+
+
+
+@c ===========================================================================================
+@node Using GNUpod, Problems, Installing GNUpod, Top
+@chapter Using GNUpod
+@menu
+* Preparation::                     How to mount and prepare the iPod for GNUpod
+* Add files::                       How to add MP3 files to the iPod
+* Search files::                    How to search for files on the iPod
+* Remove files::                    How to delete files on the iPod
+* Creating playlists::              How to create a playlist
+* Unplug the iPod::                 How to unplug the iPod (Not a joke.. read it)
+* Coexistence::                     iTunes/Music Match/xtunes/Ehpod user? Read this!
+@end menu
+
+
+@node Preparation
+@section Preparation
+
+Mount the iPod (i assume you mount it at /mnt/ipod) as described in 'Using FireWire with GNUpod'
+
+If the iPod is freshly formatted (= empty - no songs), run
+@example
+gnupod_INIT -m /mnt/ipod
+@end example
+
+
+If the iPod isn't empty and you never used gnuPod before, run
+@example
+mkdir /mnt/ipod/iPod_Control/.gnupod
+touch /mnt/ipod/iPod_Control/.gnupod/GNUtunesDB
+touch /mnt/ipod/iPod_Control/iTunes/iTunesDB
+tunes2pod.pl -m /mnt/ipod
+@end example
+
+Your iPod is now ready for GNUpod!
+
+
+@node Add files
+@section Add files
+
+To add files, we use the script called @code{@w{gnupod_addsong.pl}}.
+
+First, mount the iPod (eg. at /mnt/ipod) if it isn't mounted.
+
+If you would like to add the file /tmp/foo.mp3, run gnupod_addsong.pl like this:
+@example
+gnupod_addsong.pl -m /mnt/ipod /tmp/foo.mp3
+@end example
+
+You can also use wildcards:
+@example
+gnupod_addsong.pl -m /mnt/ipod /mnt/mp3/seiken_densetsu2_ost/* /mnt/mp3/xenogears/ost?/*
+@end example
+
+It isn't possible to add the same MP3 multiple times, gnupod_addsong.pl detects duplicates 
+(Duplicate = same filesize/time and ID3Tag name).
+
+DO NOT umount the iPod yet! First read the section 'Unplug the iPod'!
+
+
+@node Search files
+@section Search files
+
+GNUpod includes a tool called @code{@w{gnupod_search.pl}} wich helps you searching for files.
+
+Maybe you would like to search for the artist called 'Schlummiguch'. In this case, run
+@example
+gnupod_search.pl -m /mnt/ipod -a "Schlummiguch"
+@end example
+
+Please have a look at @code{@w{gnupod_search.pl --help}} for more information.
+
+@node Remove files
+@section Remove files
+
+Every file on the iPod has an unique ID, to delete a file, you'll have to know the ID.
+
+To get the desired ID, open the file @code{@w{iPod_Control/.gnupod/GNUtunesDB}} stored on your iPod.
+
+To delete the file with id="1", simply use
+@example
+gnupod_delete.pl -m /mnt/ipod 1
+@end example
+
+But there is also a much more confortable way to do this. You can use @code{@w{gnupod_search.pl}} to tell 
+@code{@w{gnupod_delete.pl}} wich songs it should remove.
+
+Remember how we searched for the artist 'Schlummiguch' in the previous section?
+
+This command would delete every song of the artist Schlummiguch:
+@example
+gnupod_delete -m /mnt/ipod `gnupod_search -m /mnt/ipod -a "Schlummiguch" -n`
+@end example
+
+Note: we added the '-n' switch to the search command and we use backticks!
+
+@node Creating playlists
+@section Creating playlists
+
+Open the file @code{@w{iPod_Control/.gnupod/GNUtunesDB}} in a editor (It's a XML File).
+
+To create a playlist named 'sweet' wich holds the songs with the ID 1 and 2, create something like this:
+@example
+<playlist name="sweet">
+ <add id="1" />
+ <add id="2" />
+</playlist>
+@end example
+
+
+You are not limited to use 'id', you can also use other attributes:
+@example
+<playist name="bogus">
+ <add album="seiken densetsu" bitrate="256" />
+</playlist>
+@end example
+This would add every song from the album 'Seiken Densetsu' (<add.. is case INsensitive) with a bitrate of 256kbit/s.
+
+Since GNUpod 0.26 it's also possible to use Regular Expressions (Regex).
+See @code{@w{perldoc perlre}} to learn more about this
+
+@example
+<playlist name="Regex Demo">
+ <regex album="^A" />
+ <iregex album="^b" />
+</playlist>
+@end example 
+
+<regex is case sensitive, use <iregex to do case insensitive matching.
+
+For more examples have a look at @code{@w{doc/gnutunesdb.example}} included in the GNUpod tarball.
+
+Don't forget to run mktunes before umounting! (See 'Unplug the iPod')
+
+@node Unplug the iPod
+@section Unplug the iPod
+
+Before umounting the iPod, you have to call @code{@w{mktunes.pl}} wich will 
+parse the GNUtunesDB XML file and convert it into the iTunesDB format.
+
+Simply run
+@example
+mktunes.pl -s -m /mnt/ipod
+@end example
+
+After @code{@w{mktunes.pl}} is done, you can umount the iPod and remove the sbp2 module
+@example
+umount /mnt/ipod
+rmmod sbp2
+@end example
+
+Added songs won't be visible on the iPod if you did not run mktunes.pl before umounting the iPod. 
+(If you forgot to run @code{@w{mktunes.pl}} before unpluging/umounting, simply mount the iPod again and run it)
+
+
+@node Coexistence
+@section Coexistence
+
+GNUpod can coexist with iTunes and other programs for the iPod.
+
+If you want to use an iPod with GNUpod and used something other than GNUpod (maybe iTunes)
+ to perform the last update (adding songs, editing playists.. doing something..), you'll have to
+ use @code{@w{tunes2pod.pl}} to update the (outdatet) GNUtunesDB.
+
+Mount the iPod and run 
+@example
+tunes2pod.pl -m /mnt/ipod
+@end example
+
+The iPod is now ready again for GNUpod.
+
+You have to do this because GNUpod stores it's information in the GNUtunesDB, other programs are accessing the 
+iTunesDB directly. After you did something with eg. iTunes, the GNUtunesDB would be 'outdatet' and you would 
+lose any changes you made with iTunes. Running @code{@w{tunes2pod.pl}} will write a new GNUtunesDB wich
+reflects the content of the current iTunesDB.
+
+You don't have to worry about this too much...
+GNUpod tells you when you need to run @code{@w{tunes2pod.pl}} and will refuse to 
+touch anything until you executed it.
+
+
+You sould avoid the use of 'extended playlist support' if you use your iPod with other programs.
+
+The Playlist part of this file...
+@example
+<files>
+<file id="1" title="hello" album="foo"..
+<file id="2" title="boing" album="foo"..
+</files>
+<playlist name="extended">
+ <add album="foo" />
+</playlist>
+@end example
+
+..would look like this after using tunes2pod.pl
+@example
+...
+<playist name="extended">
+ <add id="1" />
+ <add id="2" />
+</playlist>
+@end example
+
+The songs are still in the playlists, but the expressions you wrote are 'lost'.
+@c ===========================================================================================
+
+
+@c ===========================================================================================
+@node Problems, GNU Free Documentation License, Using GNUpod, Top
+@chapter Problems
+
+@menu
+* RedHat8::                         How to get GNUpod working on RedHat 8
+* Get rid of '-m'::                 You don't like the -m switch?
+* Known bugs and limitations::      GNUpod isn't perfect :)
+* Reporting Bugs::                  How to report a Bug
+@end menu
+
+@node RedHat8
+@section RedHat8
+
+If you are using RedHat8, GNUpod may seem to work, but the iPod won't show any songs/playlists.
+
+The Perl binary included with RedHat8 doesn't work as it should if you enabled UTF8 as locale (default?).
+
+Before running any GNUpod command (in particular @code{@w{mktunes.pl}} and @code{@w{tunes2pod.pl}}) execute
+@example
+unset LANG
+@end example
+
+Other solutions:
+@itemize @bullet
+@item Recompile Perl
+@item Install another distribution
+@end itemize
+
+This is NOT a GNUpod bug. I will not answear any RedHat8 specific bugreports.
+RedHat8 was your choice. This broken distribution is not my problem.. it's yours.. sorry
+
+@node Get rid of '-m'
+@section Get rid of '-m'
+
+You don't have to use the '-m' switch if you set IPOD_MOUNTPOINT.
+(Example for the BASH)
+@example
+export IPOD_MOUNTPOINT="/mnt/ipod"
+@end example
+
+
+@node Known bugs and limitations
+@section Known bugs and limitations
+
+@itemize @bullet
+@item Not all options of iTunes are supported (eg. Rating)
+@item Latin1 ist the only supported charset
+@end itemize
+
+
+@node Reporting Bugs
+@section Reporting Bugs
+
+To report a bug, send a mail to bug-gnupod@@gnu.org
+
+Include as much information as possible.
+
+You may want to attach the files iPod_Control/.gnupod/GNUtunesDB and iPod_Control/iTunes/iTunesDB.
+But please use gzip or bzip2 to compress the files.
+
+Please do not send me any mp3 files without asking me.
+@c ===========================================================================================
+
+
+
+
+@node GNU Free Documentation License, , Problems, Top
+@include fdl.texi
+
+
+
+
+@printindex cp
+@shortcontents
+@contents
+@bye
+@c gnupod.texi ends here
