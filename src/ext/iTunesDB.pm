@@ -207,6 +207,8 @@ return $ret;
 }
 
 
+## GENERAL #################################################################
+# Create a spl-pref (type=50) mhod
 sub mk_splprefmhod {
  my($hs) = @_;
  my($live, $chkrgx, $chklim, $mos) = 0;
@@ -229,6 +231,43 @@ sub mk_splprefmhod {
  $ret .= pack("h8", _itop($hs->{value})); #lval
  $ret .= pack("h2", _itop($mos));        #mos
  $ret .= pack("h118");
+}
+
+## GENERAL #################################################################
+# Create a spl-data (type=51) mhod
+sub mk_spldatamhod {
+ my($hs) = @_;
+
+ my $anymatch = 1 if $hs->{anymatch};
+ my $cr = undef;
+
+ foreach my $chr (@{$hs->{data}}) {
+  my $string = Unicode::String::utf8($chr->{string})->utf16;
+  $cr .= pack("H6");
+  $cr .= pack("h2", _itop($chr->{field}));
+  $cr .= pack("H6", reverse("010000"));
+  $cr .= pack("h2", _itop($chr->{action}));
+  $cr .= pack("H94");
+  $cr .= pack("h2", _itop(length($string)));
+  $cr .= $string;
+ }
+
+ my $ret = "mhod";
+ $ret .= pack("h8", _itop(24));    #Size of header
+ $ret .= pack("h8", _itop(length($cr)+160));    #header+body size
+ $ret .= pack("h8", _itop(51));    #type
+ $ret .= pack("H16");
+ $ret .= "SLst";                   #Magic
+ $ret .= pack("H8", reverse("00010001"));
+ $ret .= pack("h6");
+ $ret .= pack("h2", _itop(int(@{$hs->{data}})));     #HTM
+ $ret .= pack("h6");
+ $ret .= pack("h2", _itop($anymatch));     #anym
+ $ret .= pack("h240");
+
+
+ $ret .= $cr;
+return $ret;
 }
 
 
@@ -279,6 +318,11 @@ my($hr) = @_;
 
 #We need to create a listview-layout and an mhod with the name..
 my $appnd = __dummy_listview().mk_mhod({stype=>"title", string=>$hr->{name}});   #itunes prefs for this PL & PL name (default PL has  device name as PL name)
+
+my @da = ({field=>1,action=>1,string=>"f1,act1"},{field=>2,action=>2,string=>"f2/action2"},
+{field=>3,action=>3,string=>"Hi, this is a spl demo :) (all=3)"});
+
+$appnd .= mk_splprefmhod({item=>3,sort=>2,mos=>1,liveupdate=>1,value=>9999,chkrgx=>1,chklim=>1}).mk_spldatamhod({anymatch=>1,data=>\@da});
 
 #mk_splprefmhod({stype=>"SPLPREF", value=>"20", sort=>2, liveupdate=>1, chkrgx=>1, chklim=>1, mos=>1, item=>1});
 my $ret .= "mhyp";
@@ -457,10 +501,11 @@ my $diff = $hr->{start}+160;
 my @ret = ();
 
  for(1..$hr->{htm}) {
-  my $field = get_x86_int($diff, 4);
-  my $action= get_x86_int($diff+7, 1);
-  my $slen  = get_x86_int($diff+52,4);
+  my $field = get_int($diff+3, 1);
+  my $action= get_int($diff+7, 1);
+  my $slen  = get_int($diff+55,1);
   my $string= get_string($diff+56, $slen);
+ print "// $slen\n";
   #This sucks! no byteswap here.. apple uses x86 endian.. why??
   #Is this an iTunes bug?!
   $string = Unicode::String::utf16($string)->utf8;
@@ -524,9 +569,8 @@ my $mty = get_int($seek+12, 4);          #type number
 my $xl  = get_int($seek+28,4);           #String length
 
 ## That's spl stuff..
-## Apple seems to have big and little-endian mixed..?!
-my $htm = get_x86_int($seek+32,4); #Only set for 51
-my $anym= get_x86_int($seek+36,4); #Only set for 51
+my $htm = get_int($seek+35,1); #Only set for 51
+my $anym= get_int($seek+39,1); #Only set for 51
 my $spldata = undef;
 my $splpref = undef;
 
@@ -542,7 +586,7 @@ if($id eq "mhod") { #Seek was okay
    $foo = undef;
    $spldata = read_spldata({start=>$seek, htm=>$htm});
   __hd(get_string($seek,$ml));
-
+print "HTM: $htm // $anym\n";
  }
  elsif($mty == 50) {
   $foo = undef;
