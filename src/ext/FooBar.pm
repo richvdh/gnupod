@@ -33,17 +33,19 @@ sub connect {
  my $rr = ();
   
 
- $rr->{status} = "No mountpoint defined / missing in and out file";
+ $rr->{status} = "No mountpoint defined";
  $rr->{bindir} = ($0 =~ m%^(.+)/%)[0] || ".";
-warn "Runtimee: $rr->{bindir}\n";
-unless(!$opth->{mount} && (!$opth->{itunes} || !$opth->{xml})) {
-  $rr->{itunesdb}   = $opth->{itunes} || $opth->{mount}."/iPod_Control/iTunes/iTunesDB";
-  $rr->{etc}        = $opth->{mount}."/iPod_Control/.gnupod";
-  $rr->{xml}        = $opth->{xml} || $opth->{mount}."/iPod_Control/.gnupod/GNUtunesDB";
-  $rr->{mountpoint} = $opth->{mount};
-  $rr->{onthego}    = "$rr->{mountpoint}/iPod_Control/iTunes/OTGPlaylistInfo";
-  $rr->{playcounts} = "$rr->{mountpoint}/iPod_Control/iTunes/Play Counts";
-  $rr->{status}     = undef;
+
+if(-d $opth->{mount}) {
+  $rr->{mountpoint}     = $opth->{mount};
+  $rr->{etc}            = $opth->{mount}."/iPod_Control/.gnupod";
+  $rr->{xml}            = $opth->{mount}."/iPod_Control/.gnupod/GNUtunesDB";
+  $rr->{itunesdb}       = $opth->{mount}."/iPod_Control/iTunes/iTunesDB";
+  $rr->{playcounts}     = "$rr->{mountpoint}/iPod_Control/iTunes/Play Counts";
+  $rr->{itunesdb_md5}   = "$rr->{etc}/.itunesdb_md5";
+  $rr->{playcounts_md5} = "$rr->{etc}/.playcounts_md5";
+  $rr->{onthego}        = "$rr->{mountpoint}/iPod_Control/iTunes/OTGPlaylistInfo";
+  $rr->{status}         = undef;
 
  #Do an iTunesDB Sync if not disabled and needed
   do_itbsync($rr) if(!$opth->{_no_it_sync} && !$opth->{_no_sync} && _itb_needs_sync($rr));
@@ -90,7 +92,7 @@ sub do_otgsync {
 my $XBIN = "$con->{bindir}/gnupod_otgsync.pl";
 
 if(-x $XBIN) {
-     my $OLDENV = $ENV{IPOD_MOUNTPOINT}
+     my $OLDENV = $ENV{IPOD_MOUNTPOINT};
      $ENV{IPOD_MOUNTPOINT} = $con->{mountpoint};
      print "> On-The-Go data sync needed...\n";
      if(system("$XBIN --top4secret")) {
@@ -139,9 +141,9 @@ sub shx2_x86_int {
 sub _itb_needs_sync {
  my($rr) = @_;
 warn "debug: havetosync call ($$)\n";
- if(-r "$rr->{etc}/.itunesdb_md5" && -r $rr->{itunesdb}) {
+ if(-r $rr->{itunesdb_md5} && -r $rr->{itunesdb}) {
    my $itmd = getmd5($rr->{itunesdb});
-   my $otmd = getmd5line("$rr->{etc}/.itunesdb_md5");
+   my $otmd = getmd5line($rr->{itunesdb_md5});
    return 1 if $otmd ne $itmd;
   }
   return undef;
@@ -157,8 +159,8 @@ sub _otg_needs_sync {
  return 1 if(GNUpod::iTunesDB::readOTG($rr->{onthego}));
  
  if(-e $rr->{playcounts}) { #PlayCounts file exists..
-  if(-r "$rr->{etc}/.playcounts_md5") { #We got a md5 hash
-   my $plmd = getmd5line("$rr->{etc}/.playcounts_md5");
+  if(-r "$rr->{playcounts_md5}") { #We got a md5 hash
+   my $plmd = getmd5line("$rr->{playcounts_md5}");
    #MD5 is the same
    return 0 if $plmd eq getmd5($rr->{playcounts});
   }
@@ -186,19 +188,34 @@ sub getmd5line {
 # Call this to set GNUtunesDB <-> iTuneDB 'in-sync'
 sub setsync {
  my($rr) = @_;
- die "FATAL: Unable to read iTunesDB\n" unless (-r $rr->{itunesdb});
- #Write the file with md5sum content
- open(MDX,">$rr->{etc}/.itunesdb_md5") or die "Can't write md5-sum, $!\n";
-  print MDX getmd5($rr->{itunesdb})."\n";
- close(MDX);
- 
+ setsync_itunesdb($rr);
+ setsync_playcounts($rr);
+}
+
+######################################################################
+# Set only playcounts in sync
+sub setsync_playcounts {
+my($rr) = @_;
 #We also create an MD5 sum of the playcounts file
  if(-r $rr->{playcounts}) { #Test this, because getmd5 would die
-  open(MDX,">$rr->{etc}/.playcounts_md5") or die "Can't write pc-md5-sum, $!\n";
+  open(MDX,">$rr->{playcounts_md5}") or die "Can't write pc-md5-sum, $!\n";
    print MDX getmd5($rr->{playcounts});
   close(MDX);
+  return undef;
  }
- 
+ return 1;
+}
+
+######################################################################
+# Set only itunesdb sync
+sub setsync_itunesdb {
+my($rr) = @_;
+ die "FATAL: Unable to read iTunesDB\n" unless (-r $rr->{itunesdb});
+ #Write the file with md5sum content
+ open(MDX,">$rr->{itunesdb_md5}") or die "Can't write md5-sum, $!\n";
+  print MDX getmd5($rr->{itunesdb})."\n";
+ close(MDX);
+ return undef;
 }
 
 

@@ -1,4 +1,4 @@
-#  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
+#  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
 #  URL: http://www.gnu.org/software/gnupod/
@@ -29,7 +29,7 @@ use Getopt::Long;
 use File::Copy;
 use vars qw(%opts %dupdb);
 
-print "gnupod_addsong.pl Version 0.94 (C) 2002-2003 Adrian Ulrich\n";
+print "gnupod_addsong.pl Version 0.94 (C) 2002-2004 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
@@ -65,8 +65,11 @@ else {
 # Worker
 sub startup {
  my(@files) = @_;
+ 
+ #Don't sync if restore is true
+ $opts{_no_sync} = $opts{restore};
+ 
  my $con = GNUpod::FooBar::connect(\%opts);
-
 usage($con->{status}."\n") if $con->{status} || !@files;
 
 unless($opts{restore}) {

@@ -35,6 +35,11 @@ Summary:
 
 Details:
 --------
+
+I removed the '-x' and '-i' switch, because
+it wouldn't work well together with the
+autosync
+
 FooBar.pm:
  * connect() changed a lot
 

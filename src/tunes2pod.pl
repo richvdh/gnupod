@@ -1,4 +1,4 @@
-#  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
+#  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
 #  URL: http://www.gnu.org/software/gnupod/
@@ -29,11 +29,11 @@ use Getopt::Long;
 
 use vars qw(%opts);
 $| = 1;
-print "tunes2pod.pl Version 0.94 (C) 2002-2003 Adrian Ulrich\n";
+print "tunes2pod.pl Version 0.94 (C) 2002-2004 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
-GetOptions(\%opts, "force", "help|h", "xml|x=s", "itunes|i=s", "mount|m=s");
+GetOptions(\%opts, "force", "help|h", "mount|m=s");
 
 
 usage() if $opts{help};
@@ -129,7 +129,7 @@ for(my $i=0;$i<$itinfo->{playlists};$i++) {
 
 
 GNUpod::XMLhelper::writexml($con->{xml});
-GNUpod::FooBar::setsync($con);
+GNUpod::FooBar::setsync_itunesdb($con);
 
 #The iTunes is now set to clean .. maybe we have to
 #update the otg..
@@ -178,8 +178,6 @@ Usage: tunes2pod.pl [-h] [-m directory | -i iTunesDB | -x GNUtunesDB]
 
    -h, --help             : This ;)
    -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
-   -i, --itunes=iTunesDB  : Specify an alternate iTunesDB
-   -x, --xml=file         : GNUtunesDB (XML File)
        --force            : Disable 'sync' checking
 
 EOF

@@ -1,4 +1,4 @@
-#  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
+#  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
 #  URL: http://www.gnu.org/software/gnupod/
@@ -34,11 +34,11 @@ use vars qw($cid %pldb %spldb %itb %opts %meat %cmeat);
 #spldb{name} = '<spl' prefs
 #itb         = buffer
 $| = 1;
-print "mktunes.pl Version 0.94 (C) 2002-2003 Adrian Ulrich\n";
+print "mktunes.pl Version 0.94 (C) 2002-2004 Adrian Ulrich\n";
 
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
-GetOptions(\%opts, "help|h", "xml|x=s", "itunes|i=s", "mount|m=s", "volume|v=i");
+GetOptions(\%opts, "help|h", "mount|m=s", "volume|v=i");
 
 usage() if $opts{help};
 
@@ -313,8 +313,6 @@ Usage: mktunes.pl [-h] [-m directory | -i iTunesDB | -x GNUtunesDB] [-v VALUE]
 
    -h, --help             : This ;)
    -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
-   -i, --itunes=iTunesDB  : Specify an alternate iTunesDB
-   -x, --xml=file         : GNUtunesDB (XML File)
    -v, --volume=VALUE     : Adjust volume +-VALUE% (example: -v -20)
                             (Works with Firmware 1.x and 2.x!)
 
