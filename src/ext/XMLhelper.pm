@@ -27,7 +27,7 @@ use XML::Parser;
 use Unicode::String;
 
 
-## Release 20030928
+## Release 20030930
 
 my $cpn = undef; #Current PlaylistName
 my @idpub = ();
@@ -90,7 +90,6 @@ return $ret;
 
 ###############################################################
 # Create a new child (for playlists or file)
-# This is called by main::something.. not by myself
 sub mkfile {
  my($hr, $magic) = @_;
  my $r = undef;
@@ -104,10 +103,12 @@ sub mkfile {
       $r .= "id=\"$xid\" ";
       $idpub[$xid] = 1;
      }
-   $r .= "/>";
+    if($magic->{noend}) { $r .= ">" }
+    else                { $r .= "/>"}
   }
-
-  if($magic->{plname}) { #Create a playlist item
+  
+  if($magic->{return}) { return $r; }
+  elsif($magic->{plname}) { #Create a playlist item
    push(@{$XDAT->{playlists}->{data}->{$magic->{plname}}}, $r);
   }
   elsif($magic->{splname}) { #Create a smartplaylist item
@@ -120,10 +121,9 @@ sub mkfile {
 
 ##############################################################
 # Add a playlist to output (Called by eventer or tunes2pod.pl)
-# Creates a pref hash and the xmlheader
 sub addpl {
  my($name, $opt) = @_;
- if(!$name || ref($XDAT->{playlists}->{pref}->{$name}) eq "HASH") {
+ if(ref($XDAT->{playlists}->{pref}->{$name}) eq "HASH") {
   warn "XMLhelper.pm: Playlist '$name' is a duplicate, skipping addpl()\n";
   return;
  }
@@ -131,39 +131,32 @@ sub addpl {
 
  #Escape the prefs
  my %rh = ();
- my $xmlret = "";
  $rh{name} = $name;
  #Create the hash and the xml header
   foreach (keys(%$opt)) {
    $rh{$_} = $opt->{$_};
-   $xmlret .= xescaped($_)."=\"".xescaped($opt->{$_})."\" ";
   }
  $XDAT->{playlists}->{pref}->{$name} = \%rh;
- $XDAT->{playlists}->{xmlheader}->{$name} = $xmlret;
 }
 
 ##############################################################
 # Add a SmartPlaylist to output (Called by eventer or tunes2pod.pl)
-# Creates a pref hash and the xmlheader
 sub addspl {
  my($name, $opt) = @_;
- if(!$name || ref($XDAT->{spls}->{pref}->{$name}) eq "HASH") {
+ if(ref($XDAT->{spls}->{pref}->{$name}) eq "HASH") {
   warn "XMLhelper.pm: Playlist '$name' is a duplicate, skipping addspl()\n";
   return;
  }
 
  push(@plorder, $name);
  my %rh = ();
- my $xmlret = "";
  $rh{name} = $name;
  #Create the hash and the xml header
   foreach (keys(%$opt)) {
    $rh{$_} = $opt->{$_};
-   $xmlret .= xescaped($_)."=\"".xescaped($opt->{$_})."\" ";
   }
   
  $XDAT->{spls}->{pref}->{$name} = \%rh;
- $XDAT->{spls}->{xmlheader}->{$name} = $xmlret;
 }
 
 
@@ -198,20 +191,20 @@ sub eventer {
   } 
   elsif($href->{Context}[1] eq "" && $el eq "playlist") {
     my $xh = mkh($el, @it); #Create hash
+  #  $xh->{$el}->{name} = "NONAME" unless $xh->{$el}->{name};
     $cpn = $xh->{$el}->{name}; #Get current name
     addpl($cpn,$xh->{$el}); #Add this playlist
   }
   elsif($href->{Context}[1] eq "playlist") {
-   die "Fatal XML Error: playlist without name found!\n" if $cpn eq "";
    main::newpl(mkh($el, @it), $cpn, "pl"); #call sub
   }
   elsif($href->{Context}[1] eq "" && $el eq "smartplaylist") {
     my $xh = mkh($el,@it);     #Create a hash
+    $xh->{$el}->{name} = "NONAME" unless $xh->{$el}->{name};
     $cpn = $xh->{$el}->{name}; #Get current plname
     addspl($cpn,$xh->{$el});   #add the pl
   }
   elsif($href->{Context}[1] eq "smartplaylist") {
-   die "Fatal XML Error: smartplaylist without name found!\n" if $cpn eq "";
    main::newpl(mkh($el, @it), $cpn,"spl"); #Call sub  
   }
 }
@@ -260,8 +253,8 @@ sub writexml {
 
 #Print all playlists
  foreach(@plorder) {
-  if(my $shr = $XDAT->{spls}->{xmlheader}->{$_}) { #xmlheader present
-      print OUT "\n <smartplaylist $shr>\n";
+  if(my $shr = get_splpref($_)) { #xmlheader present
+      print OUT "\n ".mkfile({smartplaylist=>$shr}, {return=>1,noend=>1})."\n";
        ### items
         foreach my $sahr (@{$XDAT->{spls}->{data}->{$_}}) {
          print OUT "   $sahr\n";
@@ -269,8 +262,8 @@ sub writexml {
        ###
       print OUT " </smartplaylist>\n";
   }
-  elsif(my $phr = $XDAT->{playlists}->{xmlheader}->{$_}) { #plprefs found..
-      print OUT "\n <playlist $phr>\n";
+  elsif(my $phr = get_plpref($_)) { #plprefs found..
+      print OUT "\n ".mkfile({playlist=>$phr}, {return=>1,noend=>1})."\n";
        foreach(@{$XDAT->{playlists}->{data}->{$_}}) {
         print OUT "   $_\n";
        }

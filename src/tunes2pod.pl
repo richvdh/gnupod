@@ -94,7 +94,7 @@ for(my $i=0;$i<$itinfo->{playlists};$i++) {
    exit(1);
   }
   next if $href->{type}; #Don't list the MPL
-  
+  $href->{name} = "NONAME" unless($href->{name}); #Don't create an empty pl
   if(ref($href->{splpref}) eq "HASH" && ref($href->{spldata}) eq "ARRAY") { #SPL Data present
     print ">> Smart-Playlist '$href->{name}' found\n";
     render_spl($href->{name},$href->{splpref}, $href->{spldata}, $href->{matchrule}, $href->{content});
