@@ -36,7 +36,7 @@ BEGIN {
 ########################################################################
 #Try to discover the file format (mp3 or QT (AAC) )
 sub wtf_is {
- my($file) = @_;
+ my($file, $flags) = @_;
   
   if(-d $file) { #Don't add dirs
    warn "FileMagic.pm: '$file' is a directory!\n";
@@ -44,13 +44,13 @@ sub wtf_is {
   elsif(!-r $file) {
    warn "FileMagic.pm: Can't read '$file'\n";
   }
-  elsif(my $h = __is_mp3($file)) {
+  elsif(my $h = __is_mp3($file,$flags)) {
    return $h;
   }
-  elsif(my $h = __is_pcm($file)) {
+  elsif(my $h = __is_pcm($file,$flags)) {
    return $h
   }
-  elsif(my $h = __is_qt($file)) {
+  elsif(my $h = __is_qt($file,$flags)) {
    return $h
   }
 #Still no luck..
@@ -140,7 +140,7 @@ return \%rh;
 ######################################################################
 # Read mp3 tags, return undef if file is not an mp3
 sub __is_mp3 {
- my($file) = @_;
+ my($file,$flags) = @_;
  
  my $h = MP3::Info::get_mp3info($file);
  return undef unless $h; #No mp3
@@ -158,8 +158,12 @@ sub __is_mp3 {
  $rh{srate}    = int($h->{FREQUENCY}*1000);
  $rh{time}     = int($h->{SECS}*1000);
  $rh{fdesc}    = "MPEG ${$h}{VERSION} layer ${$h}{LAYER} file";
- my $h = MP3::Info::get_mp3tag($file,1);  #Get the IDv1 tag
- my $hs = MP3::Info::get_mp3tag($file, 2,1); #Get the IDv2 tag
+ 
+ my $h =undef;
+ my $hs=undef;
+ 
+ $h = MP3::Info::get_mp3tag($file,1)     unless $flags->{'noIDv1'};  #Get the IDv1 tag
+ $hs = MP3::Info::get_mp3tag($file, 2,1) unless $flags->{'noIDv2'};  #Get the IDv2 tag
 
  #The IDv2 Hashref may return arrays.. kill them :)
  foreach my $xkey (keys(%$hs)) {

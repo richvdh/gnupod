@@ -33,7 +33,7 @@ print "gnupod_addsong.pl Version 0.94 (C) 2002-2004 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
-GetOptions(\%opts, "help|h", "mount|m=s", "restore|r", "duplicate|d");
+GetOptions(\%opts, "help|h", "mount|m=s", "restore|r", "duplicate|d", "disable-v2", "disable-v1");
 
 usage() if $opts{help};
 
@@ -84,7 +84,7 @@ my $addcount = 0;
     next if -d $file;
     
     #Get the filetype
-    my $fh = GNUpod::FileMagic::wtf_is($file);
+    my $fh = GNUpod::FileMagic::wtf_is($file, {noIDv1=>$opts{'disable-v1'}, noIDv2=>$opts{'disable-v2'}});
     
     unless($fh) {
      print STDERR "* Skipping '$file', unknown file type\n";
@@ -149,6 +149,8 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
    -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
    -r, --restore          : Restore the iPod (create a new GNUtunesDB from scratch)
    -d, --duplicate        : Allow duplicate files
+       --disable-v1       : Do not read ID3v1 Tags (MP3 Only)
+       --disable-v2       : Do not read ID3v2 Tags (MP3 Only)
 
 EOF
 }

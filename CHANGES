@@ -1,3 +1,31 @@
+GNUpod 0.95 - codename 'sockentier'
+
+
+Summary
+-------
+
+- Polished Playcounts parser (no hardcoded offsets anymore)
+- added '--disable-v2' and '--disable-v1' to
+  gnupod_addsong.pl (Disable parsing of ID3TAG version X)
+- New option for the GNUtunesDB.xml entries:
+  You can set a 'hide' flag:
+  <file id="1234" hide="1" ....
+
+  ('hide' is a boolean flag -> hide="1" is TRUE,
+    hide="0" or hide="" is FALSE)
+
+  If 'hide' is set to TRUE, a song doesn't appear
+  in the 'Browser'. But the song can appear in
+  Playlists. Confused?
+  
+ 
+
+
+
+
+*** OLD STUFF ***
+
+
 GNUpod 0.94 - codename 'aspartam'
 
 
@@ -70,8 +98,6 @@ gnupod_otgsync.pl
    It's only used internal.
 
 
-
-*** OLD STUFF ***
 
 GNUpod 0.93 - codename 'Shorthorn'
 

@@ -28,13 +28,14 @@ use GNUpod::FooBar;
 use Getopt::Long;
 
 
-use vars qw($cid %pldb %spldb %itb %opts %meat %cmeat);
+use vars qw($cid %pldb %spldb %itb %opts %meat %cmeat @MPLcontent);
 #cid = CurrentID
 #pldb{name}  = array with id's
 #spldb{name} = '<spl' prefs
 #itb         = buffer
+#MPLcontent  = MasterPlaylist content (all songs without hide=true)
 $| = 1;
-print "mktunes.pl Version 0.94 (C) 2002-2004 Adrian Ulrich\n";
+print "mktunes.pl Version 0.95 (C) 2002-2004 Adrian Ulrich\n";
 
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
@@ -147,9 +148,11 @@ if(ref($spl) eq "HASH") { #We got splpref!
 #########################################################################
 # Generate playlists from %pldb (+MPL)
 sub genpls {
- my @mpldat = (1..$cid);
- my ($pldata,undef) = r_mpl("GNUpod 0.94-20040229", 1,\@mpldat);
+
+ #Create mainPlaylist and set PlayListCount to 1
+ my ($pldata,undef) = r_mpl("GNUpod 0.95-20040327", 1,\@MPLcontent);
  my $plc = 1;
+ 
 #CID is now used by r_mpl, dont use it yourself anymore
   foreach(GNUpod::XMLhelper::getpl_names()) {
     my $splh = GNUpod::XMLhelper::get_splpref($_);
@@ -158,7 +161,6 @@ sub genpls {
        $pldata .= $pl;
        my $plxt = "Smart-" if $splh;
        print ">> Created $plxt"."Playlist '$_' with $xc file"; print "s" if $xc !=1;
-     
      print "\n";
   }
  
@@ -179,6 +181,15 @@ my ($nhod,$cmhod,$cmhod_count) = undef;
   $cmhod .= $nhod;
   $cmhod_count++ if defined $nhod;
  }
+ 
+ #check if hidden-flag is set to TRUE
+ if($chr{hide}) {
+  print "! File $chr{path} will *not* appear in Browser -> 'hide' set to TRUE\n";
+ }
+ else { #Not true, add oid to MPLcontent (= Showup in Browser)
+  push(@MPLcontent,$oid);
+ }
+ 
      #Volume adjust
      if($opts{volume}) {
       $chr{volume} += int($opts{volume});
@@ -193,7 +204,7 @@ my ($nhod,$cmhod,$cmhod_count) = undef;
      my $mhit = GNUpod::iTunesDB::mk_mhit({size=>length($cmhod), count=>$cmhod_count, fh=>\%chr}).$cmhod;
      $itb{mhit}{_data_} .= $mhit;
      my $length = length($mhit);
-     $itb{INFO}{FILES}++;
+     $itb{INFO}{FILES}++; #Count all files (Needed for iTunesDB header (first part)
 
 return $length;
 }

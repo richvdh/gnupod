@@ -1,4 +1,4 @@
-# iTunesDB.pm - Version 20040116
+# iTunesDB.pm - Version 20040313
 #  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
@@ -884,35 +884,33 @@ sub readPLC {
  my $buff;
  my %pcrh = ();
 
- for(1..$chunks) {
-  seek(RATING, $offset+12, 0);
-  
-  if(read(RATING,$buff,4) != 4) {
-   warn "** iTunesDB::readPLC bug: read() failed at $offset\n";
-   warn "** debug: cs: $chunksize / c: $chunks\n";
-   warn "** Please send a bugreport to pab\@blinkenlights.ch\n";
-   warn "** CRITICAL: Skipped chunk at $offset!\n";
-   last;
-  }
 
-  my $rating = GNUpod::FooBar::shx2int($buff);
-  
+ my $rating = 0;
+ my $playc  = 0;
+
+ for(1..$chunks) {
+ 
   seek(RATING, $offset, 0);
-  read(RATING,$buff,4);
-  my $playc  = GNUpod::FooBar::shx2int($buff);
+  read(RATING,$buff,4) or warn "readPLC bug, seek failed! Please send a bugreport to pab\@blinkenlights.ch!\n";
+  $playc  = GNUpod::FooBar::shx2int($buff);
+ 
+  if($chunksize >= 16) { #12+4 - v2 firmware? 
+  warn "rmme: v2 feature reading at $offset\n";
+   seek(RATING, $offset+12, 0);
+   read(RATING, $buff,4) or warn "readPLC bug, read failed! Please send a bugreport to pab\@blinkenlights.ch!\n";
+   $rating = GNUpod::FooBar::shx2int($buff);
+  }
   
   my $songnum = (($offset-(16*6))/16)+1;
 
   $pcrh{playcount}{$songnum} = $playc if $playc;
   $pcrh{rating}{$songnum}    = $rating if $rating; 
-#  warn "debug: $songnum> $playc / $rating\n" if $playc||$rating;
   $offset += $chunksize;
  }
 
 close(RATING);
  return \%pcrh;
 }
-
 
 ##############################################
 # Read OnTheGo data
