@@ -1,2 +1,3 @@
 * Fixing bugs ;)
+* Add Audible.com support
 * Finish M4A parser (I can read the tags, but not the bitrate, etc.. :-/ )

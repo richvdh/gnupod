@@ -34,8 +34,8 @@ sub connect {
   
 
  $rr->{status} = "No mountpoint defined / missing in and out file";
-($rr->{bindir}) = $0 =~ m%^(.+)/%;
-warn "Runtime: $rr->{bindir}\n";
+ $rr->{bindir} = ($0 =~ m%^(.+)/%)[0] || ".";
+warn "Runtimee: $rr->{bindir}\n";
 unless(!$opth->{mount} && (!$opth->{itunes} || !$opth->{xml})) {
   $rr->{itunesdb}   = $opth->{itunes} || $opth->{mount}."/iPod_Control/iTunes/iTunesDB";
   $rr->{etc}        = $opth->{mount}."/iPod_Control/.gnupod";

@@ -87,7 +87,7 @@ else {
 }
 
 foreach( ("rating", "prerating") ) {
- if($file_hash{$_} < 0 || $file_hash{$_} > 5) {
+ if($file_hash{$_} && $file_hash{$_} !~ /^(2|4|6|8|10)0$/) {
   print STDERR "Warning: Song $file_hash{id} has an invalid $_: $file_hash{$_}\n";
   $file_hash{$_} = 0;
  }
@@ -109,7 +109,7 @@ my $ret = "mhit";
    $ret .= pack("h8", _itop(1));                             #?
    $ret .= pack("H8");                                      #dummyspace
    $ret .= pack("h8", _itop(256+(oct('0x14000000')
-                            *$file_hash{rating})));           #type+rating .. this is very STUPID..
+                            *($file_hash{rating}/20))));     #type+rating .. this is very STUPID..
    $ret .= pack("h8", _mactime());                           #timestamp (we create a dummy timestamp, iTunes doesn't seem to make use of this..?!)
    $ret .= pack("h8", _itop($file_hash{filesize}));          #filesize
    $ret .= pack("h8", _itop($file_hash{time}));              #seconds of song
@@ -132,9 +132,10 @@ my $ret = "mhit";
    $ret .= pack("h8", _mactime());                          #dummy timestamp again...
    $ret .= pack("H16");
    $ret .= pack("H8");                          #??
-   $ret .= pack("h8", _itop($file_hash{prerating}*oct('0x140000')));      #This is also stupid: the iTunesDB has a rating history
+   $ret .= pack("h8", _itop(($file_hash{prerating}/20)*oct('0x140000')));      #This is also stupid: the iTunesDB has a rating history
    $ret .= pack("H8");                          # ???
-   $ret .= pack("H56");                                     #
+   $ret .= pack("H56");  
+                         
 return $ret;
 }
 
@@ -775,10 +776,8 @@ $ret{volume}   = get_int($sum+64,4);
 $ret{starttime}= get_int($sum+68,4);
 $ret{stoptime} = get_int($sum+72,4);
 $ret{playcount} = get_int($sum+80,4); #84 has also something to do with playcounts. (Like rating + prerating?)
-
-$ret{rating}    = int((get_int($sum+28,4)-256)/oct('0x14000000'));
-$ret{prerating} = int(get_int($sum+120,4) / oct('0x140000'));
-
+$ret{rating}    = int((get_int($sum+28,4)-256)/oct('0x14000000')) * 20;
+$ret{prerating} = int(get_int($sum+120,4) / oct('0x140000')) * 20;
 
 ####### We have to convert the 'volume' to percent...
 ####### The iPod doesn't store the volume-value in percent..
@@ -868,7 +867,7 @@ sub readPLC {
   last unless read(RATING, $buff, 2) == 2;
   my $xin = GNUpod::FooBar::shx2int($buff);
   my $xnum = (($os-108)/16+1);
-  $pcrh{$xnum} = ($xin/20) if $xin;
+  $pcrh{$xnum} = $xin if $xin;
   warn "debug: $xnum has $xin\n" if $xin;
   $os += 16;
  }

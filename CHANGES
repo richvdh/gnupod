@@ -9,6 +9,10 @@ Summary:
   on the iPod (2.x Firmware-only-feature)
 - GNUpod checks if the iTunesDB did change and
   runs tunes2pod.pl if it has to run it
+- Changed rating-schema to match SPL-Rating
+  -> Rating 5 is now 100 (newrating=oldrating*20)
+  mktunes.pl will drop old (= now invalid) ratings,
+  no autoconvert...
 - You'll have to install Digest::MD5
 
 
@@ -16,6 +20,14 @@ Details:
 --------
 FooBar.pm:
  * connect() changed a lot
+
+iTunesDB.pm
+ * Added 'Play Counts' parser (=Rating)
+ * Changed rating Schema
+
+gnupod_otgsync.pl
+ * A new tool, don't use it yourself :)
+   It's only used internal.
 
 
 
