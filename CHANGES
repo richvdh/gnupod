@@ -1,5 +1,3 @@
- ** NOTE: THIS IS GNUPOD 0.94-pre1 **
-
 GNUpod 0.94 - codename 'aspartam'
 
 
@@ -31,6 +29,8 @@ Summary:
   mktunes.pl will drop old (= now invalid) ratings,
   no autoconvert...
 
+- gnupod_addsong.pl understands ID3v2.2 tags
+
 - You'll have to install Digest::MD5
 
 
@@ -45,6 +45,11 @@ autosync
 
 FooBar.pm:
  * connect() changed a lot
+
+FileMagic.pm:
+ * Stupid bug: We can now also read
+   ID3v2.2 tags - Thanks to
+   David Ranch for the Bugreport
 
 iTunesDB.pm
  * Added 'Play Counts' parser (=Rating)
