@@ -161,6 +161,11 @@ sub __is_mp3 {
  my $h = MP3::Info::get_mp3tag($file,1);  #Get the IDv1 tag
  my $hs = MP3::Info::get_mp3tag($file, 2,1); #Get the IDv2 tag
 
+ #The IDv2 Hashref may return arrays.. kill them :)
+ foreach my $xkey (keys(%$hs)) {
+   $hs->{$xkey} = (@{$hs->{$xkey}})[-1] if ref($hs->{$xkey}) eq "ARRAY";
+ }
+
 
 #IDv2 is stronger than IDv1..
  #Try to parse things like 01/01
