@@ -1,4 +1,5 @@
 * the iTunesDB format is not 'open' (no specification provided)
-  We don't support all features
+  We don't support all features (like SmartPlaylists)
 * FileMagic (qt parser)  is just a dummy, but i got a 'working' parser..
-  ..should be ready in rc1
+  ..should be ready soon.. (0.93?)
+* Playlist items are sometimes random sorted

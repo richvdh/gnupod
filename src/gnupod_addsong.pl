@@ -68,7 +68,7 @@ sub startup {
  my(@files) = @_;
  my($stat, $itunes, $xml) = GNUpod::FooBar::connect(\%opts);
 
- usage($stat."\n") if $stat;
+ usage($stat."\n") if $stat || !@files;
 my ($xmldoc) = GNUpod::XMLhelper::parsexml($xml, cleanit=>$opts{restore}) or usage("Failed to parse $xml\n");
  usage("Could not open $xml , did you run gnupod_INIT.pl ?\n") unless $xmldoc;
 

@@ -1,1 +1,4 @@
-Fixing bugs ;)
+* Fixing bugs ;)
+* Finish M4A parser (I can read the tags, but not the bitrate, etc.. :-/ )
+* Support Smart-Playlists
+* Check for timestamps? (like 0.2x did?)

@@ -11,17 +11,18 @@ gnupod_addsong.pl:
 gnupod_INIT.pl
   * Added '--france' switch (Limit volume to 100 db for
     1.x Firmware)
-  * Fixed the 'cleandoc' bug
 
 mktunes.pl
   * New Playlist-Code.. MUCH faster now
     (Wow.. again? no.. the code of 0.90 was
-     VERY slow many files (~3000) and more
+     VERY slow with many files (~3000) and more
      than ~15 big playlists)
   * Added '--volume' switch: Adjust the volume on the iPod!
     Use something like 'mktunes.pl --volume 70' to boost
     the volume by 70% (same as volume="70" in the GNUtunesDB)
-     
+
+XMLhelper.pm
+  * Fixed the cleandoc() bug
 
 ..and..
   Changed 'Win' to 'Windows/W32/etc'
