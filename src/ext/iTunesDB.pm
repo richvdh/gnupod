@@ -565,7 +565,6 @@ sub mk_mhyp
 {
 my($hr) = @_;
 
-print "mk_mhpy -> $hr->{name}\n";
 #We need to create a listview-layout and an mhod with the name..
 my $appnd = mk_mhod({stype=>"title", string=>$hr->{name}}).__dummy_listview();   #itunes prefs for this PL & PL name (default PL has  device name as PL name)
 
@@ -574,7 +573,6 @@ my $appnd = mk_mhod({stype=>"title", string=>$hr->{name}}).__dummy_listview();  
 ##have to adjust the childs here
 my $cmh = 2+$hr->{mhods};
 
-warn "mk_mhyp with $hr->{plid}\n";
 
 my $ret .= "mhyp";
    $ret .= pack("h8", _itop(108)); #type
