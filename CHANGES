@@ -1,3 +1,14 @@
+gnuPod 0.28
+- Rewritten Playlistcode for tunes2pod.pl
+- tunes2pod.pl doesn't kill your empty GNUtunesDB anymore
+  if it can't find the iTunesDB
+- mktunes.pl uses now binmode(), maybe this helps
+  RedHat 8 ? .. (and win32 ;) )
+- mktunes.pl is now *much* faster!!
+- the GNUtunesDB written by gnupod_delete.pl looks
+  nicer now :) (id= is now always the first element..)
+     *** OLD RELEASES ***
+
 gnuPod 0.27 codename 'codename'
 - We are now on gnu.org
 - Fixed 'creating playlists' sample in documentation.
@@ -5,7 +16,6 @@ gnuPod 0.27 codename 'codename'
 - gnupod_delete.pl doesn't kill regex playlists anymore (ouch)
 - gnupod_search.pl supports -g(enre)
  (Thanks to Johan Ruttenberg)
-     *** OLD RELEASES ***
 
 gnuPod 0.26
 - We are going to be a GNU package:
