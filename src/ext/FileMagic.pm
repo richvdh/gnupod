@@ -85,7 +85,7 @@ sub __is_mp3 {
      $rh{cdnum}   =  int($cda[0]);
      $rh{cds}    =   int($cda[1]);
      $rh{year} =     getutf8($hs->{TYER} || $h->{YEAR} || 0);
-     $rh{title} =    getutf8($hs->{TIT2} || $h->{TITLE} || $cf || "");
+     $rh{title} =    getutf8($hs->{TIT2} || $h->{TITLE} || $cf || "Untitled");
      $rh{album} =    getutf8($hs->{TALB} || $h->{ALBUM} || "Unknown Album");
      $rh{artist} =   getutf8($hs->{TPE1} || $h->{ARTIST}  || "Unknown Artist");
      $rh{genre} =    getutf8(               $h->{GENRE}   || "");

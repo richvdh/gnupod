@@ -3,7 +3,7 @@ GNUpod 0.93 - codename 'Shorthorn'
 iTunesDB.pm and co:
  * Can read and write Playlist-Elements without child
    tunes2pod.pl couldn't read files written by
-   -> (newer) MusicMatch releases.. this should fix the issue :)
+   (newer) MusicMatch releases.. this should fix the issue :)
  * Don't parse MasterPlaylists, do a seek()
    -> Speeds up parsing
 
