@@ -112,16 +112,16 @@ print " - May the iPod be with you!\n\n";
 #########################################################################
 # Create a single playlist
 sub r_mpl {
- my($name, $type, $xidref, $spref) = @_;
+ my($name, $type, $xidref, $spl) = @_;
 my $pl = undef;
 my $fc = 0;
 my $mhp = 0;
 
-if($spref) {
-print "mktunes.pl: creating dummy spl\n";
+if(ref($spl->{pref}) eq "HASH") { #We got splpref!
+print "\nwarning: mktunes.pl: writing prefs ok.. but you'll lose splmhod's (creating dummy)\n";
 my @da = ({field=>4,action=>2,string=>"test"});
- $pl .= GNUpod::iTunesDB::mk_splprefmhod({item=>$spref->{limititem},sort=>$spref->{limitsort},mos=>$spref->{moselected}
-                                          ,liveupdate=>$spref->{liveupdate},value=>$spref->{limitval},chkrgx=>1,chklim=>1});
+ $pl .= GNUpod::iTunesDB::mk_splprefmhod({item=>$spl->{pref}->{limititem},sort=>$spl->{pref}->{limitsort},mos=>$spl->{pref}->{moselected}
+                                          ,liveupdate=>$spl->{pref}->{liveupdate},value=>$spl->{pref}->{limitval},chkrgx=>1,chklim=>1});
  $pl .= GNUpod::iTunesDB::mk_spldatamhod({anymatch=>0,data=>\@da});
  $mhp=2; #Add a mhod
 }
@@ -153,7 +153,7 @@ sub genpls {
     print ">> Adding Playlist '$_...'";
     my $splh = GNUpod::XMLhelper::get_splpref($_);
     $plc++;
-       my($pl, $xc) = r_mpl($_, 0, $pldb{$_}, $splh);
+       my($pl, $xc) = r_mpl($_, 0, $pldb{$_}, {pref=>$splh});
        $pldata .= $pl;
        print "\r>> Added Playlist '$_' with $xc file"; print "s" if $xc !=1;
      
@@ -167,28 +167,28 @@ sub genpls {
 #########################################################################
 # Create the file index (like <files>)
 sub build_mhit {
- my($oid, $href) = @_;
- $href->{id} = $oid;
- 
+ my($oid, $xh) = @_;
+ my %chr = %{$xh};
+ $chr{id} = $oid;
 my ($nhod,$cmhod,$cmhod_count) = undef;
- foreach(keys(%$href)) {
-  next unless $href->{$_}; #Dont create empty fields
-  $nhod = GNUpod::iTunesDB::mk_mhod({stype=>$_, string=>$href->{$_}});
+ foreach(keys(%chr)) {
+  next unless $chr{$_}; #Dont create empty fields
+  $nhod = GNUpod::iTunesDB::mk_mhod({stype=>$_, string=>$chr{$_}});
   $cmhod .= $nhod;
   $cmhod_count++ if defined $nhod;
  }
      #Volume adjust
      if($opts{volume}) {
-      $href->{volume} += int($opts{volume});
-      if(abs($href->{volume}) > 100) {
-        print "** Warning: volume=\"$href->{volume}\" out of range: Volume set to ";
-        $href->{volume} = ($href->{volume}/abs($href->{volume})*100);
-        print "$href->{volume}% for id $href->{id}\n";
+      $chr{volume} += int($opts{volume});
+      if(abs($chr{volume}) > 100) {
+        print "** Warning: volume=\"$chr{volume}\" out of range: Volume set to ";
+        $chr{volume} = ($chr{volume}/abs($chr{volume})*100);
+        print "$chr{volume}% for id $chr{id}\n";
       }
      }
      
      #Ok, we created the mhod's for this item, now we have to create an mhit
-     my $mhit = GNUpod::iTunesDB::mk_mhit({size=>length($cmhod), count=>$cmhod_count, fh=>\%{$href}}).$cmhod;
+     my $mhit = GNUpod::iTunesDB::mk_mhit({size=>length($cmhod), count=>$cmhod_count, fh=>\%chr}).$cmhod;
      $itb{mhit}{_data_} .= $mhit;
      my $length = length($mhit);
      $itb{INFO}{FILES}++;
@@ -210,9 +210,7 @@ sub newfile {
   $cmeat{$_}{lc($el->{file}->{$_})} .= $cid." ";
  }
  
- #Warning: build_mhit will change $el->{file}->{id}
- #Don't trust $el->{file} after build_mhit() ;-)
- $itb{mhit}{_len_} += build_mhit($cid, \%{$el->{file}}); 
+ $itb{mhit}{_len_} += build_mhit($cid, $el->{file}); 
 }
 
 
@@ -236,8 +234,14 @@ sub newpl   {
 sub xmk_newspl {
  my($el, $name) = @_;
  my $mpref = GNUpod::XMLhelper::get_splpref($name)->{matchany};
-  print "!!!!!!!! [$name] SPL:: Adding song 1.. dummy!\n";
-  push(@{$pldb{$name}}, 1);
+
+ if(GNUpod::XMLhelper::get_splpref($name)->{liveupdate}) {
+  warn "PLAYLIST $name :: Liveupdate doesn't work.. you'll get an empty spl.. sorry! (That's why this code is in CVS ;) )\n";
+ }
+ elsif(my $id = $el->{splcont}->{id}) { #We found an old id with disalbed liveupdate
+    foreach(split(/ /,$meat{id}{$id})) { push(@{$pldb{$name}}, $_); }
+ }
+
 }
 
 
@@ -255,7 +259,7 @@ sub xmk_newpl {
          $ntm++;
        }
        foreach(keys(%mk)) {
-        push(@{$pldb{$name}}, $_) if $mk{$_} == $ntm;
+        push(@{${$name}}, $_) if $mk{$_} == $ntm;
        }
        
      }

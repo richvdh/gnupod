@@ -290,7 +290,7 @@ p we want primary
 Partition number (1-4): 1
 First cylinder (1-608, default 1): [just press enter]
 Using default value 1
-Last cylinder or +size or +sizeM or +sizeK (1-608, default 608): 5S [Look out: 5S .. S as in Ship]
+Last cylinder or +size or +sizeM or +sizeK (1-608, default 608): +32M [32M is the default for 1.x iPods]
 
 Command (m for help): n
 Command action
@@ -298,7 +298,7 @@ Command action
    p primary partition (1-4)
 p
 Partition number (1-4): 2
-First cylinder (6-608, default 6): 6 [is okay, or even needed.. just press enter]
+First cylinder (6-608, default 6): 6 [Just use the default value, press ENTER (don't worry if it isn't 6)]
 Using default value 6
 Last cylinder or +size or +sizeM or +sizeK (6-608, default 608): [press ENTER]
 Using default value 608 [If you don't own a 5gb iPod, this value will be different, don't care about it]
@@ -325,7 +325,8 @@ Calling ioctl() to re-read partition table.
 Syncing disks.
 @end example
 
-Puh.. this was hard :)
+Note: The first partition doesn't have to be 32M, it just needs enought space to hold the firmware 
+image (6M would be okay for firmware 130.bin).
 Now we can rewrite the Firmwarebackup we created above.
 @example
 dd if=backup_firmware of=/dev/sda1

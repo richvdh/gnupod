@@ -19,6 +19,12 @@ XMLhelper.pm:
   * Misc cleanups
   * Added SPL-Support
 
+tunes2pod.pl:
+  * Added paranoia checks (stricter parsing)
+  * Added SPL-Read code (BETA!)
+
+mktunes.pl
+  * Added INCOMPLETE SPL-Write support
 
 gnupod_addsong.pl:
   * duplicate-checker displayed the

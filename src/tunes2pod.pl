@@ -97,7 +97,7 @@ for(my $i=0;$i<$itinfo->{playlists};$i++) {
   
   if(ref($href->{splpref}) eq "HASH" && ref($href->{spldata}) eq "ARRAY") { #SPL Data present
     print ">> Smart-Playlist '$href->{name}' found\n";
-    render_spl($href->{name},$href->{splpref}, $href->{spldata}, $href->{matchrule});
+    render_spl($href->{name},$href->{splpref}, $href->{spldata}, $href->{matchrule}, $href->{content});
   }
   else { #Normal playlist  
     print ">> Playlist '$href->{name}' with ".int(@{$href->{content}})." songs\n";
@@ -126,25 +126,28 @@ exit(0);
 #######################################################
 # create a spl
 sub render_spl {
- my($name, $pref, $data, $mr) = @_;
+ my($name, $pref, $data, $mr, $content) = @_;
  
  my $of = undef;
  $of->{liveupdate} = $pref->{live};
  $of->{moselected} = $pref->{mos};
  $of->{matchany}   = $mr;
- 
+ $of->{limitomatic}=$pref->{limitomatic}; 
+ $of->{limitsort} = $pref->{isort};
+ $of->{limitval}  = $pref->{value};
+ $of->{limititem} = $pref->{iitem};
+ $of->{matchomatic}=$pref->{matchomatic};
 
-if($pref->{limitomatic}) {
-   $of->{limitsort} = $pref->{isort};
-   $of->{limitval}  = $pref->{value};
-   $of->{limititem} = $pref->{iitem};
-}
+#create this playlist
 GNUpod::XMLhelper::addspl($name, $of);
-if($pref->{matchomatic}) { #We have to match
-  foreach my $xr (@{$data}) {
+
+  foreach my $xr (@{$data}) { #Add spldata
     GNUpod::XMLhelper::mkfile({spl=>$xr}, {splname=>$name});
   }
-}
+  foreach my $cont(@{$content}) { #Add (old?) content
+    GNUpod::XMLhelper::mkfile({splcont=>{id=>$cont}}, {splname=>$name});
+  }
+
 }
 
 

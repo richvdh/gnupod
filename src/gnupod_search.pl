@@ -93,9 +93,14 @@ my $ntm = keys(%opts)-1-$opts{once}-$opts{delete};
 sub newpl {
  return unless $opts{delete}; #Just searching
  my ($el, $name, $plt) = @_;
- if(ref($el->{add}) eq "HASH") { #Add action
+ if($plt eq "pl" && ref($el->{add}) eq "HASH") { #Add action
   if(defined($el->{add}->{id}) && int(keys(%{$el->{add}})) == 1) { #Only id
    return unless($keeplist[$el->{add}->{id}]); #ID not on keeplist. dropt it
+  }
+ }
+ elsif($plt eq "spl" && ref($el->{splcont}) eq "HASH") { #spl content
+  if(defined($el->{splcont}->{id}) && int(keys(%{$el->{splcont}})) == 1) { #Only one item
+   return unless($keeplist[$el->{splcont}->{id}]);
   }
  }
   GNUpod::XMLhelper::mkfile($el,{$plt."name"=>$name});

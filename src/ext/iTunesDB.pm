@@ -72,30 +72,30 @@ return $ret;
 # mhod(s) (You have to create them yourself..!)
 sub mk_mhit {
 my($hr) = @_;
-my $file_hash = $hr->{fh};
+my %file_hash = %{$hr->{fh}};
 
 #We have to fix 'volume'
-my $vol = sprintf("%.0f",( int($file_hash->{volume})*2.55 ));
+my $vol = sprintf("%.0f",( int($file_hash{volume})*2.55 ));
 
 if($vol >= 0 && $vol <= 255) { } #Nothing to do
 elsif($vol < 0 && $vol >= -255) {            #Convert value
  $vol = oct("0xFFFFFFFF") + $vol; 
 }
 else {
- print STDERR "** Warning: ID $file_hash->{id} has volume set to $file_hash->{volume} percent. Volume set to +-0%\n";
+ print STDERR "** Warning: ID $file_hash{id} has volume set to $file_hash{volume} percent. Volume set to +-0%\n";
  $vol = 0; #We won't nuke the iPod with an ultra high volume setting..
 }
 
 foreach( ("rating", "prerating") ) {
- if($file_hash->{$_} < 0 || $file_hash->{$_} > 5) {
-  print STDERR "Warning: Song $file_hash->{id} has an invalid $_: $file_hash->{$_}\n";
-  $file_hash->{$_} = 0;
+ if($file_hash{$_} < 0 || $file_hash{$_} > 5) {
+  print STDERR "Warning: Song $file_hash{id} has an invalid $_: $file_hash{$_}\n";
+  $file_hash{$_} = 0;
  }
 }
 
 
 #Check for stupid input
-my ($c_id) = $file_hash->{id} =~ /(\d+)/;
+my ($c_id) = $file_hash{id} =~ /(\d+)/;
 if($c_id < 1) {
   print STDERR "Warning: ID has can't be $c_id, has to be > 0\n";
   print STDERR "         This song *won't* be visible on the iPod\n";
@@ -109,29 +109,29 @@ my $ret = "mhit";
    $ret .= pack("h8", _itop(1));                             #?
    $ret .= pack("H8");                                      #dummyspace
    $ret .= pack("h8", _itop(256+(oct('0x14000000')
-                            *$file_hash->{rating})));           #type+rating .. this is very STUPID..
+                            *$file_hash{rating})));           #type+rating .. this is very STUPID..
    $ret .= pack("h8", _mactime());                           #timestamp (we create a dummy timestamp, iTunes doesn't seem to make use of this..?!)
-   $ret .= pack("h8", _itop($file_hash->{filesize}));          #filesize
-   $ret .= pack("h8", _itop($file_hash->{time}));              #seconds of song
-   $ret .= pack("h8", _itop($file_hash->{songnum}));           #nr. on CD .. we dunno use it (in this version)
-   $ret .= pack("h8", _itop($file_hash->{songs}));             #songs on this CD
-   $ret .= pack("h8", _itop($file_hash->{year}));              #the year
-   $ret .= pack("h8", _itop($file_hash->{bitrate}));           #bitrate
+   $ret .= pack("h8", _itop($file_hash{filesize}));          #filesize
+   $ret .= pack("h8", _itop($file_hash{time}));              #seconds of song
+   $ret .= pack("h8", _itop($file_hash{songnum}));           #nr. on CD .. we dunno use it (in this version)
+   $ret .= pack("h8", _itop($file_hash{songs}));             #songs on this CD
+   $ret .= pack("h8", _itop($file_hash{year}));              #the year
+   $ret .= pack("h8", _itop($file_hash{bitrate}));           #bitrate
    $ret .= pack("H8", "000044AC");                          #Srate*something ?!?
    $ret .= pack("h8", _itop($vol));                         #Volume
-   $ret .= pack("h8", _itop($file_hash->{starttime}));        #Start time?
-   $ret .= pack("h8", _itop($file_hash->{stoptime}));          #Stop time?
+   $ret .= pack("h8", _itop($file_hash{starttime}));        #Start time?
+   $ret .= pack("h8", _itop($file_hash{stoptime}));          #Stop time?
    $ret .= pack("H8");
-   $ret .= pack("h8", _itop($file_hash->{playcount}));
+   $ret .= pack("h8", _itop($file_hash{playcount}));
    $ret .= pack("H8");                                      #Sometimes eq playcount .. ?!
    $ret .= pack("h8");                                      #Last playtime.. FIXME
-   $ret .= pack("h8", _itop($file_hash->{cdnum}));            #cd number
-   $ret .= pack("h8", _itop($file_hash->{cds}));              #number of cds
+   $ret .= pack("h8", _itop($file_hash{cdnum}));            #cd number
+   $ret .= pack("h8", _itop($file_hash{cds}));              #number of cds
    $ret .= pack("H8");                                      #hardcoded space 
    $ret .= pack("h8", _mactime());                          #dummy timestamp again...
    $ret .= pack("H16");
    $ret .= pack("H8");                          #??
-   $ret .= pack("h8", _itop($file_hash->{prerating}*oct('0x140000')));      #This is also stupid: the iTunesDB has a rating history
+   $ret .= pack("h8", _itop($file_hash{prerating}*oct('0x140000')));      #This is also stupid: the iTunesDB has a rating history
    $ret .= pack("H8");                          # ???
    $ret .= pack("H56");                                     #
 return $ret;
@@ -657,10 +657,10 @@ sub get_pl {
      $ret_hash{name} = $mhh->{string};
    }
    elsif(ref($mhh->{splpref}) eq "HASH") {
-     $ret_hash{splpref} = \%{$mhh->{splpref}};
+     $ret_hash{splpref} = $mhh->{splpref};
    }
    elsif(ref($mhh->{spldata}) eq "ARRAY") {
-     $ret_hash{spldata} = \@{$mhh->{spldata}};
+     $ret_hash{spldata} = $mhh->{spldata};
      $ret_hash{matchrule}=$mhh->{matchrule};
    }
  }
