@@ -297,16 +297,30 @@ sub getutf8 {
  my($in) = @_;
  
  return undef unless $in; #Do not fsckup empty input
+
+ #Get the ENCODING
  $in =~ s/^(.)//;
  my $encoding = $1;
 
-
- if(ord($encoding) > 0 && ord($encoding) < 32) {
+ # -> UTF16 with or without BOM
+ if(ord($encoding) == 1 || ord($encoding) == 2) {
+  my $bfx = Unicode::String::utf16($in)->utf16; #Paranoia
+  $bfx->byteswap if $bfx->ord == 0xFFFE;
+  $in = $bfx;
+ }
+ # -> UTF8
+ elsif(ord($encoding) == 3) {
+  my $bfx = Unicode::String::utf8($in)->utf8; #Paranoia
+  $in = $bfx;
+ }
+ # -> INVALID
+ elsif(ord($encoding) > 0 && ord($encoding) < 32) {
    warn "FileMagic.pm: warning: unsupportet ID3 Encoding found: ".ord($encoding)."\n";
    warn "                       send a bugreport to pab\@blinkenlights.ch\n";
    return undef;
  }
- else { #AutoGuess (We accept invalid id3tags)
+ # -> 0 or nothing
+ else {
   $in = $encoding.$in;
   #Remove all 00's
   $in =~ tr/\0//d;

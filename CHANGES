@@ -7,6 +7,8 @@ Summary
 
 - Read 'tracknum' on ID3V2 Files with 'TRK' Field
 
+- Handle ID3Tags with Charset info
+
 - You can now add MIDI files ;-) (with timidity)
 
 - Added --set-songnum option for gnupod_addsong.pl

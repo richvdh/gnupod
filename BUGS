@@ -5,4 +5,5 @@
 * GNUpod doen't like audible.com files (I'll have to look at this later...)
 * gnupod_addsong.pl --restore doesn't remove the '\d+_' prefix from
   files without tags
+* mktunes.pl -v 0 doesn't overwrite config value
 See -> TODO
