@@ -703,8 +703,7 @@ sub get_pl {
    my $mhods          = get_int($pos+12,4); #How many mhods we have here
 #Its a MPL, do a fast skip
 if($ret_hash{type}) {
- warn "Debug: MPL Found, doing a fast skip..\n";
-# return ($pos+$mhyp_len, {type=>1}) 
+ return ($pos+$mhyp_len, {type=>1}) 
 }
    $pos += $header_len; #set pos to start of first mhod
    #We can now read the name of the Playlist
@@ -744,7 +743,7 @@ if($ret_hash{type}) {
        print STDERR "*** Your iTunesDB maybe corrupt or you found\n";
        print STDERR "*** a bug in GNUpod. Please send this\n";
        print STDERR "*** iTunesDB to pab\@blinkenlights.ch\n\n";
-       print STDERR "!!! tunes2pod.pl panic!\n";
+       print STDERR "!!! iTunesDB.pm panic!\n";
        exit(1);
     }
     $pos += $mhih->{size};
