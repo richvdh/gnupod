@@ -4,13 +4,31 @@ GNUpod 0.95 - codename 'sockentier'
 Summary
 -------
 
-- Polished Playcounts parser (no hardcoded offsets anymore)
-- added '--disable-v2' and '--disable-v1' to
-  gnupod_addsong.pl (Disable parsing of ID3TAG version X)
 - GNUpod has now a configuration file! Read the docs or/and
   see doc/gnupodrc.example
+
+- gnupod_addsong.pl can now add FLAC files.
+  'flac' needs to be in your $PATH and it's disabled
+  per default. (Enable it using gnupod_addsong.pl --decode
+  or set 'gnupod_addsong.decode=1' in your config)
+
+- Polished Playcounts parser (no hardcoded offsets anymore)
+
+- added '--disable-v2' and '--disable-v1' to
+  gnupod_addsong.pl (Disable parsing of ID3TAG version X)
+
 - Fixed small bug with .m4a files.
   gnupod_addsong.pl can now read AAC files from www.allofmp3.com
+
+- added tools/m4a-info.pl: Use this tool to read Title/Artist tags
+  from .m4a files
+
+- You can modify the output of gnupod_search.pl using --view
+  (See 'gnupod_search.pl --help')
+
+- gnupod_addsong.pl checks for wrong extensions
+  (like a mp3-file called 'test.wav'). The iPod wouldn't play
+  such a file.
 
 
 

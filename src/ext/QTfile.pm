@@ -1,6 +1,6 @@
 package GNUpod::QTfile;
 
-#  Copyright (C) 2003 Adrian Ulrich <pab at blinkenlights.ch>
+#  Copyright (C) 2003-2004 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
 #  URL: http://www.gnu.org/software/gnupod/

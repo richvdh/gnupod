@@ -252,7 +252,7 @@ sub getmd5 {
 sub GetConfig {
  my($getopts, $doset, $name) = @_;
 
-  warn "### debug: reading configuration for app $name\n";
+#  warn "### debug: reading configuration for app $name\n";
 
   my($topic,$val,$optarget);
   
@@ -278,21 +278,21 @@ sub GetConfig {
        $optarget = undef;
       }
 
-      warn "### PARSE($line): *$topic* -> *$val*\n";
-      warn "### $topic with target $optarget\n";
+  #    warn "### PARSE($line): *$topic* -> *$val*\n";
+  #    warn "### $topic with target $optarget\n";
       
-         if ($optarget&&$name&&$name ne $optarget) { warn "d: $topic not for $name\n"; next}
-      elsif ($getopts->{$topic})      { warn "d: skipping duplicate entry $topic\n"; next}
+         if ($optarget&&$name&&$name ne $optarget) { next}
+      elsif ($getopts->{$topic})      { warn "skipping duplicate entry '$topic' from file $filerc\n";next}
       elsif ($doset->{$topic} eq "s") { $getopts->{$topic} = $val }
       elsif ($doset->{$topic} eq "i") { $getopts->{$topic} = int($val) }
       elsif ($doset->{$topic} eq "b") { $getopts->{$topic} = 1 if($val && $val ne "no") }
      }
      close(RCFILE);
-     warn "** Parser finished $filerc\n";
+ #    warn "** Parser finished $filerc\n";
   }
   
   foreach(keys(%$getopts)) {
- print "*$_* => *$getopts->{$_}*\n";
+# print "*$_* => *$getopts->{$_}*\n";
 }
   
   return 1;

@@ -27,20 +27,23 @@ use GNUpod::FooBar;
 use GNUpod::FileMagic;
 use Getopt::Long;
 use File::Copy;
-use vars qw(%opts %dupdb);
+use vars qw(%opts %dupdb $int_count);
 
-print "gnupod_addsong.pl Version 0.94 (C) 2002-2004 Adrian Ulrich\n";
+print "gnupod_addsong.pl Version 0.95 (C) 2002-2004 Adrian Ulrich\n";
+
+$int_count = 3; #The user has to send INT (Ctrl+C) x times until we stop
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
-GetOptions(\%opts, "help|h", "mount|m=s", "restore|r", "duplicate|d", "disable-v2", "disable-v1");
-GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', duplicate=>'b', 'disable-v1'=>'b', 'disable-v2'=>'b'},
+GetOptions(\%opts, "help|h", "mount|m=s", "decode", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
+                   "set-artist=s", "set-album=s", "set-genre=s", "set-rating=i", "set-playcount=i");
+GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'b', mount=>'s', duplicate=>'b', 'disable-v1'=>'b', 'disable-v2'=>'b'},
                           "gnupod_addsong");
 
 usage() if $opts{help};
 
 
-
+$SIG{'INT'} = \&handle_int;
 if($opts{restore}) {
  print "If you use --restore, you'll *lose* your playlists\n";
  print " Hit ENTER to continue or CTRL+C to abort\n\n";
@@ -82,47 +85,72 @@ my $addcount = 0;
 
 #We are ready to copy each file..
  foreach my $file (@files) {
-    #Skip dirs..
+    #Skip all songs if user sent INT
+    next if !$int_count;
+    #Skip all dirs
     next if -d $file;
     
     #Get the filetype
-    my $fh = GNUpod::FileMagic::wtf_is($file, {noIDv1=>$opts{'disable-v1'}, noIDv2=>$opts{'disable-v2'}});
-    
+    my ($fh,$media_h,$converted) =  GNUpod::FileMagic::wtf_is($file, {noIDv1=>$opts{'disable-v1'}, 
+                                                                      noIDv2=>$opts{'disable-v2'},
+								      decode=>$opts{'decode'}});
     unless($fh) {
-     print STDERR "* Skipping '$file', unknown file type\n";
+     warn "* [****] Skipping '$file', unknown file type\n";
      next;
     }
+    
+   my $wtf_ftyp = $media_h->{ftyp};
+   my $wtf_frmt = $media_h->{format};
+   
+   #wtf_is found a filetype, override data if needed
+   $fh->{artist}    = $opts{'set-artist'}    if $opts{'set-artist'};
+   $fh->{album}     = $opts{'set-album'}     if $opts{'set-album'};
+   $fh->{genre}     = $opts{'set-genre'}     if $opts{'set-genre'};
+   $fh->{rating}    = $opts{'set-rating'}    if $opts{'set-rating'};
+   $fh->{playcount} = $opts{'set-playcount'} if $opts{'set-playcount'};
    
    #Get a path
-   (${$fh}{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file, keepfile=>$opts{restore});
+   (${$fh}{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file, 
+                                                           {extension=>$wtf_frmt, keepfile=>$opts{restore}});
    #Copy the file
    if(!$opts{duplicate} && (my $dup = checkdup($fh))) {
-    print "! '$fh->{title}' is a duplicate of song $dup, skipping file\n";
+    print "! [!!!] '$file' is a duplicate of song $dup, skipping file\n";
+    unlink($converted) if $converted;
     next;
    }
+   
+   $file = $converted if $converted;
    if($opts{restore} || File::Copy::copy($file, $target)) {
-     print "+ $file ($fh->{album} / $fh->{title})\n";
+     printf("+ [%-4s][%3d] %-32s | %-32s | %-24s\n",uc($wtf_ftyp),1+$addcount, $fh->{title}, $fh->{album},$fh->{artist});
      my $fmh;
      $fmh->{file} = $fh;
      GNUpod::XMLhelper::mkfile($fmh,{addid=>1}); #Try to add an id
      $addcount++;
+     unlink($converted) if $converted;
    }
    else { #We failed..
-     print STDERR "-- FATAL -- Could not copy $file to $target: $! ... skipping\n";
+     warn "*** FATAL *** Could not copy '$file' to '$target': $!\n";
    }
    
  }
 
 if($addcount) { #We have to modify the xmldoc
- print "> Writing new XML File\n";
+ print "> Writing new XML File, added $addcount file(s)\n";
  GNUpod::XMLhelper::writexml($con->{xml});
 }
  print "\n Done\n";
 }
 
+
+
+
+
+
+
+
 ## XML Handlers ##
 sub newfile {
- $dupdb{"$_[0]->{file}->{bitrate}/$_[0]->{file}->{time}/$_[0]->{file}->{filesize}"}= $_[0]->{file}->{id}||-1;
+ $dupdb{lc($_[0]->{file}->{title})."/$_[0]->{file}->{bitrate}/$_[0]->{file}->{time}/$_[0]->{file}->{filesize}"}= $_[0]->{file}->{id}||-1;
  GNUpod::XMLhelper::mkfile($_[0],{addid=>1});
 }
 
@@ -136,8 +164,22 @@ sub newpl {
 # Check if the file is a duplicate
 sub checkdup {
  my($fh) = @_;
- return $dupdb{"$fh->{bitrate}/$fh->{time}/$fh->{filesize}"};
+ return $dupdb{lc($fh->{title})."/$fh->{bitrate}/$fh->{time}/$fh->{filesize}"};
 }
+
+
+################################################################
+#Sighandler
+sub handle_int {
+ if($int_count) {
+  warn "RECEIVED SIGINT (CTRL+C): gnupod_addsong.pl is still working! hit CTRL+C again $int_count time(s) to quit.\n";
+  $int_count--;
+ }
+ else {
+  warn "..wait.. about to shutdown (cleaning up, etc..)\n";
+ }
+}
+
 
 ###############################################################
 # Basic help
@@ -147,17 +189,20 @@ die << "EOF";
 $rtxt
 Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
 
-   -h, --help             : This ;)
-   -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
-   -r, --restore          : Restore the iPod (create a new GNUtunesDB from scratch)
-   -d, --duplicate        : Allow duplicate files
-       --disable-v1       : Do not read ID3v1 Tags (MP3 Only)
-       --disable-v2       : Do not read ID3v2 Tags (MP3 Only)
+   -h, --help              : This ;)
+   -m, --mount=directory   : iPod mountpoint, default is \$IPOD_MOUNTPOINT
+   -r, --restore           : Restore the iPod (create a new GNUtunesDB from scratch)
+   -d, --duplicate         : Allow duplicate files
+       --disable-v1        : Do not read ID3v1 Tags (MP3 Only)
+       --disable-v2        : Do not read ID3v2 Tags (MP3 Only)
+       --decode            : Convert FLAC Files to WAVE 'onthefly'
+       --set-artist=string : Set Artist (Override ID3 Tag)
+       --set-album=string  : Set Album  (Override ID3 Tag)
+       --set-genre=string  : Set Genre  (Override ID3 Tag)
+       --set-rating=int    : Set Rating
+       --set-playcount=int : Set Playcount
 
 EOF
 }
-
-
-
 
 

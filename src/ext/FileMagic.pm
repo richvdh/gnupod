@@ -26,10 +26,12 @@ use Unicode::String;
 use MP3::Info qw(:all);
 use GNUpod::FooBar;
 use GNUpod::QTfile;
+use Audio::FLAC; #Fixme: remove this.. 
 
 BEGIN {
  MP3::Info::use_winamp_genres();
  MP3::Info::use_mp3_utf8(0);
+ warn "*** REMOVE Audio::FLAC -> replace this thing!\n";
  open(NULLFH, "> /dev/null") or die "Could not open /dev/null, $!\n";
 }
 
@@ -44,19 +46,79 @@ sub wtf_is {
   elsif(!-r $file) {
    warn "FileMagic.pm: Can't read '$file'\n";
   }
+  elsif(my $xflac = __is_flac($file,$flags)) {
+   return($xflac->{ref}, {ftyp=>"FLAC", format=>"wav"}, $xflac->{newout});
+  }
   elsif(my $h = __is_mp3($file,$flags)) {
-   return $h;
+   return ($h, {ftyp=>"MP3", format=>"mp3"});
   }
   elsif(my $h = __is_pcm($file,$flags)) {
-   return $h
+   return ($h, {ftyp=>"PCM", format=>"wav"});
   }
   elsif(my $h = __is_qt($file,$flags)) {
-   return $h
+   return ($h, {ftyp=>"AAC", format=>"m4a"});
   }
 #Still no luck..
-   return undef;
+   return (undef, undef);
 }
 
+#######################################################################
+# Check for FLAC files
+sub __is_flac {
+ my($file, $flags) = @_;
+ 
+ return undef unless $flags->{decode}; #Decoder is off per default
+ 
+ open(TFLAC, $file) or return undef;
+  my $flacbuff = undef;
+  read(TFLAC,$flacbuff,4) or return undef; #Read first 4 bytes
+ close(TFLAC);
+ 
+ #Check if file has a flac header
+ return undef if($flacbuff ne "fLaC");
+ 
+ my $flac = Audio::FLAC->new( shift );
+ my $ftag = $flac->tags(); 
+ 
+ my %rh = ();
+ my $cf = ((split(/\//,$file))[-1]);
+ my @songa = pss($ftag->{TRACKNUMBER});
+
+ $rh{artist}   = getutf8($ftag->{ARTIST} || "Unknown Artist");
+ $rh{album}    = getutf8($ftag->{ALBUM}  || "Unknown Album");
+ $rh{title}    = getutf8($ftag->{TITLE}  || $cf || "Unknown Title");
+ $rh{genre}    = getutf8($ftag->{GENRE}  || "");
+ $rh{songs}    = int($songa[1]);
+ $rh{songnum}  = int($songa[0]); 
+ $rh{comment}  = getutf8($ftag->{COMMENT} || "");
+ $rh{fdesc}    = getutf8($ftag->{VENDOR} || "FLAC file without vendor");
+ 
+ my $tmpout = undef;
+ while($tmpout = sprintf("/tmp/%d_%d_gnupod_flac%d",int(time()), $$,int(rand(99)))) {
+  last unless (-e $tmpout);
+ }
+ my $xrun = system('flac', '-d', $file, '-o', $tmpout, "-s");
+ if($xrun) {
+  warn "FileMagic.pm : 'flac' exited with $xrun, maybe i couldn't run it (set doflac=0 to disable converting)\n";
+  unlink($tmpout); #maybe...
+  return undef;
+ }
+ 
+ my $pcmref = __is_pcm($tmpout);
+ 
+ if(!$pcmref) {
+  warn "FileMagic.pm : Ups, flac output is not a pcm file!\n";
+  unlink($tmpout);
+  return undef;
+ }
+ 
+ $rh{bitrate} = $pcmref->{bitrate};
+ $rh{srate}   = $pcmref->{srate};
+ $rh{filesize}= $pcmref->{filesize};
+ $rh{time}    = $pcmref->{time};
+ 
+return ({ref=>\%rh, newout=>$tmpout});
+}
 
 #######################################################################
 # Check if the QTparser thinks, it's a QT-AAC (= m4a) file
@@ -125,7 +187,7 @@ sub __is_pcm {
   $rh{srate}    = $srate;
   $rh{time}     = int(1000*$size/$bps);
   $rh{fdesc}    = "RIFF Audio File";
- 
+# warn "debug: $bps / $srate\n";
   #No id3 tags for us.. but mmmmaybe...
   #We use getuft8 because you could use umlauts and such things :)  
   #Fixme: absolute versus relative paths :

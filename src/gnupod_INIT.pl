@@ -49,7 +49,7 @@ sub go {
 ## Ask the user, if he still knows what he/she's doing..
 print << "EOF";
 
-Your iPod it mounted at $opts{mount}, ok ?
+Your iPod is mounted at $opts{mount}, ok ?
 *********************************************************
 This tool creates the default directory tree on your iPod
 and creates an *empty* GNUtunesDB (..or convert your old

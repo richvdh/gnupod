@@ -27,18 +27,18 @@ use GNUpod::FooBar;
 use Getopt::Long;
 use vars qw(%opts @keeplist);
 
-print "gnupod_search.pl Version 0.94 (C) 2002-2004 Adrian Ulrich\n";
+print "gnupod_search.pl Version 0.95 (C) 2002-2004 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "help|h", "mount|m=s", "artist|a=s",
                    "album|l=s", "title|t=s", "id|i=s",
-        		   "genre|g=s", "match-once|o", "delete", "RMME|d");
-GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', 'match-once'=>'b'}, "gnupod_search");
+                   "view=s","genre|g=s", "match-once|o", "delete", "RMME|d");
+GNUpod::FooBar::GetConfig(\%opts, {view=>'s', mount=>'s', 'match-once'=>'b'}, "gnupod_search");
 
 usage() if $opts{help};
-
 usage("\n-d was removed, use '--delete'\n") if $opts{RMME};
+$opts{view} ||= 'ialt'; #Default view
 
 go();
 
@@ -48,13 +48,10 @@ sub go {
  my $con = GNUpod::FooBar::connect(\%opts);
  usage($con->{status}."\n") if $con->{status};
 
-
-print "ID        : ARTIST / ALBUM / TITLE\n";
-print "==================================\n"; 
+pview(undef,1);
  GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}\n");
  #XML::Parser finished, write new file
  GNUpod::XMLhelper::writexml($con->{xml}) if $opts{delete};
-print "==================================\n"; 
 
 
 }
@@ -64,22 +61,18 @@ print "==================================\n";
 sub newfile {
  my($el) =  @_;
 my $matched;
-my $ntm = keys(%opts)-1-$opts{'match-once'}-$opts{delete};
+                      # 2 = mount + view (both are ALWAYS set)
+my $ntm = keys(%opts)-2-$opts{'match-once'}-$opts{delete};
 
   foreach my $opx (keys(%opts)) {
-   next if $opx =~ /mount|match-once|delete/; #Skip this
+   next if $opx =~ /mount|match-once|delete|view/; #Skip this
    if($el->{file}->{$opx} =~ /$opts{$opx}/i) {
     $matched++;
    }
   }
 
   if(($opts{'match-once'} && $matched) || $ntm == $matched) {
-    print "[RM] " if $opts{delete};
-    print "$el->{file}->{id}";
-    print " " x (10-length($el->{file}->{id})-($opts{delete}*5));
-    print ": $el->{file}->{artist} / ";
-    print "$el->{file}->{album} / ";
-    print "$el->{file}->{title}\n";
+    pview($el->{file},undef,$opts{delete});
     unlink(GNUpod::XMLhelper::realpath($opts{mount},$el->{file}->{path}))
     or warn "[!!] Remove failed: $!\n" if $opts{delete};
   }
@@ -107,6 +100,51 @@ sub newpl {
   GNUpod::XMLhelper::mkfile($el,{$plt."name"=>$name});
 }
 
+
+##############################################################
+# Printout Search output
+sub pview {
+ my($orf,$xhead, $xdelete) = @_;
+ 
+ #Build refs
+ my %qh = ();
+ $qh{t}{k} = $orf->{title};                     $qh{t}{s} = "TITLE";
+ $qh{a}{k} = $orf->{artist};                    $qh{a}{s} = "ARTIST";
+ $qh{r}{k} = $orf->{rating};    $qh{r}{w} = 4;  $qh{r}{s} = "RTNG";
+ $qh{p}{k} = $orf->{path};      $qh{p}{w} = 96; $qh{p}{s} = "PATH";
+ $qh{l}{k} = $orf->{album};                     $qh{l}{s} = "ALBUM";
+ $qh{g}{k} = $orf->{genre};                     $qh{g}{s} = "GENRE";
+ $qh{c}{k} = $orf->{playcount}; $qh{c}{w} = 4;  $qh{c}{s} = "CNT";
+ $qh{i}{k} = $orf->{id};        $qh{i}{w} = 3;  $qh{i}{s} = "ID";
+ 
+ #Prepare view
+ 
+ my $ll = 0; #LineLength
+  foreach(split(//,$opts{view})) {
+      print "|" if $ll;
+      my $cs = $qh{$_}{k};           #CurrentString
+         $cs = $qh{$_}{s} if $xhead; #Replace it if HEAD is needed
+ 
+      my $cl = $qh{$_}{w}||32;       #Current length
+         $ll += $cl+1;               #Incrase LineLength
+     printf("%-*s",$cl,$cs);
+  }
+  
+  if($xdelete && !$xhead) {
+   print " [RM]\n";
+  }
+  elsif($xhead) {
+   print "\n";
+   print "=" x $ll;
+   print "\n";
+  }
+  else {
+   print "\n";
+  }
+
+}
+
+
 ###############################################################
 # Basic help
 sub usage {
@@ -124,11 +162,13 @@ Usage: gnupod_search.pl [-h] [-m directory] File1 File2 ...
    -g, --genre=GENRE      : print songs by Genre
    -o, --match-once       : Search doesn't need to match multiple times (eg. -a & -l)
        --delete           : REMOVE (!) matched songs
+       --view=ialt        : Modify output, default=ialt
+                            t = title    a = artist   r = rating      p = path
+			    l = album    g = genre    c = playcount   i = id
 
 Note: Argument for title/artist/album.. has to be UTF8 encoded, *not* latin1!
 
 EOF
 }
-
 
 

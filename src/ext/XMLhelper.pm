@@ -46,16 +46,24 @@ return "$mountp/$ipath";
 ###############################################
 # Get an iPod-safe path for filename
 sub getpath {
- my($mountp, $filename, %opts) = @_;
+ my($mountp, $filename, $opts) = @_;
 my $path = undef;
 
-if($opts{keepfile}) { #Don't create a new filename..
+if($opts->{keepfile}) { #Don't create a new filename..
   $path = $filename;
  }
 else { #Default action.. new filename to create 
  my $name = (split(/\//, $filename))[-1];
  my $i = 0;
  $name =~ tr/a-zA-Z0-9\./_/c; 
+ 
+ #Hups, current filename has a wrong extension...
+ if($opts->{extension} && ($name !~ /\.($opts->{extension})$/i)) {
+  my($ext) = $name =~ /\.([^.]*)$/;          #Get the current extension (maybe null)
+  warn "Warning: File '$name' has a wrong extension [$ext], changed extension to $opts->{extension}\n";
+  $name =~ s/\.?$ext$/.$opts->{extension}/;  #Replace current extension with newone
+ }
+ 
 #Search a place for the MP3 file
   while($path = sprintf("$mountp/iPod_Control/Music/F%02d/%d_$name", int(rand(20)), $i++)) {
    last unless(-e $path);
