@@ -74,7 +74,7 @@ $ratingref  = GNUpod::iTunesDB::readPLC($con->{playcounts});
  }
  
  #OnTheGo and playcounts is now ok, set sync for it to true
- GNUpod::FooBar::setsync_playcounts($rr);
+ GNUpod::FooBar::setsync_playcounts($con);
  
 }
 
