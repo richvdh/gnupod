@@ -1,3 +1,20 @@
+GNUpod 0.93 - codename ''
+
+iTunesDB.pm and co:
+ * Can read and write Playlist-Elements without child
+   tunes2pod.pl couldn't read files written by
+   -> (newer) MusicMatch releases.. this should fix the issue :)
+ * Don't parse MasterPlaylists, do a seek()
+   -> Speeds up parsing
+
+FileMagic.pm
+ * Fixed (Again?) ID3 reading (Charset handling still broken?!)
+
+
+
+
+** OLD STUFF **
+
 GNUpod 0.92 - codename 'frau beyersdorf'
 
 -> This version supports SmartPlaylists (BETA!)
@@ -38,8 +55,6 @@ gnupod_addsong.pl:
 
 
 
-
-** OLD STUFF **
 
 
 GNUpod 0.91 

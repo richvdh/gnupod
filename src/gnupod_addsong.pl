@@ -92,7 +92,7 @@ my $addcount = 0;
     next;
    }
    if($opts{restore} || File::Copy::copy($file, $target)) {
-     print "+ $fh->{album} / $fh->{title}\n";
+     print "+ $file ($fh->{album} / $fh->{title})\n";
      my $fmh;
      $fmh->{file} = $fh;
      GNUpod::XMLhelper::mkfile($fmh,{addid=>1}); #Try to add an id
