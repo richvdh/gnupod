@@ -148,7 +148,7 @@ if(ref($spl) eq "HASH") { #We got splpref!
 # Generate playlists from %pldb (+MPL)
 sub genpls {
  my @mpldat = (1..$cid);
- my ($pldata,undef) = r_mpl("GNUpod 0.94-1", 1,\@mpldat);
+ my ($pldata,undef) = r_mpl("GNUpod 0.94-20040229", 1,\@mpldat);
  my $plc = 1;
 #CID is now used by r_mpl, dont use it yourself anymore
   foreach(GNUpod::XMLhelper::getpl_names()) {

@@ -101,6 +101,7 @@ if($c_id < 1) {
   print STDERR "Warning: ID can't be '$c_id', has to be > 0\n";
   print STDERR "  ---->  This song *won't* be visible on the iPod\n";
   print STDERR "  ---->  This may confuse other scripts...\n";
+  print STDERR "  ----> !! YOU SHOULD FIX THIS AND RERUN mktunes.pl !!\n";
 }
 
 my $ret = "mhit";
@@ -240,7 +241,7 @@ $chklim = $checkrule-$chkrgx*2;
  $ret .= pack("h2", _itop($hs->{sort},0xff)); #How to sort
  $ret .= pack("h6");
  $ret .= pack("h8", _itop($hs->{value})); #lval
- $ret .= pack("h2", _itop($mos,0xff));        #mos
+ $ret .= pack("h2", _itop($mos,0xff));        #MatchOnlySelected (?)
  $ret .= pack("h118");
 }
 
@@ -252,7 +253,7 @@ sub mk_spldatamhod {
  my $anymatch = 1 if $hs->{anymatch};
 
 if(ref($hs->{data}) ne "ARRAY") {
- warn "iTunesDB.pm: warning: no spldata found in spl, iTunes4-workaround enabled\n";
+# warn "iTunesDB.pm: warning: no spldata found in spl, iTunes4-workaround enabled\n";
  push(@{$hs->{data}}, {field=>4,action=>2,string=>""});
 }
 
@@ -265,7 +266,7 @@ if(ref($hs->{data}) ne "ARRAY") {
      }
      else {
         my ($from, $to) = $chr->{string} =~ /(\d+):?(\d*)/;
-        $to ||=$from;
+        $to ||=$from; #Set $to == $from is $to is empty
         $string  = pack("H8");
         $string .= pack("H8", _x86itop($from));
         $string .= pack("H24");
@@ -279,7 +280,7 @@ if(ref($hs->{data}) ne "ARRAY") {
      }
 
      if(length($string) > 254) { #length field is limited to 0xfe!
-        warn "iTunesDB.pm: splstring to long for iTunes, cropping\n";
+        warn "iTunesDB.pm: splstring to long for iTunes, cropping (yes, that's stupid)\n";
         $string = substr($string,0,254);
      }
      
@@ -419,8 +420,7 @@ return $utf8string;
 ## _INTERNAL ##################################################
 #returns a (dummy) timestamp in MAC time format
 sub _mactime {
-my $x =    1234567890;
-return sprintf("%08X", $x);
+ return sprintf("%08X", 1234567890);
 }
 
 
@@ -432,7 +432,7 @@ sub _itop
 my($in, $checkmax) = @_;
 my($int) = $in =~ /(\d+)/;
 
-$checkmax |= 0xffffffff;
+$checkmax ||= 0xffffffff;
 
 if($int > $checkmax) {
  die "iTunesDB.pm: FATAL: $int > $checkmax (<- maximal value), can't continue!\n"
@@ -448,7 +448,7 @@ sub _x86itop
 my($in, $checkmax) = @_;
 my($int) = $in =~ /(\d+)/;
 
-$checkmax |= 0xffffffff;
+$checkmax ||= 0xffffffff;
 
 if($int > $checkmax) {
  die "iTunesDB.pm: FATAL: $int > $checkmax (<- maximal value), can't continue!\n"
@@ -522,15 +522,18 @@ return $ret
 ###########################################
 # Get a INT value
 sub get_int {
-my($start, $anz) = @_;
+my($start, $anz, $fh) = @_;
+
+$fh ||= *FILE;
+
 my $buffer = undef;
 # paranoia checks
 $start = int($start);
 $anz = int($anz);
 #seek to the given position
-seek(FILE, $start, 0);
+seek($fh, $start, 0);
 #start reading
-read(FILE, $buffer, $anz);
+read($fh, $buffer, $anz);
  return GNUpod::FooBar::shx2int($buffer);
 }
 
@@ -538,17 +541,17 @@ read(FILE, $buffer, $anz);
 ###########################################
 # Get a x86INT value
 sub get_x86_int {
-my($start, $anz) = @_;
-
+my($start, $anz, $fh) = @_;
+$fh ||= *FILE;
 my($buffer, $xx, $xr) = undef;
 # paranoia checks
 $start = int($start);
 $anz = int($anz);
 
 #seek to the given position
-seek(FILE, $start, 0);
+seek($fh, $start, 0);
 #start reading
-read(FILE, $buffer, $anz);
+read($fh, $buffer, $anz);
  return GNUpod::FooBar::shx2_x86_int($buffer);
 }
 
@@ -592,12 +595,12 @@ sub read_splpref {
  my ($live, $chkrgx, $chklim, $mos);
  
     $live    = 1 if   get_int($hs->{start}+24,1);
-    $chkrgx  = 1 if get_int($hs->{start}+25,1);
-    $chklim  = 1 if get_int($hs->{start}+26,1);
- my $item    =    get_int($hs->{start}+27,1);
- my $sort    =    get_int($hs->{start}+28,1);
- my $limit   =   get_int($hs->{start}+32,4);
-    $mos     = 1 if get_int($hs->{start}+36,1);
+    $chkrgx  = 1 if   get_int($hs->{start}+25,1);
+    $chklim  = 1 if   get_int($hs->{start}+26,1);
+ my $item    =        get_int($hs->{start}+27,1);
+ my $sort    =        get_int($hs->{start}+28,1);
+ my $limit   =        get_int($hs->{start}+32,4);
+    $mos     = 1 if   get_int($hs->{start}+36,1);
  return({live=>$live,
          value=>$limit, iitem=>$item, isort=>$sort,mos=>$mos,checkrule=>($chklim+($chkrgx*2))});
 }
@@ -680,13 +683,14 @@ sub get_mhip {
 ###########################################
 # Reads a string
 sub get_string {
-my ($start, $anz) = @_;
+my ($start, $anz, $fh) = @_;
+$fh ||= *FILE;
 my($buffer) = undef;
 $start = int($start);
 $anz = int($anz);
-seek(FILE, $start, 0);
+seek($fh, $start, 0);
 #start reading
-read(FILE, $buffer, $anz);
+read($fh, $buffer, $anz);
  return $buffer;
 }
 
@@ -872,13 +876,25 @@ sub readPLC {
  my($file) = @_;
  open(RATING, "$file") or return ();
  
- my $offset = 16*6;
+ 
+ my $offset    = get_int(4 ,4,*RATING);
+ my $chunksize = get_int(8, 4,*RATING);
+ my $chunks    = get_int(12,4,*RATING);
+
  my $buff;
  my %pcrh = ();
- while(1) {
 
+ for(1..$chunks) {
   seek(RATING, $offset+12, 0);
-  last unless read(RATING,$buff,4) ==4;
+  
+  if(read(RATING,$buff,4) != 4) {
+   warn "** iTunesDB::readPLC bug: read() failed at $offset\n";
+   warn "** debug: cs: $chunksize / c: $chunks\n";
+   warn "** Please send a bugreport to pab\@blinkenlights.ch\n";
+   warn "** CRITICAL: Skipped chunk at $offset!\n";
+   last;
+  }
+
   my $rating = GNUpod::FooBar::shx2int($buff);
   
   seek(RATING, $offset, 0);
@@ -889,9 +905,8 @@ sub readPLC {
 
   $pcrh{playcount}{$songnum} = $playc if $playc;
   $pcrh{rating}{$songnum}    = $rating if $rating; 
-  warn "debug: $songnum> $playc / $rating\n" if $playc||$rating;
-
-  $offset += 16;
+#  warn "debug: $songnum> $playc / $rating\n" if $playc||$rating;
+  $offset += $chunksize;
  }
 
 close(RATING);

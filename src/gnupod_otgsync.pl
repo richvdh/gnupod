@@ -114,7 +114,7 @@ sub newfile {
   #Adjust rating
   $el->{file}->{rating}    = $plcref->{rating}{int(@keeper)-1};
   $el->{file}->{playcount} += $plcref->{playcount}{int(@keeper)-1};
-  print "$el->{file}->{id} > INC:".$plcref->{playcount}{int(@keeper)-1}."\n" if $plcref->{playcount}{int(@keeper)-1};
+ # print "$el->{file}->{id} > INC:".$plcref->{playcount}{int(@keeper)-1}."\n" if $plcref->{playcount}{int(@keeper)-1};
  }
  #Add content
    GNUpod::XMLhelper::mkfile($el);

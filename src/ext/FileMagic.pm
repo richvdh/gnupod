@@ -118,8 +118,7 @@ sub __is_pcm {
     return undef;
    }
 
-#fixme
-warn "FileMagic: debug: bps -> *$bps* / srate -> *$srate*\n";   
+ 
   my %rh = ();
   $rh{bitrate}  = $bps;
   $rh{filesize} = $size;
@@ -129,6 +128,7 @@ warn "FileMagic: debug: bps -> *$bps* / srate -> *$srate*\n";
  
   #No id3 tags for us.. but mmmmaybe...
   #We use getuft8 because you could use umlauts and such things :)  
+  #Fixme: absolute versus relative paths :
   $rh{title}    = getutf8(((split(/\//, $file))[-1]) || "Unknown Title");
   $rh{album} =    getutf8(((split(/\//, $file))[-2]) || "Unknown Album");
   $rh{artist} =   getutf8(((split(/\//, $file))[-3]) || "Unknown Artist");
