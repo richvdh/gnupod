@@ -12,6 +12,9 @@ Summary
   per default. (Enable it using gnupod_addsong.pl --decode
   or set 'gnupod_addsong.decode=1' in your config)
 
+- gnupod_addsong.pl can read ALAC (Apples Loseless Audio Codec)
+  files (iTunes creates normal .m4a files)
+
 - Polished Playcounts parser (no hardcoded offsets anymore)
 
 - added '--disable-v2' and '--disable-v1' to
@@ -29,6 +32,9 @@ Summary
 - gnupod_addsong.pl checks for wrong extensions
   (like a mp3-file called 'test.wav'). The iPod wouldn't play
   such a file.
+
+- Fixed some SmartPlaylist stuff and added support for last
+  playtime
 
 
 

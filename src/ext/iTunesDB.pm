@@ -58,7 +58,7 @@ $SPLDEF{string_action}{8} = 'ENDWITH';
 $SPLDEF{num_action}{1}       = "eq";
 $SPLDEF{num_action}{0x10}    = "gt";
 $SPLDEF{num_action}{0x40}    = "lt";
-$SPLDEF{num_action}{0x0100}  = "range";  #0x0100
+$SPLDEF{num_action}{0x0100}  = "range";
 $SPLDEF{num_action}{0x0200}  = "unknown_fixme";
 
 #Field names  ## string types uc() .. int types lc()
@@ -86,11 +86,12 @@ $SPLDEF{field}{35} = "bpm";
 $SPLDEF{field}{39} = "GROUP";
 
 
+#Checkrule (COMPLETE)
 $SPLDEF{checkrule}{1} = "limit";
 $SPLDEF{checkrule}{2} = "spl";
 $SPLDEF{checkrule}{3} = "both";
 
-
+#Limititem (COMPLETE)
 $SPLDEF{limititem}{1} = "minute";
 $SPLDEF{limititem}{2} = "megabyte";
 $SPLDEF{limititem}{3} = "song";
@@ -100,7 +101,7 @@ $SPLDEF{limititem}{5} = "gigabyte";
 
 my %SPLREDEF = _r_spldef();
 
-##########################################3
+##########################################
 #ReConvert the SPLDEF hash
 sub _r_spldef {
 my %RES = ();
@@ -346,6 +347,9 @@ sub mk_spldatamhod {
  my $anymatch = 1 if $hs->{anymatch};
 
  if(ref($hs->{data}) ne "ARRAY") {
+  #This is an iTunes bug: it will go crazy if it finds an spldatamhod without data...
+  #workaround: Create a fake-entry if we didn't catch one from the GNUtunesDB.xml
+  # ..-> iTunes does the same :)
   push(@{$hs->{data}}, {field=>'ARTIST',action=>'CONTAINS',string=>""});
  }
 
@@ -353,23 +357,24 @@ sub mk_spldatamhod {
  foreach my $chr (@{$hs->{data}}) {
      my $string = undef;
      my $int_field = undef;
-	 my $action_prefix = undef;
-	 my $action_num    = undef;
+     my $action_prefix = undef;
+     my $action_num    = undef;
+    
      if($int_field = $SPLREDEF{field}{uc($chr->{field})}) { #String type
         $string = Unicode::String::utf8($chr->{string})->utf16;
         #String has 0x1 as prefix
-		$action_prefix = 0x01000000;
-		my($is_negative,$real_action) = $chr->{action} =~ /^(NOT_)?(.+)/;
+        $action_prefix = 0x01000000;
+        my($is_negative,$real_action) = $chr->{action} =~ /^(NOT_)?(.+)/;
 		
-		#..but a negative string has 0x3 as prefix
-		$action_prefix = 0x03000000 if $is_negative;
+        #..but a negative string has 0x3 as prefix
+	$action_prefix = 0x03000000 if $is_negative;
 		
-		unless($action_num = $SPLREDEF{string_action}{uc($real_action)}) {
-		 warn "iTunesDB.pm: action $chr->{action} is invalid for $chr->{field} , setting action to IS\n";
-		 $action_num = $SPLREDEF{string_action}{IS};
-		}
-        
-	 }
+        unless($action_num = $SPLREDEF{string_action}{uc($real_action)}) {
+         warn "iTunesDB.pm: action $chr->{action} is invalid for $chr->{field} , setting action to IS\n";
+         $action_num = $SPLREDEF{string_action}{IS};
+        }
+     
+     }
      elsif($int_field = $SPLREDEF{field}{lc($chr->{field})}) { #Int type
         my ($from, $to) = $chr->{string} =~ /(\d+):?(\d*)/;
         $to ||=$from; #Set $to == $from is $to is empty
@@ -383,34 +388,33 @@ sub mk_spldatamhod {
         $string .= pack("H8", _x86itop(1));
         $string .= pack("H40");
         #int has 0x0 as prefix..
-	    $action_prefix = 0x00000000;
+	$action_prefix = 0x00000000;
         my($is_negative,$real_action) = $chr->{action} =~ /^(!)?(.+)/;
-	    #..but negative int action has 0x2
-		$action_prefix = 0x02000000 if $is_negative;
+	#..but negative int action has 0x2
+        $action_prefix = 0x02000000 if $is_negative;
 		
-		unless($action_num = $SPLREDEF{num_action}{lc($real_action)}) {
-		 warn "iTunesDB.pm: action $chr->{action} is invalid for $chr->{field}, setting action to eq\n";
-		 $action_num = $SPLREDEF{num_action}{eq};
-		}
-	 }
-	 else { #Unknown type, this is fatal!
+           unless($action_num = $SPLREDEF{num_action}{lc($real_action)}) {
+             warn "iTunesDB.pm: action $chr->{action} is invalid for $chr->{field}, setting action to eq\n";
+             $action_num = $SPLREDEF{num_action}{eq};
+           }
+	}
+	else { #Unknown type, this is fatal!
 	  die "iTunesDB.pm: FATAL ERROR: <spl field=\"$chr->{field}\"... is unknown, can't continue!\n";
-	 }
+	}
 
-#warn "$chr->{action}  -> $action_prefix / $action_num\n";
-
-     if(length($string) > 254) { #length field is limited to 0xfe!
+     if(length($string) > 0xfe) { #length field is limited to 0xfe!
         warn "iTunesDB.pm: splstring to long for iTunes, cropping (yes, that's stupid)\n";
         $string = substr($string,0,254);
      }
      
      $cr .= pack("H6");
      $cr .= pack("h2", _itop($int_field,0xff));
-	 $cr .= pack("H8",_x86itop($action_num+$action_prefix));
+     $cr .= pack("H8",_x86itop($action_num+$action_prefix)); #Yepp.. everything here is x86! ouch
      $cr .= pack("H94");
      $cr .= pack("h2", _itop(length($string),0xff));
      $cr .= $string;
  }
+
 
  my $ret = "mhod";
  $ret .= pack("h8", _itop(24));    #Size of header
@@ -420,7 +424,7 @@ sub mk_spldatamhod {
  $ret .= "SLst";                   #Magic
  $ret .= pack("H8", reverse("00010001")); #?
  $ret .= pack("h6");
- $ret .= pack("h2", _itop(int(@{$hs->{data}}),0xff));     #HTM (Childs from cr)
+ $ret .= pack("h2", _itop(int(@{$hs->{data}}),0xff));     #HTM (Childs from cr) FIXME: is this really limited to 0xff childs?
  $ret .= pack("h6");
  $ret .= pack("h2", _itop($anymatch,0xff));     #anymatch rule on or off
  $ret .= pack("h240");
@@ -464,8 +468,8 @@ my ($hr) = @_;
 
 my $ret = "mhlp";
    $ret .= pack("h8", _itop(92));                   #Static header size
-   $ret .= pack("h8", _itop($hr->{playlists}));          #playlists on iPod (including main!)
-   $ret .= pack("h160", "00");                     #dummy space
+   $ret .= pack("h8", _itop($hr->{playlists}));     #playlists on iPod (including main!)
+   $ret .= pack("h160", "00");                      #dummy space
 return $ret;
 }
 
@@ -536,11 +540,6 @@ return $utf8string;
 
 
 
-## _INTERNAL ##################################################
-#returns a (dummy) timestamp in MAC time format
-sub _mactime {
- return sprintf("%08X", 1234567890);
-}
 
 
 
@@ -553,7 +552,7 @@ my($int) = $in =~ /(\d+)/;
 
 $checkmax ||= 0xffffffff;
 
-if($int > $checkmax) {
+if($int > $checkmax or $int < 0) {
  die "iTunesDB.pm: FATAL: $int > $checkmax (<- maximal value), can't continue!\n"
 }
 
