@@ -11,7 +11,7 @@ exit 1
 fi
 
 dnl Basic modules
-PERL_NEED="MP3::Info File::Copy XML::Parser Getopt::Mixed Unicode::String"
+PERL_NEED="MP3::Info File::Copy XML::Parser Getopt::Long Unicode::String"
 dnl Modules for extensions
 ALL_MODULES="$PERL_NEED XML::Simple"
 
