@@ -31,8 +31,8 @@ use Getopt::Long;
 
 use vars qw($xmldoc %itb %opts);
 
-
-print "mktunes.pl Version 0.90 (C) 2002-2003 Adrian Ulrich\n";
+$| = 1;
+print "mktunes.pl Version 0.91 (C) 2002-2003 Adrian Ulrich\n";
 
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
@@ -52,10 +52,11 @@ sub startup {
 my($stat, $itunes, $xml) = GNUpod::FooBar::connect(\%opts);
 
 usage("$stat\n") if $stat;
+print "> Parsing XML...\n";
 ($xmldoc) = GNUpod::XMLhelper::parsexml($xml);
  usage("Could not open $xml, did you run gnupod_INIT.pl ?\n") unless $xmldoc;
 
- my $quickhash = GNUpod::XMLhelper::build_quickhash($xmldoc);
+ my ($quickhash, $memeat, $cimemeat) = GNUpod::XMLhelper::build_quickhash($xmldoc);
 
 ## FILE STUFF
 print "> Creating File Database...\n";
@@ -78,7 +79,7 @@ print "> Creating playlists:\n";
 my @xpl = GNUpod::XMLhelper::build_plarr($xmldoc);
 # Build the playlists...
 
- $itb{playlist}{_data_} = genpldata($quickhash, @xpl);
+ $itb{playlist}{_data_} = genpldata($quickhash, $memeat, $cimemeat, @xpl);
  $itb{playlist}{_len_}  = length($itb{playlist}{_data_});
 
 # Create headers for the playlist part..
@@ -142,16 +143,82 @@ return GNUpod::iTunesDB::mk_mhyp($plSize, "gnuPod", 1, $itb{INFO}{FILES}).$pl;
 }
 
 
+
+
+
 #############################################################
 # Parses playlist stuff
 sub genpldata {
-my ($quickhash, @xpl) = @_;
+my ($quickhash, $memeat, $cimemeat, @xpl) = @_;
 
 #Create default playlist
 my $pldata = dflt_plgen($quickhash);
 #Set playlistc to 1 , because we got one (dflt_plgen)
 my $playlistc = 1;
+my %mm = ();
 
+
+foreach my $cpl (@xpl) {
+ my @promoted = ();
+   foreach my $action (keys(%$cpl)) {
+      next unless ref($cpl->{$action}) eq "ARRAY";
+      foreach my $itx (@{$cpl->{$action}}) {
+          my $htm = int(keys(%$itx));
+	  my %plm;
+
+	  foreach my $pel (keys(%$itx)) {
+	       if($action eq "add") {
+	          my @keys = split(/ /,$cimemeat->{$pel}{lc($itx->{$pel})});
+	          foreach my $mid (@keys) {
+	            $plm{$mid}++;
+	          }
+	        }
+		elsif($action eq "iregex" || $action eq "regex") {
+		  my $peat = $cimemeat;
+		  $peat = $memeat if $action eq "regex";
+		  foreach my $valx (keys(%{$peat->{$pel}})) {
+		     my $cms = $itx->{$pel};
+		     $cms = lc($cms) if $action eq "iregex";
+		     if($valx =~ /$cms/) {
+		       foreach my $mid (split(/ /,$peat->{$pel}{$valx})) {
+		        $plm{$mid}++;
+		       }
+		     
+		     }
+		  }
+		} else { print "Unhandled action: $action\n"; }
+	       
+	    }
+	  
+	  foreach(keys(%plm)) {
+	   push(@promoted, $_) if $plm{$_} == $htm;
+	  }
+	  
+      }
+      ##end one element!
+     
+   }
+
+
+
+ my $pltemp = undef;
+ my $plfc = 0; #PlayListFileCount
+
+ foreach(@promoted) {
+  $pltemp .= GNUpod::iTunesDB::mk_mhip($_);
+  $pltemp .= GNUpod::iTunesDB::mk_mhod(undef, undef, $_);
+  $plfc++;
+ }
+ #Add header for $pltemp;
+ $pldata .= GNUpod::iTunesDB::mk_mhyp(length($pltemp), $cpl->{name}, 0,$plfc).$pltemp;
+ print ">> Added Playlist '$cpl->{name}' with $plfc item";
+ print "s" if $plfc !=1; print "\n";
+ $playlistc++;
+
+}
+
+return GNUpod::iTunesDB::mk_mhlp($playlistc).$pldata;
+=head1
 ## FIXME: Maybe we should SORT the playlists by name?
 ##        iTunes does it.. hmm.. but it's stupid ;-)
 
@@ -160,7 +227,7 @@ foreach my $cpl (@xpl) {
  #Hu.. we have to create a new playlist
  my %pldata = ();
 
-
+print "DEBUG: ".($cpl->{name})."\n";
    #########################################################################################
    ## MATCH Routines.. this is very ugly and we could speedup many things..
    ## But it works as it should.. send me a patch if you like :)
@@ -169,6 +236,7 @@ foreach my $cpl (@xpl) {
     ## New element ##
     my %matchkey = (); #Clean matchkey
     my $smc = 0;
+    print ">> ".($cadd->{id})."\n";
     foreach my $key (keys(%{$cadd})) {
      $smc++; #We have to match every item..
 
@@ -262,6 +330,8 @@ foreach my $cpl (@xpl) {
   $playlistc++;
 }
  return GNUpod::iTunesDB::mk_mhlp($playlistc).$pldata;
+=cut
+
 }
 
 

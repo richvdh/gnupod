@@ -28,7 +28,7 @@ use GNUpod::FooBar;
 use Getopt::Long;
 use vars qw(%opts);
 
-print "gnupod_search.pl Version 0.90 (C) 2002-2003 Adrian Ulrich\n";
+print "gnupod_search.pl Version 0.91 (C) 2002-2003 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
@@ -52,9 +52,12 @@ sub go {
 
 
 
-my $href = GNUpod::XMLhelper::build_quickhash($xmldoc);
+my ($href) = GNUpod::XMLhelper::build_quickhash($xmldoc);
 
 my $ntm = keys(%opts)-1-$opts{once}-$opts{delete}; #-2 because we skip 'mount|once' .. dirty hack
+
+usage("Nothing to do!\n") unless $ntm;
+
 my @nomatch = ();
 my %present = ();
 ## Start!

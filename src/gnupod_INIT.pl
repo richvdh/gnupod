@@ -30,11 +30,11 @@ use Getopt::Long;
 use vars qw(%opts);
 
 
-print "gnupod_addsong.pl Version 0.90 (C) 2002-2003 Adrian Ulrich\n";
+print "gnupod_addsong.pl Version 0.91 (C) 2002-2003 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
-GetOptions(\%opts, "help|h", "mount|m=s", "disable-convert|d");
+GetOptions(\%opts, "help|h", "mount|m=s", "disable-convert|d", "france|f");
 
 usage() if $opts{help};
 
@@ -69,6 +69,7 @@ Hit ENTER to continue or CTRL+C to abort
 
 EOF
 ##
+
 <STDIN>;
  
  print "Creating directory structure on $opts{mount}\n\n";
@@ -89,6 +90,18 @@ EOF
    mkdir("$path") or die "Could not create $path ($!)\n";
    print "+$path\n";
  }
+
+if($opts{france}) {
+ print "> Creating 'Limit' file (because you used --france)\n";
+ mkdir("$opts{mount}/iPod_Control/Device");
+ open(LIMIT, ">$opts{mount}/iPod_Control/Device/Limit") or die "Failed: $!\n";
+  print LIMIT "216\n"; #Why?
+ close(LIMIT);
+}
+else {
+ print "> Removing 'Limit' file (because you didn't use --france)\n";
+ unlink("$opts{mount}/iPod_Control/Device/Limit");
+}
  
  print "> Creating dummy files\n";
  
@@ -123,6 +136,10 @@ Usage: gnupod_INIT.pl [-h] [-m directory]
    -h, --help             : This ;)
    -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
    -d, --disable-convert  : Don't try to convert an exiting iTunesDB
+   -f, --france           : Limit Volume to 100dB (For French-People)
+                            Maximal-volume without this is ~104dB (VERY LOUD)
+			    *WARNING* This works only for iPods running
+			    Firmware 1.x (1st & 2nd generation)
 
 EOF
 }

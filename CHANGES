@@ -1,3 +1,10 @@
+GNUpod 0.91
+
+- 'gnupod_addsong.pl -d' doesn't delete all songs anymore.. hups ;)
+- added '--france' switch to gnupod_INIT.pl (Limit volume to 100dB for 1.x
+  Firmware iPods)
+
+
 GNUpod 0.90
 
 - This is a *COMPLETE* rewrite of GNUpod, expect new bugs
@@ -6,8 +13,8 @@ GNUpod 0.90
 Highlights:
 
 - Faster (?)
-- REAL Unicode Support (Perl 5.8 and 5.6)
-- Cleaner Code
+- REAL Unicode Support (Perl 5.8 and 5.6, .. i hope!)
+- Cleaner Code (?)
 - Support for elements like 'playcount / volume .. etc' (Read the docs)
 
 

@@ -325,7 +325,7 @@ dd if=backup_firmware of=/dev/sda1
 @end example
 
 You may ask why we now write the Firmware to sda1 while we read it from sda2, the answear is simple:
-Before running fdisk, the iPod was a Mac-iPod with a different Partition layout, but now the iPod is a Win-iPod, belive me: sda1 
+Before running fdisk, the iPod was a Mac-iPod with a different Partition layout, but now the iPod is a Windows-iPod, belive me: sda1 
 is correct.
 
 After writing back the Firmware we can format the iPod:

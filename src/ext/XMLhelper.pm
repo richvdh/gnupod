@@ -118,8 +118,9 @@ sub build_plarr {
 sub build_quickhash {
 my($xmldoc) = @_;
 my %rhash = ();
-
- 
+my %memeat = ();
+my %cimemeat = ();
+ print "MK QH\n";
   foreach my $gnupod (@{$xmldoc->{gnuPod}}) {
     foreach my $files (@{$gnupod->{files}}) {
       foreach my $file (@{$files->{file}}) {
@@ -129,6 +130,8 @@ my %rhash = ();
 	  my %thash = (); #clean the TempHash
 	   foreach my $el (keys(%{$file})) {
 	     $thash{$el} = ${$file}{$el};
+	     $memeat{$el}{${$file}{$el}} .= ${$file}{id}." ";
+             $cimemeat{$el}{lc(${$file}{$el})} .= ${$file}{id}." ";
 	   }
 	   unless(defined($thash{id})) {
 	    print STDERR "FATAL XML ERROR: 'file' element without 'id' found! ($thash{path})\n";
@@ -140,8 +143,8 @@ my %rhash = ();
       }
     }
   }
-
-return \%rhash; 
+print "NewMemEat not done yet!!\n";
+return \%rhash, \%memeat, \%cimemeat; 
 }
 
 #####################################################
