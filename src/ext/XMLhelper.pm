@@ -274,7 +274,11 @@ return $p;
 # Write the XML File
 sub writexml {
  my($out) = @_;
- open(OUT, ">$out") or die "Could not write to '$out' : $!\n";
+ 
+ my $tmp_out = $out.".tmp_".time();
+ 
+
+ open(OUT, ">$tmp_out") or die "Could not write to '$tmp_out' : $!\n";
  binmode(OUT);
 
  print OUT "<?xml version='1.0' standalone='yes'?>\n";
@@ -309,7 +313,11 @@ sub writexml {
   }
  }
 print OUT "</gnuPod>\n";
-close(OUT);
+
+ if(close(OUT)) {
+  rename($tmp_out,$out) or warn "Could not move $tmp_out to $out, $!\n";
+ }
+ 
 }
 
 1;

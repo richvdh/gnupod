@@ -24,3 +24,19 @@ An HTML Version of the info-page is also
 included in this package (see doc/)
 
 You should also read the FAQ
+
+
+GNUpod commands (cheatsheet)
+----------------------------
+
+gnupod_INIT.pl      INIT a new iPod (create empty Database + Directories)
+gnupod_addsong.pl   Add files
+gnupod_check.pl     Check for 'zombie' files
+gnupod_otgsync.pl   Handles On-The-Go Sync (not for humans)
+gnupod_search.pl    Search ;)
+mktunes.pl          Convert the GNUtunesDB.xml to a iTunesDB
+tunes2pod.pl        Convert the iTunesDB into a GNUtunesDB.xml
+
+You'll have to use mktunes.pl if you added/deleted/changed something
+on the iPod.
+

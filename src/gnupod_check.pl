@@ -58,7 +58,7 @@ sub go {
   print " -> Everything is fine :)\n";
  }
  elsif($TRACKER{GLOBFILES} != $TRACKER{ITFILES}) {
-  print " -> The GNUtunesDB.xml is inconsistent. Try to fix the errors\n";
+  print " -> The GNUtunesDB.xml is inconsistent. Please try to fix the errors.\n";
  }
  
  if($TRACKER{ERR} > 25) {
@@ -97,7 +97,7 @@ sub newfile {
  $TRACKER{ITFILES}++;
  
  if($TRACKER{ID}{int($id)} != 1) {
-  print "  ID $id is used 2 times!\n";
+  print "  ID $id is used ".int($TRACKER{ID}{int($id)})." times!\n";
   $TRACKER{ERR}++;
  }
  
