@@ -14,7 +14,7 @@
  <file id="9" bitrate="123" time="345" path="bar" volume="-90" /> <!-- -90% volume //-->
 
  <!-- Rating + Playcount are also supported //-->
- <file id="10" bitrate="256" time="2332" rating="4" playcount="33" path="blubb" /> <!-- 4 stars rated + playcount = 33 //-->
+ <file id="10" bitrate="256" time="2332" rating="40" playcount="33" path="blubb" /> <!-- 2 stars rated (rating*20) + playcount = 33 //-->
 
 
  <!-- You can also set the start/stop time of a song //-->
@@ -69,7 +69,7 @@
      Please read ../README.smartplaylists
      and tell me, if it works for you ;) -->
 
-<!-- Note: SPL well suported on 1.x Firmware-iPods (not a GNUpod limitation) //-->
+<!-- Note: SPL isn't well suported on 1.x Firmware-iPods (not a GNUpod limitation) //-->
 <smartplaylist name="Example" limititem="5" checkrule="2" moselected="1" limitval="1" matchany="1" liveupdate="0" limitsort="2">
  <spl action="1" field="4" string="TestoStado" />
  <spl action="1" field="4" string="Foo" />

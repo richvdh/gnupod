@@ -31,7 +31,7 @@ use vars qw(%mhod_id @mhod_array);
 
 #mk_mhod() will take care of lc() entries
 #fixme: checkout 13.. is it language?
-%mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, "comment", 8, "composer", 12);# "SPLPREF",50, "SPLDATA",51, "PLTHING", 100) ;
+%mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, "comment", 8, "composer", 12, "group", 13);# "SPLPREF",50, "SPLDATA",51, "PLTHING", 100) ;
  foreach(keys(%mhod_id)) {
   $mhod_array[$mhod_id{$_}] = $_;
  }
@@ -114,7 +114,7 @@ my $ret = "mhit";
    $ret .= pack("H8");                                      #dummyspace
    $ret .= pack("h8", _itop(256+(oct('0x14000000')
                             *($file_hash{rating}/20))));     #type+rating .. this is very STUPID..
-   $ret .= pack("h8", _mactime());                           #timestamp (we create a dummy timestamp, iTunes doesn't seem to make use of this..?!)
+   $ret .= pack("h8", _itop($file_hash{changetime}));        #Time changed
    $ret .= pack("h8", _itop($file_hash{filesize}));          #filesize
    $ret .= pack("h8", _itop($file_hash{time}));              #seconds of song
    $ret .= pack("h8", _itop($file_hash{songnum}));           #nr. on CD .. we dunno use it (in this version)
@@ -129,11 +129,11 @@ my $ret = "mhit";
    $ret .= pack("H8");
    $ret .= pack("h8", _itop($file_hash{playcount}));
    $ret .= pack("H8");                                      #Sometimes eq playcount .. ?!
-   $ret .= pack("h8");                                      #Last playtime.. FIXME
+   $ret .= pack("h8", _itop($file_hash{lastplay}));         #Last playtime..
    $ret .= pack("h8", _itop($file_hash{cdnum}));            #cd number
    $ret .= pack("h8", _itop($file_hash{cds}));              #number of cds
    $ret .= pack("H8");                                      #hardcoded space ?
-   $ret .= pack("h8", _mactime());                          #dummy timestamp again...
+   $ret .= pack("h8", _itop($file_hash{addtime}));         #File added @
    $ret .= pack("H16");
    $ret .= pack("H8");                          #??
    $ret .= pack("h8", _itop(($file_hash{prerating}/20)*oct('0x140000')));      #This is also stupid: the iTunesDB has a rating history
@@ -285,13 +285,13 @@ if(ref($hs->{data}) ne "ARRAY") {
         $string = substr($string,0,254);
      }
      
-     my $xNot = 1;                # == $action
-        $xNot = 3 if ($chr->{not});  # != $action
-
+  warn "Fixme: not is broken\n";
+  
+  
      $cr .= pack("H6");
      $cr .= pack("h2", _itop($chr->{field},0xff));
-     $cr .= pack("h2", _itop($xNot,0xff));
-     $cr .= pack("H4");
+     $cr .= pack("h6", _itop(($chr->{not}||1),0xffffff));
+ 
      $cr .= pack("h2", _itop($chr->{action},0xff));
      $cr .= pack("H94");
      $cr .= pack("h2", _itop(length($string),0xff));
@@ -569,10 +569,13 @@ sub read_spldata {
  
 my $diff = $hr->{start}+160;
 my @ret = ();
-
+print "***\n";
  for(1..$hr->{htm}) {
   my $field = get_int($diff+3, 1);
-  my $doesNot = 1 if (get_int($diff+4,1) == 0x3);
+  my $doesNot = get_int($diff+4,3);
+print "Fixme: not is borken (read and write)\n";
+__hd(get_string($diff+4,3)); 
+print "*$doesNot\n"; 
   my $action= get_int($diff+7, 1);
   my $slen  = get_int($diff+55,1); #Whoa! This is true: string is limited to 0xfe (254) chars!! (iTunes4)
   my $rs    = undef; #ReturnSting
@@ -649,6 +652,7 @@ if($id eq "mhod") { #Seek was okay
  }
  elsif($mty == 50) { #Get prefs from splpref mhod
   $foo = undef;
+#__hd(get_string($seek,$ml));
   $splpref = read_splpref({start=>$seek, end=>$ml});
  }
  return({size=>$ml,string=>$foo,type=>$mty,spldata=>$spldata,splpref=>$splpref,matchrule=>$anym});
@@ -782,9 +786,9 @@ my ($sum) = @_;
 if(get_string($sum, 4) eq "mhit") { #Ok, its a mhit
 
 my %ret     = ();
-
 #Infos stored in mhit
 $ret{id}       = get_int($sum+16,4);
+$ret{changetime} = get_int($sum+32,4);
 $ret{filesize} = get_int($sum+36,4);
 $ret{time}     = get_int($sum+40,4);
 $ret{cdnum}    = get_int($sum+92,4);
@@ -798,8 +802,11 @@ $ret{volume}   = get_int($sum+64,4);
 $ret{starttime}= get_int($sum+68,4);
 $ret{stoptime} = get_int($sum+72,4);
 $ret{playcount} = get_int($sum+80,4); #84 has also something to do with playcounts. (Like rating + prerating?)
+$ret{lastplay} = get_int($sum+88,4);
 $ret{rating}    = int((get_int($sum+28,4)-256)/oct('0x14000000')) * 20;
+$ret{addtime}   = get_int($sum+104,4);
 $ret{prerating} = int(get_int($sum+120,4) / oct('0x140000')) * 20;
+
 
 ####### We have to convert the 'volume' to percent...
 ####### The iPod doesn't store the volume-value in percent..
@@ -893,13 +900,17 @@ sub readPLC {
 
  my $rating = 0;
  my $playc  = 0;
-
+ my $lastply= 0;
  for(1..$chunks) {
  
   seek(RATING, $offset, 0);
   read(RATING,$buff,4) or warn "readPLC bug, seek failed! Please send a bugreport to pab\@blinkenlights.ch!\n";
   $playc  = GNUpod::FooBar::shx2int($buff);
  
+  seek(RATING,$offset+4,0);
+  read(RATING,$buff,4) or warn "readPLC bug, seek failed! Please send a bugreport to pab\@blinkenlights.ch!\n";
+  $lastply = GNUpod::FooBar::shx2int($buff);
+  
   if($chunksize >= 16) { #12+4 - v2 firmware? 
    seek(RATING, $offset+12, 0);
    read(RATING, $buff,4) or warn "readPLC bug, read failed! Please send a bugreport to pab\@blinkenlights.ch!\n";
@@ -910,6 +921,7 @@ sub readPLC {
 
   $pcrh{playcount}{$songnum} = $playc if $playc;
   $pcrh{rating}{$songnum}    = $rating if $rating; 
+  $pcrh{lastplay}{$songnum}  = $lastply if $lastply;
   $offset += $chunksize;
  }
 

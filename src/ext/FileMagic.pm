@@ -97,6 +97,7 @@ sub __is_flac {
  while($tmpout = sprintf("/tmp/%d_%d_gnupod_flac%d",int(time()), $$,int(rand(99)))) {
   last unless (-e $tmpout);
  }
+ 
  my $xrun = system('flac', '-d', $file, '-o', $tmpout, "-s");
  if($xrun) {
   warn "FileMagic.pm : 'flac' exited with $xrun, maybe i couldn't run it (set doflac=0 to disable converting)\n";
@@ -107,7 +108,7 @@ sub __is_flac {
  my $pcmref = __is_pcm($tmpout);
  
  if(!$pcmref) {
-  warn "FileMagic.pm : Ups, flac output is not a pcm file!\n";
+  warn "FileMagic.pm : Uups, could not read FLAC-Output file (__is_pcm() failed)\n";
   unlink($tmpout);
   return undef;
  }

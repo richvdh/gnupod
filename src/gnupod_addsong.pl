@@ -27,6 +27,8 @@ use GNUpod::FooBar;
 use GNUpod::FileMagic;
 use Getopt::Long;
 use File::Copy;
+
+use constant MACTIME => 2082931200; #Mac EPOCH offset
 use vars qw(%opts %dupdb $int_count);
 
 print "gnupod_addsong.pl Version 0.95 (C) 2002-2004 Adrian Ulrich\n";
@@ -109,6 +111,8 @@ my $addcount = 0;
    $fh->{rating}    = $opts{'set-rating'}    if $opts{'set-rating'};
    $fh->{playcount} = $opts{'set-playcount'} if $opts{'set-playcount'};
    
+   #Set the addtime to unixtime(now)+MACTIME (the iPod uses mactime)
+   $fh->{addtime} = time()+MACTIME;
    #Get a path
    (${$fh}{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file, 
                                                            {extension=>$wtf_frmt, keepfile=>$opts{restore}});
