@@ -1,3 +1,14 @@
+GNUpod 0.97 - codename
+
+Summary
+
+- 0.96 didn't write 'tracknum' for OGG Files, fixed now..
+  Thanks to <> for reporting..
+
+
+*** OLD STUFF ***
+
+
 GNUpod 0.96 - codename 'kartoffelsaft'
 
 Summary
@@ -28,11 +39,6 @@ Summary
 
 - Support for 'Playlist IDs' (Useless feature ATM ;) )
 
-
-
-
-
-*** OLD STUFF ***
 
 GNUpod 0.95 - codename 'sockentier'
 
