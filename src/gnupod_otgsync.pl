@@ -66,7 +66,7 @@ sub go {
  if(GNUpod::FooBar::_otgdata_broken($con)) { #Ok, On-The-Go data is ** BROKEN **
    warn "gnupod_otgsync.pl: Error: You forgot to run mktunes.pl, wiping broken On-The-Go data...\n";
    #Remove broken data.. live is hard..
-   unlink($con->{onthego}) or warn "Could not remove $con->{onthego}, $!\n";
+   unlink(glob($con->{onthego})) or warn "Could not remove $con->{onthego}, $!\n";
    unlink($con->{playcounts}) or warn "Could not remove $con->{playcounts}, $!\n"; 
 	 warn "Done!\n";
  }
@@ -96,26 +96,29 @@ sub go {
 #############################################
 # Add onthego contents to XML
 sub mkotg {
- my(@xotg) = @_;
- 
- #Get all old playlists and create a new name
- my $otggen = 1;
- foreach(GNUpod::XMLhelper::getpl_attribs()) {
-   my $plname = $_->{name};
-   if($plname =~ /^On-The-Go (\d+)/) {
-    $otggen = ($1+1) if $otggen<=$1;
-   }
- }
- 
- GNUpod::XMLhelper::addpl("On-The-Go $otggen");
- 
- foreach(@xotg) {
-  my $otgid = $_+1;
-  my $plfh = ();
-  $plfh->{add}->{id} = $keeper[$otgid];
-  next unless $plfh->{add}->{id};
-  GNUpod::XMLhelper::mkfile($plfh,{"plname"=>"On-The-Go $otggen"});
- }
+	my(@otgrefs) = @_;
+
+	#Get all old playlists and create a new name
+	my $otggen = 1;
+	foreach(GNUpod::XMLhelper::getpl_attribs()) {
+		my $plname = $_->{name};
+		if($plname =~ /^On-The-Go (\d+)/) {
+			$otggen = ($1+1) if $otggen<=$1;
+		}
+	}
+
+	foreach (@otgrefs) {
+		my @xotg = @$_; #Change ref to array
+		GNUpod::XMLhelper::addpl("On-The-Go $otggen");
+		foreach(@xotg) {
+			my $otgid = $_+1;
+			my $plfh = ();
+			$plfh->{add}->{id} = $keeper[$otgid];
+			next unless $plfh->{add}->{id};
+			GNUpod::XMLhelper::mkfile($plfh,{"plname"=>"On-The-Go $otggen"});
+		}
+		$otggen++;
+	}
 
 }
 

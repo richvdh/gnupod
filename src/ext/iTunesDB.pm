@@ -1224,24 +1224,33 @@ close(RATING);
 ##############################################
 # Read OnTheGo data
 sub readOTG {
- my($file) = @_;
+	my($glob) = @_;
  
- my $buff = undef;
- open(OTG, "$file") or return ();
-  seek(OTG, 12, 0);
-  read(OTG, $buff, 4);
-  
-  my $items = GNUpod::FooBar::shx2int($buff); 
+	my $buff = undef;
+	my @content = ();
 
-  my @content = ();
-  my $offset = 20;
-  for(1..$items) {
-   seek(OTG, $offset, 0);
-   read(OTG, $buff, 4);
-   push(@content, GNUpod::FooBar::shx2int($buff));
-   $offset+=4;
-  }
-  return @content;
+	foreach my $file (glob($glob)) {
+#		print "OTG: $file\n";
+		my @otgdb = ();
+		open(OTG, "$file") or next;
+		seek(OTG, 12, 0);
+		read(OTG, $buff, 4);
+  
+		my $items = GNUpod::FooBar::shx2int($buff); 
+		my $offset = 20;
+		for(1..$items) {
+			seek(OTG, $offset, 0);
+			my $rb = read(OTG, $buff, 4);
+			if($rb == 0) {
+				_itBUG("readOTG($glob) i:$items / f:$file / s:$offset / fs: ".(-s $file));
+				last;
+			}
+			push(@otgdb, GNUpod::FooBar::shx2int($buff));
+			$offset+=4;
+		}
+		push(@content,\@otgdb);
+	}
+	return @content;
 }
 
 

@@ -47,7 +47,7 @@ if(-d $opth->{mount}) {
   $rr->{playcounts}     = "$rr->{mountpoint}/iPod_Control/iTunes/Play Counts";
   $rr->{itunesdb_md5}   = "$rr->{etc}/.itunesdb_md5";
   $rr->{onthego_invalid}  = "$rr->{etc}/.onthego_invalid";
-  $rr->{onthego}        = "$rr->{mountpoint}/iPod_Control/iTunes/OTGPlaylistInfo";
+  $rr->{onthego}        = "$rr->{mountpoint}/iPod_Control/iTunes/OTGPlaylist*";
   $rr->{status}         = undef;
 
   _check_casesensitive($rr->{mountpoint}); #Check if somebody mounted the iPod caseSensitive
@@ -187,17 +187,19 @@ sub _itb_needs_sync {
 ######################################################################
 # Checks if we need to do an OTG-Sync
 sub _otg_needs_sync {
- my($rr) = @_;
-#warn "debug: otgsync need? (request from $$)\n";
- #OTG Sync needed
- return 1 if( (-e $rr->{onthego}) && (-s $rr->{onthego}) > 0 );
- 
- if(-e $rr->{playcounts}) { #PlayCounts file exists..
-  return 1;
- }
+	my($rr) = @_;
+	#warn "debug: otgsync need? (request from $$)\n";
+	#OTG Sync needed
+	foreach my $otgf (glob($rr->{onthego})) {
+		return 1 if ( -e $otgf && -s $otgf > 0 );
+	}
 
- #No OTG and no PLC file, no sync needed
- return 0;
+	if(-e $rr->{playcounts}) { #PlayCounts file exists..
+		return 1;
+	}
+	
+	#No OTG and no PLC file, no sync needed
+	return 0;
 }
 
 
@@ -253,7 +255,7 @@ sub setsync_otg {
 my($rr) = @_;
 
 
- if( !(-e $rr->{onthego}) || unlink($rr->{onthego})) {
+ if( !(glob($rr->{onthego})) || unlink(glob(($rr->{onthego})) )) {
   return undef;
  }
 
