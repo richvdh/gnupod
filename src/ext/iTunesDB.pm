@@ -61,9 +61,15 @@ $SPLDEF{num_action}{1}       = "eq";
 $SPLDEF{num_action}{0x10}    = "gt";
 $SPLDEF{num_action}{0x40}    = "lt";
 $SPLDEF{num_action}{0x0100}  = "range";
-$SPLDEF{num_action}{0x0200}  = "unknown_fixme";
+$SPLDEF{num_action}{0x0200}  = "within";
+
+$SPLDEF{within_key}{86400} = "day";
+$SPLDEF{within_key}{86400*7} = "week";
+$SPLDEF{within_key}{2628000} = "month";
+
 
 #Field names  ## string types uc() .. int types lc()
+
 $SPLDEF{field}{2}  = "TITLE";
 $SPLDEF{field}{3}  = "ALBUM";
 $SPLDEF{field}{4}  = "ARTIST";
@@ -86,6 +92,7 @@ $SPLDEF{field}{25} = "rating";
 $SPLDEF{field}{31} = "compilation";
 $SPLDEF{field}{35} = "bpm";
 $SPLDEF{field}{39} = "GROUP";
+$SPLDEF{field}{40} = "PLAYLIST";
 
 
 #Checkrule (COMPLETE)
@@ -99,6 +106,28 @@ $SPLDEF{limititem}{2} = "megabyte";
 $SPLDEF{limititem}{3} = "song";
 $SPLDEF{limititem}{4} = "hour";
 $SPLDEF{limititem}{5} = "gigabyte";
+
+
+
+$SPLDEF{limitsort}{2}   = "random";
+$SPLDEF{limitsort}{3}   = "title";
+$SPLDEF{limitsort}{4}   = "album";
+$SPLDEF{limitsort}{5}   = "artist";
+$SPLDEF{limitsort}{7}   = "genre";
+
+$SPLDEF{limitsort}{16}  = "addtime_high";
+$SPLDEF{limitsort}{-16} = "addtime_low";
+
+$SPLDEF{limitsort}{20}  = "playcount_high";
+$SPLDEF{limitsort}{-20} = "playcount_low";
+
+$SPLDEF{limitsort}{21}  = "lastplay_high";
+$SPLDEF{limitsort}{-21} = "lastplay_low";
+
+$SPLDEF{limitsort}{23}  = "rating_high";
+$SPLDEF{limitsort}{-23} = "rating_low";
+
+
 
 
 my %SPLREDEF = _r_spldef();
@@ -294,7 +323,7 @@ sub mk_mhod {
 # Create a spl-pref (type=50) mhod
 sub mk_splprefmhod {
  my($hs) = @_;
- my($live, $chkrgx, $chklim, $mos) = 0;
+ my($live, $chkrgx, $chklim, $mos, $sort_low) = 0;
 
  #Bool stuff
  $live        = 1 if $hs->{liveupdate};
@@ -302,6 +331,20 @@ sub mk_splprefmhod {
  #Tristate
 my $checkrule   = $SPLREDEF{checkrule}{lc($hs->{checkrule})};
 my $int_item    = $SPLREDEF{limititem}{lc($hs->{item})};
+
+ #sort stuff
+
+#Build SORT Flags
+my $sort = $SPLREDEF{limitsort}{lc($hs->{sort})};
+if($sort == 0) {
+ warn "Unknown limitsort value ($hs->{sort}) , setting sort to 'random'\n";
+ $sort = $SPLREDEF{limitsort}{random};
+}
+elsif($sort < 0) {
+ $sort_low = 1; #Set LOW flag
+ $sort *= -1;   #Get positive value
+}
+
 
 if($checkrule < 1 || $checkrule > 3) {
  warn "iTunesDB.pm: error: 'checkrule' ($hs->{checkrule}) invalid. Value set to 'limit')\n";
@@ -326,11 +369,12 @@ $chklim = $checkrule-$chkrgx*2;
  $ret .= pack("h2", _itop($chkrgx,0xff)); #Check regexps?
  $ret .= pack("h2", _itop($chklim,0xff)); #Check limits?
  $ret .= pack("h2", _itop($int_item,0xff)); #Wich item?
- $ret .= pack("h2", _itop($hs->{sort},0xff)); #How to sort
+ $ret .= pack("h2", _itop($sort,0xff)); #How to sort
  $ret .= pack("h6");
  $ret .= pack("h8", _itop($hs->{value})); #lval
  $ret .= pack("h2", _itop($mos,0xff));        #MatchOnlySelected (?)
- $ret .= pack("h118");
+ $ret .= pack("h2", _itop($sort_low, 0xff)); #Set LOW flag..
+ $ret .= pack("h116");
 
 }
 
@@ -371,18 +415,6 @@ sub mk_spldatamhod {
      
      }
      elsif($int_field = $SPLREDEF{field}{lc($chr->{field})}) { #Int type
-        my ($from, $to) = $chr->{string} =~ /(\d+):?(\d*)/;
-        $to ||=$from; #Set $to == $from is $to is empty
-        $string  = pack("H8");
-        $string .= pack("H8", _x86itop($from));
-        $string .= pack("H24");
-        $string .= pack("H8", _x86itop(1));
-        $string .= pack("H8");
-        $string .= pack("H8", _x86itop($to));
-        $string .= pack("H24");
-        $string .= pack("H8", _x86itop(1));
-        $string .= pack("H40");
-        
         #int has 0x0 as prefix..
         $action_prefix = 0x00000000;
         my($is_negative,$real_action) = $chr->{action} =~ /^(!)?(.+)/;
@@ -394,6 +426,37 @@ sub mk_spldatamhod {
           warn "iTunesDB.pm: action $chr->{action} is invalid for $chr->{field}, setting action to ".$is_negative."eq\n";
           $action_num = $SPLREDEF{num_action}{eq};
         }
+        
+        my ($within_magic_a, $within_magic_b, $within_range, $within_key) = undef;
+        my ($from, $to) = $chr->{string} =~ /(\d+):?(\d*)/;
+        
+        #within stuff is different.. aaaaaaaaaaaaahhhhhhhhhhhh
+        if($action_num == $SPLREDEF{num_action}{within}) {
+         $within_magic_a = 0x2dae2dae;        #Funny stuff at apple
+         $from           = $within_magic_a;
+         $to             = $within_magic_a;
+         
+         $within_magic_b = 0xffffffff;        #Isn't magic.. but we are not 64 bit..
+         ($within_range, $within_key) = $chr->{string} =~ /(\d+)_(\S+)/;
+         $within_key = $SPLREDEF{within_key}{lc($within_key)};
+         $within_range-- if $within_range > 0; #0x..ff = 1.. 
+        }
+        else { #Fallback for normal stuff
+         $to ||=$from; #Set $to == $from is $to is empty
+        }
+                
+        $string  = pack("H8", _x86itop($within_magic_a));
+        $string .= pack("H8", _x86itop($from));
+        $string .= pack("H8", _x86itop($within_magic_b));
+        $string .= pack("H8", _x86itop($within_magic_b-$within_range)); #0-0 for non within
+        $string .= pack("H8");
+        $string .= pack("H8", _x86itop($within_key||1));
+        $string .= pack("H8", _x86itop($within_magic_a));
+        $string .= pack("H8", _x86itop($to));
+        $string .= pack("H24");
+        $string .= pack("H8", _x86itop(1));
+        $string .= pack("H40");
+        #__hd($string);die;
 	}
 	else { #Unknown type, this is fatal!
 	  die "iTunesDB.pm: FATAL ERROR: <spl field=\"$chr->{field}\"... is unknown, can't continue!\n";
@@ -685,29 +748,48 @@ my @ret = ();
   my $action= get_x86_int($diff+5, 3);  #Field ACTION
   my $slen  = get_int($diff+55,1); #Whoa! This is true: string is limited to 0xfe (254) chars!! (iTunes4)
   my $rs    = undef; #ReturnSting
+#__hd(get_string($diff+56,69));
+#__hd(get_string($diff+56,96));
+
 
   my $human_exp = $SPLDEF{hprefix}{$ftype};
-
+ 
    if($SPLDEF{is_string}{$ftype}) { #Is a string type
 	my $string= get_string($diff+56, $slen);
     #No byteswap here?? why???
     $rs = Unicode::String::utf16($string)->utf8;
     $human_exp .= $SPLDEF{string_action}{$action};
 	#Warn about bugs 
-	$SPLDEF{string_action}{$action} or _itBUG("Unknown s_action $action for $ftype");
+	$SPLDEF{string_action}{$action} or _itBUG("Unknown s_action $action for $ftype (= GNUpod doesn't understand this SmartPlaylist)");
+   }
+   elsif($action == $SPLREDEF{num_action}{within} 
+         && get_x86_int($diff+56+8,4) == 0xffffffff
+         && get_x86_int($diff+56,4)   == 0x2dae2dae) {
+     ## Within type is handled different... ask apple why...
+     $rs = (0xffffffff-get_x86_int($diff+56+12,4)+1);
+  
+     $human_exp .= $SPLDEF{num_action}{$action}; #Set human exp
+     my $within_key = $SPLDEF{within_key}{get_x86_int($diff+56+20,4)}; #Set within key
+     if($within_key) {
+      $rs = $rs."_".$within_key;
+     }
+     else {
+      _itBUG("Can't handle within_SPL_FIELD - unknown within_key, using 1_day");
+      $rs = "1_day";
+     }
    }
    else { #Is INT (Or range)
     my $xfint = get_x86_int($diff+56+4,4);
     my $xtint = get_x86_int($diff+56+28,4);
     $rs = "$xfint:$xtint";
 	$human_exp .= $SPLDEF{num_action}{$action};
-	$SPLDEF{num_action}{$action} or  _itBUG("Unknown a_action $action for $ftype");
+	$SPLDEF{num_action}{$action} or  _itBUG("Unknown a_action $action for $ftype (= GNUpod doesn't understand this SmartPlaylist)");
    }
    
   $diff += $slen+56;
   
   my $human_field = $SPLDEF{field}{$field};
-  $SPLDEF{field}{$field} or _itBUG("Unknown SPL-Field: $field");
+  $SPLDEF{field}{$field} or _itBUG("Unknown SPL-Field: $field (= GNUpod doesn't understand this SmartPlaylist)");
   
   push(@ret, {action=>$human_exp,field=>$human_field,string=>$rs});
  }
@@ -719,16 +801,29 @@ my @ret = ();
 # Read SPLpref data
 sub read_splpref {
  my($hs) = @_;
- my ($live, $chkrgx, $chklim, $mos);
+ my ($live, $chkrgx, $chklim, $mos, $sort_low);
  
-    $live    = 1 if   get_int($hs->{start}+24,1);
-    $chkrgx  = 1 if   get_int($hs->{start}+25,1);
-    $chklim  = 1 if   get_int($hs->{start}+26,1);
- my $item    =        get_int($hs->{start}+27,1);
- my $sort    =        get_int($hs->{start}+28,1);
- my $limit   =        get_int($hs->{start}+32,4);
-    $mos     = 1 if   get_int($hs->{start}+36,1);
-	
+    $live     = 1 if   get_int($hs->{start}+24,1);
+    $chkrgx   = 1 if   get_int($hs->{start}+25,1);
+    $chklim   = 1 if   get_int($hs->{start}+26,1);
+ my $item     =        get_int($hs->{start}+27,1);
+ my $sort     =        get_int($hs->{start}+28,1);
+ my $limit    =        get_int($hs->{start}+32,4);
+    $mos      = 1 if   get_int($hs->{start}+36,1);
+    $sort_low = 1 if   get_int($hs->{start}+37,1) == 0x1;
+
+#We don't pollute everything with this sort_low flag, we do something nasty to the
+#$sort value ;)
+$sort *= -1 if $sort_low;
+
+ if($SPLDEF{limitsort}{$sort}) {
+  $sort = $SPLDEF{limitsort}{$sort};
+ }
+ else {
+  _itBUG("Don't know how to handle SPLSORT '$sort', setting sort to RANDOM",);
+  $sort = "random";
+ }
+
 $SPLDEF{limititem}{int($item)} or warn "Bug: limititem $item unknown\n";
 $SPLDEF{checkrule}{int($chklim+($chkrgx*2))} or warn "Bug: Checkrule ".int($chklim+($chkrgx*2))." unknown\n";
  return({live=>$live,
