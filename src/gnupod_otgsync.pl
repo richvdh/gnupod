@@ -109,6 +109,7 @@ sub mkotg {
 
 	foreach (@otgrefs) {
 		my @xotg = @$_; #Change ref to array
+		next if int(@xotg) == 0; #Do not create empty OTG-Lists
 		GNUpod::XMLhelper::addpl("On-The-Go $otggen");
 		foreach(@xotg) {
 			my $otgid = $_+1;
