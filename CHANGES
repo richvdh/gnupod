@@ -1,9 +1,32 @@
-GNUpod 0.91
+GNUpod 0.91 (ServicePack 1 ;) )
 
-- 'gnupod_addsong.pl -d' doesn't delete all songs anymore.. hups ;)
-- added '--france' switch to gnupod_INIT.pl (Limit volume to 100dB for 1.x
-  Firmware iPods)
+gnupod_search.pl:
+  * -d doesn't delete all songs anymore.. hups..
+  * Playlist-Cleanup works now.. (another stupid bug.. :-/) 
 
+gnupod_addsong.pl:
+  * Can read from STDIN again (use 'gnupod_addsong.pl -')
+    (I forgot this feature ;) )
+
+gnupod_INIT.pl
+  * Added '--france' switch (Limit volume to 100 db for
+    1.x Firmware)
+
+mktunes.pl
+  * New Playlist-Code.. MUCH faster now
+    (Wow.. again? no.. the code of 0.90 was
+     VERY slow many files (~3000) and more
+     than ~15 big playlists)
+     
+
+..and..
+  Changed 'Win' to 'Windows/W32/etc'
+
+
+
+
+
+** OLD GNUpod RELEASES **
 
 GNUpod 0.90
 
@@ -26,7 +49,6 @@ but AAC Support will be added soon (GNUpod 0.91?) and adding
 SPL Support is possible ;)
 
 
-    ** OLD GNUpod RELEASES **
 gnuPod 0.29-rc1
 - Unicode Support!!
   Use an UNICODE Texteditor to edit the GNUtunesDB..

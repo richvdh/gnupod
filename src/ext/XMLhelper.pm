@@ -30,7 +30,7 @@ use Unicode::String;
 #Force XML::Parser -> XML::Sax maybe SLOOOW (with the 100% perl parser)
 $XML::Simple::PREFERRED_PARSER = "XML::Parser";
 
-## Release 20030914
+## Release 20030919
 
 my @idpub;
 my $xid = 1; #The ipod doesn't like ID 0
@@ -120,7 +120,6 @@ my($xmldoc) = @_;
 my %rhash = ();
 my %memeat = ();
 my %cimemeat = ();
- print "MK QH\n";
   foreach my $gnupod (@{$xmldoc->{gnuPod}}) {
     foreach my $files (@{$gnupod->{files}}) {
       foreach my $file (@{$files->{file}}) {
@@ -143,7 +142,6 @@ my %cimemeat = ();
       }
     }
   }
-print "NewMemEat not done yet!!\n";
 return \%rhash, \%memeat, \%cimemeat; 
 }
 

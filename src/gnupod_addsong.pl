@@ -30,7 +30,7 @@ use Getopt::Long;
 use File::Copy;
 use vars qw(%opts);
 
-print "gnupod_addsong.pl Version 0.90 (C) 2002-2003 Adrian Ulrich\n";
+print "gnupod_addsong.pl Version 0.91 (C) 2002-2003 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
@@ -46,6 +46,15 @@ if($opts{restore}) {
  <STDIN>;
  $opts{duplicate} = 1; #Don't skip dups on restore
  startup(glob("$opts{mount}/iPod_Control/Music/*/*"));
+}
+elsif($ARGV[0] eq "-" && @ARGV == 1) {
+ print STDERR "Reading from STDIN, hit CTRL+D (EOF) when finished\n";
+ my @files = ();
+  while(<STDIN>) {
+   chomp;
+   push(@files, $_);
+  }
+  startup(@files);
 }
 else {
  startup(@ARGV);

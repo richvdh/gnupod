@@ -112,7 +112,8 @@ if($opts{delete}) { #Clean doctree and rebuild..
  
 my @hpl = (); #HoldPlayList
      foreach my $pli (@{$pl->{add}}) {
-	if($present{$pli->{id}}) {
+	#No id part or on our holdlist.. damd bug!
+	if(!defined($pli->{id}) || keys(%$pli) != 1 || $present{$pli->{id}}) { 
 	 push(@hpl, $pli);
 	}
      }
