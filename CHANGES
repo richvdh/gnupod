@@ -2,10 +2,10 @@ GNUpod 0.91
 
 Much changed from 0.90 to 0.91.
 I removed XML::Simple and use (again)
-XML::Parser (Event based GNUpod..)
+XML::Parser (Event based GNUpod.. .. again)
 0.91 needs much less memory...
 
-I hope i didn't break anything.. but 
+I hope i didn't break anything.. but...
 
 
 gnupod_search.pl:

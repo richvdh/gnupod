@@ -108,7 +108,6 @@ else {
   GNUpod::XMLhelper::writexml($xml);
  
  if(-e $itunes && !$opts{'disable-convert'}) {
- ## Fixme: Does this work??
   print "Found *existing* iTunesDB, running tunes2pod.pl\n";
   system("tunes2pod.pl -m $opts{mount}");
  }

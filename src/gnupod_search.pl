@@ -34,9 +34,11 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "help|h", "mount|m=s", "artist|a=s",
                    "album|l=s", "title|t=s", "id|i=s",
-        		   "genre|g=s", "once|o", "delete|d");
+        		   "genre|g=s", "once|o", "delete", "RMME|d");
 
 usage() if $opts{help};
+
+usage("-d was removed, use '--delete'\n") if $opts{RMME};
 
 go();
 
@@ -47,8 +49,8 @@ sub go {
  usage($stat."\n") if $stat;
 
 
-print "ID      : ARTIST / ALBUM / TITLE\n";
-print "================================\n"; 
+print "ID        : ARTIST / ALBUM / TITLE\n";
+print "==================================\n"; 
 GNUpod::XMLhelper::doxml($xml) or usage("Failed to parse $xml\n");
 GNUpod::XMLhelper::writexml($xml) if $opts{delete};
 
@@ -115,7 +117,7 @@ Usage: gnupod_search.pl [-h] [-m directory | -x GNUtunesDB] File1 File2 ...
    -i, --id=ID            : print songs by ID
    -g, --genre=GENRE      : print songs by Genre
    -o, --once             : Search doesn't need to match multiple times (eg. -a & -l)
-   -d, --delete           : REMOVE (!) matched songs
+       --delete           : REMOVE (!) matched songs
 EOF
 }
 
