@@ -78,10 +78,10 @@ elsif($gimme eq "GET_MP3") {
   close(LAMEIN);
   print "PATH:$tmpout\n";
 }
-elsif($gimme eq "GET_AAC") {
+elsif($gimme eq "GET_AAC" or $gimme eq "GET_AACBM") {
  #Yeah! FAAC is broken and can't write to stdout..
- 
   my $tmpout = get_u_path("/tmp/gnupod_faac", "m4a");
+     $tmpout = get_u_path("/tmp/gnupod_faac", "m4b") if $gimme eq "GET_AACBM";
   open(FLACOUT, "-|") or exec("flac", "-d", "-s", "-c", "$file") or die "Could not exec flac: $!\n";
   open(FAACIN , "|-") or exec("faac", "-w", "-q", "120", "-o", $tmpout, "-") or die "Could not exec faac: $!\n";
    while(<FLACOUT>) { #Feed faac

@@ -112,17 +112,13 @@ GNUpod does (currently) *NOT* support:
 
  - Audible.com files (DRM)
  - Apple MusicStore files (.m4p - DRM AAC) but it does support .m4a
- - Unsupported formats, like ogg / midi / nsf...
 
-GnuPod >= 0.95 can convert FLAC files 'on the fly'.
+GnuPod >= 0.96 can convert FLAC and OGG files 'on the fly'.
 You'll have to call gnupod_addsong.pl with the
---decode switch and 'flac' needs to be in your current
-$PATH. It's somewhat alpha and gnupod will convert the
-flac files into wave files (no, i'm not going to encode
-the files with lame to save space.. flac is loseless, like wave ;) )
+--decode switch. see 'man gnupod_addsong.pl' for more details
+(Or read the complete docs: 'info gnupod')
 
-DRM-Support maybe harder, because i don't own any DRM-'Protected'
-Music :-)
+DRM-Support isn't planned.
 
 But gnupod works pretty well with M4A files from allofmp3.com
 

@@ -44,7 +44,7 @@ GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b', 'd
                           "gnupod_addsong");
 
 
-usage("\n--decode takes 'pcm' 'mp3' 'aac' -> '--decode=mp3'\n") if $opts{decode} && $opts{decode} !~ /^(mp3|aac|pcm|crashme)$/;
+usage("\n--decode takes 'pcm' 'mp3' 'aac' 'aacbm' -> '--decode=mp3'\n") if $opts{decode} && $opts{decode} !~ /^(mp3|aac|aacbm|pcm|crashme)$/;
 usage() if $opts{help};
 version() if $opts{version};
 
