@@ -107,16 +107,15 @@ else {
  print "> Creating dummy files\n";
  
   GNUpod::XMLhelper::writexml($con->{xml});
- 
+
+#Fixme: bindir would be good!
  if(-e $con->{itunesdb} && !$opts{'disable-convert'}) {
   print "Found *existing* iTunesDB, running tunes2pod.pl\n";
-  system("tunes2pod.pl -m $opts{mount}");
+  system("tunes2pod.pl --force -m $opts{mount}");
  }
  else {
-  print "No iTunesDB found, creating a dummy file\n";
-  open(ITUNES, ">$con->{itunesdb}") or die "Could not create $con->{itunesdb}: $!\n";
-   print ITUNES "";
-  close(ITUNES);
+  print "No iTunesDB found, running mktunes.pl\n";
+  system("mktunes.pl -m $opts{mount}");
  }
  
  print "\n Done\n   Your iPod is now ready for GNUpod :)\n";
