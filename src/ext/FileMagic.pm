@@ -25,6 +25,7 @@ use strict;
 use Unicode::String;
 use MP3::Info qw(:all);
 use GNUpod::FooBar;
+use GNUpod::QTfile;
 
 BEGIN {
  MP3::Info::use_winamp_genres();
@@ -41,8 +42,8 @@ sub wtf_is {
   elsif(my $h = __is_pcm($file)) {
    return $h
   }
-  elsif(__is_qt($file)) {
-   print "--> QT File (AAC) Detected\n";
+  elsif(my $h = __is_qt($file)) {
+   return $h
   }
   else {
    print "Unknown file type: $file\n";
@@ -52,7 +53,23 @@ sub wtf_is {
 
 sub __is_qt {
  my($file) = @_;
- return undef;
+ my $ret = GNUpod::QTfile::parsefile($file);
+ return undef unless $ret; #No QT file
+ 
+ my %rh = ();
+ if($ret->{time} < 0) {
+  warn "QTfile parsing failed, invalid time!\n";
+  warn "You found a bug\n";
+  return undef;
+ }
+ 
+ $rh{time} = $ret->{time};
+ $rh{filesize} = $ret->{filesize};
+ $rh{fdesc}    = $ret->{fdesc};
+ $rh{artist} = $ret->{artist} || "Unknown Artist";
+ $rh{album}  = $ret->{album}  || "Unknown Album";
+ $rh{title}  = $ret->{title}  || "Unknown Title";
+ return  \%rh;
 }
 
 ######################################################################

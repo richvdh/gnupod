@@ -1,19 +1,36 @@
-GNUpod 0.94 - codename
+GNUpod 0.94 - codename 'aspartam'
 
 Summary:
 --------
 - Nobody did buy me a 40gb iPod with Firmware 2.x
+
 - I bought one myself
+
+- gnupod_addsong.pl understands .m4a files
+  (= AAC Files written by iTunes)
+  I don't know if it works with DRM files (.m4p?)
+  I don't have DRM files and i'm not interested
+  in DRM files...
+  If you like to see support for DRM files, send
+  me a patch ;-)
+
 - Added support for On-The-Go playlists!
+  (2.x Firmware-only-feature)
+
 - GNUpod can now handle the 'Rating' set
   on the iPod (2.x Firmware-only-feature)
+
 - GNUpod checks if the iTunesDB did change and
   runs tunes2pod.pl if it has to run it
+
 - Changed rating-schema to match SPL-Rating
   -> Rating 5 is now 100 (newrating=oldrating*20)
   mktunes.pl will drop old (= now invalid) ratings,
   no autoconvert...
+
 - You'll have to install Digest::MD5
+
+
 
 
 Details:
@@ -24,6 +41,9 @@ FooBar.pm:
 iTunesDB.pm
  * Added 'Play Counts' parser (=Rating)
  * Changed rating Schema
+
+QTfile.pm
+ * A dirty QuickTime parser
 
 gnupod_otgsync.pl
  * A new tool, don't use it yourself :)

@@ -1,9 +1,8 @@
 * the iTunesDB format is not 'open' (no specification provided)
   We don't support all features
-* FileMagic (qt parser)  is just a dummy, but i got a 'working' parser..
-  ..should be ready soon.. (0.93?)
 * GNUpod doesn't like duplicate id's
 * Smartplaylist support isn't tested very well
 * GNUpod doen't like audible.com files (I'll have to look at this later...)
+* QTfile.pm (=QuickTime parser) isn't tested very well
 
 See -> TODO
