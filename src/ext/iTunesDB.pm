@@ -122,6 +122,8 @@ my %RES = ();
 
 ## GENERAL #########################################################
 # create an iTunesDB header
+#
+## _agdoc: ({size})
 sub mk_mhbd
 {
 my ($hr) = @_;
@@ -140,6 +142,8 @@ return $ret;
 # a iTunesDB has 2 mhsd's: (This is a child of mk_mhbd)
 # mhsd1 holds every song on the ipod
 # mhsd2 holds playlists
+#
+## _agdoc: ({size}{type})
 sub mk_mhsd
 {
 my ($hr) = @_;
