@@ -11,6 +11,8 @@ use XML::Simple;
 ##
 ##
 
+my @idpub;
+my $xid = 0;
 ###############################################
 # Get an iPod-safe path for filename
 sub getpath {
@@ -18,15 +20,20 @@ sub getpath {
  
  my ($i, $path) = undef; 
  my $name = (split(/\//, $filename))[-1];
- $name =~ tr/a-zA-Z0-9./_/c;
-for($path = sprintf("$mountp/iPod_Control/Music/F%02d/%d_$name", int(rand(20)), $i);(-e $path);$i++) 
-  {}
+ $name =~ tr/a-zA-Z0-9\./_/c;
+ 
+#Search a place for the MP3 file
+  while($path = sprintf("$mountp/iPod_Control/Music/F%02d/%d_$name", int(rand(20)), $i++)) {
+   last unless(-e $path);
+  }
+ 
 #Remove mountpoint from $path
-$path =~ s/^$mountp(.+)/$1/;
+my $ipath = $path;
+$ipath =~ s/^$mountp(.+)/$1/;
 
 #Convert /'s to :'s
-$path =~ tr/\//:/;
-return $path;
+$ipath =~ tr/\//:/;
+return ($ipath, $path);
 }
 
 #############################################################
@@ -35,6 +42,12 @@ sub parsexml {
  my($xmlin) = @_;
  my $xls = XML::Simple->new();
  my $doc = $xls->XMLin($xmlin, keeproot => 1, keyattr => [], forcearray=>1);
+ 
+ #Create the IDPUB (Free IDs)
+  foreach(@{$doc->{gnuPod}->[0]->{files}->[0]->{file}}) {
+   $idpub[$_->{id}]++;
+  }
+
 return $doc;
 }
 
@@ -79,6 +92,26 @@ my %rhash = ();
 return \%rhash; 
 }
 
+#####################################################
+# Add a file hash
+sub addfile {
+ my($xmldoc, $fh) = @_;
+#Request a free ID
+ while($idpub[$xid]) { $xid++; }
+     $fh->{id} = $xid;
+     $idpub[$xid] = 1;
+     
+     push(@{$xmldoc->{gnuPod}->[0]->{files}->[0]->{file}}, $fh);
+}
 
+
+######################################################
+# Write the XML File
+sub write_xml {
+ my($out, $href) = @_;
+ open(OUT, ">$out") or die "Could not write to $out, $!\n";
+  print OUT XML::Simple::XMLout($href,keeproot=>1,xmldecl=>1);
+ close(OUT);
+}
 
 1;

@@ -87,11 +87,9 @@ for(my $i=0;$i<$xpc_pl;$i++) {
  }
 
 
-#Print the new GNUtunesDB to STDERR (debug)
 
-open(OUT, ">$out") or die "Could not write to $out\n";
- print OUT  XML::Simple::XMLout(\%hout,keeproot=>1,xmldecl=>1);
-close(OUT);
+GNUpod::XMLhelper::write_xml($out, \%hout);
+
 
 print STDOUT "\n Done\n";
 }
