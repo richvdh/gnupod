@@ -27,7 +27,7 @@ use GNUpod::FooBar;
 use Getopt::Long;
 use vars qw(%opts %TRACKER);
 
-print "gnupod_check.pl Version 0.95rc1 (C) 2002-2004 Adrian Ulrich\n";
+print "gnupod_check.pl Version 0.95rc2 (C) 2002-2004 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
@@ -51,8 +51,10 @@ sub go {
  checkGNUtunes();
  
  print "..finished\n\n";
- print "  iPod files:   $TRACKER{GLOBFILES}\n";
- print "  GNUpod files: $TRACKER{ITFILES}\n";
+ print "  Total Playtime : ".int($TRACKER{TIME}/1000/60/60)." h\n";
+ print "  Space used     : ".int($TRACKER{SIZE}/1024/1024/1024)." GB\n";
+ print "  iPod files     : $TRACKER{GLOBFILES}\n";
+ print "  GNUpod files   : $TRACKER{ITFILES}\n";
  
  if($TRACKER{GLOBFILES} == $TRACKER{ITFILES} && $TRACKER{ERR} == 0) {
   print " -> Everything is fine :)\n";
@@ -92,6 +94,9 @@ sub newfile {
  
  my $HINT = "Remove this zombie using 'gnupod_search --delete -i \"^$id\$\"'";
 
+ $TRACKER{SIZE}+=int($el->{file}->{filesize});
+ $TRACKER{TIME}+=int($el->{file}->{time});
+ 
  $TRACKER{ID}{int($id)}++;
  $TRACKER{PATH}{lc($rp)}++; #FAT32 is caseInsensitive.. HFS+ should also be caseInsensitive (ON THE IPOD)
  $TRACKER{ITFILES}++;
