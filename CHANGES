@@ -3,6 +3,7 @@ GNUpod 0.91 (ServicePack 1 ;) )
 gnupod_search.pl:
   * -d doesn't delete all songs anymore.. hups..
   * Playlist-Cleanup works now.. (another stupid bug.. :-/) 
+  * Added '--title' switch to usage
 
 gnupod_addsong.pl:
   * Can read from STDIN again (use 'gnupod_addsong.pl -')

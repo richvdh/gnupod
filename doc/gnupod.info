@@ -186,7 +186,7 @@ should look like this (If you are running linux 2.4.20 or older)
 
    Linux 2.4.21 (and newer) doesn't show such verbose output and your
 iPod won't get detectet when loading sbp2. Simply run
-`rescan-scsi-bus.h' wich should find your iPod (See /proc/scsi/scsi).
+`rescan-scsi-bus.sh' wich should find your iPod (See /proc/scsi/scsi).
 (You can download 'rescan-scsi-bus.sh' at
 http://www.garloff.de/kurt/linux/rescan-scsi-bus.sh)
 

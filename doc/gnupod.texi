@@ -202,7 +202,7 @@ sda: test WP failed, assume Write Enabled
 In this case, @code{@w{/dev/sda}} would be your iPod.
 
 Linux 2.4.21 (and newer) doesn't show such verbose output and your iPod 
-won't get detectet when loading sbp2. Simply run @code{@w{rescan-scsi-bus.h}} 
+won't get detectet when loading sbp2. Simply run @code{@w{rescan-scsi-bus.sh}} 
 wich should find your iPod (See /proc/scsi/scsi). 
 (You can download 'rescan-scsi-bus.sh' at http://www.garloff.de/kurt/linux/rescan-scsi-bus.sh)
 

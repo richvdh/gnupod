@@ -138,6 +138,7 @@ Usage: gnupod_search.pl [-h] [-m directory | -x GNUtunesDB] File1 File2 ...
 
    -h, --help             : This ;)
    -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
+   -t, --title=TITLE      : print songs by Title
    -a, --artist=ARTIST    : print songs by Artist
    -l, --album=ALBUM      : print songs by Album
    -i, --id=ID            : print songs by ID
