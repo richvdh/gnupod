@@ -211,9 +211,10 @@ Convert your Mac iPod
 for HFS+ and your iPod is HFS+ Formatted (aka 'Mac-iPod') you will have
 to reformat the iPod.
 
-   Note: Linux 2.4.22 HAS Support for HFS+!  It's still experimental
-and may do nasty things.  If you build your kernel with HFS+ support,
-you don't have to convert your iPod :)
+   Note: Linux 2.6.4 includes HFS+ Read/WRITE Support(!)  It's still
+experimental and may do nasty things. (But it works well for me..)  If
+you build your kernel with HFS+ support, you don't have to convert your
+iPod :)
 
    The first step is to upgrade your iPod to Firmware 1.1.0 or newer.
 (YES: 1.1.0 can read FAT32, but Apple never shipped FAT32 formatted
@@ -552,7 +553,7 @@ Recovering files
 ================
 
    If you lost your iTunesDB and your GNUtunesDB, your iPod won't know
-anymore which songs are on it, this very good ;)
+anymore which songs are on it.
 
    You can 'rebuild' an GNUtunesDB using `gnupod_addsong.pl'
 
@@ -1146,21 +1147,21 @@ Node: Installing GNUpod1961
 Node: Installation of GNUpod2384
 Node: Using FireWire with GNU/Linux3497
 Node: Convert your Mac iPod6906
-Node: Firmware update11936
-Node: Using GNUpod13709
-Node: Preparation14461
-Node: Add files15184
-Node: Search files16302
-Node: Remove files16783
-Node: Creating playlists17088
-Node: Unplug the iPod18283
-Node: Recovering files19187
-Node: Coexistence19908
-Node: Problems21371
-Node: GNUtunesDB21750
-Node: Get rid of '-m'23251
-Node: Known bugs and limitations23531
-Node: Reporting Bugs23814
-Node: GNU Free Documentation License24254
+Node: Firmware update11978
+Node: Using GNUpod13751
+Node: Preparation14503
+Node: Add files15226
+Node: Search files16344
+Node: Remove files16825
+Node: Creating playlists17130
+Node: Unplug the iPod18325
+Node: Recovering files19229
+Node: Coexistence19932
+Node: Problems21395
+Node: GNUtunesDB21774
+Node: Get rid of '-m'23275
+Node: Known bugs and limitations23555
+Node: Reporting Bugs23838
+Node: GNU Free Documentation License24278
 
 End Tag Table

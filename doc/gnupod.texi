@@ -228,8 +228,8 @@ next section 'Convert your Mac iPod' before using @code{@w{mount}}.
 If the Operating System you are running doesn't have write support for HFS+ and your iPod is 
 HFS+ Formatted (aka 'Mac-iPod') you will have to reformat the iPod.
 
-Note: Linux 2.4.22 HAS Support for HFS+! 
-It's still experimental and may do nasty things. 
+Note: Linux 2.6.4 includes HFS+ Read/WRITE Support(!)
+It's still experimental and may do nasty things. (But it works well for me..) 
 If you build your kernel with HFS+ support, you don't have to convert your iPod :)
 
 
@@ -575,8 +575,7 @@ Added songs won't be visible on the iPod if you did not run mktunes.pl before um
 @node Recovering files
 @section Recovering files
 
-If you lost your iTunesDB and your GNUtunesDB, your iPod won't know anymore which songs are on it, this 
-very good ;)
+If you lost your iTunesDB and your GNUtunesDB, your iPod won't know anymore which songs are on it.
 
 You can 'rebuild' an GNUtunesDB using @code{gnupod_addsong.pl}
 
