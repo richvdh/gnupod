@@ -168,6 +168,12 @@ my @METADEF = ("album",   "\xA9alb",
   $reth{channels}  = get_string_oct(24,2,$cDat);
   $reth{bit_depth}  = get_string_oct(26,2,$cDat);
  }
+ 
+ if(!$reth{genre}) {
+  my $numeric_genre = int(unpack("H*",$lx{metadat}{'::moov::udta::meta::ilst::gnre'}[$sound_index]));
+  $reth{genre} = "($numeric_genre)" if $numeric_genre;
+ }
+
  $reth{filesize} = $fsize;
  
  #Fixme: This is ugly.. bitrate is somewhere found in esds / stsd

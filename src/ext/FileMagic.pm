@@ -151,7 +151,7 @@ sub __is_qt {
  $rh{artist}    = getutf8($ret->{artist}   || "Unknown Artist");
  $rh{album}     = getutf8($ret->{album}    || "Unknown Album");
  $rh{title}     = getutf8($ret->{title}    || $cf || "Unknown Title");
- $rh{genre}     = getutf8($ret->{genre}    || "");
+ $rh{genre}     = _get_genre( getutf8($ret->{genre} || $ret->{gnre} || "") );
  $rh{composer}  = getutf8($ret->{composer} || ""); 
  $rh{soundcheck}= _parse_iTunNORM($ret->{iTunNORM});
  return  ({codec=>$ret->{_CODEC}, ref=>\%rh});
@@ -273,7 +273,6 @@ sub __is_mp3 {
 sub _get_genre {
  my ($string) = @_;
  my $num_to_txt = undef;
- 
  if($string =~ /^\((\d+)\)$/) {
   $num_to_txt = $mp3_genres[$1];
  }
