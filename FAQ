@@ -10,10 +10,12 @@ TOC
 6 : Can i add File-Format $foobar ?
 7 : How can i add files recursive?
 8 : How to get parseable output from gnupod_search.pl?
-9 : Why?
-10: Do you have any specs about the iTunesDB format?
-11: How do i report bugs or feature-requests?
-12: How can i contribute?
+9 : Some Artists/Albums, etc. shows up multiple times
+    on the iPod Browser!
+10 : Why?
+11: Do you have any specs about the iTunesDB format?
+12: How do i report bugs or feature-requests?
+13: How can i contribute?
 
 
 
@@ -145,7 +147,20 @@ gnupod_search.pl --view=i -l "Cure" 2>/dev/null | tail +4
 FIXME.. maybe we should have an --out option?
 
 
-9. Why?
+9. Some Artists/Albums, etc. shows up multiple times..
+------------------------------------------------------
+
+Maybe you got some SPACES in the Artist/Album Name.
+
+'Placebo' isn't the same as 'Placebo  '
+
+To fix it:
+- Open the GNUtunesDB.xml (/mnt/ipod/iPod_Control/.gnupod/)
+- Search the faulty entries, fix them and save
+- Run mktunes.pl to update the iPod.
+
+
+10. Why?
 -------
 
 I wanted an iPod and after buying one, i realized that
@@ -157,7 +172,7 @@ i did it myself :)
 ..And i had enough free time to do it :)
 
 
-10. Do you have any specs about the iTunesDB format?
+11. Do you have any specs about the iTunesDB format?
 ----------------------------------------------------
 
 I didn't create a 'whitepaper' or something like this.
@@ -172,7 +187,7 @@ Just have a look at iTunesDB.pm and tunes2pod.pl+mktunes.pl
 <pab at blinkenlights.ch>
 
 
-11. How do i report bugs or feature-requests?
+12. How do i report bugs or feature-requests?
 ---------------------------------------------
 
 Send a mail to <bug-gnupod at nongnu.org>
@@ -180,7 +195,7 @@ Send a mail to <bug-gnupod at nongnu.org>
 
 
 
-12. How can i contribute?
+13. How can i contribute?
 -------------------------
 
 Use gnupod and:

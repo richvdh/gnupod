@@ -53,10 +53,11 @@ sub getpath {
    $path = $filename;
  }
  else { #Default action.. new filename to create 
+
    my $test_extension = $opts->{extension} || $opts->{format}; #Test extension
    my $name = (split(/\//, $filename))[-1];                    #Name
    my $i = 0;                                                  #Count
-   $name =~ tr/a-zA-Z0-9\./_/c;                                #CleanName
+   $name =~ tr/a-zA-Z0-9\./_/c;                                #CleanName for dumb Filesystems
 
    #Hups, current filename has a wrong extension...
    if($opts->{format} && $test_extension && ($name !~ /\.($test_extension)$/i)) {
@@ -65,19 +66,32 @@ sub getpath {
      $name =~ s/\.?$ext$/.$opts->{format}/;  #Replace current extension with newone
    }
  
-   #Search a place for the MP3 file
-   while($path = sprintf("$mountp/iPod_Control/Music/F%02d/%d_$name", int(rand(40)), $i++)) {
-     if( !(-e $path) && open(TESTFILE,">",$path) ) {
+   #### #Search a place for the MP3 file ####
+   # 1. Glob to find all dirs
+   ## We don't cache this, we do a glob for each new file..
+   ## Shouldn't be a waste if time.. We belive in the Cacheing of the OS ;)
+   my @aviable_targets = glob("$mountp/iPod_Control/Music/*");
+
+   # 2. Paranoia check..
+   unless(@aviable_targets) {
+     warn "No folders found, did you run gnupod_INIT.pl ?\n";
+     return undef;
+   }
+
+   # 3. Search
+   while($path = sprintf($aviable_targets[int(rand(@aviable_targets))]."/%d_$name",$i++)) {
+     if( !(-e $path) && open(TESTFILE,">",$path) ) { #This is false if we would write to a globed file :)
        close(TESTFILE);
        unlink($path); #Maybe it's a dup.. we don't create empty files
        last;
      }
      elsif($i > 2000) { #nuff!
-       warn "getpath(): Could not write $name anywhere, panic! [$!]\n";
+       warn "getpath(): Could not write $name anywhere, panic! [$path, $!]\n";
        return undef;
      }
    }
- }
+   
+ } ## End default action
  
 #Remove mountpoint from $path
 my $ipath = $path;
