@@ -1,6 +1,6 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
-<!-- Created on October, 5  2003 by texi2html 1.65 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!-- Created on February, 14  2004 by texi2html 1.64 -->
 <!-- 
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -17,11 +17,11 @@ Send bugs and suggestions to <texi2html@mathematik.uni-kl.de>
 <META NAME="keywords" CONTENT="GNUpod Manual: ">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
-<META NAME="Generator" CONTENT="texi2html 1.65">
+<META NAME="Generator" CONTENT="texi2html 1.64">
 
 </HEAD>
 
-<BODY LANG="en" BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000FF" VLINK="#800080" ALINK="#FF0000">
+<BODY LANG="" BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000FF" VLINK="#800080" ALINK="#FF0000">
 
 <A NAME="SEC_Top"></A>
 <TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
@@ -67,8 +67,8 @@ Adrian Ulrich
 </TR></TABLE>
 <H1> 1. GNUpod </H1>
 <!--docid::SEC1::-->
-This edition of the <CITE>GNUpod Manual</CITE>, last updated 05. Oct. 2003,
-documents GNUpod Version 0.92
+This edition of the <CITE>GNUpod Manual</CITE>, last updated 14. Feb. 2004,
+documents GNUpod Version 0.94
 <P>
 
 <BLOCKQUOTE><TABLE BORDER=0 CELLSPACING=0> 
@@ -118,7 +118,7 @@ To use GNUpod, the follwing is needed:
 <LI>Firewire card that is supported by the Operating System
 <LI>Write support for HFS+ or FAT32
 <LI>Perl 5.6 or 5.8
-<LI>The Perl modules MP3::Info, File::Copy, Unicode::String, and XML::Parser
+<LI>The Perl modules MP3::Info, File::Copy, Unicode::String, Digest::MD5 and XML::Parser
 <LI>Basic knowledge of the shell
 </UL>
 <P>
@@ -204,6 +204,9 @@ If you don't know how to install them, please read
 http://cpan.org/misc/cpan-faq.html#How_install_Perl_modules
 </P><P>
 
+(Maybe you'd like to use the CPAN-Shell.. google knows how to use it ;-) )
+</P><P>
+
 <A NAME="Using FireWire with GNU/Linux"></A>
 <HR SIZE="6">
 <A NAME="SEC5"></A>
@@ -261,8 +264,8 @@ If your system hangs after loading sbp2 or mounting the iPod you may try to load
 </pre></td></tr></table></P><P>
 
 This will slow down the transfer rate but should act much more stable.
-Note: The FireWire code of Linux 2.4.21 (and newer) seems to be much more 
-stable: try to upgrade your kernel if you have crashes and oopses.
+Note: Firewire works very good with Linux 2.6. If you have Problems
+with Linux 2.4, you may wan't to upgrade to 2.6 !
 </P><P>
 
 After loading sbp2, use <CODE>dmesg</CODE> to get some information, the output
@@ -289,7 +292,7 @@ In this case, <CODE>/dev/sda</CODE> would be your iPod.
 
 Linux 2.4.21 (and newer) doesn't show such verbose output and your iPod 
 won't get detectet when loading sbp2. Simply run <CODE>rescan-scsi-bus.sh</CODE> 
-wich should find your iPod (See /proc/scsi/scsi). 
+which should find your iPod (See /proc/scsi/scsi). 
 (You can download 'rescan-scsi-bus.sh' at http://www.garloff.de/kurt/linux/rescan-scsi-bus.sh)
 </P><P>
 
@@ -350,7 +353,7 @@ Have a look at the next section to learn how to do this.
 Also note that you will need a fdisk for DOS-Style partitions. The kernel you are running has also to support 
 DOS-Style partitions (to access the device after you converted it) and Mac partitions (to read the firmware).
 If you are using GNU/Linux on x86, your fdisk should be fine, but if you are running GNU/Linux on 
-(for example) PowerPC you may have to get a suitable fdisk from the util-linux package wich can
+(for example) PowerPC you may have to get a suitable fdisk from the util-linux package which can
 be retrieved from: ftp://ftp.kernel.org/pub/linux/utils/util-linux/
 </P><P>
 
@@ -480,7 +483,7 @@ Setup Firewire as described in 'Using FireWire with GNU/Linux', load the modules
 Do not try to mount the iPod. We assume your iPod at <CODE>/dev/sda</CODE>.
 </P><P>
 
-First you need to get a new Firmware wich you can download from http://www.iweenie.com/ipod.shtml
+First you need to get a new Firmware which you can download from http://www.iweenie.com/ipod.shtml
 </P><P>
 
 If you got a FAT32 formatted iPod (..or you plan to 'convert' the iPod after upgrading the Firmware), you'll need 
@@ -623,7 +626,11 @@ You can also use wildcards:
 </pre></td></tr></table></P><P>
 
 It isn't possible to add the same MP3 multiple times, gnupod_addsong.pl detects duplicates 
-(Duplicate = same filesize/time and ID3Tag name).
+(Duplicate = same filesize/time and ID3Tag name). You can disable the duplicate-detection 
+with the '--duplicate' switch.
+</P><P>
+
+gnupod_addsong.pl understands MP3/WAV (RIFF) and M4A (Apple AAC - NO DRM!) files.
 </P><P>
 
 Note: gnupod_addsong.pl will try to 'auto-detect' the encoding of the ID3 Tag. 
@@ -652,7 +659,7 @@ DO NOT umount the iPod yet! First read the section 'Unplug the iPod'!
 <!--docid::SEC11::-->
 <P>
 
-GNUpod includes a tool called <CODE>gnupod_search.pl</CODE> wich helps you searching for files.
+GNUpod includes a tool called <CODE>gnupod_search.pl</CODE> which helps you searching for files.
 </P><P>
 
 Maybe you would like to search for the artist called 'Schlummiguch'. In this case, run
@@ -707,7 +714,7 @@ To Remove all files from the artist 'Schlummiguch', run
 Open the file <CODE>iPod_Control/.gnupod/GNUtunesDB</CODE> in a editor (It's a XML File).
 </P><P>
 
-To create a playlist named 'sweet' wich holds the songs with the ID 1 and 2, create something like this:
+To create a playlist named 'sweet' which holds the songs with the ID 1 and 2, create something like this:
 <TABLE><tr><td>&nbsp;</td><td class=example><pre>&#60;playlist name="sweet"&#62;
  &#60;add id="1" /&#62;
  &#60;add id="2" /&#62;
@@ -758,7 +765,7 @@ Don't forget to run mktunes before umounting! (See 'Unplug the iPod')
 <!--docid::SEC14::-->
 <P>
 
-Before umounting the iPod, you have to call <CODE>mktunes.pl</CODE> wich will 
+Before umounting the iPod, you have to call <CODE>mktunes.pl</CODE> which will 
 parse the GNUtunesDB XML file and convert it into the iTunesDB format.
 </P><P>
 
@@ -766,7 +773,7 @@ Simply run
 <TABLE><tr><td>&nbsp;</td><td class=example><pre>mktunes.pl -m /mnt/ipod
 </pre></td></tr></table></P><P>
 
-Note: Since GNUpod 0.91, mktunes.pl has a '--volume' option wich you can use to 
+Note: Since GNUpod 0.91, mktunes.pl has a '--volume' option which you can use to 
 boost the Volume.
 </P><P>
 
@@ -804,7 +811,7 @@ Added songs won't be visible on the iPod if you did not run mktunes.pl before um
 <!--docid::SEC15::-->
 <P>
 
-If you lost your iTunesDB and your GNUtunesDB, your iPod won't know anymore wich songs are on it, this 
+If you lost your iTunesDB and your GNUtunesDB, your iPod won't know anymore which songs are on it, this 
 very good ;)
 </P><P>
 
@@ -815,7 +822,7 @@ You can 'rebuild' an GNUtunesDB using <CODE>gnupod_addsong.pl</CODE>
 </pre></td></tr></table></P><P>
 
 First, <CODE>gnupod_INIT.pl</CODE> will create a clean, empty GNUtunesDB, it won't delete any songs on the iPod.
-<CODE>gnupod_addsong.pl --restore</CODE> will re-create a GNUtunesDB including the Songs wich are on the iPod
+<CODE>gnupod_addsong.pl --restore</CODE> will re-create a GNUtunesDB including the Songs which are on the iPod
 </P><P>
 
 I think nobody will ever have to do this.. but it maybe usefull to know that it's possible
@@ -857,7 +864,7 @@ The iPod is now ready again for GNUpod.
 
 You have to do this because GNUpod stores it's information in the GNUtunesDB, other programs are accessing the 
 iTunesDB directly. After you did something with eg. iTunes, the GNUtunesDB would be 'outdatet' and you would 
-lose any changes you made with iTunes. Running <CODE>tunes2pod.pl</CODE> will write a new GNUtunesDB wich
+lose any changes you made with iTunes. Running <CODE>tunes2pod.pl</CODE> will write a new GNUtunesDB which
 reflects the content of the current iTunesDB.
 </P><P>
 
@@ -1007,7 +1014,7 @@ You don't have to use the '-m' switch if you set IPOD_MOUNTPOINT.
 
 <UL>
 <LI>Smartplaylist support is incomplete (No liveupdate)
-<LI>You can't add m4a (AAC) files atm
+<LI>GNUpod doesn't like Audible.com and DRM Files
 </UL>
 <P>
 
@@ -1063,7 +1070,7 @@ Please do not send me any mp3 files without asking me.
 </center>
 <P>
 
-<TABLE><tr><td>&nbsp;</td><td class=display><pre style="font-family: serif">Copyright &copy; 2000,2001,2002 Free Software Foundation, Inc.
+<TABLE><tr><td>&nbsp;</td><td class=display><pre style="font-family: serif">Copyright (C) 2000,2001,2002 Free Software Foundation, Inc.
 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA
 
 Everyone is permitted to copy and distribute verbatim copies
@@ -1625,14 +1632,14 @@ to permit their use in free software.
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
 </TR></TABLE>
 <H1>Table of Contents</H1>
-<BLOCKQUOTE>
+<UL>
 <A NAME="TOC1" HREF="gnupod.html#SEC1">1. GNUpod</A>
 <BR>
 <A NAME="TOC2" HREF="gnupod.html#SEC2">2. Requirements</A>
 <BR>
 <A NAME="TOC3" HREF="gnupod.html#SEC3">3. Installing GNUpod</A>
 <BR>
-<BLOCKQUOTE>
+<UL>
 <A NAME="TOC4" HREF="gnupod.html#SEC4">3.1 Installation of GNUpod</A>
 <BR>
 <A NAME="TOC5" HREF="gnupod.html#SEC5">3.2 Using FireWire with GNU/Linux</A>
@@ -1641,10 +1648,10 @@ to permit their use in free software.
 <BR>
 <A NAME="TOC7" HREF="gnupod.html#SEC7">3.4 Firmware update</A>
 <BR>
-</BLOCKQUOTE>
+</UL>
 <A NAME="TOC8" HREF="gnupod.html#SEC8">4. Using GNUpod</A>
 <BR>
-<BLOCKQUOTE>
+<UL>
 <A NAME="TOC9" HREF="gnupod.html#SEC9">4.1 Preparation</A>
 <BR>
 <A NAME="TOC10" HREF="gnupod.html#SEC10">4.2 Add files</A>
@@ -1661,10 +1668,10 @@ to permit their use in free software.
 <BR>
 <A NAME="TOC16" HREF="gnupod.html#SEC16">4.8 Coexistence</A>
 <BR>
-</BLOCKQUOTE>
+</UL>
 <A NAME="TOC17" HREF="gnupod.html#SEC17">5. Problems</A>
 <BR>
-<BLOCKQUOTE>
+<UL>
 <A NAME="TOC18" HREF="gnupod.html#SEC18">5.1 GNUtunesDB</A>
 <BR>
 <A NAME="TOC19" HREF="gnupod.html#SEC19">5.2 Get rid of '-m'</A>
@@ -1673,16 +1680,16 @@ to permit their use in free software.
 <BR>
 <A NAME="TOC21" HREF="gnupod.html#SEC21">5.4 Reporting Bugs</A>
 <BR>
-</BLOCKQUOTE>
+</UL>
 <A NAME="TOC22" HREF="gnupod.html#SEC22">A. GNU Free Documentation License</A>
 <BR>
-<BLOCKQUOTE>
-<BLOCKQUOTE>
+<UL>
+<UL>
 <A NAME="TOC23" HREF="gnupod.html#SEC23">A.0.1 ADDENDUM: How to use this License for your documents</A>
 <BR>
-</BLOCKQUOTE>
-</BLOCKQUOTE>
-</BLOCKQUOTE>
+</UL>
+</UL>
+</UL>
 <HR SIZE=1>
 <A NAME="SEC_OVERVIEW"></A>
 <TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
@@ -1716,7 +1723,7 @@ to permit their use in free software.
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
 </TR></TABLE>
 <H1>About this document</H1>
-This document was generated 
+This document was generated by <I>AU</I> on <I>February, 14  2004</I>
 using <A HREF="http://www.mathematik.uni-kl.de/~obachman/Texi2html
 "><I>texi2html</I></A>
 <P></P>  
@@ -1878,10 +1885,9 @@ the following structure:
 <BR>  
 <FONT SIZE="-1">
 This document was generated
-by <I>Adrian Ulrich</I> on <I>October, 5  2003</I>
+by <I>AU</I> on <I>February, 14  2004</I>
 using <A HREF="http://www.mathematik.uni-kl.de/~obachman/Texi2html
 "><I>texi2html</I></A>
-</FONT>
 
 </BODY>
 </HTML>

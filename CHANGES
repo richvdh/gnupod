@@ -1,8 +1,8 @@
 GNUpod 0.94 - codename 'aspartam'
 
 
-Summary:
---------
+Summary (hmm.. it's a long summary..):
+--------------------------------------
 - Nobody did buy me a 40gb iPod with Firmware 2.x
 
 - I bought one myself
@@ -29,7 +29,7 @@ Summary:
 - Changed rating-schema to match SPL-Rating
   -> Rating 5 is now 100 (newrating=oldrating*20)
   mktunes.pl will drop old (= now invalid) ratings,
-  no autoconvert...
+  no autoconvert... sorry.. but does anyone care?
 
 - gnupod_addsong.pl understands ID3v2.2 tags
 

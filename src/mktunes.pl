@@ -34,7 +34,7 @@ use vars qw($cid %pldb %spldb %itb %opts %meat %cmeat);
 #spldb{name} = '<spl' prefs
 #itb         = buffer
 $| = 1;
-print "mktunes.pl Version 0.94-pre1 (C) 2002-2004 Adrian Ulrich\n";
+print "mktunes.pl Version 0.94 (C) 2002-2004 Adrian Ulrich\n";
 
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};

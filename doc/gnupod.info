@@ -1,7 +1,6 @@
-Dies ist gnupod.info, hergestellt von Makeinfo Version 4.3 aus
-gnupod.texi.
+This is gnupod.info, produced by makeinfo version 4.5 from gnupod.texi.
 
-Copyright (C) 2002, 2003 Adrian Ulrich
+Copyright (C) 2002, 2003, 2004 Adrian Ulrich
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -24,8 +23,8 @@ File: gnupod.info,  Node: Top,  Next: Requirements,  Up: (dir)
 GNUpod
 ******
 
-   This edition of the `GNUpod Manual', last updated 05. Oct. 2003,
-documents GNUpod Version 0.92
+   This edition of the `GNUpod Manual', last updated 14. Feb. 2004,
+documents GNUpod Version 0.94
 
 * Menu:
 
@@ -57,8 +56,8 @@ Requirements
 
    * Perl 5.6 or 5.8
 
-   * The Perl modules MP3::Info, File::Copy, Unicode::String, and
-     XML::Parser
+   * The Perl modules MP3::Info, File::Copy, Unicode::String,
+     Digest::MD5 and XML::Parser
 
    * Basic knowledge of the shell
 
@@ -114,6 +113,9 @@ install them, please read
 
    http://cpan.org/misc/cpan-faq.html#How_install_Perl_modules
 
+   (Maybe you'd like to use the CPAN-Shell.. google knows how to use it
+;-) )
+
 
 File: gnupod.info,  Node: Using FireWire with GNU/Linux,  Next: Convert your Mac iPod,  Prev: Installation of GNUpod,  Up: Installing GNUpod
 
@@ -160,9 +162,8 @@ this:
      modprobe sbp2 sbp2_max_speed=0 sbp2_serialize_io=1 sbp2_force_inquiry_hack=1
 
    This will slow down the transfer rate but should act much more
-stable.  Note: The FireWire code of Linux 2.4.21 (and newer) seems to
-be much more stable: try to upgrade your kernel if you have crashes and
-oopses.
+stable.  Note: Firewire works very good with Linux 2.6. If you have
+Problems with Linux 2.4, you may wan't to upgrade to 2.6 !
 
    After loading sbp2, use `dmesg' to get some information, the output
 should look like this (If you are running linux 2.4.20 or older)
@@ -185,7 +186,7 @@ should look like this (If you are running linux 2.4.20 or older)
 
    Linux 2.4.21 (and newer) doesn't show such verbose output and your
 iPod won't get detectet when loading sbp2. Simply run
-`rescan-scsi-bus.sh' wich should find your iPod (See /proc/scsi/scsi).
+`rescan-scsi-bus.sh' which should find your iPod (See /proc/scsi/scsi).
 (You can download 'rescan-scsi-bus.sh' at
 http://www.garloff.de/kurt/linux/rescan-scsi-bus.sh)
 
@@ -231,7 +232,7 @@ kernel you are running has also to support DOS-Style partitions (to
 access the device after you converted it) and Mac partitions (to read
 the firmware).  If you are using GNU/Linux on x86, your fdisk should be
 fine, but if you are running GNU/Linux on (for example) PowerPC you may
-have to get a suitable fdisk from the util-linux package wich can be
+have to get a suitable fdisk from the util-linux package which can be
 retrieved from: ftp://ftp.kernel.org/pub/linux/utils/util-linux/
 
    Compile and install the pc-fdisk (and only the pc-fdisk!)
@@ -338,7 +339,7 @@ new Firmware or/and the documentation told you to do this **
 the modules and make sure sbp2 detected your iPod.  Do not try to mount
 the iPod. We assume your iPod at `/dev/sda'.
 
-   First you need to get a new Firmware wich you can download from
+   First you need to get a new Firmware which you can download from
 http://www.iweenie.com/ipod.shtml
 
    If you got a FAT32 formatted iPod (..or you plan to 'convert' the
@@ -436,7 +437,11 @@ gnupod_addsong.pl like this:
 
    It isn't possible to add the same MP3 multiple times,
 gnupod_addsong.pl detects duplicates (Duplicate = same filesize/time
-and ID3Tag name).
+and ID3Tag name). You can disable the duplicate-detection with the
+'-duplicate' switch.
+
+   gnupod_addsong.pl understands MP3/WAV (RIFF) and M4A (Apple AAC - NO
+DRM!) files.
 
    Note: gnupod_addsong.pl will try to 'auto-detect' the encoding of
 the ID3 Tag.  Sometimes this works (in most cases ;) ) sometimes it
@@ -451,7 +456,7 @@ File: gnupod.info,  Node: Search files,  Next: Remove files,  Prev: Add files,  
 Search files
 ============
 
-   GNUpod includes a tool called `gnupod_search.pl' wich helps you
+   GNUpod includes a tool called `gnupod_search.pl' which helps you
 searching for files.
 
    Maybe you would like to search for the artist called 'Schlummiguch'.
@@ -480,7 +485,7 @@ Creating playlists
    Open the file `iPod_Control/.gnupod/GNUtunesDB' in a editor (It's a
 XML File).
 
-   To create a playlist named 'sweet' wich holds the songs with the ID
+   To create a playlist named 'sweet' which holds the songs with the ID
 1 and 2, create something like this:
      <playlist name="sweet">
       <add id="1" />
@@ -516,13 +521,13 @@ File: gnupod.info,  Node: Unplug the iPod,  Next: Recovering files,  Prev: Creat
 Unplug the iPod
 ===============
 
-   Before umounting the iPod, you have to call `mktunes.pl' wich will
+   Before umounting the iPod, you have to call `mktunes.pl' which will
 parse the GNUtunesDB XML file and convert it into the iTunesDB format.
 
    Simply run
      mktunes.pl -m /mnt/ipod
 
-   Note: Since GNUpod 0.91, mktunes.pl has a '-volume' option wich you
+   Note: Since GNUpod 0.91, mktunes.pl has a '-volume' option which you
 can use to boost the Volume.
 
      mktunes.pl -m /mnt/ipod --volume 40
@@ -547,7 +552,7 @@ Recovering files
 ================
 
    If you lost your iTunesDB and your GNUtunesDB, your iPod won't know
-anymore wich songs are on it, this very good ;)
+anymore which songs are on it, this very good ;)
 
    You can 'rebuild' an GNUtunesDB using `gnupod_addsong.pl'
 
@@ -555,7 +560,7 @@ anymore wich songs are on it, this very good ;)
 
    First, `gnupod_INIT.pl' will create a clean, empty GNUtunesDB, it
 won't delete any songs on the iPod.  `gnupod_addsong.pl --restore' will
-re-create a GNUtunesDB including the Songs wich are on the iPod
+re-create a GNUtunesDB including the Songs which are on the iPod
 
    I think nobody will ever have to do this.. but it maybe usefull to
 know that it's possible (Note: Of course you'll lose your Playlists)
@@ -582,8 +587,8 @@ editing playists.. doing something..), you'll have to  use
 GNUtunesDB, other programs are accessing the iTunesDB directly. After
 you did something with eg. iTunes, the GNUtunesDB would be 'outdatet'
 and you would lose any changes you made with iTunes. Running
-`tunes2pod.pl' will write a new GNUtunesDB wich reflects the content of
-the current iTunesDB.
+`tunes2pod.pl' will write a new GNUtunesDB which reflects the content
+of the current iTunesDB.
 
    You sould avoid the use of 'extended playlist support' if you use
 your iPod with other programs.
@@ -675,7 +680,7 @@ Known bugs and limitations
 
    * Smartplaylist support is incomplete (No liveupdate)
 
-   * You can't add m4a (AAC) files atm
+   * GNUpod doesn't like Audible.com and DRM Files
 
 
 File: gnupod.info,  Node: Reporting Bugs,  Prev: Known bugs and limitations,  Up: Problems
@@ -1135,27 +1140,27 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top849
-Node: Requirements1437
-Node: Installing GNUpod1947
-Node: Installation of GNUpod2370
-Node: Using FireWire with GNU/Linux3404
-Node: Convert your Mac iPod6835
-Node: Firmware update11864
-Node: Using GNUpod13636
-Node: Preparation14388
-Node: Add files15111
-Node: Search files16073
-Node: Remove files16553
-Node: Creating playlists16858
-Node: Unplug the iPod18052
-Node: Recovering files18954
-Node: Coexistence19673
-Node: Problems21135
-Node: GNUtunesDB21514
-Node: Get rid of '-m'23015
-Node: Known bugs and limitations23295
-Node: Reporting Bugs23566
-Node: GNU Free Documentation License24006
+Node: Top851
+Node: Requirements1439
+Node: Installing GNUpod1961
+Node: Installation of GNUpod2384
+Node: Using FireWire with GNU/Linux3497
+Node: Convert your Mac iPod6906
+Node: Firmware update11936
+Node: Using GNUpod13709
+Node: Preparation14461
+Node: Add files15184
+Node: Search files16302
+Node: Remove files16783
+Node: Creating playlists17088
+Node: Unplug the iPod18283
+Node: Recovering files19187
+Node: Coexistence19908
+Node: Problems21371
+Node: GNUtunesDB21750
+Node: Get rid of '-m'23251
+Node: Known bugs and limitations23531
+Node: Reporting Bugs23814
+Node: GNU Free Documentation License24254
 
 End Tag Table

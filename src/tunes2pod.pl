@@ -29,7 +29,7 @@ use Getopt::Long;
 
 use vars qw(%opts);
 $| = 1;
-print "tunes2pod.pl Version 0.94-pre1 (C) 2002-2004 Adrian Ulrich\n";
+print "tunes2pod.pl Version 0.94 (C) 2002-2004 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 

@@ -133,6 +133,7 @@ If you don't know how to install them, please read
 
 http://cpan.org/misc/cpan-faq.html#How_install_Perl_modules
 
+(Maybe you'd like to use the CPAN-Shell.. google knows how to use it ;-) )
 
 
 @node Using FireWire with GNU/Linux
@@ -203,7 +204,7 @@ In this case, @code{@w{/dev/sda}} would be your iPod.
 
 Linux 2.4.21 (and newer) doesn't show such verbose output and your iPod 
 won't get detectet when loading sbp2. Simply run @code{@w{rescan-scsi-bus.sh}} 
-wich should find your iPod (See /proc/scsi/scsi). 
+which should find your iPod (See /proc/scsi/scsi). 
 (You can download 'rescan-scsi-bus.sh' at http://www.garloff.de/kurt/linux/rescan-scsi-bus.sh)
 
 You can now mount the iPod:
@@ -246,7 +247,7 @@ Have a look at the next section to learn how to do this.
 Also note that you will need a fdisk for DOS-Style partitions. The kernel you are running has also to support 
 DOS-Style partitions (to access the device after you converted it) and Mac partitions (to read the firmware).
 If you are using GNU/Linux on x86, your fdisk should be fine, but if you are running GNU/Linux on 
-(for example) PowerPC you may have to get a suitable fdisk from the util-linux package wich can
+(for example) PowerPC you may have to get a suitable fdisk from the util-linux package which can
 be retrieved from: ftp://ftp.kernel.org/pub/linux/utils/util-linux/
 
 Compile and install the pc-fdisk (and only the pc-fdisk!)
@@ -367,7 +368,7 @@ new Firmware or/and the documentation told you to do this **
 Setup Firewire as described in 'Using FireWire with GNU/Linux', load the modules and make sure sbp2 detected your iPod.
 Do not try to mount the iPod. We assume your iPod at @code{@w{/dev/sda}}.
 
-First you need to get a new Firmware wich you can download from http://www.iweenie.com/ipod.shtml
+First you need to get a new Firmware which you can download from http://www.iweenie.com/ipod.shtml
 
 If you got a FAT32 formatted iPod (..or you plan to 'convert' the iPod after upgrading the Firmware), you'll need 
 Version 1.1.0 or newer.
@@ -466,7 +467,10 @@ gnupod_addsong.pl -m /mnt/ipod /mnt/mp3/seiken_densetsu2_ost/* /mnt/mp3/xenogear
 @end example
 
 It isn't possible to add the same MP3 multiple times, gnupod_addsong.pl detects duplicates 
-(Duplicate = same filesize/time and ID3Tag name).
+(Duplicate = same filesize/time and ID3Tag name). You can disable the duplicate-detection 
+with the '--duplicate' switch.
+
+gnupod_addsong.pl understands MP3/WAV (RIFF) and M4A (Apple AAC - NO DRM!) files.
 
 Note: gnupod_addsong.pl will try to 'auto-detect' the encoding of the ID3 Tag. 
 Sometimes this works (in most cases ;) ) sometimes it doesn't. If it doesn't work for you, 
@@ -479,7 +483,7 @@ DO NOT umount the iPod yet! First read the section 'Unplug the iPod'!
 @node Search files
 @section Search files
 
-GNUpod includes a tool called @code{@w{gnupod_search.pl}} wich helps you searching for files.
+GNUpod includes a tool called @code{@w{gnupod_search.pl}} which helps you searching for files.
 
 Maybe you would like to search for the artist called 'Schlummiguch'. In this case, run
 @example
@@ -504,7 +508,7 @@ gnupod_search.pl -m /mnt/ipod -a "Schlummiguch" -d
 
 Open the file @code{@w{iPod_Control/.gnupod/GNUtunesDB}} in a editor (It's a XML File).
 
-To create a playlist named 'sweet' wich holds the songs with the ID 1 and 2, create something like this:
+To create a playlist named 'sweet' which holds the songs with the ID 1 and 2, create something like this:
 @example
 <playlist name="sweet">
  <add id="1" />
@@ -540,7 +544,7 @@ Don't forget to run mktunes before umounting! (See 'Unplug the iPod')
 @node Unplug the iPod
 @section Unplug the iPod
 
-Before umounting the iPod, you have to call @code{@w{mktunes.pl}} wich will 
+Before umounting the iPod, you have to call @code{@w{mktunes.pl}} which will 
 parse the GNUtunesDB XML file and convert it into the iTunesDB format.
 
 Simply run
@@ -548,7 +552,7 @@ Simply run
 mktunes.pl -m /mnt/ipod
 @end example
 
-Note: Since GNUpod 0.91, mktunes.pl has a '--volume' option wich you can use to 
+Note: Since GNUpod 0.91, mktunes.pl has a '--volume' option which you can use to 
 boost the Volume.
 
 @example
@@ -571,7 +575,7 @@ Added songs won't be visible on the iPod if you did not run mktunes.pl before um
 @node Recovering files
 @section Recovering files
 
-If you lost your iTunesDB and your GNUtunesDB, your iPod won't know anymore wich songs are on it, this 
+If you lost your iTunesDB and your GNUtunesDB, your iPod won't know anymore which songs are on it, this 
 very good ;)
 
 You can 'rebuild' an GNUtunesDB using @code{gnupod_addsong.pl}
@@ -581,7 +585,7 @@ gnupod_addsong.pl --restore -m /mnt/ipod
 @end example
 
 First, @code{gnupod_INIT.pl} will create a clean, empty GNUtunesDB, it won't delete any songs on the iPod.
-@code{gnupod_addsong.pl --restore} will re-create a GNUtunesDB including the Songs wich are on the iPod
+@code{gnupod_addsong.pl --restore} will re-create a GNUtunesDB including the Songs which are on the iPod
 
 I think nobody will ever have to do this.. but it maybe usefull to know that it's possible
 (Note: Of course you'll lose your Playlists)
@@ -604,7 +608,7 @@ The iPod is now ready again for GNUpod.
 
 You have to do this because GNUpod stores it's information in the GNUtunesDB, other programs are accessing the 
 iTunesDB directly. After you did something with eg. iTunes, the GNUtunesDB would be 'outdatet' and you would 
-lose any changes you made with iTunes. Running @code{@w{tunes2pod.pl}} will write a new GNUtunesDB wich
+lose any changes you made with iTunes. Running @code{@w{tunes2pod.pl}} will write a new GNUtunesDB which
 reflects the content of the current iTunesDB.
 
 
@@ -691,7 +695,7 @@ export IPOD_MOUNTPOINT="/mnt/ipod"
 
 @itemize @bullet
 @item Smartplaylist support is incomplete (No liveupdate)
-@item You can't add m4a (AAC) files atm
+@item GNUpod doesn't like Audible.com and DRM Files
 @end itemize
 
 
