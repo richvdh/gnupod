@@ -127,17 +127,14 @@ exit(0);
 # create a spl
 sub render_spl {
  my($name, $pref, $data, $mr, $content) = @_;
- 
  my $of = undef;
  $of->{liveupdate} = $pref->{live};
  $of->{moselected} = $pref->{mos};
  $of->{matchany}   = $mr;
- $of->{limitomatic}=$pref->{limitomatic}; 
  $of->{limitsort} = $pref->{isort};
  $of->{limitval}  = $pref->{value};
  $of->{limititem} = $pref->{iitem};
- $of->{matchomatic}=$pref->{matchomatic};
-
+ $of->{checkrule} = $pref->{checkrule};
 #create this playlist
 GNUpod::XMLhelper::addspl($name, $of);
 

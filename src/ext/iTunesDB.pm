@@ -211,11 +211,19 @@ sub mk_splprefmhod {
  my($hs) = @_;
  my($live, $chkrgx, $chklim, $mos) = 0;
  #Bool stuff
- $live   = 1 if $hs->{liveupdate};
- $chkrgx = 1 if $hs->{chkrgx};
- $chklim = 1 if $hs->{chklim};
- $mos    = 1 if $hs->{mos};
- 
+ $live        = 1 if $hs->{liveupdate};
+my $checkrule   = int($hs->{checkrule});
+ $mos         = 1 if $hs->{mos};
+
+if($checkrule < 1 || $checkrule > 3) {
+ warn "iTunesDB.pm: error: 'checkrule' ($checkrule) out of range. value set to 1 (=LimitMatch)\n";
+ $checkrule = 1;
+}
+
+$chkrgx = 1 if $checkrule>1;
+$chklim = $checkrule-$chkrgx*2;
+#lim-only = 1 / match only = 2 / both = 3
+
  my $ret = "mhod";
  $ret .= pack("h8", _itop(24));    #Size of header
  $ret .= pack("h8", _itop(96));
@@ -238,6 +246,11 @@ sub mk_spldatamhod {
  my($hs) = @_;
 
  my $anymatch = 1 if $hs->{anymatch};
+
+if(ref($hs->{data}) ne "ARRAY") {
+ warn "iTunesDB.pm: warning: no spldata found in spl, iTunes4-workaround enabled\n";
+ push(@{$hs->{data}}, {field=>4,action=>2,string=>""});
+}
 
  my $cr = undef;
  foreach my $chr (@{$hs->{data}}) {
@@ -524,16 +537,17 @@ my @ret = ();
 # Read SPLpref data
 sub read_splpref {
  my($hs) = @_;
- my $live =    get_int($hs->{start}+24,1);
- my $chkrgx  = get_int($hs->{start}+25,1);
- my $chklim  = get_int($hs->{start}+26,1);
- my $item =    get_int($hs->{start}+27,1);
- my $sort =    get_int($hs->{start}+28,1);
- my $limit =   get_int($hs->{start}+32,4);
- my $mos   =   get_int($hs->{start}+36,1);
-# print "Live: $live / rgx $chkrgx / lim $chklim / val $limit / it $item / sort $sort / mos $mos\n";
- return({live=>$live, matchomatic=>$chkrgx, limitomatic=>$chklim,
-         value=>$limit, iitem=>$item, isort=>$sort,mos=>$mos});
+ my ($live, $chkrgx, $chklim, $mos);
+ 
+    $live    = 1 if   get_int($hs->{start}+24,1);
+    $chkrgx  = 1 if get_int($hs->{start}+25,1);
+    $chklim  = 1 if get_int($hs->{start}+26,1);
+ my $item    =    get_int($hs->{start}+27,1);
+ my $sort    =    get_int($hs->{start}+28,1);
+ my $limit   =   get_int($hs->{start}+32,4);
+    $mos     = 1 if get_int($hs->{start}+36,1);
+ return({live=>$live,
+         value=>$limit, iitem=>$item, isort=>$sort,mos=>$mos,checkrule=>($chklim+($chkrgx*2))});
 }
 
 #################################################

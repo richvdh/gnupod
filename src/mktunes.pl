@@ -28,8 +28,11 @@ use GNUpod::FooBar;
 use Getopt::Long;
 
 
-use vars qw($cid %pldb %itb %opts %meat %cmeat);
-
+use vars qw($cid %pldb %spldb %itb %opts %meat %cmeat);
+#cid = CurrentID
+#pldb{name}  = array with id's
+#spldb{name} = '<spl' prefs
+#itb         = buffer
 $| = 1;
 print "mktunes.pl Version 0.92 (C) 2002-2003 Adrian Ulrich\n";
 
@@ -114,14 +117,11 @@ sub r_mpl {
 my $pl = undef;
 my $fc = 0;
 my $mhp = 0;
-
-if(ref($spl->{pref}) eq "HASH") { #We got splpref!
-print "\nwarning: mktunes.pl: writing prefs ok.. but you'll lose splmhod's (creating dummy)\n";
-my @da = ({field=>4,action=>2,string=>"test"},{field=>2,action=>1,string=>"test2"});
- $pl .= GNUpod::iTunesDB::mk_splprefmhod({item=>$spl->{pref}->{limititem},sort=>$spl->{pref}->{limitsort},mos=>$spl->{pref}->{moselected}
-                                          ,liveupdate=>$spl->{pref}->{liveupdate},value=>$spl->{pref}->{limitval},
-                                          chkrgx=>$spl->{pref}->{matchomatic},chklim=>$spl->{pref}->{limitomatic}});
- $pl .= GNUpod::iTunesDB::mk_spldatamhod({anymatch=>$spl->{pref}->{matchany},data=>\@da});
+if(ref($spl) eq "HASH") { #We got splpref!
+ $pl .= GNUpod::iTunesDB::mk_splprefmhod({item=>$spl->{limititem},sort=>$spl->{limitsort},mos=>$spl->{moselected}
+                                          ,liveupdate=>$spl->{liveupdate},value=>$spl->{limitval},
+                                          checkrule=>$spl->{checkrule}});
+ $pl .= GNUpod::iTunesDB::mk_spldatamhod({anymatch=>$spl->{matchany},data=>$spldb{$name}});
  $mhp=2; #Add a mhod
 }
 
@@ -149,12 +149,12 @@ sub genpls {
  my $plc = 1;
 #CID is now used by r_mpl, dont use it yourself anymore
   foreach(GNUpod::XMLhelper::getpl_names()) {
-    print ">> Adding Playlist '$_...'";
     my $splh = GNUpod::XMLhelper::get_splpref($_);
-    $plc++;
-       my($pl, $xc) = r_mpl($_, 0, $pldb{$_}, {pref=>$splh});
+    $plc++; #PLcount
+       my($pl, $xc) = r_mpl($_, 0, $pldb{$_}, $splh);
        $pldata .= $pl;
-       print "\r>> Added Playlist '$_' with $xc file"; print "s" if $xc !=1;
+       my $plxt = "Smart-" if $splh;
+       print ">> Created $plxt"."Playlist '$_' with $xc file"; print "s" if $xc !=1;
      
      print "\n";
   }
@@ -234,12 +234,21 @@ sub xmk_newspl {
  my($el, $name) = @_;
  my $mpref = GNUpod::XMLhelper::get_splpref($name)->{matchany};
 
+#Is spl data, add it
+ if(my $xr = $el->{spl}) {
+  push(@{$spldb{$name}}, $xr);
+ }
+
  if(GNUpod::XMLhelper::get_splpref($name)->{liveupdate}) {
   warn "PLAYLIST $name :: Liveupdate doesn't work.. you'll get an empty spl.. sorry! (That's why this code is in CVS ;) )\n";
  }
  elsif(my $id = $el->{splcont}->{id}) { #We found an old id with disalbed liveupdate
     foreach(split(/ /,$meat{id}{$id})) { push(@{$pldb{$name}}, $_); }
  }
+# else {
+#  print "????????????\n";
+#   foreach(keys(%$el)) { print "?? $_\n" }
+# }
 
 }
 

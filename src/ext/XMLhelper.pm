@@ -191,7 +191,7 @@ sub eventer {
   } 
   elsif($href->{Context}[1] eq "" && $el eq "playlist") {
     my $xh = mkh($el, @it); #Create hash
-  #  $xh->{$el}->{name} = "NONAME" unless $xh->{$el}->{name};
+    $xh->{$el}->{name} = "NONAME" unless $xh->{$el}->{name};
     $cpn = $xh->{$el}->{name}; #Get current name
     addpl($cpn,$xh->{$el}); #Add this playlist
   }
