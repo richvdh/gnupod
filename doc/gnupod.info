@@ -1,6 +1,6 @@
-This is gnupod.info, produced by makeinfo version 4.5 from gnupod.texi.
+This is gnupod.info, produced by makeinfo version 4.7 from gnupod.texi.
 
-Copyright (C) 2002, 2003, 2004 Adrian Ulrich
+   Copyright (C) 2002, 2003, 2004 Adrian Ulrich
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -12,6 +12,7 @@ is included in the section entitled "GNU Free Documentation License".
    (a) The FSF's Back-Cover Text is: "You have freedom to copy and
 modify this GNU Manual, like GNU software.  Copies published by the Free
 Software Foundation raise funds for GNU development."
+
 INFO-DIR-SECTION GNU Packages
 START-INFO-DIR-ENTRY
 * GNUpod: (gnupod).        Manage your iPod.
@@ -20,11 +21,11 @@ END-INFO-DIR-ENTRY
 
 File: gnupod.info,  Node: Top,  Next: Requirements,  Up: (dir)
 
-GNUpod
-******
+1 GNUpod
+********
 
-   This edition of the `GNUpod Manual', last updated 31. May. 2004,
-documents GNUpod Version 0.95rc1
+This edition of the `GNUpod Manual', last updated 27. Jun. 2004,
+documents GNUpod Version 0.95
 
 * Menu:
 
@@ -43,10 +44,10 @@ Appendices
 
 File: gnupod.info,  Node: Requirements,  Next: Installing GNUpod,  Prev: Top,  Up: Top
 
-Requirements
-************
+2 Requirements
+**************
 
-   To use GNUpod, the follwing is needed:
+To use GNUpod, the follwing is needed:
 
    * iPod (HFS+ or FAT32)
 
@@ -67,8 +68,8 @@ Solaris 9.
 
 File: gnupod.info,  Node: Installing GNUpod,  Next: Using GNUpod,  Prev: Requirements,  Up: Top
 
-Installing GNUpod
-*****************
+3 Installing GNUpod
+*******************
 
 * Menu:
 
@@ -80,10 +81,10 @@ Installing GNUpod
 
 File: gnupod.info,  Node: Installation of GNUpod,  Next: Using FireWire with GNU/Linux,  Up: Installing GNUpod
 
-Installation of GNUpod
-======================
+3.1 Installation of GNUpod
+==========================
 
-   The installation of GNUpod is very simple:
+The installation of GNUpod is very simple:
 
      tar -xzvf gnupod-tools-VERSION.tar.gz
      cd gnupod-tools/
@@ -119,10 +120,10 @@ install them, please read
 
 File: gnupod.info,  Node: Using FireWire with GNU/Linux,  Next: Convert your Mac iPod,  Prev: Installation of GNUpod,  Up: Installing GNUpod
 
-Using FireWire with GNU/Linux
-=============================
+3.2 Using FireWire with GNU/Linux
+=================================
 
-   Of course the Linux kernel must support FireWire. If the one you are
+Of course the Linux kernel must support FireWire. If the one you are
 using doesn't have FireWire support you'll have to recompile your
 Kernel. (It's also a good idea to update the Kernel when you are doing
 this...)
@@ -204,12 +205,12 @@ have a look at the next section 'Convert your Mac iPod' before using
 
 File: gnupod.info,  Node: Convert your Mac iPod,  Next: Firmware update,  Prev: Using FireWire with GNU/Linux,  Up: Installing GNUpod
 
-Convert your Mac iPod
-=====================
+3.3 Convert your Mac iPod
+=========================
 
-   If the Operating System you are running doesn't have write support
-for HFS+ and your iPod is HFS+ Formatted (aka 'Mac-iPod') you will have
-to reformat the iPod.
+If the Operating System you are running doesn't have write support for
+HFS+ and your iPod is HFS+ Formatted (aka 'Mac-iPod') you will have to
+reformat the iPod.
 
    Note: Linux 2.6.4 includes HFS+ Read/WRITE Support(!)  It's still
 experimental and may do nasty things. (But it works well for me..)  If
@@ -259,8 +260,8 @@ partition map and force the kernel to re-read the new (empty) map
 
    Now we can use 'pc-fdisk' to create a new partition layout:
      pc-fdisk /dev/sda [start fdisk]
-     
-     
+
+
      Command (m for help): n [make new partition]
      Command action
         e extended
@@ -270,7 +271,7 @@ partition map and force the kernel to re-read the new (empty) map
      First cylinder (1-608, default 1): [just press enter]
      Using default value 1
      Last cylinder or +size or +sizeM or +sizeK (1-608, default 608): +32M [32M is the default for 1.x iPods]
-     
+
      Command (m for help): n
      Command action
         e extended
@@ -281,7 +282,7 @@ partition map and force the kernel to re-read the new (empty) map
      Using default value 6
      Last cylinder or +size or +sizeM or +sizeK (6-608, default 608): [press ENTER]
      Using default value 608 [If you don't own a 5gb iPod, this value will be different, don't care about it]
-     
+
      Command (m for help): t [Modify type]
      Partition number (1-4): 1
      Hex code (type L to list codes): 0 [we don't care about the warning below]
@@ -290,16 +291,16 @@ partition map and force the kernel to re-read the new (empty) map
      type 0 is probably unwise. You can delete
      a partition using the `d' command.
      Changed system type of partition 1 to 0 (Empty)
-     
+
      Command (m for help): t
      Partition number (1-4): 2 [this is where data will go]
      Hex code (type L to list codes): b [b=FAT32]
      Changed system type of partition 2 to b (Win95 FAT32)
-     
-     
+
+
      Command (m for help): w [Writing new partition. Can take a while.]
      The partition table has been altered!
-     
+
      Calling ioctl() to re-read partition table.
      Syncing disks.
 
@@ -333,11 +334,11 @@ Diskmode))
 
 File: gnupod.info,  Node: Firmware update,  Prev: Convert your Mac iPod,  Up: Installing GNUpod
 
-Firmware update
-===============
+3.4 Firmware update
+===================
 
-   ** Don't update the Firmware just for fun, only do it if you need a
-new Firmware or/and the documentation told you to do this **
+** Don't update the Firmware just for fun, only do it if you need a new
+Firmware or/and the documentation told you to do this **
 
    Setup Firewire as described in 'Using FireWire with GNU/Linux', load
 the modules and make sure sbp2 detected your iPod.  Do not try to mount
@@ -383,8 +384,8 @@ Firmware... (because the zip file wouldn't have a correct checksum)
 
 File: gnupod.info,  Node: Using GNUpod,  Next: Problems,  Prev: Installing GNUpod,  Up: Top
 
-Using GNUpod
-************
+4 Using GNUpod
+**************
 
 * Menu:
 
@@ -401,10 +402,10 @@ Using GNUpod
 
 File: gnupod.info,  Node: Preparation,  Next: Configuration,  Up: Using GNUpod
 
-Preparation
-===========
+4.1 Preparation
+===============
 
-   Mount the iPod (i assume you mount it at /mnt/ipod) as described in
+Mount the iPod (i assume you mount it at /mnt/ipod) as described in
 'Using FireWire with GNUpod'
 
    If the iPod is freshly formatted or you never used GNUpod before
@@ -426,11 +427,11 @@ volume).  This only works for iPods running Firmware 1.x
 
 File: gnupod.info,  Node: Configuration,  Next: Add files,  Prev: Preparation,  Up: Using GNUpod
 
-Configuration
-=============
+4.2 Configuration
+=================
 
-   (Note: You don't need to bother about the Configfile. GNUpod works
-fine  without it, but it could make your life easier)
+(Note: You don't need to bother about the Configfile. GNUpod works fine
+without it, but it could make your life easier)
 
    GNUpod >= 0.95 can read a simple Configfile.  An example comes with
 GNUpod, see doc/gnupodrc.example
@@ -441,10 +442,10 @@ GNUpod, see doc/gnupodrc.example
 
 File: gnupod.info,  Node: Add files,  Next: Search files,  Prev: Configuration,  Up: Using GNUpod
 
-Add files
-=========
+4.3 Add files
+=============
 
-   To add files, we use the script called `gnupod_addsong.pl'.
+To add files, we use the script called `gnupod_addsong.pl'.
 
    First, mount the iPod (eg. at /mnt/ipod) if it isn't mounted.
 
@@ -473,10 +474,10 @@ example-file: pab@blinkenligts.ch
 
 File: gnupod.info,  Node: Search files,  Next: Remove files,  Prev: Add files,  Up: Using GNUpod
 
-Search files
-============
+4.4 Search files
+================
 
-   GNUpod includes a tool called `gnupod_search.pl' which helps you
+GNUpod includes a tool called `gnupod_search.pl' which helps you
 searching for files.
 
    Maybe you would like to search for the artist called 'Schlummiguch'.
@@ -489,21 +490,21 @@ In this case, run
 
 File: gnupod.info,  Node: Remove files,  Next: Creating playlists,  Prev: Search files,  Up: Using GNUpod
 
-Remove files
-============
+4.5 Remove files
+================
 
-   Removing files is done using `gnupod_search.pl -d'.  To Remove all
+Removing files is done using `gnupod_search.pl -d'.  To Remove all
 files from the artist 'Schlummiguch', run
      gnupod_search.pl -m /mnt/ipod -a "Schlummiguch" -d
 
 
 File: gnupod.info,  Node: Creating playlists,  Next: Unplug the iPod,  Prev: Remove files,  Up: Using GNUpod
 
-Creating playlists
-==================
+4.6 Creating playlists
+======================
 
-   Open the file `iPod_Control/.gnupod/GNUtunesDB' in a editor (It's a
-XML File).
+Open the file `iPod_Control/.gnupod/GNUtunesDB' in a editor (It's a XML
+File).
 
    To create a playlist named 'sweet' which holds the songs with the ID
 1 and 2, create something like this:
@@ -536,7 +537,7 @@ matching.
         <spl action="eq" field="playcount" string="0" />
         <spl action="IS" field="artist" string="Jon Doe" />
       </smartplaylist>
-     
+
        <smartplaylist checkrule="spl" liveupdate="1" name="Example SPL2" >
         <spl action="gt" field="bitrate" string="311" />
       </smartplaylist>
@@ -546,17 +547,18 @@ All songs from Jon Doe never played until yet) 'Example SPL2' matches
 all songs with a Bitrate > 331.  (See also README.smartplaylists)
 
    For more examples have a look at `doc/gnutunesdb.example' included
-in the GNUpod tarball.
+in the GNUpod tarball.  Also checkout
+http://blinkenlights.ch/gnupod/mkspl.html for a 'JavaScript SPL-Creator'
 
    Don't forget to run mktunes before umounting! (See 'Unplug the iPod')
 
 
 File: gnupod.info,  Node: Unplug the iPod,  Next: Recovering files,  Prev: Creating playlists,  Up: Using GNUpod
 
-Unplug the iPod
-===============
+4.7 Unplug the iPod
+===================
 
-   Before umounting the iPod, you have to call `mktunes.pl' which will
+Before umounting the iPod, you have to call `mktunes.pl' which will
 parse the GNUtunesDB XML file and convert it into the iTunesDB format.
 
    Simply run
@@ -583,11 +585,11 @@ and run it)
 
 File: gnupod.info,  Node: Recovering files,  Next: Coexistence,  Prev: Unplug the iPod,  Up: Using GNUpod
 
-Recovering files
-================
+4.8 Recovering files
+====================
 
-   If your computer crashed while uploading/deleting songs, you may
-have some 'zombie' files.
+If your computer crashed while uploading/deleting songs, you may have
+some 'zombie' files.
 
    In this case, you can use 'gnupod_check.pl' to search 'lost' files.
 gnupod_check.pl will tell you what you could do to fix it.
@@ -608,10 +610,10 @@ know that it's possible (Note: Of course you'll lose your Playlists)
 
 File: gnupod.info,  Node: Coexistence,  Prev: Recovering files,  Up: Using GNUpod
 
-Coexistence
-===========
+4.9 Coexistence
+===============
 
-   GNUpod can coexist with iTunes and other programs for the iPod.
+GNUpod can coexist with iTunes and other programs for the iPod.
 
    If you want to use an iPod with GNUpod and used something other than
 GNUpod (maybe iTunes)  to perform the last update (adding songs,
@@ -655,8 +657,8 @@ are 'lost'.
 
 File: gnupod.info,  Node: Problems,  Next: GNU Free Documentation License,  Prev: Using GNUpod,  Up: Top
 
-Problems
-********
+5 Problems
+**********
 
 * Menu:
 
@@ -668,11 +670,11 @@ Problems
 
 File: gnupod.info,  Node: GNUtunesDB,  Next: Get rid of '-m',  Up: Problems
 
-GNUtunesDB
-==========
+5.1 GNUtunesDB
+==============
 
-   We talked alot about the 'GNUtunesDB' and the 'iTunesDB' files, but
-why do we need this two files and what's the difference ?
+We talked alot about the 'GNUtunesDB' and the 'iTunesDB' files, but why
+do we need this two files and what's the difference ?
 
    Well, you can find the iTunesDB on your iPod at
 `iPod_Control/iTunes/iTunesDB' .  This file is read by the iPod when
@@ -705,18 +707,18 @@ gnupod_something.pl) you'll have to run `mktunes.pl'.
 
 File: gnupod.info,  Node: Get rid of '-m',  Next: Known bugs and limitations,  Prev: GNUtunesDB,  Up: Problems
 
-Get rid of '-m'
-===============
+5.2 Get rid of '-m'
+===================
 
-   You don't have to use the '-m' switch if you set IPOD_MOUNTPOINT.
+You don't have to use the '-m' switch if you set IPOD_MOUNTPOINT.
 (Example for the BASH)
      export IPOD_MOUNTPOINT="/mnt/ipod"
 
 
 File: gnupod.info,  Node: Known bugs and limitations,  Next: Reporting Bugs,  Prev: Get rid of '-m',  Up: Problems
 
-Known bugs and limitations
-==========================
+5.3 Known bugs and limitations
+==============================
 
    * Smartplaylist support is incomplete (No liveupdate)
 
@@ -725,10 +727,10 @@ Known bugs and limitations
 
 File: gnupod.info,  Node: Reporting Bugs,  Prev: Known bugs and limitations,  Up: Problems
 
-Reporting Bugs
-==============
+5.4 Reporting Bugs
+==================
 
-   To report a bug, send a mail to bug-gnupod@nongnu.org
+To report a bug, send a mail to bug-gnupod@nongnu.org
 
    Include as much information as possible.
 
@@ -741,13 +743,14 @@ the files.
 
 File: gnupod.info,  Node: GNU Free Documentation License,  Prev: Problems,  Up: Top
 
-GNU Free Documentation License
-******************************
+Appendix A GNU Free Documentation License
+*****************************************
 
                       Version 1.2, November 2002
+
      Copyright (C) 2000,2001,2002 Free Software Foundation, Inc.
      59 Temple Place, Suite 330, Boston, MA  02111-1307, USA
-     
+
      Everyone is permitted to copy and distribute verbatim copies
      of this license document, but changing it is not allowed.
 
@@ -1138,10 +1141,10 @@ GNU Free Documentation License
      you may choose any version ever published (not as a draft) by the
      Free Software Foundation.
 
-ADDENDUM: How to use this License for your documents
-----------------------------------------------------
+A.0.1 ADDENDUM: How to use this License for your documents
+----------------------------------------------------------
 
-   To use this License in a document you have written, include a copy of
+To use this License in a document you have written, include a copy of
 the License in the document and put the following copyright and license
 notices just after the title page:
 
@@ -1169,39 +1172,42 @@ recommend releasing these examples in parallel under your choice of
 free software license, such as the GNU General Public License, to
 permit their use in free software.
 
+ [index ]
 * Menu:
 
-* Darwin:                                Requirements.
+* Darwin:                                Requirements.          (line 6)
 * FDL, GNU Free Documentation License:   GNU Free Documentation License.
+                                                                (line 6)
 * installation:                          Installation of GNUpod.
-* requirements:                          Requirements.
-* Solaris:                               Requirements.
+                                                                (line 6)
+* requirements:                          Requirements.          (line 6)
+* Solaris:                               Requirements.          (line 6)
 
 
 
 Tag Table:
-Node: Top851
-Node: Requirements1442
-Node: Installing GNUpod1964
-Node: Installation of GNUpod2387
-Node: Using FireWire with GNU/Linux3500
-Node: Convert your Mac iPod6909
-Node: Firmware update12173
-Node: Using GNUpod13946
-Node: Preparation14769
-Node: Configuration15496
+Node: Top855
+Node: Requirements1444
+Node: Installing GNUpod1967
+Node: Installation of GNUpod2394
+Node: Using FireWire with GNU/Linux3512
+Node: Convert your Mac iPod6926
+Node: Firmware update12155
+Node: Using GNUpod13933
+Node: Preparation14760
+Node: Configuration15492
 Node: Add files15949
-Node: Search files17069
-Node: Remove files17550
-Node: Creating playlists17855
-Node: Unplug the iPod19694
-Node: Recovering files20598
-Node: Coexistence21488
-Node: Problems22951
-Node: GNUtunesDB23330
-Node: Get rid of '-m'24831
-Node: Known bugs and limitations25111
-Node: Reporting Bugs25394
-Node: GNU Free Documentation License25837
+Node: Search files17074
+Node: Remove files17560
+Node: Creating playlists17870
+Node: Unplug the iPod19797
+Node: Recovering files20706
+Node: Coexistence21601
+Node: Problems23069
+Node: GNUtunesDB23452
+Node: Get rid of '-m'24958
+Node: Known bugs and limitations25243
+Node: Reporting Bugs25534
+Node: GNU Free Documentation License25982
 
 End Tag Table

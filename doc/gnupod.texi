@@ -568,7 +568,7 @@ You can also use Smart-Playlists with Firmware >= 2.x
 (See also README.smartplaylists)
 
 For more examples have a look at @code{@w{doc/gnutunesdb.example}} included in the GNUpod tarball.
-
+Also checkout http://blinkenlights.ch/gnupod/mkspl.html for a 'JavaScript SPL-Creator'
 
 Don't forget to run mktunes before umounting! (See 'Unplug the iPod')
 

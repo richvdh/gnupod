@@ -41,9 +41,10 @@
     var evalme;
     for(var i=1;i<=counter;i++) {
      var action_field = getField(getChangedTo(i));
+     var value_field  = getvalueField(getChangedTo(i));
      evalme =  "spl_field = document.spling.field_"+i+".value;";
      evalme += "spl_action = document.spling."+action_field+"_"+i+".value;";
-     evalme += "spl_value  = document.spling.value_"+i+".value;";           
+     evalme += "spl_value  = document.spling."+value_field+"_"+i+".value;";           
      eval(evalme);
      spl_field = spl_field.substr(1);
      splLine += "  <spl action=\""+spl_action+"\" field=\""+spl_field+"\" string=\""+spl_value+"\" />\n";
@@ -70,12 +71,25 @@
    /* Hide forms */
    eval("document.spling.INTaction_"+fID+".style.display = 'none'");
    eval("document.spling.STRaction_"+fID+".style.display = 'none'");
-   
+   eval("document.spling.BOOLaction_"+fID+".style.display = 'none'");
+   eval("document.spling.RATINGaction_"+fID+".style.display = 'none'");
+
+   eval("document.spling.RATINGvalue_"+fID+".style.display = 'none'");
+   eval("document.spling.value_"+fID+".style.display = 'none'");
+
    var changedto = getChangedTo(fID);
    var a_field   = getField(changedto);
-   
-   if (a_field)
+   var v_field   = getvalueField(changedto);
+
+   if (a_field) {
      eval("document.spling."+a_field+"_"+fID+".style.display = 'inline'");
+   }
+   
+     eval("document.spling."+v_field+"_"+fID+".style.display = 'inline'");
+   
+   if(changedto == 'B') {
+    eval("document.spling.value_"+fID+".style.display = 'none'");   
+   }
 
 
 
@@ -95,13 +109,24 @@
    else if(ChangedTo == "I") {
     return "INTaction";
    }
+   else if(ChangedTo == "B") {
+    return "BOOLaction";
+   }   
+   else if(ChangedTo == "R") {
+    return "RATINGaction";
+   }
    else {
-    alert("Panic, unknown changedto "+ChangedTo);
+    alert("Sorry, i can't handle this type ATM.. somebody would have to write code ;)\nkey: "+ChangedTo);
     return 0;
    }
   }
   
-  
+  function getvalueField(ChangedTo) {
+   if(ChangedTo == "R") {
+    return "RATINGvalue";
+   }
+   return "value";
+  }  
 
   
   
@@ -166,7 +191,7 @@ function moreFields()
    <option value="Iplaycount">Playcount</option>
    <option value="Dlastplay">Last played</option>
    <option value="Icdnum">CD Number</option>
-   <option value="Xrating">Rating</option>
+   <option value="Rrating">Rating</option>
    <option value="Bcompilation">Compilation</option>
    <option value="Ibpm">BPM</option>
   </select>  
@@ -190,7 +215,33 @@ function moreFields()
    <option value="ENDWITH">ends with</option>
    <option value="NOT_ENDWITH">doesn't end with</option>
   </select>
+
+  <select name="BOOLaction_">
+   <option value="eq">set</option>
+   <option value="!eq">not set</option>
+  </select>
+
+  <select name="RATINGaction_">
+   <option value="eq">is</option>
+   <option value="!eq">is not</option>
+   <option value="gt">more than</option>
+   <option value="lt">less than</option>
+   <option value="range">Range (use from:to) FIXME</option>
+   <option value="!range">not Range (use from:to) FIXME</option>
+  </select> 
+
+  <select name="RATINGvalue_">
+   <option value="0">no rating</option>
+   <option value="20">* star</option>
+   <option value="40">** stars</option>
+   <option value="60">*** stars</option>
+   <option value="80">**** stars</option>
+   <option value="100">***** stars</option>
+  </select>
+
   <input name="value_">
+
+  
   </div>
   
 
