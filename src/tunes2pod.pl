@@ -51,22 +51,20 @@ GNUpod::iTunesDB::open_itunesdb($in) or usage("Could not open $in\n");
 
 #Check where the FILES and PLAYLIST part starts..
 #..and how many files are in this iTunesDB
-my($pos, $pdi,$xpct_songs, $xpc_pl) = GNUpod::iTunesDB::get_starts();
 
-print "> Has $xpct_songs songs";
+my $itinfo = GNUpod::iTunesDB::get_starts();
+#This 2 will change while running..
+my $pos = $itinfo->{position};
+my $pdi = $itinfo->{pdi};
 
+print "> Has $itinfo->{songs} songs";
 my ($ff, $href) = undef;
 my %hout = ();
- for(my $i=0;$i<$xpct_songs;$i++) {
-##This would me a status-bar like thing..
-##But i don't have a licence for status bars ;)
-#  my $l = $i/$xpct_songs*40;
-#  print "\r";
-#  print "." x int($l);
+ for(my $i=0;$i<$itinfo->{songs};$i++) {
   ($pos,$href) = GNUpod::iTunesDB::get_mhits($pos); #get_nod_a returns wher it's guessing the next MHIT, if it fails, it returns '-1'
   #Seek failed.. this shouldn't happen..  
   if($pos == -1) {
-   print STDERR "\n*** FATAL: Expected to find $xpct_songs files,\n";
+   print STDERR "\n*** FATAL: Expected to find $itinfo->{songs} files,\n";
    print STDERR "*** but i failed to get nr. $i\n";
    print STDERR "*** Your iTunesDB maybe corrupt or you found\n";
    print STDERR "*** a bug in GNUpod. Please send this\n";
@@ -83,25 +81,46 @@ print STDOUT "\r> Found $ff files, ok\n";
 
 
 #Now get each playlist
-print STDOUT "> Found ".($xpc_pl-1)." playlists:\n";
-for(my $i=0;$i<$xpc_pl;$i++) {
+print STDOUT "> Found ".($itinfo->{playlists}-1)." playlists:\n";
+for(my $i=0;$i<$itinfo->{playlists};$i++) {
   ($pdi, $href) = GNUpod::iTunesDB::get_pl($pdi);
   if($pdi == -1) {
-   print STDERR "*** FATAL: Expected to find $xpc_pl playlists,\n";
+   print STDERR "*** FATAL: Expected to find $itinfo->{playlists} playlists,\n";
    print STDERR "*** but i failed to get nr. $i\n";
    print STDERR "*** Your iTunesDB maybe corrupt or you found\n";
    print STDERR "*** a bug in GNUpod. Please send this\n";
    print STDERR "*** iTunesDB to pab\@blinkenlights.ch\n\n";
    exit(1);
   }
-  next if ${$href}{type}; #Don't list the MPL
-print STDOUT ">> Playlist '${$href}{name}' with ".int(@{${$href}{content}})." songs\n";
-  GNUpod::XMLhelper::addpl(${$href}{name});
-  foreach(@{${$href}{content}}) {
-   my $plfh = ();
-   $plfh->{add}->{id} = $_;
-   GNUpod::XMLhelper::mkfile($plfh,{plname=>${$href}{name}});
+  next if $href->{type}; #Don't list the MPL
+  if($href->{splpref} || $href->{spldata}) {
+    print ">> Smart-Playlist '$href->{name}' skipped\n";
+        ########################
+         print "  ]] Prefs dump: ";
+         foreach(keys(%{$href->{splpref}})) {
+          print "$_=\"$href->{splpref}{$_}\" ";
+         }
+         print "\n";
+         foreach my $hrx (@{$href->{spldata}}) {
+          print "  )) RULE: ";
+            foreach(keys(%$hrx)) {
+             print "  $_=\"$hrx->{$_}\" ";
+            }
+            print "\n";
+         }
+        ########################
   }
+  else { #Normal playlist  
+    print ">> Playlist '$href->{name}' with ".int(@{$href->{content}})." songs\n";
+    GNUpod::XMLhelper::addpl($href->{name});
+    foreach(@{$href->{content}}) {
+     my $plfh = ();
+     $plfh->{add}->{id} = $_;
+     GNUpod::XMLhelper::mkfile($plfh,{plname=>$href->{name}});
+    }
+  }
+
+
  }
 
 

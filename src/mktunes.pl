@@ -119,7 +119,7 @@ my $fc = 0;
   $cid++; #Whoo! We ReUse the global CID.. first plitem = last file item+1 (or maybe 2 ;) )
   $pl .= GNUpod::iTunesDB::mk_mhip({plid=>$cid, sid=>$_});
   print "MKX $_\n";
-  $pl .= GNUpod::iTunesDB::mk_mhod({fqid=>$_});
+  $pl .= GNUpod::iTunesDB::mk_mhod({fqid=>$_,stype=>"PLTHING"});
   $fc++;
  }
  my $plSize = length($pl);
@@ -154,7 +154,7 @@ sub build_mhit {
  
 my ($nhod,$cmhod,$cmhod_count) = undef;
  foreach(keys(%$href)) {
-  next unless $href->{$_};
+  next unless $href->{$_}; #Dont create empty fields
   $nhod = GNUpod::iTunesDB::mk_mhod({stype=>$_, string=>$href->{$_}});
   $cmhod .= $nhod;
   $cmhod_count++ if defined $nhod;

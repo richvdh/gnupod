@@ -73,14 +73,14 @@ sub __is_mp3 {
  $rh{time}     = int($h->{SECS}*1000);
  $rh{fdesc}    = "MPEG ${$h}{VERSION} layer ${$h}{LAYER} file";
  $h = MP3::Info::get_mp3tag($file, 1);  #Get the IDv1 tag
- $hs = MP3::Info::get_mp3tag($file, 2); #Get the IDv2 tag
+ $hs = MP3::Info::get_mp3tag($file, 2, 1); #Get the IDv2 tag
 
 #IDv2 is stronger than IDv1..
  #Try to parse things like 01/01
  my @songa = pss($hs->{TRCK} || $h->{TRACKNUM});
  my @cda   = pss($hs->{TPOS});
  
-     $rh{songs}    =  int($songa[1]);
+     $rh{songs}    = int($songa[1]);
      $rh{songnum} =  int($songa[0]);
      $rh{cdnum}   =  int($cda[0]);
      $rh{cds}    =   int($cda[1]);

@@ -29,7 +29,7 @@ use Unicode::String;
 use vars qw(%mhod_id @mhod_array);
 
 
-%mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, "comment", 8, "composer", 12, "PLTHING", 100) ;
+%mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, "comment", 8, "composer", 12, "SPLPREF",50, "SPLDATA",51, "PLTHING", 100) ;
 
  foreach(keys(%mhod_id)) {
   $mhod_array[$mhod_id{$_}] = $_;
@@ -161,24 +161,25 @@ my ($hr) = @_;
 my $type_string = $hr->{stype};
 my $string = $hr->{string};
 my $fqid = $hr->{fqid};
-
 my $type = $mhod_id{lc($type_string)};
 
-return undef if !$type && !$fqid; #Invalid type string.. no problemo
 #Appnd size for normal mhod's
-
 my $mod = 40;
 
-if(!$fqid) { 
-  #normal mhod, default fqid
-  $fqid = 1; 
-  $fqid = 1397519220 if $type == 51; #Fixme: are spl mhods no pl mhods?
-}
-else {
- #pl mhod's are longer... fix size
+#Called with fqid, this has to be an PLTHING (100)
+if($fqid) { 
+ #fqid set, that's a pl item!
  $type = 100;
+ #Playlist mhods are longer
  $mod += 4;
 }
+elsif(!$type) { #No type, skip it
+ return undef;
+}
+else { #has a type, default fqid
+ $fqid=1;
+}
+
 
 if($type == 7 && $string !~ /#!#\d+#!#/) {
 warn "iTunesDB.pm: warning: wrong format: '$type_string=\"$string\"'\n";
@@ -394,6 +395,20 @@ return $ret
 ### Here are the READ sub's used by tunes2pod.pl
 
 ###########################################
+# Get a x86 INT value (WHY did apple mix this?)
+sub get_x86_int {
+ my($start, $anz) = @_;
+ my($buffer,$xr) = undef;
+  seek(FILE, int($start), 0);
+  read(FILE, $buffer, int($anz));
+  foreach(split(//,$buffer)) {
+   $xr .= sprintf("%02X",ord($_));
+  
+  }
+ return(oct("0x".$xr));
+}
+
+###########################################
 # Get a INT value
 sub get_int {
 my($start, $anz) = @_;
@@ -401,7 +416,7 @@ my($start, $anz) = @_;
 my($buffer, $xx, $xr) = undef;
 # paranoia checks
 $start = int($start);
-$anz = int($anz) || 1;
+$anz = int($anz);
 
 #seek to the given position
 seek(FILE, $start, 0);
@@ -416,7 +431,70 @@ read(FILE, $buffer, $anz);
 }
 
 
+sub DBG_spl {
+ my($hr) = @_;
+ 
+ #print "Trying to decode a spl wich has $hr->{htm} items\n";
 
+my $diff = $hr->{start}+56;
+my @ret = ();
+ for(1..$hr->{htm}) {
+  my $field = get_x86_int($diff, 4);#/16777216;
+  my $action= get_x86_int($diff+7, 1);
+  my $slen  = get_x86_int($diff+52,4);
+  my $string= get_string($diff+56, $slen);
+  #This sucks! no byteswap here.. apple uses x86 endian.. why??
+  #Is this an iTunes bug?!
+  $string = Unicode::String::utf16($string)->utf8;
+ # my $dbg = get_string($diff+56,$slen);
+ # hd($dbg);
+  my @xr = ();
+  $xr[2] = "SongName";
+  $xr[4] = "Artist";
+  $xr[7] = "Year";
+  $xr[8] = "Genre";
+  $xr[9] = "Kind";
+  $xr[14] = "Comment";
+  $xr[18] = "Composer";
+ 
+  my @xm = ();
+  $xm[1] = "IS";
+  $xm[2] = "CONTAINS";
+  $xm[4] = "STARTS_WITH";
+  $xm[8] = "ENDS_WITH";
+  $xm[16] = "GTHAN";
+ # print "**$field**$action**  --> $xr[$field] /$xm[$action]/ '$string'($slen)\n";
+  $diff += $slen+56;
+  push(@ret, {field=>$field,action=>$action,string=>$string});
+ }
+ return \@ret;
+}
+
+sub hd {
+   open(KK,">/tmp/XLZ"); print KK $_[0]; close(KK);
+   system("hexdump -vC /tmp/XLZ");
+}
+
+
+sub DBG_fifty {
+ my($hs) = @_;
+ my $limit = get_int($hs->{start}+32,4);
+ 
+ my $live = get_int($hs->{start}+24,1);
+ my $chkrgx  = get_int($hs->{start}+25,1);
+ my $chklim  = get_int($hs->{start}+26,1);
+ my $item = get_int($hs->{start}+27,1);
+ my $sort = get_int($hs->{start}+28,1);
+ my $mos   = get_int($hs->{start}+36,1);
+ my @xit = ("", "min", "artist", "songs", "", "GigaByte");
+ my @xso = ("", "", "random", "", "album", "", "", "genre");
+ $xso[23] = "rating";
+ 
+# print "Live: $live // Check_Regexp $chkrgx // Check Limit $chklim // MatchOS $mos\n";
+# print "> limitval: $limit -> what? $xit[$item]($item) sort by $xso[$sort]($sort)\n";
+ return({live=>$live, matchomatic=>$chkrgx, limitomatic=>$chklim,
+         value=>$limit, iitem=>$item, isort=>$sort});
+}
 ###########################################
 #get a SINGLE mhod entry:
 # return+seek = new_mhod should be there
@@ -427,26 +505,32 @@ my $id  = get_string($seek, 4);          #are we lost?
 my $ml  = get_int($seek+8, 4);           #Length of this mhod
 my $mty = get_int($seek+12, 4);          #type number
 my $xl  = get_int($seek+28,4);           #String length
+my $spldata = undef;
+my $splpref = undef;
+my $htm = get_x86_int($seek+32,4);
+my $anym= get_x86_int($seek+36,4);
 
 if($id eq "mhod") { #Seek was okay
-   my $foo = get_string($seek+40, $xl); #string of the entry            #maybe a 'no conv' flag would be better
+    my $foo = get_string($seek+($ml-$xl), $xl); #string of the entry            #maybe a 'no conv' flag would be better
     #$foo is now UTF16 (Swapped), but we need an utf8
     $foo = Unicode::String::byteswap2($foo);
     $foo = Unicode::String::utf16($foo)->utf8;
- 
- if(!$mhod_array[$mty]) {
-  print STDOUT "WARNING: unknown type: $mty, returning RAW data (SmartPlaylist's aren't supportet atm..)\n";
-  $foo = get_string($seek+40, $xl);
-print "Is at $seek for $xl !!!!\n";
-   open(KK,">/tmp/XLZ"); print KK $foo; close(KK);
-   system("hexdump -vC /tmp/XLZ");
- }
- 
-  return ($ml, $foo, $mty);
-}
 
-#Was no mhod, return -1
-return -1;
+ if($mty == 51) {
+   $foo = undef;
+   $spldata = DBG_spl({start=>$seek+104, htm=>$htm});
+ }
+ elsif($mty == 50) {
+  $foo = undef;
+  $splpref = DBG_fifty({start=>$seek, end=>$ml});
+ }
+
+ return({size=>$ml,string=>$foo,type=>$mty,spldata=>$spldata,splpref=>$splpref,anymatch=>$anym});
+
+}
+else {
+ return({size=>-1});
+}
 }
 
 
@@ -455,18 +539,18 @@ return -1;
 # get an mhip entry
 sub get_mhip {
  my($pos) = @_;
+ 
  if(get_string($pos, 4) eq "mhip") {
   my $oof = get_int($pos+4, 4);
-  my($oid) = get_mhod($pos+$oof);
+  my $oid = get_mhod($pos+$oof)->{size};
   return $oid if $oid == -1; #fatal error..
-   my $px = get_int($pos+6*4, 4);
-   my $spx = get_int($pos+5*4,4);
-   print STDERR "PX is at $px // spx(order?) $spx\n";
-  return ($oid+$oof, $px);
+   my $plid = get_int($pos+5*4,4);
+   my $sid  = get_int($pos+6*4, 4);
+  return({size=>($oid+$oof),sid=>$sid,plid=>$plid});
  }
 
 #we are lost
- return -1;
+ return ({size=>-1});
 }
 
 
@@ -476,7 +560,7 @@ sub get_string {
 my ($start, $anz) = @_;
 my($buffer) = undef;
 $start = int($start);
-$anz = int($anz) || 1;
+$anz = int($anz);
 seek(FILE, $start, 0);
 #start reading
 read(FILE, $buffer, $anz);
@@ -504,25 +588,32 @@ sub get_pl {
    #Ehpod is buggy and writes the playlist name 2 times.. well catch both of them
    #MusicMatch is also stupid and doesn't create a playlist mhod
    #for the mainPlaylist
-   my ($oid, $plt, $type, $plname, $itt) = undef;
+   my ($oid, $plname, $itt) = undef;
    
    while($oid != -1) {
     $pos += $oid;
-    ($oid, $plt, $type) = get_mhod($pos);
-    $plname = $plt if $type == 1;
+    my $mhh = get_mhod($pos);
+    $oid = $mhh->{size};
+     if($mhh->{type} == 1) {
+       $plname = $mhh->{string};
+     }
+     elsif($mhh->{type} == 50) {
+       $ret_hash{splpref} = \%{$mhh->{splpref}};
+     }
+     elsif($mhh->{type} == 51) {
+       $ret_hash{spldata} = \@{$mhh->{spldata}};
+     }
     #1 = name
     #100 = style
-    #50  = ??
-    #51  = ??
+    #50  = splpref
+    #51  = spldata
    }
    $ret_hash{name} = $plname;
-   $ret_hash{type} = $pl_type;
-   
+   $ret_hash{type} = $pl_type; 
    #Now get the items
-   $oid = 0; #clean oid
  for(my $i = 0; $i<$scount;$i++) {
-    ($oid, $itt) = get_mhip($pos);
-    if($oid == -1) {
+    my $mhih = get_mhip($pos);
+    if($mhih->{size} == -1) {
        print STDERR "*** FATAL: Expected to find $scount songs,\n";
        print STDERR "*** but i failed to get nr. $i\n";
        print STDERR "*** Your iTunesDB maybe corrupt or you found\n";
@@ -530,8 +621,8 @@ sub get_pl {
        print STDERR "*** iTunesDB to pab\@blinkenlights.ch\n\n";
        exit(1);
     }
-    $pos += $oid;
-     push(@pldata, $itt) if $itt;
+    $pos += $mhih->{size};
+     push(@pldata, $mhih->{sid}) if $mhih->{sid};
    }
    $ret_hash{content} = \@pldata;
    return ($pos, \%ret_hash);   
@@ -589,14 +680,15 @@ if(abs($ret{volume}) > 100) {
 
  #Now get the mhods from this mhit
 $sum += get_int($sum+4,4);
- my ($next_start, $txt, $type) = undef;
+ my ($next_start) = undef;
     while($next_start != -1) {
      $sum += $next_start; 
-     ($next_start, $txt, $type) = get_mhod($sum);    #returns the number where its guessing the next mhod, -1 if it's failed
+     my $mhh = get_mhod($sum);    #returns the number where its guessing the next mhod, -1 if it's failed
+       $next_start = $mhh->{size};
        #Convert ID to XML Name
-       my $xml_name = $mhod_array[$type];
+       my $xml_name = $mhod_array[$mhh->{type}];
        if($xml_name) { #add known name to hash
-        $ret{$xml_name} = $txt;
+        $ret{$xml_name} = $mhh->{string};
        }
  
     }
@@ -606,6 +698,7 @@ return ($sum,\%ret);          #black magic, returns next (possible?) start of th
 #Was no mhod
  return -1;
 }
+
 
 
 
@@ -627,8 +720,7 @@ my $songs = get_int($sseek+8,4);
 $sseek = $mhbd_s + $pdi;
 $sseek += get_int($sseek+4,4);
 my $pls = get_int($sseek+8,4);
-
-return($pos, ($pos+$pdi), $songs, $pls);
+return({position=>$pos,pdi=>($pos+$pdi),songs=>$songs,playlists=>$pls});
 }
 
 
