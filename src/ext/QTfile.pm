@@ -28,7 +28,7 @@ package GNUpod::QTfile;
 
 use strict;
 use GNUpod::FooBar;
-use vars qw(%hchild %reth);
+use vars qw(%hchild %reth @LEVELA);
 
 #Some static def
 $hchild{'moov'} = 8;
@@ -60,8 +60,12 @@ $hchild{'trkn'} = 8;
 $hchild{'tmpo'} = 8;
 $hchild{'disk'} = 8;
 
+
+##Call this to parse a file
 sub parsefile {
  my($qtfile) = @_;
+ 
+ 
  open(QTFILE, $qtfile) or return undef;
 
  my $fsize = -s "$qtfile";
@@ -70,24 +74,86 @@ sub parsefile {
  my %lx = ();
     %reth = (); #Cleanup
 
- if($fsize < 16 || rseek(4,4) ne "ftyp") {
+ if($fsize < 16 || rseek(4,4) ne "ftyp") { #Can't be a QTfile
   close(QTFILE);
   return undef;
  }
+ 
 
+ #Ok, header looks okay.. seek each atom and buildup $lx{metadat}
  while($pos<$fsize) {
   my($clevel, $len) = get_atom($level, $pos, \%lx);
   unless($len) {
-   warn "** Unexpected data found at $pos!\n";
-   warn "** You found a bug! Please send a bugreport\n";
-   warn "** to pab\@blinkenlights.ch\n";
-   warn "** GIVING UP PARSING\n";
-   last;
+    warn "** Unexpected data found at $pos!\n";
+    warn "** You found a bug! Please send a bugreport\n";
+    warn "** to pab\@blinkenlights.ch\n";
+    warn "** GIVING UP PARSING\n";
+    last;
   }
   $pos+=$len;
   $level = $clevel;
  }
  close(QTFILE);
+ 
+ 
+########### Now we build the chain #######################################
+my @METADEF = ("album",   "\xA9alb",
+               "comment", "\xA9cmt",
+               "genre",   "\xA9gen",
+               "group",   "\xA9grp",
+               "composer","\xA9wrt",
+               "artist",  "\xA9ART",
+               "title",   "\xA9nam",
+               "fdesc",   "\xA9too",
+               "year",    "\xA9day",
+               "comment", "\xA9cmt",
+               "comment", "\xA9cmt");
+
+###All STRING fields..
+ for(my $i = 0;$i<int(@METADEF);$i+=2) {
+  my $cKey = "::moov::udta::meta::ilst::".$METADEF[$i+1]."::data";
+  if($lx{metadat}{$cKey}[0]) {
+   $reth{$METADEF[$i]} = $lx{metadat}{$cKey}[0];
+  }
+ }
+
+###INT and such fields are here:
+ 
+ if( my $cDat = $lx{metadat}{'::moov::udta::meta::ilst::tmpo::data'}[0] ) {
+  $reth{bpm} = GNUpod::FooBar::shx2_x86_int($cDat);
+ }
+ 
+ if( my $cDat = $lx{metadat}{'::moov::udta::meta::ilst::trkn::data'}[0]) {
+   $reth{tracknum} = GNUpod::FooBar::shx2_x86_int(substr($cDat,2,2));
+   $reth{tracks}   = GNUpod::FooBar::shx2_x86_int(substr($cDat,4,2));  
+ }
+
+ if( my $cDat = $lx{metadat}{'::moov::udta::meta::ilst::disk::data'}[0]) {
+   $reth{cdnum} = GNUpod::FooBar::shx2_x86_int(substr($cDat,2,2));
+   $reth{cds}   = GNUpod::FooBar::shx2_x86_int(substr($cDat,4,2));  
+ }
+ 
+
+ if( my $cDat = $lx{metadat}{'::moov:mvhd'}[0] ) {
+ #Calculate the time... 
+ $reth{time} = int( get_string_oct(8,4,$cDat)/
+                    get_string_oct(4,4,$cDat)*1000 );
+ }
+ 
+ #Get FX-Apple iTunNORM field
+ if(ref($lx{metadat}{'::moov::udta::meta::ilst::----::data'}) eq "ARRAY") { #Exists!
+  for(my $i=0; $i<int(@{$lx{metadat}{'::moov::udta::meta::ilst::----::data'}});$i++) {
+     if($lx{metadat}{'::moov::udta::meta::ilst::----::mean'}[$i] eq "apple.iTunes" &&
+        $lx{metadat}{'::moov::udta::meta::ilst::----::name'}[$i] eq "NORM") {
+       $reth{iTunNORM} = $lx{metadat}{'::moov::udta::meta::ilst::----::data'}[$i];
+     }
+  }
+ }
+ 
+ if( my $cDat = $lx{metadat}{'::moov::trak::mdia::minf::stbl::stsd'}[0] ) {
+  $reth{_CODEC} = substr($cDat,4,4);
+  $reth{srate}  = get_string_oct(32,2,$cDat);
+ }
  $reth{filesize} = $fsize;
  return \%reth;
 }
@@ -97,76 +163,20 @@ sub parsefile {
 sub get_atom {
  my($level, $pos, $lt) = @_;
 
- my $len = getoct($pos,4);
+ my $len = getoct($pos,4); #Length of field
  #Error
- return(undef, undef) if $len < 1;
- my $typ = rseek($pos+4,4);
+ return(undef, undef) if $len < 8;
  
+ #Now get the type
+ my $typ = rseek($pos+4,4);
+ #..and keep track of it..
  $level = $lt->{ltrack}->{$pos} if $lt->{ltrack}->{$pos};
- $lt->{topic}->{$level} = $typ;
 
-#print "_" x $level;
-#print int($level)."] \@$pos L $len -> $typ \n";
-#print " parent : ".$lt->{"topic_".($level-1)}."\n";
-
- if($typ eq "data") {
-  return(undef,undef) if $len < 16;
-  my $parent =$lt->{topic}->{$level-1};
-  my $dat = rseek($pos+16,$len-16);
-  if($parent eq "©alb") {
-   $reth{album} = $dat;
-  }
-  elsif($parent eq "©cmt") {
-   $reth{comment} = $dat;
-  }
-  elsif($parent eq "©gen") {
-   $reth{genre} = $dat;
-  }
-  elsif($parent eq "©grp") {
-   $reth{group} = $dat;
-  }
-  elsif($parent eq "©wrt") {
-   $reth{composer} = $dat;
-  }
-  elsif($parent eq "©ART") {
-   $reth{artist} = $dat;
-  }
-  elsif($parent eq "©nam") {
-   $reth{title} = $dat;
-  }
-  elsif($parent eq "©too") {
-   $reth{fdesc} = $dat;
-  }
-  elsif($parent eq "©day") {
-   $reth{year} = $dat;
-  }
-  elsif($parent eq "tmpo") {
-    $reth{bpm} = GNUpod::FooBar::shx2_x86_int($dat);
-  }
-  elsif($parent eq "trkn") {
-   $reth{tracknum} = GNUpod::FooBar::shx2_x86_int(substr($dat,2,2));
-   $reth{tracks}   = GNUpod::FooBar::shx2_x86_int(substr($dat,4,2));
-  }
-  elsif($parent eq "disk") {
-   $reth{cdnum} = GNUpod::FooBar::shx2_x86_int(substr($dat,2,2));
-   $reth{cds}   = GNUpod::FooBar::shx2_x86_int(substr($dat,4,2));
-  }
-  elsif($parent eq "----" && length($dat) == 90 && $dat =~ /^\s(\S{8})\s(\S{8})\s/) { #This is the iTunNorm field
-    #Fixme: We should read the 'mean' and 'name' stuff for this..
-    #Guessing like we do now sux
-    $reth{iTunNORM} = $dat;
-  }
-  elsif($parent eq "----" or $parent eq "disk") {
-   #Do nothing.. iTunes does this fields and we
-   #don't need to warn about this..
-   #warn "Debug: $parent / $dat\n";
-  }
-  else {
-   warn "QTfile warning: Skipping $typ -> $parent [<-- unknown field]\n";
-  }
- }
- elsif($typ eq "mvhd") {
-  $reth{time} = int(getoct($pos+24,4)/getoct($pos+20,4)*1000);
+ #Build a chain for this level.. looks like '::foo::bar::bla'
+ $LEVELA[$level] = $typ;
+ my $cChain = undef;
+ for(1..$level) {
+  $cChain .= "::".$LEVELA[$_];
  }
 
   if(defined($hchild{$typ})) { #This type has a child
@@ -177,6 +187,10 @@ sub get_atom {
    #Fix len
    $len = $hchild{$typ};
   }
+  elsif($len >= 16 && $cChain !~ /(::mdat|::free)$/) {  #No child -> final element -> data!
+   push(@{$lt->{metadat}->{$cChain}},rseek($pos+16,$len-16));
+  }
+
  return($level,$len);
 }
 
@@ -188,6 +202,20 @@ sub get_atom {
 sub getoct {
 my($offset, $len) = @_;
   GNUpod::FooBar::shx2_x86_int(rseek($offset,$len));
+}
+
+
+###################################################
+# Get INT vaules from string
+sub get_string_oct {
+my($offset, $len, $string) = @_;
+
+ if($offset+$len > length($string)) {
+  warn "Bug: invalid substr() call! Returning 0\n";
+  return 0;
+ }
+ 
+  GNUpod::FooBar::shx2_x86_int(substr($string,$offset,$len));
 }
 
 ####################################################

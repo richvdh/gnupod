@@ -48,8 +48,8 @@ sub wtf_is {
   elsif(my $xflac = __is_flac($file,$flags)) {
    return($xflac->{ref}, {ftyp=>"FLAC", format=>"wav"}, $xflac->{newout});
   }
-  elsif(my $h = __is_qt($file,$flags)) {
-   return ($h, {ftyp=>"AAC", format=>"m4a"});
+  elsif(my $xqt = __is_qt($file,$flags)) {
+   return ($xqt->{ref},  {ftyp=>$xqt->{codec}, format=>"m4a"});
   }
   elsif(my $h = __is_mp3($file,$flags)) {
    return ($h, {ftyp=>"MP3", format=>"mp3"});
@@ -147,7 +147,7 @@ sub __is_qt {
  $rh{album}     = getutf8($ret->{album}  || "Unknown Album");
  $rh{title}     = getutf8($ret->{title}  || $cf || "Unknown Title");
  $rh{soundcheck}= _parse_iTunNORM($ret->{iTunNORM});
- return  \%rh;
+ return  ({codec=>$ret->{_CODEC}, ref=>\%rh});
 }
 
 ######################################################################
