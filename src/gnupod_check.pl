@@ -47,7 +47,7 @@ sub go {
  usage($con->{status}."\n") if $con->{status};
 
  print "Pass 1: Checking Files in the GNUtunesDB.xml...\n";
- GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}\n");
+ GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
 
  print "Pass 2: Checking Files on the iPod...\n";
  checkGNUtunes();

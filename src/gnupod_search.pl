@@ -52,7 +52,7 @@ sub go {
 
  pview(undef,1);
  
- GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}\n");
+ GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
  #XML::Parser finished, write new file
  GNUpod::XMLhelper::writexml($con) if $opts{delete};
 

@@ -4,6 +4,7 @@ Summary
 -------
 
 - Write tracknum for AAC/ALAC files (doh!)
+- Support for Bookmarks (Just rename .m4a files into .m4b)
 
 
 

@@ -245,7 +245,8 @@ sub mk_mhit {
     $ret .= pack("h8", _itop($file_hash{cds}));               #number of cds
     $ret .= pack("H8");                                       #hardcoded space ?
     $ret .= pack("h8", _itop($file_hash{addtime}));           #File added @
-    $ret .= pack("H16");
+    $ret .= pack("h8", _itop($file_hash{bookmark}));          #QTFile Bookmark
+    $ret .= pack("H8");
     $ret .= pack("H12");                                       #??
     $ret .= pack("h4", _itop($file_hash{bpm},0xffff));         #BPM
 #Fixme: this was wrong.. so i removed it now..
@@ -1023,8 +1024,6 @@ $ret{rating}     = int((get_int($sum+28,4)-256)/oct('0x14000000')) * 20;
 $ret{changetime} = get_int($sum+32,4);
 $ret{filesize}   = get_int($sum+36,4);
 $ret{time}       = get_int($sum+40,4);
-$ret{cdnum}      = get_int($sum+92,4);
-$ret{cds}        = get_int($sum+96,4);
 $ret{songnum}    = get_int($sum+44,4);
 $ret{songs}      = get_int($sum+48,4);
 $ret{year}       = get_int($sum+52,4);
@@ -1036,7 +1035,10 @@ $ret{stoptime}   = get_int($sum+72,4);
 $ret{soundcheck} = get_int($sum+76,4);
 $ret{playcount}  = get_int($sum+80,4); #84 has also something to do with playcounts. (Like rating + prerating?)
 $ret{lastplay}   = get_int($sum+88,4);
+$ret{cdnum}      = get_int($sum+92,4);
+$ret{cds}        = get_int($sum+96,4);
 $ret{addtime}    = get_int($sum+104,4);
+$ret{bookmark}   = get_int($sum+108,4);
 $ret{bpm} = get_int($sum+122,2);
 
 #Fixme: prerating is invalid.. rerere..
@@ -1131,6 +1133,7 @@ sub readPLC {
  my %pcrh = ();
  my $rating   = 0;
  my $playc    = 0;
+ my $bookmark = 0;
  my $lastply  = 0;
  my $chunknum = 0;
 
@@ -1149,12 +1152,12 @@ sub readPLC {
   if (read(RATING,$buff,4) != 4) { _itBUG("Read failed at $offset while reading LASTPLAY ($chunks/$chunksize)"); last; }
   $lastply = GNUpod::FooBar::shx2int($buff);
   
-  #8 is always zero atm?!
-  seek(RATING,$offset+8,0);
-  read(RATING,$buff,4);
-  my $bookmark = GNUpod::FooBar::shx2int($buff);
-  warn "FIXME :bookmark: $chunknum has $bookmark !\n" if $bookmark;
-
+  if($chunksize >= 12) {
+   seek(RATING, $offset+8,0);
+   if(read(RATING, $buff,4) != 4) { _itBUG("Read failed at $offset while reading BOOKMARK ($chunks/$chunksize)"); last;}
+   $bookmark = GNUpod::FooBar::shx2int($buff);
+  }
+  
   if($chunksize >= 16) { #12+4 - v2 firmware? 
    seek(RATING, $offset+12, 0);
    if (read(RATING, $buff,4) != 4) { _itBUG("Read failed at $offset while reading RATING ($chunks/$chunksize)"); last; }
@@ -1163,9 +1166,10 @@ sub readPLC {
   
 #print " aka $chunknum] \n";
 
-  $pcrh{playcount}{$chunknum} = $playc   if $playc;
-  $pcrh{rating}{$chunknum}    = $rating  if $rating;
-  $pcrh{lastplay}{$chunknum}  = $lastply if $lastply;
+  $pcrh{playcount}{$chunknum} = $playc    if $playc;
+  $pcrh{rating}{$chunknum}    = $rating   if $rating;
+  $pcrh{lastplay}{$chunknum}  = $lastply  if $lastply;
+  $pcrh{bookmark}{$chunknum}  = $bookmark if $bookmark;
   $offset += $chunksize; #Nex to go!
  }
 

@@ -82,7 +82,7 @@ sub startup {
  usage($con->{status}."\n") if $con->{status} || !@files;
 
  unless($opts{restore}) { #We parse the old file, if we are NOT restoring the iPod
-  GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}\n");
+  GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
  }
 
  my $addcount = 0;
