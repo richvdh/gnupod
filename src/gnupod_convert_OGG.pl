@@ -42,7 +42,6 @@ elsif($gimme eq "GET_META") {
  my $ogg_pmod = undef;
  
  foreach my $ogg_pmod ('Ogg::Vorbis::Header::PurePerl','Ogg::Vorbis::Header') {
-     $ogg_pmod = $_;
   my $nocompile = "use $ogg_pmod; \$ftag = $ogg_pmod->new(\$file);";
   eval $nocompile; #2. eval it!
   last unless $@;

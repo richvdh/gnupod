@@ -473,7 +473,8 @@ them to the iPod.
      gnupod_addsong.pl -m /mnt/ipod myfile.flac myfile.ogg --decode=mp3
 
    (Note: To use all features of -decode, you will have to install
-Audio::FLAC, Ogg::Vorbis::Header::PurePerl, lame, flac, oggenc and faac)
+Audio::FLAC::Header, Ogg::Vorbis::Header::PurePerl, lame, flac, oggenc
+and faac)
 
    gnupod_addsong.pl tries to 'auto-detect' the encoding of the ID3 Tag.
 Sometimes this works (in most cases ;) ) sometimes it doesn't. If it
@@ -1242,18 +1243,18 @@ Node: Using GNUpod13932
 Node: Preparation14821
 Node: Configuration15553
 Node: Add files16010
-Node: Search files17484
-Node: Remove files17970
-Node: Edit tags18271
-Node: Creating playlists18816
-Node: Unplug the iPod21291
-Node: Recovering files22200
-Node: Coexistence23095
-Node: Problems24565
-Node: GNUtunesDB24948
-Node: Get rid of '-m'26454
-Node: Known bugs and limitations26739
-Node: Reporting Bugs27030
-Node: GNU Free Documentation License27478
+Node: Search files17492
+Node: Remove files17978
+Node: Edit tags18279
+Node: Creating playlists18824
+Node: Unplug the iPod21299
+Node: Recovering files22208
+Node: Coexistence23103
+Node: Problems24573
+Node: GNUtunesDB24956
+Node: Get rid of '-m'26462
+Node: Known bugs and limitations26747
+Node: Reporting Bugs27038
+Node: GNU Free Documentation License27486
 
 End Tag Table
