@@ -39,7 +39,7 @@ $int_count = 3; #The user has to send INT (Ctrl+C) x times until we stop
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
-                   "set-artist=s", "set-album=s", "set-genre=s", "set-rating=i", "set-playcount=i");
+                   "set-artist=s", "set-album=s", "set-genre=s", "set-rating=i", "set-playcount=i", "playlist|p=s");
 GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'b', mount=>'s', duplicate=>'b', 'disable-v1'=>'b', 'disable-v2'=>'b'},
                           "gnupod_addsong");
 
@@ -85,6 +85,10 @@ sub startup {
   GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
  }
 
+ if ($opts{playlist}) { #Create this playlist
+  GNUpod::XMLhelper::addpl($opts{playlist}); #Fixme: this may printout a warning..
+ } 
+
  my $addcount = 0;
 
  #We are ready to copy each file..
@@ -122,11 +126,14 @@ sub startup {
    #Check for duplicates
    if(!$opts{duplicate} && (my $dup = checkdup($fh))) {
     print "! [!!!] '$file' is a duplicate of song $dup, skipping file\n";
+    create_playlist_now($opts{playlist}, $dup); #We also add duplicates to a playlist..
     unlink($converted) if $converted; #Unlink file, if we converted it.. (tmp)
     next;
    }
    
-   
+
+
+  
    #ReSet filename if we did a convert
    $file = $converted if $converted;
    
@@ -139,7 +146,8 @@ sub startup {
      
 	 my $fmh;
      $fmh->{file} = $fh;
-     GNUpod::XMLhelper::mkfile($fmh,{addid=>1}); #Try to add an id
+     my $id = GNUpod::XMLhelper::mkfile($fmh,{addid=>1}); #Try to add an id
+     create_playlist_now($opts{playlist}, $id);
      $addcount++; #Inc. addcount
    }
    else { #We failed..
@@ -154,7 +162,7 @@ sub startup {
 
  
  
- if($addcount) { #We have to modify the xmldoc
+ if($opts{playlist} || $addcount) { #We have to modify the xmldoc
   print "> Writing new XML File, added $addcount file(s)\n";
   GNUpod::XMLhelper::writexml($con);
  }
@@ -164,8 +172,24 @@ sub startup {
 
 
 
+#############################################################
+# Add item to playlist
+sub create_playlist_now {
+ my($plname, $id) = @_;
 
-
+ if($plname && $id >= 0) {
+   #Broken-by-design: We don't have a ID-Pool for playlists..
+   #-> Create a fake_entry
+   my $fake_entry = GNUpod::XMLhelper::mkfile({ add => { id => $id } }, { return=>1 });
+   my $found = 0;
+   foreach(GNUpod::XMLhelper::getpl_content($plname)) {
+     if($_ eq $fake_entry) {
+       $found++; last;
+     }
+   }
+   GNUpod::XMLhelper::mkfile({ add => { id => $id } },{"plname"=>$plname}) unless $found;
+ }
+}
 
 
 
@@ -215,6 +239,7 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
    -m, --mount=directory    iPod mountpoint, default is \$IPOD_MOUNTPOINT
    -r, --restore            Restore the iPod (create a new GNUtunesDB from scratch)
    -d, --duplicate          Allow duplicate files
+   -p, --playlist=string    Add songs to this playlist
        --disable-v1         Do not read ID3v1 Tags (MP3 Only)
        --disable-v2         Do not read ID3v2 Tags (MP3 Only)
        --decode             Convert FLAC Files to WAVE 'onthefly'

@@ -141,7 +141,9 @@ sub mkfile {
    else                { $r .= "/>"}
  }
   
-  if($magic->{return}) { return $r; }
+  if($magic->{return}) { 
+   return $r; 
+  }
   elsif($magic->{plname}) { #Create a playlist item
    push(@{$XDAT->{playlists}->{data}->{$magic->{plname}}}, $r);
   }
@@ -151,6 +153,7 @@ sub mkfile {
   else { #No playlist item? has to be a file
    push(@{$XDAT->{files}}, $r);
   }
+  return $xid; #Return current XID
 }
 
 ##############################################################
@@ -196,6 +199,14 @@ sub addspl {
 #Get all playlists
 sub getpl_names {
  return @plorder;
+}
+
+##############################################################
+#Get Playlist content
+sub getpl_content {
+ my($plname) = @_;
+ return @{$XDAT->{playlists}->{data}->{$plname}} if ref($XDAT->{playlists}->{data}->{$plname}) eq "ARRAY";
+ return (); #Dummy fallback
 }
 
 ##############################################################

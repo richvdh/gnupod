@@ -570,6 +570,9 @@ You can also use Smart-Playlists with Firmware >= 2.x
 For more examples have a look at @code{@w{doc/gnutunesdb.example}} included in the GNUpod tarball.
 Also checkout http://blinkenlights.ch/gnupod/mkspl.html for a 'JavaScript SPL-Creator'
 
+You can also use the --playlist option of gnupod_addsong.pl. This will create and add the listed songs to the 
+named playlist.
+
 Don't forget to run mktunes before umounting! (See 'Unplug the iPod')
 
 @node Unplug the iPod
