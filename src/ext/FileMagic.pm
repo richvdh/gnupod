@@ -49,7 +49,7 @@ sub wtf_is {
    return($xflac->{ref}, {ftyp=>"FLAC", format=>"wav"}, $xflac->{newout});
   }
   elsif(my $xqt = __is_qt($file,$flags)) {
-   return ($xqt->{ref},  {ftyp=>$xqt->{codec}, format=>"m4a"});
+   return ($xqt->{ref},  {ftyp=>$xqt->{codec}, format=>"m4a", extension=>"m4a|m4p"});
   }
   elsif(my $h = __is_mp3($file,$flags)) {
    return ($h, {ftyp=>"MP3", format=>"mp3"});

@@ -29,7 +29,7 @@ use GNUpod::FooBar;
 
 use vars qw(%mhod_id @mhod_array %SPLDEF);
 
-use constant ITUNESDB_MAGIC => 'mhdb';
+use constant ITUNESDB_MAGIC => 'mhbd';
 
 #mk_mhod() will take care of lc() entries
 %mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, "comment", 8, "composer", 12, "group", 13);# "SPLPREF",50, "SPLDATA",51, "PLTHING", 100) ;
@@ -103,7 +103,7 @@ $SPLDEF{limititem}{5} = "gigabyte";
 
 my %SPLREDEF = _r_spldef();
 
-_itBUG("Hm.. This should be in a BEGIN block!");
+#_itBUG("Hm.. This should be in a BEGIN block!");
 
 ##########################################
 #ReConvert the SPLDEF hash
@@ -1009,7 +1009,7 @@ return({position=>$pos,pdi=>($pos+$pdi),songs=>$songs,playlists=>$pls});
 
 
 ##############################################
-# Read PlayCounts (We don't read the PLAYTIME)
+# Read PlayCounts 
 sub readPLC {
  my($file) = @_;
  open(RATING, "$file") or return ();

@@ -36,7 +36,7 @@ Summary
 - Fixed some SmartPlaylist stuff and added support for last
   playtime
 
-
+- Added gnupod_check.pl, it check's for 'lost' files
 
 *** OLD STUFF ***
 

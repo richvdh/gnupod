@@ -40,33 +40,43 @@ use vars qw($XDAT);
 sub realpath {
  my($mountp, $ipath) = @_;
  $ipath =~ tr/:/\//;
-return "$mountp/$ipath";
+return $mountp.$ipath;
 }
 
 ###############################################
 # Get an iPod-safe path for filename
 sub getpath {
  my($mountp, $filename, $opts) = @_;
-my $path = undef;
+ my $path = undef;
 
 if($opts->{keepfile}) { #Don't create a new filename..
   $path = $filename;
  }
 else { #Default action.. new filename to create 
- my $name = (split(/\//, $filename))[-1];
- my $i = 0;
- $name =~ tr/a-zA-Z0-9\./_/c; 
- 
+ my $test_extension = $opts->{extension} || $opts->{format}; #Test extension
+ my $name = (split(/\//, $filename))[-1];                    #Name
+ my $i = 0;                                                  #Count
+ $name =~ tr/a-zA-Z0-9\./_/c;                                #CleanName
+
  #Hups, current filename has a wrong extension...
- if($opts->{extension} && ($name !~ /\.($opts->{extension})$/i)) {
+ if($opts->{format} && $test_extension && ($name !~ /\.($test_extension)$/i)) {
   my($ext) = $name =~ /\.([^.]*)$/;          #Get the current extension (maybe null)
-  warn "Warning: File '$name' has a wrong extension [$ext], changed extension to $opts->{extension}\n";
-  $name =~ s/\.?$ext$/.$opts->{extension}/;  #Replace current extension with newone
+  warn "Warning: File '$name' has a wrong extension [$ext], changed extension to $opts->{format}\n";
+  $name =~ s/\.?$ext$/.$opts->{format}/;  #Replace current extension with newone
  }
  
 #Search a place for the MP3 file
   while($path = sprintf("$mountp/iPod_Control/Music/F%02d/%d_$name", int(rand(20)), $i++)) {
-   last unless(-e $path);
+   if( !(-e $path) && open(TESTFILE,">",$path) ) {
+    close(TESTFILE);
+    unlink($path); #Maybe it's a dup.. we don't create empty files
+    last;
+   }
+   elsif($i > 2000) { #nuff!
+    warn "getpath(): Could not write $name anywhere! [$!]\n";
+    return undef;
+   }
+   
   }
  }
  

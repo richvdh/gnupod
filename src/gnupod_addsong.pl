@@ -103,6 +103,7 @@ sub startup {
     
    my $wtf_ftyp = $media_h->{ftyp};
    my $wtf_frmt = $media_h->{format};
+   my $wtf_ext  = $media_h->{extension};
    
    #wtf_is found a filetype, override data if needed
    $fh->{artist}    = $opts{'set-artist'}    if $opts{'set-artist'};
@@ -115,7 +116,7 @@ sub startup {
    $fh->{addtime} = time()+MACTIME;
    #Get a path
    (${$fh}{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file, 
-                                                           {extension=>$wtf_frmt, keepfile=>$opts{restore}});
+                                                           {format=>$wtf_frmt, extension=>$wtf_ext, keepfile=>$opts{restore}});
    #Copy the file
    if(!$opts{duplicate} && (my $dup = checkdup($fh))) {
     print "! [!!!] '$file' is a duplicate of song $dup, skipping file\n";
@@ -127,7 +128,10 @@ sub startup {
    #ReSet filename if we did a convert
    $file = $converted if $converted;
    
-   if($opts{restore} || File::Copy::copy($file, $target)) {
+   if(!defined($target)) {
+    warn "*** FATAL *** Skipping '$file' , no target found!\n";
+   }
+   elsif($opts{restore} || File::Copy::copy($file, $target)) {
      printf("+ [%-4s][%3d] %-32s | %-32s | %-24s\n",
 	    uc($wtf_ftyp),1+$addcount, $fh->{title}, $fh->{album},$fh->{artist});
      
