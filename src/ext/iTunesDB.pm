@@ -174,6 +174,7 @@ return $ret;
 ## GENERAL ##########################################################
 # An mhod simply holds information
 
+
 sub mk_mhod
 {
 ##   - type id
@@ -208,8 +209,6 @@ else {
  $type = 100;
  $mod += 4;
 }
-
-
 
 $string = _ipod_string($string); #cache data
 

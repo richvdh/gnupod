@@ -45,7 +45,7 @@ sub __is_mp3 {
  $rh{time}     = int($h->{SECS}*1000);
  $rh{fdesc}    = "MPEG ${$h}{VERSION} layer ${$h}{LAYER} file";
  $h = MP3::Info::get_mp3tag($file);
- $hs = MP3::Info::get_mp3tag($file,2); #Get the IDv2 tag
+ $hs = MP3::Info::get_mp3tag($file); #Get the IDv2 tag
  
   foreach(keys %$h) {
    printf "%s => %s\n", $_, $h->{$_};
@@ -71,7 +71,7 @@ sub __is_mp3 {
      $rh{playcount}=  int($hs->{PCNT}) || 0;
 
 foreach(keys %rh) {
- print "RET: $_ -> $rh{$_}\n";
+ print "RET: $_ -> ".Unicode::String::utf8($rh{$_})."\n";
 }
 
 print "Fixme: we need to handle id3v2 better!\n";
