@@ -36,27 +36,28 @@ print "> Creating File Database...\n";
  $itb{mhlt}{_data_}   = GNUpod::iTunesDB::mk_mhlt($itb{INFO}{FILES});
  $itb{mhlt}{_len_}    = length($itb{mhlt}{_data_});
 
-# Create header for the mhit header (doh!)
+# Create header for the mhit header
  $itb{mhsd_1}{_data_} = GNUpod::iTunesDB::mk_mhsd($itb{mhit}{_len_}+$itb{mhlt}{_len_}, 1);
  $itb{mhsd_1}{_len_} = length($itb{mhsd_1}{_data_});
 
-# get a nice playlist array..
 
+
+## PLAYLIST STUFF
 print "> Creating playlists:\n";
+
 my @xpl = GNUpod::XMLhelper::build_plarr($xmldoc);
 # Build the playlists...
 
  $itb{playlist}{_data_} = genpldata($quickhash, @xpl);
  $itb{playlist}{_len_}  = length($itb{playlist}{_data_});
 
-print "GD\n";
-
 # Create headers for the playlist part..
  $itb{mhsd_2}{_data_} = GNUpod::iTunesDB::mk_mhsd($itb{playlist}{_len_}, 2);
  $itb{mhsd_2}{_len_}  = length($itb{mhsd_2}{_data_});
 
 
-#Calculate filesize from buffered calculations.. wow, that's very ugly :)
+#Calculate filesize from buffered calculations...
+#This is *very* ugly.. but it's fast :-)
 my $fl = 0;
 foreach my $xk (keys(%itb)) {
  foreach my $xx (keys(%{$itb{$xk}})) {
@@ -65,8 +66,10 @@ foreach my $xk (keys(%itb)) {
  }
 }
 
+
+## FINISH IT :-)
 print "> Writing file...\n";
-open(ITB, ">iTunesDB") or die "Sorry: Could not write iTunesDB: $!\n";
+open(ITB, ">iTunesDB") or die "** Sorry: Could not write your iTunesDB: $!\n";
  binmode(ITB); #Maybe this helps win32? ;)
  print ITB GNUpod::iTunesDB::mk_mhbd($fl);  #Main header
  print ITB $itb{mhsd_1}{_data_};            #Header for FILE part
@@ -76,10 +79,10 @@ open(ITB, ">iTunesDB") or die "Sorry: Could not write iTunesDB: $!\n";
  print ITB $itb{mhsd_2}{_data_};            #Header for PLAYLIST part
  print ITB $itb{playlist}{_data_};          #Playlist content
 close(ITB);
+## Finished!
 
 print "You can now umount your iPod. [Files: $itb{INFO}{FILES}]\n";
 print " - May the iPod be with you!\n\n";
-
 }
 
 
@@ -88,7 +91,11 @@ print " - May the iPod be with you!\n\n";
 
 
 #############################################################
-# Create the default playlist
+# Create the default playlist, the iPod needs a 'MPL'
+# (= MasterPlayList). This is just a normal Playlist wich
+# holds *EVERY* Song on the iPod wich should show up in the
+# 'Browser' ..
+
 sub dflt_plgen { 
  my($quickhash) = @_;
  my $pl = undef;
@@ -100,7 +107,6 @@ sub dflt_plgen {
    $pl .= GNUpod::iTunesDB::mk_mhip($_);
    $pl .= GNUpod::iTunesDB::mk_mhod(undef, undef, $_);
   }
-  
  my $plSize = length($pl);
 return GNUpod::iTunesDB::mk_mhyp($plSize, "gnuPod", 1, $itb{INFO}{FILES}).$pl;
 }
@@ -111,12 +117,13 @@ return GNUpod::iTunesDB::mk_mhyp($plSize, "gnuPod", 1, $itb{INFO}{FILES}).$pl;
 sub genpldata {
 my ($quickhash, @xpl) = @_;
 
-
 #Create default playlist
 my $pldata = dflt_plgen($quickhash);
 #Set playlistc to 1 , because we got one (dflt_plgen)
 my $playlistc = 1;
 
+## FIXME: Maybe we should SORT the playlists by name?
+##        iTunes does it.. hmm.. but it's stupid ;-)
 
 #..now do the ones specified..
 foreach my $cpl (@xpl) {
@@ -138,7 +145,7 @@ foreach my $cpl (@xpl) {
      if($key eq "id" && int(keys(%{$cadd})) == 1) { #Do a FastMatch
       $matchkey{${$cadd}{$key}} = $smc;
      }
-     else { #Slow matching
+     else { #Slow but ultrahyper flexible matching for 'add' target
 
         foreach my $xid (keys(%{$quickhash})) {
 	  foreach my $xkey (keys(%{${$quickhash}{$xid}})) {
@@ -236,12 +243,11 @@ sub build_mhits {
 my($quickhash) = @_;
 my $length = 0;
 my $nhod = undef;
-my @ico = ('-', '\\', '|', '/');
 #We are now able to build the 'DB' part
 #We have to sort the IDs here.. the iPod wouldn't like
 #random input here.... Stupid thing..
   foreach my $key (sort {$a <=> $b} keys(%{$quickhash})) {
-  my $href = ${$quickhash}{$key};
+   my $href = ${$quickhash}{$key};
     my ($cmhod, $cmhod_count) = undef;
      foreach (keys(%{$href})) {
       next unless ${$href}{$_};

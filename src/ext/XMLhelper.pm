@@ -41,7 +41,9 @@ sub build_plarr {
  my($xmldoc) = @_;
  my @ra = ();
   foreach my $gnupod (@{$xmldoc->{gnuPod}}) {
-   push(@ra, @{$gnupod->{playlist}});
+   if($gnupod->{playlist}) {
+    push(@ra, @{$gnupod->{playlist}});
+   }
   }
   return @ra;
 }

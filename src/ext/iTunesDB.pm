@@ -1,3 +1,62 @@
+# iTunesDB.pm - Version 20030723
+#
+# (C) 2003 Adrian Ulrich <pab@blinkenlights.ch>
+#
+# --------------------------------------------------------
+# This program may be copied only under the terms of the
+# GNU General Public License v2 or later.
+# --------------------------------------------------------
+#
+#
+=head1 NAME
+
+iTunesDB - Read/Write the DB File of an iPod
+
+=head1 SYNOPSIS
+
+   use iTunesDB;
+
+=head1 DESCRIPTION
+
+With this module, you can read and write an iTunesDB.
+Apple uses this Format to store information about
+Songs (Name, Comment, Rating, Bitrate...) and Playlists
+on (eg.) the iPod.
+
+Because Apple doesn't publish any (free) information
+about the format, this module maybe (is) incomplete.
+Some (mostly useless) features are *not* supportet atm.
+
+Reverse-Engineering rocks ;-)
+
+=head1 EXPORTED_SYMBOLS
+
+iTunesDB.pm doesn't export anything.
+
+=head1 READING AN iTunesDB
+
+Reading an iTunesDB is very easy, you'll only
+have to do something like this: (FIXME!!)
+
+ use iTunesDB;
+ my $xmldoc = iTunesDB::parseitunes($ARGV[0]);
+
+
+You'll get the hashref '$xmldoc'.
+
+You can use XML::Simple::XMLout to
+see the XML-Doc
+(Note: XML::Simple is loaded by
+ iTunesDB.pm)
+
+ XML::Simple::XMLout($xmldoc,keeprot=>1);
+
+
+..foo
+
+=cut
+
+
 package GNUpod::iTunesDB;
 use strict;
 use Unicode::String;
@@ -5,7 +64,7 @@ use Unicode::String;
 use vars qw(%mhod_id @mhod_array);
 
 
-%mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "comment", 8, "composer", 12, "PLTHING", 100) ;
+%mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, "comment", 8, "composer", 12, "PLTHING", 100) ;
 
  foreach(keys(%mhod_id)) {
   $mhod_array[$mhod_id{$_}] = $_;
@@ -48,6 +107,21 @@ return $ret;
 # mhod(s) (You have to create them yourself..!)
 sub mk_mhit {
 my($hod_length, $hodcount, %file_hash) = @_;
+
+#We have to fix 'volume'
+my $vol = sprintf("%.0f",( int($file_hash{volume})*2.55 ));
+
+if($vol >= 0 && $vol <= 255) { } #Nothing to do
+elsif($vol < 0 && $vol >= -255) {            #Convert value
+ $vol = oct("0xFFFFFFFF") + $vol; 
+}
+else {
+ print "Warning: ID $file_hash{id} has volume set to $file_hash{volume} percent. Ignoring value\n";
+ $vol = 0; #We won't nuke the iPod with an ultra high volume setting..
+}
+
+#print ">> $vol // $file_hash{volume}%\n" if $vol;
+
 my $ret = "mhit";
    $ret .= pack("h8", _itop(156));                           #header size
    $ret .= pack("h8", _itop(int($hod_length)+156));           #len of this entry
@@ -63,13 +137,24 @@ my $ret = "mhit";
    $ret .= pack("h8", _itop($file_hash{songs}));             #songs on this CD
    $ret .= pack("h8", _itop($file_hash{year}));              #the year
    $ret .= pack("h8", _itop($file_hash{bitrate}));           #bitrate
-   $ret .= pack("H8", "000044AC");                          #whats this?! 
-   $ret .= pack("H56");                                     #dummyspace
-   $ret .= pack("h8", _itop($file_hash{cdnum}));             #cd number
-   $ret .= pack("h8", _itop($file_hash{cds}));               #number of cds
+   $ret .= pack("H8", "000044AC");                          #Srate*something ?!?
+   $ret .= pack("h8", _itop($vol));                         #Volume
+   $ret .= pack("h8", _itop($file_hash{starttime}));        #Start time?
+   $ret .= pack("h8", _itop($file_hash{stoptime}));          #Stop time?
+   $ret .= pack("H8");
+   $ret .= pack("h8", _itop($file_hash{playcount}));
+   $ret .= pack("H8");                                      #Sometimes eq playcount .. ?!
+   $ret .= pack("h8", _mactime());                          #Last playtime.. FIXME
+#   $ret .= pack("H32");                                     #dummyspace
+   $ret .= pack("h8", _itop($file_hash{cdnum}));            #cd number
+   $ret .= pack("h8", _itop($file_hash{cds}));              #number of cds
    $ret .= pack("H8");                                      #hardcoded space 
-   $ret .= pack("h8", _mactime());                           #dummy timestamp again...
-   $ret .= pack("H96");                                     #dummy space
+   $ret .= pack("h8", _mactime());                          #dummy timestamp again...
+   $ret .= pack("H16");
+   $ret .= pack("H8", "BBF85D87");                          #??
+   $ret .= pack("h8", _itop($file_hash{rating}*5120));      #rating, FIXME: doesn't work
+   $ret .= pack("H8", "0000FFFF");                          # ???
+   $ret .= pack("H56");                                     #
 return $ret;
 }
 
@@ -374,7 +459,7 @@ sub get_mhip {
  if(get_string($pos, 4) eq "mhip") {
   my $oof = get_int($pos+4, 4);
   my($oid) = get_mhod($pos+$oof);
-  return -1 if $oid == -1; #fatal error..
+  return $oid if $oid == -1; #fatal error..
    my $px = get_int($pos+6*4, 4);
   return ($oid+$oof, $px);
  }
@@ -409,6 +494,7 @@ sub get_pl {
  
   if(get_string($pos, 4) eq "mhyp") { #Ok, its an mhyp
    my $pl_type    = get_int($pos+20, 4); #Is it a main playlist?
+   my $scount     = get_int($pos+16, 4); #How many songs should we expect?
    my $header_len = get_int($pos+4, 4);
    
    $pos += $header_len; #set pos to start of first mhod
@@ -433,9 +519,17 @@ sub get_pl {
    
    #Now get the items
    $oid = 0; #clean oid
-   while($oid != -1) {
-    $pos += $oid;
+ for(my $i = 0; $i<$scount;$i++) {
     ($oid, $itt) = get_mhip($pos);
+    if($oid == -1) {
+       print STDERR "*** FATAL: Expected to find $scount songs,\n";
+       print STDERR "*** but i failed to get nr. $i\n";
+       print STDERR "*** Your iTunesDB maybe corrupt or you found\n";
+       print STDERR "*** a bug in GNUpod. Please send this\n";
+       print STDERR "*** iTunesDB to pab\@blinkenlights.ch\n\n";
+       exit(1);
+    }
+    $pos += $oid;
      push(@pldata, $itt) if $itt;
    }
    $ret_hash{content} = \@pldata;
@@ -466,6 +560,30 @@ $ret{songnum}  = get_int($sum+44,4);
 $ret{songs}    = get_int($sum+48,4);
 $ret{year}     = get_int($sum+52,4);
 $ret{bitrate}  = get_int($sum+56,4);
+$ret{volume}   = get_int($sum+64,4);
+$ret{starttime}= get_int($sum+68,4);
+$ret{stoptime} = get_int($sum+72,4);
+$ret{playcount} = get_int($sum+80,4); #84 has also something to do with playcounts.
+$ret{rating}   = int(get_int($sum+120,4) / 5120); #We would like to write 'rating="1"', not
+                                               #rating='5120' to the GNUtunesDB
+
+
+####### We have to convert the 'volume' to percent...
+####### The iPod doesn't store the volume-value in percent..
+#Minus value (-X%)
+$ret{volume} -= oct("0xffffffff") if $ret{volume} > 255;
+
+#Convert it to percent
+$ret{volume} = sprintf("%.0f",($ret{volume}/2.55));
+
+## Paranoia check
+if(abs($ret{volume}) > 100) {
+ print " *** BUG *** .. Volume is $ret{volume} percent.. this is impossible :)\n";
+ print "Please send this iTunesDB to pab\@blinkenlights.ch .. thanks :)\n";
+ print ">> Volume set to 0 percent..\n";
+ $ret{volume} = 0;
+}
+
 
  #Now get the mhods from this mhit
 $sum += get_int($sum+4,4);
@@ -499,12 +617,29 @@ my $mhsd_s     = get_int($mhbd_s+4,4);
 my $mhlt_s     = get_int($mhbd_s+$mhsd_s+4,4);
 my $pos = $mhbd_s+$mhsd_s+$mhlt_s; #pos is now the start of the first mhit (always 292?);
 
-return($pos, ($pos+$pdi));
+#How many songs are on the iPod ?
+my $sseek = $mhbd_s + $mhsd_s;
+my $songs = get_int($sseek+8,4);
+
+#How many playlists should we find ?
+$sseek = $mhbd_s + $pdi;
+$sseek += get_int($sseek+4,4);
+my $pls = get_int($sseek+8,4);
+
+return($pos, ($pos+$pdi), $songs, $pls);
 }
 
 
+########################################################
+# Open the iTunesDB file..
 sub open_itunesdb {
- open(FILE, $_[0]) or die "Failed and FIXME\n";
+ open(FILE, $_[0]);
+}
+
+########################################################
+# Close the iTunesDB file..
+sub close_itunesdb {
+ close(FILE);
 }
 
 
