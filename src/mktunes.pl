@@ -40,7 +40,7 @@ use vars qw($cid %pldb %spldb %itb %opts %meat %cmeat @MPLcontent);
 #                    OTGPlaylist!!
 
 $| = 1;
-print "mktunes.pl Version 0.95 (C) 2002-2004 Adrian Ulrich\n";
+print "mktunes.pl Version 0.95rc1 (C) 2002-2004 Adrian Ulrich\n";
 
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
@@ -48,7 +48,7 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 GetOptions(\%opts, "help|h", "ipod-name|n=s", "mount|m=s", "volume|v=i", "energy|e");
 GNUpod::FooBar::GetConfig(\%opts, {'ipod-name'=>'s', mount=>'s', volume=>'i', energy=>'b'}, "mktunes");
 
-$opts{'ipod-name'} ||= "GNUpod 0.95-20040509";
+$opts{'ipod-name'} ||= "GNUpod 0.95-20040531 aka rc1";
 
 
 usage() if $opts{help};

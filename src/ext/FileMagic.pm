@@ -71,7 +71,7 @@ sub __is_flac {
  
  open(TFLAC, $file) or return undef;
   my $flacbuff = undef;
-  read(TFLAC,$flacbuff,4) or return undef; #Read first 4 bytes
+  read(TFLAC,$flacbuff,4);
  close(TFLAC);
  
  #Check if file has a flac header
@@ -132,7 +132,7 @@ sub __is_qt {
  return undef unless $ret; #No QT file
  
  my %rh = ();
- if($ret->{time} < 0) {
+ if($ret->{time} < 1) {
   warn "QTfile parsing failed, invalid time!\n";
   warn "You found a bug - send an email to: pab\@blinkenlights.ch\n";
   return undef;
@@ -236,7 +236,6 @@ sub __is_mp3 {
  #The IDv2 Hashref may return arrays.. kill them :)
  foreach my $xkey (keys(%$hs)) {
    if( ref($hs->{$xkey}) eq "ARRAY" ) {
-    #Fixme: does this always work?
     $hs->{$xkey} = join(":", @{$hs->{$xkey}});
    } 
  }

@@ -288,6 +288,10 @@ sub GetConfig {
  #    warn "** Parser finished $filerc\n";
   }
   
+ # foreach(keys(%$getopts)) {
+ #  warn "CONF: $_ - $getopts->{$_}\n";
+ # }
+  
   
   return 1;
 }

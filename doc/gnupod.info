@@ -23,8 +23,8 @@ File: gnupod.info,  Node: Top,  Next: Requirements,  Up: (dir)
 GNUpod
 ******
 
-   This edition of the `GNUpod Manual', last updated 18. April. 2004,
-documents GNUpod Version 0.95
+   This edition of the `GNUpod Manual', last updated 31. May. 2004,
+documents GNUpod Version 0.95rc1
 
 * Menu:
 
@@ -527,6 +527,21 @@ is case INsensitive) with a bitrate of 256kbit/s.
    <regex is case sensitive, use <iregex to do case insensitive
 matching.
 
+   You can also use Smart-Playlists with Firmware >= 2.x
+
+      <smartplaylist checkrule="spl" liveupdate="1" name="Example SPL1" >
+        <spl action="eq" field="playcount" string="0" />
+        <spl action="IS" field="artist" string="Jon Doe" />
+      </smartplaylist>
+     
+       <smartplaylist checkrule="spl" liveupdate="1" name="Example SPL2" >
+        <spl action="gt" field="bitrate" string="311" />
+      </smartplaylist>
+
+   'Example SPL1' matches all songs from 'Jon Doe' with playcount==0 (=
+All songs from Jon Doe never played until yet) 'Example SPL2' matches
+all songs with a Bitrate > 331.  (See also README.smartplaylists)
+
    For more examples have a look at `doc/gnutunesdb.example' included
 in the GNUpod tarball.
 
@@ -568,16 +583,21 @@ File: gnupod.info,  Node: Recovering files,  Next: Coexistence,  Prev: Unplug th
 Recovering files
 ================
 
-   If you lost your iTunesDB and your GNUtunesDB, your iPod won't know
-anymore which songs are on it.
+   If your computer crashed while uploading/deleting songs, you may
+have some 'zombie' files.
 
-   You can 'rebuild' an GNUtunesDB using `gnupod_addsong.pl'
+   In this case, you can use 'gnupod_check.pl' to search 'lost' files.
+gnupod_check.pl will tell you what you could do to fix it.
+
+   If gnupod_check.pl found many errors (or you lost your
+GNUtunesDB.xml), you can 'rebuild' an GNUtunesDB using
+`gnupod_addsong.pl'
 
      gnupod_addsong.pl --restore -m /mnt/ipod
 
-   First, `gnupod_INIT.pl' will create a clean, empty GNUtunesDB, it
-won't delete any songs on the iPod.  `gnupod_addsong.pl --restore' will
-re-create a GNUtunesDB including the Songs which are on the iPod
+   First, it will create a clean, empty GNUtunesDB, it won't delete any
+songs on the iPod.  Then, `gnupod_addsong.pl --restore' will re-create
+a GNUtunesDB including the Songs which are on the iPod
 
    I think nobody will ever have to do this.. but it maybe usefull to
 know that it's possible (Note: Of course you'll lose your Playlists)
@@ -1158,27 +1178,27 @@ permit their use in free software.
 
 Tag Table:
 Node: Top851
-Node: Requirements1441
-Node: Installing GNUpod1963
-Node: Installation of GNUpod2386
-Node: Using FireWire with GNU/Linux3499
-Node: Convert your Mac iPod6908
-Node: Firmware update11983
-Node: Using GNUpod13756
-Node: Preparation14579
-Node: Configuration15306
-Node: Add files15759
-Node: Search files16879
-Node: Remove files17360
-Node: Creating playlists17665
-Node: Unplug the iPod18860
-Node: Recovering files19764
-Node: Coexistence20467
-Node: Problems21930
-Node: GNUtunesDB22309
-Node: Get rid of '-m'23810
-Node: Known bugs and limitations24090
-Node: Reporting Bugs24373
-Node: GNU Free Documentation License24816
+Node: Requirements1442
+Node: Installing GNUpod1964
+Node: Installation of GNUpod2387
+Node: Using FireWire with GNU/Linux3500
+Node: Convert your Mac iPod6909
+Node: Firmware update11984
+Node: Using GNUpod13757
+Node: Preparation14580
+Node: Configuration15307
+Node: Add files15760
+Node: Search files16880
+Node: Remove files17361
+Node: Creating playlists17666
+Node: Unplug the iPod19504
+Node: Recovering files20408
+Node: Coexistence21298
+Node: Problems22761
+Node: GNUtunesDB23140
+Node: Get rid of '-m'24641
+Node: Known bugs and limitations24921
+Node: Reporting Bugs25204
+Node: GNU Free Documentation License25647
 
 End Tag Table

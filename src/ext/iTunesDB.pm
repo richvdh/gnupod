@@ -103,20 +103,7 @@ $SPLDEF{limititem}{5} = "gigabyte";
 
 my %SPLREDEF = _r_spldef();
 
-#_itBUG("Hm.. This should be in a BEGIN block!");
 
-##########################################
-#ReConvert the SPLDEF hash
-sub _r_spldef {
-my %RES = ();
- foreach my $spldsc (keys(%SPLDEF)) {
-   foreach my $xkey (keys(%{$SPLDEF{$spldsc}})) {
-    my $xval = $SPLDEF{$spldsc}{$xkey};
-    $RES{$spldsc}{$xval} = int($xkey);
-   }
- }
- return %RES;
-}
 
 
 
@@ -375,10 +362,10 @@ sub mk_spldatamhod {
         my($is_negative,$real_action) = $chr->{action} =~ /^(NOT_)?(.+)/;
 		
         #..but a negative string has 0x3 as prefix
-	$action_prefix = 0x03000000 if $is_negative;
+        $action_prefix = 0x03000000 if $is_negative;
 		
         unless($action_num = $SPLREDEF{string_action}{uc($real_action)}) {
-         warn "iTunesDB.pm: action $chr->{action} is invalid for $chr->{field} , setting action to IS\n";
+         warn "iTunesDB.pm: action $chr->{action} is invalid for $chr->{field} , setting action to ".$is_negative."IS\n";
          $action_num = $SPLREDEF{string_action}{IS};
         }
      
@@ -395,16 +382,18 @@ sub mk_spldatamhod {
         $string .= pack("H24");
         $string .= pack("H8", _x86itop(1));
         $string .= pack("H40");
+        
         #int has 0x0 as prefix..
-	$action_prefix = 0x00000000;
+        $action_prefix = 0x00000000;
         my($is_negative,$real_action) = $chr->{action} =~ /^(!)?(.+)/;
-	#..but negative int action has 0x2
+        
+        #..but negative int action has 0x2
         $action_prefix = 0x02000000 if $is_negative;
 		
-           unless($action_num = $SPLREDEF{num_action}{lc($real_action)}) {
-             warn "iTunesDB.pm: action $chr->{action} is invalid for $chr->{field}, setting action to eq\n";
-             $action_num = $SPLREDEF{num_action}{eq};
-           }
+        unless($action_num = $SPLREDEF{num_action}{lc($real_action)}) {
+          warn "iTunesDB.pm: action $chr->{action} is invalid for $chr->{field}, setting action to ".$is_negative."eq\n";
+          $action_num = $SPLREDEF{num_action}{eq};
+        }
 	}
 	else { #Unknown type, this is fatal!
 	  die "iTunesDB.pm: FATAL ERROR: <spl field=\"$chr->{field}\"... is unknown, can't continue!\n";
@@ -706,7 +695,6 @@ my @ret = ();
     $human_exp .= $SPLDEF{string_action}{$action};
 	#Warn about bugs 
 	$SPLDEF{string_action}{$action} or _itBUG("Unknown s_action $action for $ftype");
-   
    }
    else { #Is INT (Or range)
     my $xfint = get_x86_int($diff+56+4,4);
@@ -1121,6 +1109,18 @@ sub _itBUG {
  
 }
 
+##########################################
+#ReConvert the SPLDEF hash
+sub _r_spldef {
+my %RES = ();
+ foreach my $spldsc (keys(%SPLDEF)) {
+   foreach my $xkey (keys(%{$SPLDEF{$spldsc}})) {
+    my $xval = $SPLDEF{$spldsc}{$xkey};
+    $RES{$spldsc}{$xval} = int($xkey);
+   }
+ }
+ return %RES;
+}
 
 
 

@@ -31,7 +31,7 @@ use File::Copy;
 use constant MACTIME => 2082931200; #Mac EPOCH offset
 use vars qw(%opts %dupdb $int_count);
 
-print "gnupod_addsong.pl Version 0.95 (C) 2002-2004 Adrian Ulrich\n";
+print "gnupod_addsong.pl Version 0.95rc1 (C) 2002-2004 Adrian Ulrich\n";
 
 $int_count = 3; #The user has to send INT (Ctrl+C) x times until we stop
 
@@ -50,7 +50,8 @@ if($opts{restore}) {
  print "If you use --restore, you'll *lose* your playlists\n";
  print " Hit ENTER to continue or CTRL+C to abort\n\n";
  <STDIN>;
- $opts{duplicate} = 1; #Don't skip dups on restore
+ delete($opts{decode}); #We don't decode anything
+ $opts{duplicate} = 1;  #Don't skip dups on restore
  startup(glob("$opts{mount}/iPod_Control/Music/*/*"));
 }
 elsif($ARGV[0] eq "-" && @ARGV == 1) {
@@ -79,7 +80,7 @@ sub startup {
  my $con = GNUpod::FooBar::connect(\%opts);
  usage($con->{status}."\n") if $con->{status} || !@files;
 
- unless($opts{restore}) {
+ unless($opts{restore}) { #We parse the old file, if we are NOT restoring the iPod
   GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}\n");
  }
 
@@ -117,7 +118,7 @@ sub startup {
    #Get a path
    (${$fh}{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file, 
                                                            {format=>$wtf_frmt, extension=>$wtf_ext, keepfile=>$opts{restore}});
-   #Copy the file
+   #Check for duplicates
    if(!$opts{duplicate} && (my $dup = checkdup($fh))) {
     print "! [!!!] '$file' is a duplicate of song $dup, skipping file\n";
     unlink($converted) if $converted; #Unlink file, if we converted it.. (tmp)

@@ -106,7 +106,6 @@ my @METADEF = ("album",   "\xA9alb",
                "title",   "\xA9nam",
                "fdesc",   "\xA9too",
                "year",    "\xA9day",
-               "comment", "\xA9cmt",
                "comment", "\xA9cmt");
 
 ###All STRING fields..
@@ -153,6 +152,7 @@ my @METADEF = ("album",   "\xA9alb",
  if( my $cDat = $lx{metadat}{'::moov::trak::mdia::minf::stbl::stsd'}[0] ) {
   $reth{_CODEC} = substr($cDat,4,4);
   $reth{srate}  = get_string_oct(32,2,$cDat);
+  #Fixme: Bitrate should be in stsd
  }
  $reth{filesize} = $fsize;
  return \%reth;

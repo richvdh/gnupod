@@ -165,7 +165,7 @@ sub addpl {
  }
 
  push(@plorder, $name);
- my %rh = %{$opts};
+ my %rh = %{$opt};
  $rh{name} = $name; #Force the name
  
  $XDAT->{playlists}->{pref}->{$name} = \%rh;
@@ -183,7 +183,7 @@ sub addspl {
  }
 
  push(@plorder, $name);
- my %rh = %{$opts};
+ my %rh = %{$opt};
  $rh{name} = $name; #Force the name
  
  $XDAT->{spls}->{pref}->{$name} = \%rh;
