@@ -24,6 +24,7 @@ mktunes.pl
 
 XMLhelper.pm
   * Fixed the cleandoc() bug
+  * Dropped XML::Simple.. it's stupid :-/
 
 ..and..
   Changed 'Win' to 'Windows/W32/etc'

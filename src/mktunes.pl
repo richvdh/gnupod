@@ -29,8 +29,8 @@ use GNUpod::FooBar;
 use Getopt::Long;
 
 
-use vars qw($xmldoc %itb %opts);
-
+use vars qw($cid %pldb %itb %opts %meat %cmeat);
+$cid=52;
 $| = 1;
 print "mktunes.pl Version 0.91 (C) 2002-2003 Adrian Ulrich\n";
 
@@ -45,7 +45,63 @@ startup();
 
 
 
+sub newfile {
+ my($el) = @_;
+ $cid++;
+ $itb{mhit}{_len_} += build_mhit($cid, $el->{file}); 
 
+##Create the gnuPod 0.2x like memeater
+ #$meat{KEY}{VAL} = id." ";
+ foreach(keys(%{$el->{file}})) {
+  $meat{$_}{$el->{file}->{$_}} .= $el->{file}->{id}." ";
+  $cmeat{$_}{lc($el->{file}->{$_})} .= $cid." ";
+ }
+}
+
+sub newpl   {
+ my($el, $name) = @_;
+  
+   foreach my $action (keys(%$el)) {
+     if($action eq "add") {
+       my $ntm;
+       my %mk;
+       foreach my $xrn (keys(%{$el->{$action}})) {
+         foreach(split(/ /,$cmeat{$xrn}{lc($el->{$action}->{$xrn})})) {
+          $mk{$_}++;
+         }
+         $ntm++;
+       }
+       foreach(keys(%mk)) {
+        push(@{$pldb{$name}}, $_) if $mk{$_} >= $ntm;
+       }
+       
+     }
+     elsif($action eq "regex" || $action eq "iregex") {
+      my $ntm;
+      my %mk;
+      my $mval;
+       foreach my $xrn (keys(%{$el->{$action}})) {
+        $ntm++;
+        my $regex = $el->{$action}->{$xrn};
+         foreach my $val (keys(%{$meat{$xrn}})) {
+           if($val =~ /$regex/) {
+            $mval = $val;
+           }
+           elsif($action eq "iregex" && $val =~ /$regex/i) {
+            $mval = $val;
+           }
+           ##get the keys
+           foreach(split(/ /,$meat{$xrn}{$mval})) {
+            $mk{$_}++;
+           }
+         }
+       }
+       foreach(keys(%mk)) {
+        push(@{$pldb{$name}}, $_) if $mk{$_} >= $ntm;
+       }
+     }
+   }
+}
 
 sub startup {
 
@@ -55,16 +111,9 @@ usage("$stat\n") if $stat;
 
 print "! Volume-adjust set to $opts{volume} percent\n" if defined($opts{volume});
 
-print "> Parsing XML...\n";
-($xmldoc) = GNUpod::XMLhelper::parsexml($xml);
- usage("Could not open $xml, did you run gnupod_INIT.pl ?\n") unless $xmldoc;
+print "> Parsing XML and creating FileDB\n";
+GNUpod::XMLhelper::doxml($xml);
 
- my ($quickhash, $memeat, $cimemeat) = GNUpod::XMLhelper::build_quickhash($xmldoc);
-
-## FILE STUFF
-print "> Creating File Database...\n";
-# Create mhits (File index stuff)
- $itb{mhit}{_len_} = build_mhits($quickhash);
 
 # Create header for mhits
  $itb{mhlt}{_data_}   = GNUpod::iTunesDB::mk_mhlt($itb{INFO}{FILES});
@@ -79,12 +128,8 @@ print "> Creating File Database...\n";
 ## PLAYLIST STUFF
 print "> Creating playlists:\n";
 
-my @xpl = GNUpod::XMLhelper::build_plarr($xmldoc);
-# Build the playlists...
-
- $itb{playlist}{_data_} = genpldata($quickhash, $memeat, $cimemeat, @xpl);
+ $itb{playlist}{_data_} = genpls();
  $itb{playlist}{_len_}  = length($itb{playlist}{_data_});
-
 # Create headers for the playlist part..
  $itb{mhsd_2}{_data_} = GNUpod::iTunesDB::mk_mhsd($itb{playlist}{_len_}, 2);
  $itb{mhsd_2}{_len_}  = length($itb{mhsd_2}{_data_});
@@ -121,131 +166,48 @@ print " - May the iPod be with you!\n\n";
 
 
 
-
-
-
-#############################################################
-# Create the default playlist, the iPod needs a 'MPL'
-# (= MasterPlayList). This is just a normal Playlist wich
-# holds *EVERY* Song on the iPod wich should show up in the
-# 'Browser' ..
-
-sub dflt_plgen { 
- my($quickhash) = @_;
- my $pl = undef;
-#Note: we are now building a PL, no need to sort the keys as we had
-#      to do it in the DB Part, this speeds up things :)
-#      (And the ipod has to sort things anyway.. unsortet input doesn't
-#       slow down the iPod)
-  foreach (keys(%{$quickhash})) {
-   $pl .= GNUpod::iTunesDB::mk_mhip($_);
-   $pl .= GNUpod::iTunesDB::mk_mhod(undef, undef, $_);
-  }
- my $plSize = length($pl);
-return GNUpod::iTunesDB::mk_mhyp($plSize, "gnuPod", 1, $itb{INFO}{FILES}).$pl;
-}
-
-
-
-
-
-#############################################################
-# Parses playlist stuff
-sub genpldata {
-my ($quickhash, $memeat, $cimemeat, @xpl) = @_;
-
-#Create default playlist
-my $pldata = dflt_plgen($quickhash);
-#Set playlistc to 1 , because we got one (dflt_plgen)
-my $playlistc = 1;
-my %mm = ();
-
-
-foreach my $cpl (@xpl) {
- my @promoted = ();
-   foreach my $action (keys(%$cpl)) {
-      next unless ref($cpl->{$action}) eq "ARRAY";
-      foreach my $itx (@{$cpl->{$action}}) {
-          my $htm = int(keys(%$itx));
-	  my %plm;
-
-	  foreach my $pel (keys(%$itx)) {
-	       if($action eq "add") {
-	          my @keys = split(/ /,$cimemeat->{$pel}{lc($itx->{$pel})});
-	          foreach my $mid (@keys) {
-	            $plm{$mid}++;
-	          }
-	        }
-		elsif($action eq "iregex" || $action eq "regex") {
-		  my $peat = $cimemeat;
-		  $peat = $memeat if $action eq "regex";
-		  foreach my $valx (keys(%{$peat->{$pel}})) {
-		     my $cms = $itx->{$pel};
-		     $cms = lc($cms) if $action eq "iregex";
-		     if($valx =~ /$cms/) {
-		       foreach my $mid (split(/ /,$peat->{$pel}{$valx})) {
-		        $plm{$mid}++;
-		       }
-		     
-		     }
-		  }
-		} else { print "** WARNING: Unhandled action: $action:$pel\n"; }
-	       
-	    }
-	  
-	  foreach(keys(%plm)) {
-	   push(@promoted, $_) if $plm{$_} == $htm;
-	  }
-	  
-      }
-      ##end one element!
-     
-   }
-
-
-
- my $pltemp = undef;
- my $plfc = 0; #PlayListFileCount
-
- foreach(@promoted) {
-  $pltemp .= GNUpod::iTunesDB::mk_mhip($_);
-  $pltemp .= GNUpod::iTunesDB::mk_mhod(undef, undef, $_);
-  $plfc++;
+sub r_mpl {
+ my($name, $type, @xid) = @_;
+my $pl = undef;
+my $fc = 0;
+ foreach(@xid) {
+  $pl .= GNUpod::iTunesDB::mk_mhip($_);
+  $pl .= GNUpod::iTunesDB::mk_mhod(undef, undef, $_);
+  $fc++;
  }
- #Add header for $pltemp;
- $pldata .= GNUpod::iTunesDB::mk_mhyp(length($pltemp), $cpl->{name}, 0,$plfc).$pltemp;
- print ">> Added Playlist '$cpl->{name}' with $plfc item";
- print "s" if $plfc !=1; print "\n";
- $playlistc++;
-
-}
-
-return GNUpod::iTunesDB::mk_mhlp($playlistc).$pldata;
-
+ my $plSize = length($pl);
+ return (GNUpod::iTunesDB::mk_mhyp($plSize, $name, $type, $fc).$pl,$fc);
 }
 
 
+sub genpls {
+ my ($pldata,undef) = r_mpl("gnuPod", 1,(1..$cid));
+ my $plc = 1;
+ 
+  foreach(GNUpod::XMLhelper::getpl_names()) {
+    print ">> Added Playlist '$_'";
+    $plc++;
+    my($pl, $xc) = r_mpl($_, 0, @{$pldb{$_}});
+    $pldata .= $pl;
+    print " with $xc files\n";
+  }
+ 
+ return GNUpod::iTunesDB::mk_mhlp($plc).$pldata;
+}
 
-
-#############################################################
-# Create the mhits (File index)
-sub build_mhits {
-my($quickhash) = @_;
-my $length = 0;
-my $nhod = undef;
-#We are now able to build the 'DB' part
-#We have to sort the IDs here.. the iPod wouldn't like
-#random input here.... Stupid thing..
-  foreach my $key (sort {$a <=> $b} keys(%{$quickhash})) {
-   my $href = ${$quickhash}{$key};
-    my ($cmhod, $cmhod_count) = undef;
-     foreach (keys(%{$href})) {
-      next unless ${$href}{$_};
-      $nhod = GNUpod::iTunesDB::mk_mhod($_, ${$href}{$_});
-      $cmhod .= $nhod;
-      $cmhod_count++ if defined $nhod;
-     }
-     
+#########################################################################
+# Create the file index (like <files>)
+sub build_mhit {
+ my($oid, $href) = @_;
+ $href->{id} = $oid;
+ 
+my ($nhod,$cmhod,$cmhod_count) = undef;
+ foreach(keys(%$href)) {
+  next unless $href->{$_};
+  $nhod = GNUpod::iTunesDB::mk_mhod($_, $href->{$_});
+  $cmhod .= $nhod;
+  $cmhod_count++ if defined $nhod;
+ }
      #Volume adjust
      if($opts{volume}) {
       $href->{volume} += int($opts{volume});
@@ -259,15 +221,11 @@ my $nhod = undef;
      #Ok, we created the mhod's for this item, now we have to create an mhit
      my $mhit = GNUpod::iTunesDB::mk_mhit(length($cmhod), $cmhod_count, %{$href}).$cmhod;
      $itb{mhit}{_data_} .= $mhit;
-     $length += length($mhit);
+     my $length = length($mhit);
      $itb{INFO}{FILES}++;
 
-  }
- return $length;
+return $length;
 }
-
-
-
 
 
 

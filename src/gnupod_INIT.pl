@@ -30,7 +30,7 @@ use Getopt::Long;
 use vars qw(%opts);
 
 
-print "gnupod_addsong.pl Version 0.91 (C) 2002-2003 Adrian Ulrich\n";
+print "gnupod_addsong.pl Version 0.92 (C) 2002-2003 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
@@ -105,8 +105,7 @@ else {
  
  print "> Creating dummy files\n";
  
-  my($xmldoc) = GNUpod::XMLhelper::parsexml($xml, cleanit=>1);
-  GNUpod::XMLhelper::write_xml($xml, $xmldoc);
+  GNUpod::XMLhelper::writexml($xml);
  
  if(-e $itunes && !$opts{'disable-convert'}) {
  ## Fixme: Does this work??

@@ -55,8 +55,7 @@ my($pos, $pdi,$xpct_songs, $xpc_pl) = GNUpod::iTunesDB::get_starts();
 
 print "> Has $xpct_songs songs";
 
-my $href = undef;
-my @xar  = ();
+my ($ff, $href) = undef;
 my %hout = ();
  for(my $i=0;$i<$xpct_songs;$i++) {
 ##This would me a status-bar like thing..
@@ -73,15 +72,14 @@ my %hout = ();
    print STDERR "*** a bug in GNUpod. Please send this\n";
    print STDERR "*** iTunesDB to pab\@blinkenlights.ch\n\n";
    exit(1);
-  }  
-  push(@xar, $href);
+  }
+  GNUpod::XMLhelper::mkfile({file=>$href});  
+  $ff++;
  }
 
 
 #<files> part built
-$hout{gnuPod}{files}{file} = \@xar;
-my $found_files = int(@xar);
-print STDOUT "\r> Found $found_files files, ok\n";
+print STDOUT "\r> Found $ff files, ok\n";
 
 
 #Now get each playlist
@@ -97,23 +95,18 @@ for(my $i=0;$i<$xpc_pl;$i++) {
    exit(1);
   }
   next if ${$href}{type}; #Don't list the MPL
-  my @xr = ();
+print STDOUT ">> Playlist '${$href}{name}' with ".int(@{${$href}{content}})." songs\n";
+  GNUpod::XMLhelper::addpl(${$href}{name});
   foreach(@{${$href}{content}}) {
-   my %ch = ();
-   $ch{id} = $_;
-   push(@xr, \%ch);
+   my $plfh = ();
+   $plfh->{add}->{id} = $_;
+   GNUpod::XMLhelper::mkfile($plfh,{plname=>${$href}{name}});
   }
-  my %plh = ();
-  $plh{name} = ${$href}{name};
-  $plh{add}  = \@xr;
-  #Add new playlist to XML hash
-  push(@{$hout{gnuPod}{playlist}},\%plh);  
-  print STDOUT ">> Playlist '$plh{name}' with ".int(@xr)." songs\n";
  }
 
 
 
-GNUpod::XMLhelper::write_xml($out, \%hout);
+GNUpod::XMLhelper::writexml($out);
 
 
 print STDOUT "\n Done\n";

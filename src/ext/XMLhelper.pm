@@ -23,18 +23,17 @@ package GNUpod::XMLhelper;
 # This product is not supported/written/published by Apple!
 
 use strict;
-
-use XML::Simple;
+use XML::Parser;
 use Unicode::String;
 
-#Force XML::Parser -> XML::Sax maybe SLOOOW (with the 100% perl parser)
-$XML::Simple::PREFERRED_PARSER = "XML::Parser";
 
 ## Release 20030920
 
-my @idpub;
-my $xid = 1; #The ipod doesn't like ID 0
-
+my $cpn = undef; #Current PlaylistName
+my @idpub = ();
+my @plorder = ();
+my $xid = 1;
+use vars qw($XDAT);
 
 ##############################################
 # Convert an ipod path to unix
@@ -72,137 +71,133 @@ $ipath =~ tr/\//:/;
 return ($ipath, $path);
 }
 
+
+################################################################
+# Escape chars
+sub xescaped {
+ my ($ret) = @_;
+$ret =~ s/&/&amp;/g;
+$ret =~ s/"/&quot;/g;
+$ret =~ s/</&lt;/g;
+$ret =~ s/>/&gt;/g;
+$ret =~ s/'/&apos;/g;
+my $bfx = Unicode::String::utf8($ret)->utf8;
+$ret = $bfx if $bfx ne $ret;
+return $ret;
+}
+
+
+
+
+###############################################################
+# Create a new child (for playlists or file)
+sub mkfile {
+ my($hr, $magic) = @_;
+ my $r = undef;
+  foreach my $base (keys %$hr) {
+   $r .= "<".xescaped($base)." ";
+     foreach (keys %{$hr->{$base}}) {
+      $r .= xescaped($_)."=\"".xescaped($hr->{$base}->{$_})."\" ";
+     }
+     if($magic->{addid} && !$hr->{$base}->{id}) {
+      while($idpub[$xid]) { $xid++; }
+      $r .= "id=\"$xid\" ";
+      $idpub[$xid] = 1;
+     }
+   $r .= "/>";
+  }
+
+  if($magic->{plname}) {
+   push(@{$XDAT->{playlists}->{$magic->{plname}}}, $r);
+  }
+  else {
+   push(@{$XDAT->{files}}, $r);
+  }
+}
+
+##############################################################
+# Add a playlist to output
+sub addpl {
+ push(@plorder, $_[0]);
+}
+
+##############################################################
+#Get all playlists
+sub getpl_names {
+ return @plorder;
+}
+
+
+##############################################################
+# Call events
+sub eventer {
+ my($href, $el, @it) = @_;
+  if($href->{Context}[1] eq "files") {
+    my $xh = mkh($el,@it);
+    @idpub[$xh->{file}->{id}] = 1;
+    main::newfile($xh);
+  }
+  elsif($href->{Context}[1] eq "" && $el eq "playlist") {
+    $cpn = mkh($el,@it)->{$el}->{name};
+    addpl($cpn);
+  }
+  elsif($href->{Context}[1] eq "playlist") {
+   die "Fatal XML Error: playlist without name found!\n" if $cpn eq "";
+   #mkfile(mkh($el, @it), $cpn);
+   main::newpl(mkh($el, @it), $cpn);
+  }
+  else {
+   #print "?? $href->{Context}[0] // $href->{Context}[1] // $href->{Context}[2] // $el\n";
+  }
+}
+
+
+##############################################################
+# Create a hash
+sub mkh {
+ my($base, @content) = @_;
+ my $href = ();
+  for(my $i=0;$i<int(@content);$i+=2) {
+   $href->{$base}->{$content[$i]} = $content[$i+1];
+  }
+  return $href;
+}
+
+
+
 #############################################################
-# Parses the XML File
-sub parsexml {
+# Parses the XML File and do events
+sub doxml {
  my($xmlin, %opts) = @_;
- my $doc = undef;
-if($opts{cleanit}) { #We create a clean XML file
-  $doc->{gnuPod}->[0]->{files} = ();
-}
-elsif(-r $xmlin) { #Parse the oldone..
- $doc = XML::Simple::XMLin($xmlin, keeproot => 1, keyattr => [], forcearray=>1); 
-#We need to do some workarounds on perl 5.6 versus 5.8
-#We should add an 'bugdetector' and skip this if we don't have
-#to run it.. would speedup things..
- cleandoc($doc);
- 
- #Create the IDPUB (Free IDs)
-  foreach(@{$doc->{gnuPod}->[0]->{files}->[0]->{file}}) {
-   $idpub[$_->{id}]++;
-  }
-}
-else { #XML does not exist?
- return undef;
+return undef unless (-r $xmlin);
+my $p = new XML::Parser(Handlers=>{Start=>\&eventer});
+   $p->parsefile($xmlin);
+return $p;
 }
 
-
-return $doc;
-}
-
-######################################################################
-# Same as quickhash, but for playlist items
-sub build_plarr {
- my($xmldoc) = @_;
- my @ra = ();
-  foreach my $gnupod (@{$xmldoc->{gnuPod}}) {
-   if($gnupod->{playlist}) {
-    push(@ra, @{$gnupod->{playlist}});
-   }
-  }
-  return @ra;
-}
-
-######################################################################
-# Create an easy to use hash with some usefull information
-sub build_quickhash {
-my($xmldoc) = @_;
-my %rhash = ();
-my %memeat = ();
-my %cimemeat = ();
-  foreach my $gnupod (@{$xmldoc->{gnuPod}}) {
-    foreach my $files (@{$gnupod->{files}}) {
-      foreach my $file (@{$files->{file}}) {
-         #Now we get EVERY file element, even if someone did
-	 #a weird XML File with many <gnuPod> parts and such idiotic
-	 #stuff..
-	  my %thash = (); #clean the TempHash
-	   foreach my $el (keys(%{$file})) {
-	     $thash{$el} = ${$file}{$el};
-	     $memeat{$el}{${$file}{$el}} .= ${$file}{id}." ";
-             $cimemeat{$el}{lc(${$file}{$el})} .= ${$file}{id}." ";
-	   }
-	   unless(defined($thash{id})) {
-	    print STDERR "FATAL XML ERROR: 'file' element without 'id' found! ($thash{path})\n";
-            print STDERR "Please remove this file (from your iPod and the GNUtunesDB) and\n";
-	    print STDERR "try again... This shouldn't happen :-/ .. bye\n";
-	    exit(2);
-	   }
-	   $rhash{$thash{id}} = \%thash;
-      }
-    }
-  }
-return \%rhash, \%memeat, \%cimemeat; 
-}
-
-#####################################################
-# Add a file hash
-sub addfile {
- my($xmldoc, $fh) = @_;
-#Request a free ID
- while($idpub[$xid]) { $xid++; }
-     $fh->{id} = $xid;
-     $idpub[$xid] = 1;
-     
-     push(@{$xmldoc->{gnuPod}->[0]->{files}->[0]->{file}}, $fh);
-}
 
 
 ######################################################
 # Write the XML File
-sub write_xml {
- my($out, $href, %opts) = @_;
-
+sub writexml {
+ my($out) = @_;
  open(OUT, ">$out") or die "Could not write to $out : $!\n";
  binmode(OUT);
- #Perl 5.6 bug? ReCleanup the doc (FORCED)
- cleandoc($href, undef, undef, 1);
- print OUT XML::Simple::XMLout($href,keeproot=>1,xmldecl=>1);
- close(OUT);
+ print OUT "<?xml version='1.0' standalone='yes'?>\n";
+ print OUT "<gnuPod>\n <files>\n";
+ foreach(@{$XDAT->{files}}) {
+  print OUT "  $_\n";
+ }
+print OUT " </files>\n";
+ foreach(@plorder) {
+  print OUT "\n <playlist name=\"$_\">\n";
+   foreach(@{$XDAT->{playlists}->{$_}}) {
+    print OUT "   $_\n";
+   }
+  print OUT " </playlist>\n";
+ }
+print OUT "</gnuPod>\n";
+close(OUT);
 }
-
-
-######################################################
-# XML::Parser on perl 5.8 seems to have a bug:
-# SOMETIMES, it returns latin1 stuff.. SOMETIMES utf8
-# -> We scan the doctree and convert latin1 to utf8
-#   if XML::Parser freaked out..
-#  ..yes: this is slow.. but better than fu*king up the dochash
-#  with 2 charsets..
-
-sub cleandoc {
- my ($r, $base, $xref, $always) = @_;
- if(ref($r) eq "HASH") {
-  foreach(keys(%$r)) {
-    cleandoc(${$r}{$_}, $_, $r, $always);
-  }
- }
- elsif(ref($r) eq "ARRAY") {
-  foreach(@$r) {
-   cleandoc($_, undef, undef, $always);
-  }
- }
- elsif(ref($r) eq "") { 
- next unless defined($r); #Dont mess around with nothing
-  my $bfx = Unicode::String::utf8($r)->utf8;
-  $r = $bfx if $always || $bfx ne $r; #SOMETIMES, we got weird input from XML::parser..
-                           #Unicode::String (utf8 to utf8?) fixes this.. don't know why *g*
-  $xref->{$base} = $r;
- }
- else {
-  die "*** Bug in sub cleandoc: i can't handle ".ref($r)." .. sorry!\n";
- }
-}
-
 
 1;

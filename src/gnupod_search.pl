@@ -26,7 +26,7 @@ use strict;
 use GNUpod::XMLhelper;
 use GNUpod::FooBar;
 use Getopt::Long;
-use vars qw(%opts);
+use vars qw(%opts @keeplist);
 
 print "gnupod_search.pl Version 0.91 (C) 2002-2003 Adrian Ulrich\n";
 
@@ -34,7 +34,7 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "help|h", "mount|m=s", "artist|a=s",
                    "album|l=s", "title|t=s", "id|i=s",
-		   "genre|g=s", "once|o", "delete|d");
+        		   "genre|g=s", "once|o", "delete|d");
 
 usage() if $opts{help};
 
@@ -45,88 +45,56 @@ go();
 sub go {
  my($stat, $itunes, $xml) = GNUpod::FooBar::connect(\%opts);
  usage($stat."\n") if $stat;
- 
- my ($xmldoc) = GNUpod::XMLhelper::parsexml($xml, cleanit=>$opts{restore}) or usage("Failed to parse $xml\n");
-
- usage("Could not open $xml , did you run gnupod_INIT.pl ?\n") unless $xmldoc;
-
-
-
-my ($href) = GNUpod::XMLhelper::build_quickhash($xmldoc);
-
-my $ntm = keys(%opts)-1-$opts{once}-$opts{delete}; #-2 because we skip 'mount|once' .. dirty hack
-
-usage("Nothing to do!\n") unless $ntm;
-
-my @nomatch = ();
-my %present = ();
-## Start!
 
 
 print "ID      : ARTIST / ALBUM / TITLE\n";
-print "================================\n";
-    foreach my $xlr (keys(%{$href})) {
-       my $ch = $href->{$xlr};
-       #We got now the hash of the current item..       
-       #Let's loop!
-       # %opts will *never* be bigger than
-       # our hashes...
-       my $matched = 0;
-       foreach my $element (keys(%opts)) {
-        next if $element =~ /mount|once|delete/; #Skip this..
-          if($ch->{$element} =~ /$opts{$element}/i) {
-	   $matched++;
-	    if($opts{once} || $matched == $ntm) {
-	        
-		#Remove the file if --delete is present
-		if($opts{delete}) {
-		  unlink GNUpod::XMLhelper::realpath($opts{mount},$ch->{path}) or
-		  warn "*** Could not unlink ".$ch->{path}.", but item is removed from XML-Doc !\n";
-	          print "[RM]";
-		}
-		
-		print " " x (7-(length($ch->{id}))-$opts{delete});
-	        print $ch->{id}." ";
-		print ": ".$ch->{artist}." / ".$ch->{album}." / ".$ch->{title}."\n";
-	      last; #We matched.. no need to loop again (and print out duplicates)
-	    }
-	  }
-	  elsif($opts{delete}){ #We have to delete: hold good items
-	   push(@nomatch, $ch);
-	   $present{$ch->{id}}++; #We found this item.. merk it ;)
-	  }
-       }
-    }
-    
+print "================================\n"; 
+GNUpod::XMLhelper::doxml($xml) or usage("Failed to parse $xml\n");
+GNUpod::XMLhelper::writexml($xml) if $opts{delete};
 
-## FIXME:: Rewrite the delete part.. it's slow and very ugly    
-if($opts{delete}) { #Clean doctree and rebuild..
- ## Clean the old file hash..
-  foreach my $gp (@{$xmldoc->{gnuPod}}) {
-   foreach my $fx (@{$gp->{files}}) {
-    $fx = undef;
-   }
-#Now cleanup all playlists here
-   foreach my $pl (@{$gp->{playlist}}) {
-   next unless ref($pl->{add}) eq "ARRAY";
- 
-my @hpl = (); #HoldPlayList
-     foreach my $pli (@{$pl->{add}}) {
-	#No id part or on our holdlist.. damd bug!
-	if(!defined($pli->{id}) || keys(%$pli) != 1 || $present{$pli->{id}}) { 
-	 push(@hpl, $pli);
-	}
-     }
-     @{$pl->{add}} = @hpl;
+
+}
+
+#############################################
+# Eventhandler for FILE items
+sub newfile {
+ my($el) =  @_;
+my $matched;
+my $ntm = keys(%opts)-1-$opts{once}-$opts{delete};
+
+  foreach my $opx (keys(%opts)) {
+   next if $opx =~ /mount|once|delete/; #Skip this
+   if($el->{file}->{$opx} =~ /$opts{$opx}/i) {
+    $matched++;
    }
   }
- @{$xmldoc->{gnuPod}->[0]->{files}->[0]->{file}} = @nomatch;
-GNUpod::XMLhelper::write_xml($xml,$xmldoc);
+
+  if(($opts{once} && $matched) || $ntm == $matched) {
+    print "$el->{file}->{id}";
+    print " " x (8-length($el->{file}->{id}));
+    print ": $el->{file}->{artist} / ";
+    print "$el->{file}->{album} / ";
+    print "$el->{file}->{title}\n";
+  }
+  elsif($opts{delete}) { #Did not match, keep this item..
+   GNUpod::XMLhelper::mkfile($el);
+   $keeplist[$el->{file}->{id}] = 1;
+  }
 }
 
+############################################
+# Eventhandler for PLAYLIST items
+sub newpl {
+ return unless $opts{delete}; #Just searching
+ my ($el, $name) = @_;
+ if(ref($el->{add}) eq "HASH") { #Add action
+  if(defined($el->{add}->{id}) && int(keys(%{$el->{add}})) == 1) { #Only id
+   return unless($keeplist[$el->{add}->{id}]); #ID not on keeplist. dropt it
+  }
+ }
+
+  GNUpod::XMLhelper::mkfile($el,{plname=>$name});
 }
-
-
 
 ###############################################################
 # Basic help
@@ -147,8 +115,6 @@ Usage: gnupod_search.pl [-h] [-m directory | -x GNUtunesDB] File1 File2 ...
    -d, --delete           : REMOVE (!) matched songs
 EOF
 }
-
-
 
 
 

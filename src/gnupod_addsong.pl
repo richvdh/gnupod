@@ -28,7 +28,7 @@ use GNUpod::FooBar;
 use GNUpod::FileMagic;
 use Getopt::Long;
 use File::Copy;
-use vars qw(%opts);
+use vars qw(%opts %dupdb);
 
 print "gnupod_addsong.pl Version 0.91 (C) 2002-2003 Adrian Ulrich\n";
 
@@ -69,8 +69,9 @@ sub startup {
  my($stat, $itunes, $xml) = GNUpod::FooBar::connect(\%opts);
 
  usage($stat."\n") if $stat || !@files;
-my ($xmldoc) = GNUpod::XMLhelper::parsexml($xml, cleanit=>$opts{restore}) or usage("Failed to parse $xml\n");
- usage("Could not open $xml , did you run gnupod_INIT.pl ?\n") unless $xmldoc;
+unless($opts{restore}) {
+ GNUpod::XMLhelper::doxml($xml, cleanit=>$opts{restore}) or usage("Failed to parse $xml\n");
+}
 
 my $addcount = 0;
 #We are ready to copy each file..
@@ -85,13 +86,15 @@ my $addcount = 0;
    #Get a path
    (${$fh}{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file, keepfile=>$opts{restore});
    #Copy the file
-   if(!$opts{duplicate} && (my $dup = checkdup($xmldoc, $fh))) {
+   if(!$opts{duplicate} && (my $dup = checkdup($fh))) {
     print "! '$fh->{title}' is a duplicate of song $dup, skipping file\n";
     next;
    }
    if($opts{restore} || File::Copy::copy($file, $target)) {
      print "+ $fh->{title}\n";
-     GNUpod::XMLhelper::addfile($xmldoc, $fh);
+     my $fmh;
+     $fmh->{file} = $fh;
+     GNUpod::XMLhelper::mkfile($fmh,{addid=>1});
      $addcount++;
    }
    else { #We failed..
@@ -102,23 +105,24 @@ my $addcount = 0;
 
 if($addcount) {
  print "> Writing new XML File\n";
- GNUpod::XMLhelper::write_xml($xml, $xmldoc);
+ GNUpod::XMLhelper::writexml($xml);
 }
  print "\n Done\n";
 }
 
+sub newfile {
+ $dupdb{"$_[0]->{file}->{bitrate}/$_[0]->{file}->{time}/$_[0]->{file}->{filesize}"}=1;
+ GNUpod::XMLhelper::mkfile($_[0],{addid=>1});
+}
+
+sub newpl {
+ GNUpod::XMLhelper::mkfile($_[0],{plname=>$_[1]});
+}
+
+
 sub checkdup {
-my($xmldoc, $fh) = @_;
- foreach my $gnupod (@{$xmldoc->{gnuPod}}) {
-    foreach my $files (@{$gnupod->{files}}) {
-      foreach my $file (@{$files->{file}}) {
-         if($file->{filesize} == $fh->{filesize} &&
-	    $file->{time}     == $fh->{time}     &&
-	    $file->{bitrate}  == $fh->{bitrate}) {
-	     return $file->{id} || -1;
-	    }
-	 }}}
-return undef;
+ my($fh) = @_;
+ return $dupdb{"$fh->{bitrate}/$fh->{time}/$fh->{filesize}"};
 }
 
 ###############################################################
