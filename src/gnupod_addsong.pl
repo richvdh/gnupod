@@ -270,20 +270,20 @@ die << "EOF";
 $rtxt
 Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
 
-   -h, --help                display this help and exit
-       --version             output version information and exit
-   -m, --mount=directory     iPod mountpoint, default is \$IPOD_MOUNTPOINT
-   -r, --restore             Restore the iPod (create a new GNUtunesDB from scratch)
-   -d, --duplicate           Allow duplicate files
-   -p, --playlist=string     Add songs to this playlist
-       --disable-v1          Do not read ID3v1 Tags (MP3 Only)
-       --disable-v2          Do not read ID3v2 Tags (MP3 Only)
-       --decode=pcm|mp3|aac  Convert FLAC Files to WAVE/MP3 or AAC 'on-the-fly'
-       --set-artist=string   Set Artist (Override ID3 Tag)
-       --set-album=string    Set Album  (Override ID3 Tag)
-       --set-genre=string    Set Genre  (Override ID3 Tag)
-       --set-rating=int      Set Rating
-       --set-playcount=int   Set Playcount
+   -h, --help                      display this help and exit
+       --version                   output version information and exit
+   -m, --mount=directory           iPod mountpoint, default is \$IPOD_MOUNTPOINT
+   -r, --restore                   Restore the iPod (create a new GNUtunesDB from scratch)
+   -d, --duplicate                 Allow duplicate files
+   -p, --playlist=string           Add songs to this playlist
+       --disable-v1                Do not read ID3v1 Tags (MP3 Only)
+       --disable-v2                Do not read ID3v2 Tags (MP3 Only)
+       --decode=pcm|mp3|aac|aacbm  Convert FLAC Files to WAVE/MP3 or AAC 'on-the-fly'
+       --set-artist=string         Set Artist (Override ID3 Tag)
+       --set-album=string          Set Album  (Override ID3 Tag)
+       --set-genre=string          Set Genre  (Override ID3 Tag)
+       --set-rating=int            Set Rating
+       --set-playcount=int         Set Playcount
 
 Report bugs to <bug-gnupod\@nongnu.org>
 EOF
