@@ -27,6 +27,8 @@ use MP3::Info qw(:all);
 use GNUpod::FooBar;
 use GNUpod::QTfile;
 
+use constant FLAC_CONVERTER => 'gnupod_convert_FLAC.pl';
+
 BEGIN {
  MP3::Info::use_winamp_genres();
  
@@ -45,7 +47,7 @@ BEGIN {
 ########################################################################
 #Try to discover the file format (mp3 or QT (AAC) )
 sub wtf_is {
- my($file, $flags) = @_;
+ my($file, $flags, $con) = @_;
   
   if(-d $file) { #Don't add dirs
    warn "FileMagic.pm: '$file' is a directory!\n";
@@ -53,8 +55,8 @@ sub wtf_is {
   elsif(!-r $file) {
    warn "FileMagic.pm: Can't read '$file'\n";
   }
-  elsif(my $xflac = __is_flac($file,$flags)) {
-   return($xflac->{ref}, {ftyp=>"FLAC", format=>"wav"}, $xflac->{newout});
+  elsif(my $xflac = __is_flac($file,$flags,$con)) {
+   return($xflac->{ref}, {ftyp=>"FLAC"}, $xflac->{encoder});
   }
   elsif(my $xqt = __is_qt($file,$flags)) {
    return ($xqt->{ref},  {ftyp=>$xqt->{codec}, format=>"m4a", extension=>"m4a|m4p|m4b"});
@@ -70,12 +72,12 @@ sub wtf_is {
    return (undef, undef, undef);
 }
 
-#######################################################################
-# Check for FLAC files
+########################################################################
+#Handle Non-Native flac
 sub __is_flac {
- my($file, $flags) = @_;
+ my($file, $flags,$con) = @_;
  
- return undef unless $flags->{decode}; #Decoder is off per default
+ return undef unless $flags->{decode}; #Decoder is OFF per default!
  
  open(TFLAC, $file) or return undef;
   my $flacbuff = undef;
@@ -85,64 +87,26 @@ sub __is_flac {
  #Check if file has a flac header
  return undef if($flacbuff ne "fLaC");
  
- 
- my $ftag = undef;
-
- ## This is a UGLY trick to cheat perl!
- ## 1. Create a string
- my $nocompile = "use Audio::FLAC; \$ftag = Audio::FLAC->new( \$file )->tags();";
- eval $nocompile; #2. eval it!
- ## 3. = no errors without Audio::FLAC! :)
-
- if ($@ || ref($ftag) ne "HASH") {
-  warn "FileMagic.pm: Could not read FLAC-Metadata from $file\n";
-  warn "FileMagic.pm: Maybe Audio::FLAC is not installed?\n";
-  warn "Error: $@\n";
-  return undef;
- }
- 
+ #Read TAG using converter-api
+ my $metastuff = converter_readmeta(FLAC_CONVERTER, $file,$con);
+ return undef unless ref($metastuff) eq "HASH";
  my %rh = ();
  my $cf = ((split(/\//,$file))[-1]);
- my @songa = pss($ftag->{TRACKNUMBER});
+ my @songa = pss($metastuff->{_TRACKNUM});
 
- $rh{artist}   = getutf8($ftag->{ARTIST} || "Unknown Artist");
- $rh{album}    = getutf8($ftag->{ALBUM}  || "Unknown Album");
- $rh{title}    = getutf8($ftag->{TITLE}  || $cf || "Unknown Title");
- $rh{genre}    = getutf8($ftag->{GENRE}  || "");
+ $rh{artist}   = getutf8($metastuff->{_ARTIST} || "Unknown Artist");
+ $rh{album}    = getutf8($metastuff->{_ALBUM}  || "Unknown Album");
+ $rh{title}    = getutf8($metastuff->{_TITLE}  || $cf || "Unknown Title");
+ $rh{genre}    = getutf8($metastuff->{_GENRE}  || "");
  $rh{songs}    = int($songa[1]);
  $rh{songnum}  = int($songa[0]); 
- $rh{comment}  = getutf8($ftag->{COMMENT} || "");
- $rh{fdesc}    = getutf8($ftag->{VENDOR} || "FLAC file without vendor");
- 
- my $tmpout = undef;
- 
- #I know, this is a 'security' problem.. but GNUpod isn't setuid-root
- while($tmpout = sprintf("/tmp/%d_%d_gnupod_flac%d",int(time()), $$,int(rand(99)))) {
-  last unless (-e $tmpout);
- }
- 
- my $xrun = system('flac', '-d', $file, '-o', $tmpout, "-s");
- if($xrun) {
-  warn "FileMagic.pm : 'flac' exited with $xrun, maybe you didn't install flac or '$file' is broken?\n";
-  unlink($tmpout); #maybe...
-  return undef;
- }
- 
- my $pcmref = __is_pcm($tmpout);
- 
- if(!$pcmref) {
-  warn "FileMagic.pm : Uups, could not read FLAC-Output file (__is_pcm() failed)\n";
-  unlink($tmpout);
-  return undef;
- }
- 
- $rh{bitrate} = $pcmref->{bitrate};
- $rh{srate}   = $pcmref->{srate};
- $rh{filesize}= $pcmref->{filesize};
- $rh{time}    = $pcmref->{time};
- 
-return ({ref=>\%rh, newout=>$tmpout});
+ $rh{comment}  = getutf8($metastuff->{_COMMENT} || "");
+ $rh{fdesc}    = getutf8($metastuff->{_VENDOR} || "FLAC file without vendor");
+  
+
+ return {ref=>\%rh, encoder=>FLAC_CONVERTER};
 }
+
 
 
 #######################################################################
@@ -344,6 +308,45 @@ sub _parse_iTunNORM {
  
 }
 
+#########################################################
+# Stert the converter
+sub kick_convert {
+ my($prog, $file, $format, $con) = @_;
+
+ $prog = "$con->{bindir}/$prog";
+
+ open(KICKOMATIC, "-|") or exec($prog, $file, "GET_$format") or die "Could not exec $prog\n";
+  my $newP = <KICKOMATIC>;
+  chomp($newP);
+ close(KICKOMATIC);
+ 
+ if($newP =~ /^PATH:(.+)$/) {
+  return $1;
+ }
+ return undef;
+}
+
+
+#########################################################
+# Read metadata from converter
+sub converter_readmeta {
+ my($prog, $file, $con) = @_;
+
+ $prog = "$con->{bindir}/$prog";
+
+
+ my %metastuff = ();
+ open(CFLAC, "-|") or exec($prog, $file, "GET_META") or die "converter_readmeta: Could not exec $prog\n";
+  while(<CFLAC>) {
+   chomp($_);
+   if($_ =~ /^([^:]+):(.*)$/) {
+    $metastuff{$1} = $2;
+   }
+  }
+  close(CFLAC);
+ return undef unless $metastuff{FORMAT};
+ return \%metastuff;
+}
 
 1;
 
