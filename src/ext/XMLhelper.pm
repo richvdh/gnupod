@@ -17,10 +17,6 @@ my $xid = 1; #The ipod doesn't like ID 0
 
 
 #We need todo some 'workarounds' on non-perl 5.8
-my $douni = undef; $douni = 1 if($] >=5.008);
-if($douni) {
- eval 'use encoding "utf8"';
-}
 
 ###############################################
 # Get an iPod-safe path for filename
@@ -60,18 +56,12 @@ if($opts{cleanit}) { #We create a clean XML file
 }
 elsif(-r $xmlin) { #Parse the oldone..
  $doc = XML::Simple::XMLin($xmlin, keeproot => 1, keyattr => [], forcearray=>1); 
+ cleandoc($doc);
+ 
  #Create the IDPUB (Free IDs)
   foreach(@{$doc->{gnuPod}->[0]->{files}->[0]->{file}}) {
    $idpub[$_->{id}]++;
   }
-=head
-  my $dbg = $doc->{gnuPod}->[0]->{files}->[0]->{file}->[0]->{title};
-  print length($dbg)."//$dbg\n";
-   foreach(split(//,$dbg)) {
-    print ord($_). "$_\n";
-   }
-   print "Is it 228 for ae??\n";
-=cut
 }
 else { #XML does not exist?
  return undef;
@@ -141,19 +131,46 @@ sub addfile {
 ######################################################
 # Write the XML File
 sub write_xml {
- my($out, $href) = @_;
+ my($out, $href, %opts) = @_;
 
-#### How to handle utf8 in 5.6 and 5.8
-if($douni) {
- open(OUT, ">:utf8", "$out") or die "Could write to $out : $!\n";}
-else { #perl 5.6
- open(OUT, ">$out") or die "Could not write to $out : $!\n";}
-#### 
- 
+ open(OUT, ">$out") or die "Could not write to $out : $!\n";
+ binmode(OUT);
  print OUT XML::Simple::XMLout($href,keeproot=>1);
  close(OUT);
 }
 
+
+######################################################
+# XML::Parser on perl 5.8 seems to have a bug:
+# SOMETIMES, it returns latin1 stuff.. SOMETIMES utf8
+# -> We go to the doctree and convert latin1 to utf8
+#   if XML::Parser freaked out..
+#  ..yes: this is slow.. but better than fu*king up the doc
+sub cleandoc {
+ my ($r, $base, $xref) = @_;
+ if(ref($r) eq "HASH") {
+  foreach(keys(%$r)) {
+    cleandoc(${$r}{$_}, $_, $r);
+  }
+ }
+ elsif(ref($r) eq "ARRAY") {
+  foreach(@$r) {
+   cleandoc($_);
+  }
+ }
+ elsif(ref($r) eq "") {
+  if($r =~ /ö|ä|ü|Ö|Ä|Ü|é|è|à|Ô|Â|Ê|Û|â|ê|û|ô/) { #Broken input
+   print "ICONV:: $r ->";
+    my $us = Unicode::String->new($r);
+    $r = $us->as_string;
+   print "$r ** FIXME: This is *BROKEN*\n";
+  }
+  $xref->{$base} = $r;
+ }
+ else {
+  die "Bug in cleandoc: i can't handle ".ref($r)."\n";
+ }
+}
 
 
 1;
