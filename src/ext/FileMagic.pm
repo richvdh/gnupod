@@ -160,7 +160,9 @@ sub __is_qt {
  }
  
  my $cf = ((split(/\//,$file))[-1]);
- 
+ $rh{songs}     = int($ret->{tracks});
+ $rh{songnum}   = int($ret->{tracknum});
+ $rh{srate}     = int($ret->{srate});
  $rh{time}      = int($ret->{time});
  $rh{filesize}  = int($ret->{filesize});
  $rh{fdesc}     = getutf8($ret->{fdesc});

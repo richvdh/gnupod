@@ -1,3 +1,15 @@
+GNUpod 0.96 - codename
+
+Summary
+-------
+
+- Write tracknum for AAC/ALAC files (doh!)
+
+
+
+
+*** OLD STUFF ***
+
 GNUpod 0.95 - codename 'sockentier'
 
 
@@ -49,7 +61,6 @@ Summary
 
 - GNUpod warns about case-sensitive mounted filesystems
 
-*** OLD STUFF ***
 
 
 GNUpod 0.94 - codename 'aspartam'
