@@ -11,6 +11,7 @@ gnupod_addsong.pl:
 gnupod_INIT.pl
   * Added '--france' switch (Limit volume to 100 db for
     1.x Firmware)
+  * Fixed the 'cleandoc' bug
 
 mktunes.pl
   * New Playlist-Code.. MUCH faster now
