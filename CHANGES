@@ -17,11 +17,11 @@ Summary
 - added '--disable-v2' and '--disable-v1' to
   gnupod_addsong.pl (Disable parsing of ID3TAG version X)
 
-- Fixed small bug with .m4a files.
-  gnupod_addsong.pl can now read AAC files from www.allofmp3.com
+- Fixed small bug with .m4a files and added more fields.
+  gnupod_addsong.pl can now read M4A/AAC files from www.allofmp3.com
 
 - added tools/m4a-info.pl: Use this tool to read Title/Artist tags
-  from .m4a files
+  from .m4a files (not installed by 'make install')
 
 - You can modify the output of gnupod_search.pl using --view
   (See 'gnupod_search.pl --help')

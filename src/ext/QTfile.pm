@@ -42,15 +42,23 @@ $hchild{'udta'} = 8;
 $hchild{'meta'} = 12;
 $hchild{'ilst'} = 8;
 $hchild{'----'} = 8;
-$hchild{'©alb'} = 8;
 $hchild{'day'} = 8;
 $hchild{'cmt'} = 8;
 $hchild{'disk'} = 8;
-$hchild{'©ART'} = 8;
 $hchild{'wrt'} = 8;
-$hchild{'©nam'} = 8;
-$hchild{'©too'} = 8;
 $hchild{'dinf'} = 8;
+$hchild{'©grp'} = 8;
+$hchild{'©too'} = 8;
+$hchild{'©nam'} = 8;
+$hchild{'©ART'} = 8;
+$hchild{'©alb'} = 8;
+$hchild{'©gen'} = 8;
+$hchild{'©cmt'} = 8;
+$hchild{'©wrt'} = 8;
+$hchild{'©day'} = 8;
+$hchild{'trkn'} = 8;
+$hchild{'tmpo'} = 8;
+$hchild{'disk'} = 8;
 
 sub parsefile {
  my($qtfile) = @_;
@@ -105,6 +113,18 @@ sub get_atom {
   if($parent eq "©alb") {
    $reth{album} = $dat;
   }
+  elsif($parent eq "©cmt") {
+   $reth{comment} = $dat;
+  }
+  elsif($parent eq "©gen") {
+   $reth{genre} = $dat;
+  }
+  elsif($parent eq "©grp") {
+   $reth{group} = $dat;
+  }
+  elsif($parent eq "©wrt") {
+   $reth{composer} = $dat;
+  }
   elsif($parent eq "©ART") {
    $reth{artist} = $dat;
   }
@@ -113,6 +133,20 @@ sub get_atom {
   }
   elsif($parent eq "©too") {
    $reth{fdesc} = $dat;
+  }
+  elsif($parent eq "©day") {
+   $reth{year} = $dat;
+  }
+  elsif($parent eq "tmpo") {
+    $reth{bpm} = GNUpod::FooBar::shx2_x86_int($dat);
+  }
+  elsif($parent eq "trkn") {
+   $reth{tracknum} = GNUpod::FooBar::shx2_x86_int(substr($dat,2,2));
+   $reth{tracks}   = GNUpod::FooBar::shx2_x86_int(substr($dat,4,2));
+  }
+  elsif($parent eq "disk") {
+   $reth{cdnum} = GNUpod::FooBar::shx2_x86_int(substr($dat,2,2));
+   $reth{cds}   = GNUpod::FooBar::shx2_x86_int(substr($dat,4,2));
   }
   elsif($parent eq "----" or $parent eq "disk") {
    #Do nothing.. iTunes does this fields and we

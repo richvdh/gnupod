@@ -11,7 +11,7 @@ foreach(@ARGV) {
   print "\nFile '$_'\n";
   
   if(ref($fref) eq "HASH") {
-   foreach(keys(%$fref)) {
+   foreach(sort keys(%$fref)) {
     printf ("  %-12s :  %s\n",$_,$fref->{$_});
    }
   }
