@@ -283,7 +283,7 @@ sub __is_mp3 {
      $rh{title} =    getutf8($hs->{TIT2} || $hs->{TT2} || $h->{TITLE}   || $cf || "Untitled");
      $rh{album} =    getutf8($hs->{TALB} || $hs->{TAL} || $h->{ALBUM}   || "Unknown Album");
      $rh{artist} =   getutf8($hs->{TPE1} || $hs->{TP1} || $h->{ARTIST}  || "Unknown Artist");
-     $rh{genre} =    getutf8($hs->{TCON} || $hs->{TCO} || $h->{GENRE}   || "");
+     $rh{genre} =    _get_genre( getutf8($hs->{TCON} || $hs->{TCO} || $h->{GENRE}   || "") );
      $rh{comment} =  getutf8($hs->{COMM} || $hs->{COM} || $h->{COMMENT} || "");
      $rh{composer} = getutf8($hs->{TCOM} || $hs->{TCM} || "");
      $rh{playcount}= int(getutf8($hs->{PCNT} || $hs->{CNT})) || 0;
@@ -291,6 +291,15 @@ sub __is_mp3 {
  return \%rh;
 }
 
+sub _get_genre {
+ my ($string) = @_;
+ my $num_to_txt = undef;
+ 
+ if($string =~ /^\((\d+)\)$/) {
+  $num_to_txt = $mp3_genres[$1];
+ }
+ return ($num_to_txt || $string);
+}
 
 ########
 # Guess format

@@ -24,6 +24,8 @@ Summary
 
 - Support for Bookmarks (Just rename .m4a files into .m4b)
 
+- Convert strange Genre-Strings in MP3 Tags ( (17) -> Rock )
+
 
 
 

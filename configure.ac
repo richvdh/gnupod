@@ -49,10 +49,11 @@ do
  if test $? = 0; then
   echo " ok"
  else
-  echo " failed! (this module is OPTIONAL, GNUpod works without $i"
+  echo " failed!"
   echo "** $i not found. You can install it using this command:"
-  echo "# perl -MCPAN -e 'install $i'"
+  echo "** # perl -MCPAN -e 'install $i'"
   echo "** ..but GNUpod will also work without $i"
+  echo
  fi
 done
 
