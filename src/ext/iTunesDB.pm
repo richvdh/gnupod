@@ -38,7 +38,7 @@ use constant ITUNESDB_MAGIC => 'mhbd';
  }
 
 
-
+############# SMART PLAYLIST DEFS ##########################
 
 #Human prefix
 $SPLDEF{hprefix}{2} = "!";
@@ -63,13 +63,13 @@ $SPLDEF{num_action}{0x40}    = "lt";
 $SPLDEF{num_action}{0x0100}  = "range";
 $SPLDEF{num_action}{0x0200}  = "within";
 
+#Within is completly different, thx to apple :p
 $SPLDEF{within_key}{86400} = "day";
 $SPLDEF{within_key}{86400*7} = "week";
 $SPLDEF{within_key}{2628000} = "month";
 
 
 #Field names  ## string types uc() .. int types lc()
-
 $SPLDEF{field}{2}  = "TITLE";
 $SPLDEF{field}{3}  = "ALBUM";
 $SPLDEF{field}{4}  = "ARTIST";
@@ -108,7 +108,10 @@ $SPLDEF{limititem}{4} = "hour";
 $SPLDEF{limititem}{5} = "gigabyte";
 
 
-
+#Sort stuff. _low fields are below zero here..
+#In the iTunesDB, we don't (can't) have negative
+#values.. but we use it so see, if we have to set
+#the _low flag.... blabla
 $SPLDEF{limitsort}{2}   = "random";
 $SPLDEF{limitsort}{3}   = "title";
 $SPLDEF{limitsort}{4}   = "album";
@@ -142,7 +145,7 @@ my %SPLREDEF = _r_spldef();
 
 ## GENERAL #########################################################
 # create an iTunesDB header
-#
+### XHR: size
 sub mk_mhbd {
  my ($hr) = @_;
 
@@ -161,6 +164,7 @@ sub mk_mhbd {
 # mhsd1 holds every song on the ipod
 # mhsd2 holds playlists
 #
+### XHR: size type
 sub mk_mhsd {
  my ($hr) = @_;
 
@@ -177,6 +181,7 @@ sub mk_mhsd {
 ## GENERAL ##########################################################
 # Create an mhit entry, needs to know about the length of his
 # mhod(s) (You have to create them yourself..!)
+### XHR: fh 
 sub mk_mhit {
  my($hr) = @_;
  my %file_hash = %{$hr->{fh}};
@@ -254,6 +259,7 @@ return $ret;
 
 ## GENERAL ##########################################################
 # An mhod simply holds information
+### XHR: stype string fqid
 sub mk_mhod {
 ##   - type id
 #1   - titel
@@ -321,6 +327,7 @@ sub mk_mhod {
 
 ## GENERAL #################################################################
 # Create a spl-pref (type=50) mhod
+### XHR: liveupdate mos checkrule item
 sub mk_splprefmhod {
  my($hs) = @_;
  my($live, $chkrgx, $chklim, $mos, $sort_low) = 0;
@@ -330,17 +337,17 @@ sub mk_splprefmhod {
  $mos         = 1 if $hs->{mos};
  #Tristate
 my $checkrule   = $SPLREDEF{checkrule}{lc($hs->{checkrule})};
+ #INT
 my $int_item    = $SPLREDEF{limititem}{lc($hs->{item})};
 
  #sort stuff
-
 #Build SORT Flags
 my $sort = $SPLREDEF{limitsort}{lc($hs->{sort})};
 if($sort == 0) {
  warn "Unknown limitsort value ($hs->{sort})\n";
- return undef;
+ return undef; #Skip this spl
 }
-elsif($sort < 0) {
+elsif($sort < 0) { # <0 ---> Is a _low sort
  $sort_low = 1; #Set LOW flag
  $sort *= -1;   #Get positive value
 }
@@ -348,12 +355,12 @@ elsif($sort < 0) {
 #Check checkrule range
 if($checkrule < 1 || $checkrule > 3) {
  warn "iTunesDB.pm: error: 'checkrule' ($hs->{checkrule}) invalid.\n";
- return undef;
+ return undef; #Skip this spl
 }
 
 if($int_item < 1) {
  warn "iTunesDB.pm: error: 'item' ($hs->{item}) invalid.\n";
- return undef;
+ return undef; #Skip this spl
 }
 
 #lim-only = 1 / match only = 2 / both = 3
@@ -386,7 +393,7 @@ sub mk_spldatamhod {
  my $anymatch = 1 if $hs->{anymatch};
 
  if(ref($hs->{data}) ne "ARRAY") {
-  #This is an iTunes bug: it will go crazy if it finds an spldatamhod without data...
+  #This is an iTunes/iPod bug/feature: it will go crazy if it finds an spldatamhod without data...
   #workaround: Create a fake-entry if we didn't catch one from the GNUtunesDB.xml
   # ..-> iTunes does the same :)
   push(@{$hs->{data}}, {field=>'ARTIST',action=>'CONTAINS',string=>""});
@@ -396,8 +403,8 @@ sub mk_spldatamhod {
  my $CHTM = 0; #Count HasToMatch...
  
  foreach my $chr (@{$hs->{data}}) {
-     my $string = undef;
-     my $int_field = undef;
+     my $string        = undef;
+     my $int_field     = undef;
      my $action_prefix = undef;
      my $action_num    = undef;
     
@@ -434,21 +441,29 @@ sub mk_spldatamhod {
         
         #within stuff is different.. aaaaaaaaaaaaahhhhhhhhhhhh
         if($action_num == $SPLREDEF{num_action}{within}) {
-         $within_magic_a = 0x2dae2dae;        #Funny stuff at apple
-         $from           = $within_magic_a;
-         $to             = $within_magic_a;
+          $within_magic_a = 0x2dae2dae;        #Funny stuff at apple
+          $from           = $within_magic_a;
+          $to             = $within_magic_a;
          
-         $within_magic_b = 0xffffffff;        #Isn't magic.. but we are not 64 bit..
-         ($within_range, $within_key) = $chr->{string} =~ /(\d+)_(\S+)/;
+          $within_magic_b = 0xffffffff;        #Isn't magic.. but we are not 64 bit..
+          ($within_range, $within_key) = $chr->{string} =~ /(\d+)_(\S+)/;
          
-         if($SPLREDEF{within_key}{lc($within_key)}) {
-           $within_key = $SPLREDEF{within_key}{lc($within_key)}; #Known
-         }
-         else {
-          warn "Invalid value for 'within' action: '$chr->{string}', skipping rule\n";
-          next;
-         }
-         $within_range-- if $within_range > 0; #0x..ff = 1.. 
+          if($SPLREDEF{within_key}{lc($within_key)}) {
+            $within_key = $SPLREDEF{within_key}{lc($within_key)}; #Known
+          }
+          else {
+           warn "Invalid value for 'within' action: '$chr->{string}', skipping rule\n";
+           next;
+          }
+         
+          if($within_range > 0) {
+           $within_range--; #0x..ff = 1;
+          }
+          else {
+           warn "iTunesDB.pm: Value of within set to 0!\n";
+           $within_range = 0;
+          }
+         
         }
         else { #Fallback for normal stuff
          $to ||=$from; #Set $to == $from is $to is empty
@@ -584,8 +599,8 @@ my $ret = "mhip";
    $ret .= pack("h8", _itop(76));
    $ret .= pack("h8", _itop($hr->{childs})); #Mhod childs !
    $ret .= pack("H8", "00");
-   $ret .= pack("h8", _itop($hr->{plid})); #ORDER id
-   $ret .= pack("h8", _itop($hr->{sid}));   #song id in playlist
+   $ret .= pack("h8", _itop($hr->{plid}));   #ORDER id
+   $ret .= pack("h8", _itop($hr->{sid}));    #song id in playlist
    $ret .= pack("H96", "00");
   return $ret;
  }
@@ -902,7 +917,7 @@ sub get_mhip {
 
   for(my $i=0;$i<$mhods;$i++) {
    my $mhs = get_mhod($pos+$oof)->{size};
-   _itBUG("Fatal seek error in get_mhip, can't continue!",1) if $mhs == -1;
+   _itBUG("Fatal seek error in get_mhip, can't continue! (debug: $mhs / $i / $pos / $oof)",1) if $mhs == -1;
    $oid+=$mhs;
   }
 
@@ -1108,42 +1123,57 @@ sub readPLC {
  open(RATING, "$file") or return ();
  
  
- my $offset    = get_int(4 ,4,*RATING);
- my $chunksize = get_int(8, 4,*RATING);
- my $chunks    = get_int(12,4,*RATING);
-
+ my $offset    = get_int(4 ,4,*RATING); #How long is the header?
+ my $chunksize = get_int(8, 4,*RATING); #How long is one entry? (16 for V2 Firmware, 12 for v1)
+ my $chunks    = get_int(12,4,*RATING); #How many chunks do we have?
+ 
  my $buff;
  my %pcrh = ();
+ my $rating   = 0;
+ my $playc    = 0;
+ my $lastply  = 0;
+ my $chunknum = 0;
+
+ 
+ warn "Debug: Filesize : ";
+ warn -s $file;
+ warn "\n -> Calculated: ".($offset+$chunksize*$chunks)."\n";
+ 
 
 
- my $rating = 0;
- my $playc  = 0;
- my $lastply= 0;
- for(1..$chunks) {
+ 
+ for my $chunknum (1..$chunks) {
+  
   seek(RATING, $offset, 0);
-  read(RATING,$buff,4) or warn "readPLC bug, seek failed! Please send a bugreport to pab\@blinkenlights.ch!\n";
+  if (read(RATING,$buff,4) != 4) { _itBUG("Read failed at $offset while reading PLAYCOUNT",1) }
   $playc  = GNUpod::FooBar::shx2int($buff);
  
   seek(RATING,$offset+4,0);
-  read(RATING,$buff,4) or warn "readPLC bug, seek failed! Please send a bugreport to pab\@blinkenlights.ch!\n";
+  if (read(RATING,$buff,4) != 4) { _itBUG("Read failed at $offset while reading LASTPLAY",1) }
   $lastply = GNUpod::FooBar::shx2int($buff);
+  
+  #Fixme: what is 8?
+  seek(RATING,$offset+8,0);
+  read(RATING,$buff,4);
+  warn "??? > ".(GNUpod::FooBar::shx2int($buff))."\n";
   
   if($chunksize >= 16) { #12+4 - v2 firmware? 
    seek(RATING, $offset+12, 0);
-   read(RATING, $buff,4) or warn "readPLC bug, read failed! Please send a bugreport to pab\@blinkenlights.ch!\n";
+   if (read(RATING, $buff,4) != 4) { _itBUG("Read failed at $offset while reading RATING",1) }
    $rating = GNUpod::FooBar::shx2int($buff);
   }
   
+  ## FIXME: 0.95 blocker: is this okay?!?? don't we need to use $chunksize?!
   my $songnum = (($offset-(16*6))/16)+1;
 
-#print "$songnum] ";
-#print "*" x int($pcrh{rating}{songnum}/20);
-#print " $pcrh{lastplay}{$songnum}\n";
+print "$songnum / aka $chunknum] ";
+print "*" x int($pcrh{rating}{songnum}/20);
+print " $pcrh{lastplay}{$songnum}\n";
 
-  $pcrh{playcount}{$songnum} = $playc if $playc;
-  $pcrh{rating}{$songnum}    = $rating if $rating; 
+  $pcrh{playcount}{$songnum} = $playc   if $playc;
+  $pcrh{rating}{$songnum}    = $rating  if $rating;
   $pcrh{lastplay}{$songnum}  = $lastply if $lastply;
-  $offset += $chunksize;
+  $offset += $chunksize; #Nex to go!
  }
 
 close(RATING);
@@ -1163,12 +1193,12 @@ sub readOTG {
   my $items = GNUpod::FooBar::shx2int($buff); 
 
   my @content = ();
-  my $offst = 20;
+  my $offset = 20;
   for(1..$items) {
-   seek(OTG, $offst, 0);
+   seek(OTG, $offset, 0);
    read(OTG, $buff, 4);
    push(@content, GNUpod::FooBar::shx2int($buff));
-   $offst+=4;
+   $offset+=4;
   }
   return @content;
 }

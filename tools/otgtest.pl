@@ -20,11 +20,7 @@ sub go {
  my $con = GNUpod::FooBar::connect(\%opts);
  usage($con->{status}."\n") if $con->{status};
 
-print "Parsing xml doc..\n";
-  push(@keeper, -1);
-
-GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}\n");
-
+print "********** readOTG() *************\n";
 #Read on The Go list written by the iPod
 my @xotg    = GNUpod::iTunesDB::readOTG($con->{onthego});
 
@@ -32,15 +28,15 @@ foreach(@xotg) {
  print "(100)OTGC: $_\n";
 }
 
+
+print "********** readPLC() *************\n";
 #plcref is used by newfile()
 #so we have to call this before doxml()
 $plcref  = GNUpod::iTunesDB::readPLC($con->{playcounts});
 
-foreach(keys(%{$plcref->{rating}})) {
- print "PLCX: $_ (aka ".($keeper[$_])." --> $plcref->{rating}->{$_}\n";
 }
 
-}
+
 
 sub newfile {
  my($el) = @_;

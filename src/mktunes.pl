@@ -279,7 +279,7 @@ sub xmk_newspl {
  }
 
  unless(GNUpod::XMLhelper::get_splpref($name)->{liveupdate}) {
-  warn "mktunes.pl: warning: (pl: $name) Liveupdate disabled. Please set liveupdate=\"1\" if you don't want an empty playlist";
+  warn "mktunes.pl: warning: (pl: $name) Liveupdate disabled. Please set liveupdate=\"1\" if you don't want an empty playlist\n";
  }
 
  if(my $id = $el->{splcont}->{id}) { #We found an old id with disalbed liveupdate
