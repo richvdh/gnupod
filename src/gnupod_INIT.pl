@@ -28,7 +28,7 @@ use Getopt::Long;
 use vars qw(%opts);
 
 
-print "gnupod_addsong.pl Version 0.93 (C) 2002-2003 Adrian Ulrich\n";
+print "gnupod_addsong.pl Version 0.94 (C) 2002-2003 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
@@ -41,8 +41,8 @@ go();
 
 sub go {
  
- my($stat, $itunes, $xml) = GNUpod::FooBar::connect(\%opts);
- usage("$stat\n") if $stat;
+ my $con = GNUpod::FooBar::connect(\%opts);
+ usage("$con->{status}\n") if $con->{status};
 
 ## Ask the user, if he still knows what he/she's doing..
 print << "EOF";
@@ -106,15 +106,15 @@ else {
  
  print "> Creating dummy files\n";
  
-  GNUpod::XMLhelper::writexml($xml);
+  GNUpod::XMLhelper::writexml($con->{xml});
  
- if(-e $itunes && !$opts{'disable-convert'}) {
+ if(-e $con->{itunesdb} && !$opts{'disable-convert'}) {
   print "Found *existing* iTunesDB, running tunes2pod.pl\n";
   system("tunes2pod.pl -m $opts{mount}");
  }
  else {
   print "No iTunesDB found, creating a dummy file\n";
-  open(ITUNES, ">$itunes") or die "Could not create $itunes: $!\n";
+  open(ITUNES, ">$con->{itunesdb}") or die "Could not create $con->{itunesdb}: $!\n";
    print ITUNES "";
   close(ITUNES);
  }

@@ -76,7 +76,7 @@ To use GNUpod, the follwing is needed:
 @item Firewire card that is supported by the Operating System
 @item Write support for HFS+ or FAT32
 @item Perl 5.6 or 5.8
-@item The Perl modules MP3::Info, File::Copy, Unicode::String, and XML::Parser
+@item The Perl modules MP3::Info, File::Copy, Unicode::String, Digest::MD5 and XML::Parser
 @item Basic knowledge of the shell
 @end itemize
 

@@ -34,7 +34,7 @@ use vars qw($cid %pldb %spldb %itb %opts %meat %cmeat);
 #spldb{name} = '<spl' prefs
 #itb         = buffer
 $| = 1;
-print "mktunes.pl Version 0.93 (C) 2002-2003 Adrian Ulrich\n";
+print "mktunes.pl Version 0.94 (C) 2002-2003 Adrian Ulrich\n";
 
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
@@ -49,14 +49,14 @@ startup();
 
 sub startup {
 
-my($stat, $itunes, $xml) = GNUpod::FooBar::connect(\%opts);
+my $con = GNUpod::FooBar::connect(\%opts);
 
-usage("$stat\n") if $stat;
+usage("$con->{status}\n") if $con->{status};
 
 print "! Volume-adjust set to $opts{volume} percent\n" if defined($opts{volume});
 
 print "> Parsing XML and creating FileDB\n";
-GNUpod::XMLhelper::doxml($xml);
+GNUpod::XMLhelper::doxml($con->{xml});
 
 
 # Create header for mhits
@@ -92,7 +92,7 @@ foreach my $xk (keys(%itb)) {
 
 ## FINISH IT :-)
 print "> Writing iTunesDB...\n";
-open(ITB, ">$itunes") or die "** Sorry: Could not write your iTunesDB: $!\n";
+open(ITB, ">$con->{itunesdb}") or die "** Sorry: Could not write your iTunesDB: $!\n";
  binmode(ITB); #Maybe this helps win32? ;)
  print ITB GNUpod::iTunesDB::mk_mhbd({size=>$fl});  #Main header
  print ITB $itb{mhsd_1}{_data_};            #Header for FILE part
@@ -103,6 +103,9 @@ open(ITB, ">$itunes") or die "** Sorry: Could not write your iTunesDB: $!\n";
  print ITB $itb{playlist}{_data_};          #Playlist content
 close(ITB);
 ## Finished!
+
+print "> Updating Sync-Status\n";
+GNUpod::FooBar::setsync($con);
 
 print "You can now umount your iPod. [Files: $itb{INFO}{FILES}]\n";
 print " - May the iPod be with you!\n\n";
@@ -145,7 +148,7 @@ if(ref($spl) eq "HASH") { #We got splpref!
 # Generate playlists from %pldb (+MPL)
 sub genpls {
  my @mpldat = (1..$cid);
- my ($pldata,undef) = r_mpl("GNUpod 0.93-1", 1,\@mpldat);
+ my ($pldata,undef) = r_mpl("GNUpod 0.94-1", 1,\@mpldat);
  my $plc = 1;
 #CID is now used by r_mpl, dont use it yourself anymore
   foreach(GNUpod::XMLhelper::getpl_names()) {

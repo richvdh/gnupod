@@ -29,11 +29,11 @@ use Getopt::Long;
 
 use vars qw(%opts);
 $| = 1;
-print "tunes2pod.pl Version 0.93 (C) 2002-2003 Adrian Ulrich\n";
+print "tunes2pod.pl Version 0.94 (C) 2002-2003 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
-GetOptions(\%opts, "help|h", "xml|x=s", "itunes|i=s", "mount|m=s");
+GetOptions(\%opts, "force", "help|h", "xml|x=s", "itunes|i=s", "mount|m=s");
 
 
 usage() if $opts{help};
@@ -42,13 +42,24 @@ usage() if $opts{help};
 converter();
 
 sub converter {
-my($stat, $in, $out) = GNUpod::FooBar::connect(\%opts);
-usage("$stat\n") if $stat;
+#We ARE doing the sync, don't let connect() call us again!
+$opts{_no_sync} = 1;
+my $con = GNUpod::FooBar::connect(\%opts);
+usage("$con->{status}\n") if $con->{status};
+
+#We disabled all autosyncing (_no_sync set to 1), so we do a test
+#ourself
+if(!$opts{force} && !(GNUpod::FooBar::havetosync($con))) {
+ print "I don't think that you have to run tunes2pod.pl\n";
+ print "The GNUtunesDB looks up-to-date\n";
+ print "\n";
+ print "If you think i'm wrong, use --force\n";
+ exit(1);
+}
 
 
 
-
-GNUpod::iTunesDB::open_itunesdb($in) or usage("Could not open $in\n");
+GNUpod::iTunesDB::open_itunesdb($con->{itunesdb}) or usage("Could not open $con->{itunesdb}\n");
 
 
 #Check where the FILES and PLAYLIST part starts..
@@ -118,8 +129,8 @@ for(my $i=0;$i<$itinfo->{playlists};$i++) {
 
 
 
-GNUpod::XMLhelper::writexml($out);
-
+GNUpod::XMLhelper::writexml($con->{xml});
+GNUpod::FooBar::setsync($con);
 
 print STDOUT "\n Done\n";
 exit(0);
@@ -165,6 +176,7 @@ Usage: tunes2pod.pl [-h] [-m directory | -i iTunesDB | -x GNUtunesDB]
    -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
    -i, --itunes=iTunesDB  : Specify an alternate iTunesDB
    -x, --xml=file         : GNUtunesDB (XML File)
+       --force            : Disable 'sync' checking
 
 EOF
 }

@@ -1,3 +1,24 @@
+GNUpod 0.94 - codename
+
+Summary:
+--------
+- Nobody did buy me a 40gb iPod with Firmware 2.x
+- I bought one myself
+- Added support for On-The-Go playlists!
+- GNUpod checks if the iTunesDB did change and
+  runs tunes2pod.pl if it has to run it
+- You'll have to install Digest::MD5
+
+
+Details:
+--------
+FooBar.pm:
+ * connect() changed a lot
+
+
+
+*** OLD STUFF ***
+
 GNUpod 0.93 - codename 'Shorthorn'
 
 Summary:
@@ -27,8 +48,6 @@ XMLhelper.pm
 
 
 
-
-** OLD STUFF **
 
 GNUpod 0.92 - codename 'frau beyersdorf'
 

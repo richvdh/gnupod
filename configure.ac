@@ -1,4 +1,4 @@
-AC_INIT(gnupod, 0.93, bug-gnupod@nongnu.org)
+AC_INIT(gnupod, 0.94, bug-gnupod@nongnu.org)
 AC_PATH_PROGS(PERL, perl-5.8.1 perl-5.8.0 perl-5.8 perl-5.6 perl)
 
 if test $PERL; then
@@ -10,7 +10,7 @@ exit 1
 fi
 
 dnl Basic modules
-ALL_MODULES="XML::Parser Unicode::String MP3::Info File::Copy"
+ALL_MODULES="Digest::MD5 XML::Parser Unicode::String MP3::Info File::Copy"
 
 
 dnl Ugly check for modules

@@ -44,15 +44,15 @@ go();
 ####################################################
 # Worker
 sub go {
- my($stat, $itunes, $xml) = GNUpod::FooBar::connect(\%opts);
- usage($stat."\n") if $stat;
+ my $con = GNUpod::FooBar::connect(\%opts);
+ usage($con->{status}."\n") if $con->{status};
 
 
 print "ID        : ARTIST / ALBUM / TITLE\n";
 print "==================================\n"; 
- GNUpod::XMLhelper::doxml($xml) or usage("Failed to parse $xml\n");
+ GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}\n");
  #XML::Parser finished, write new file
- GNUpod::XMLhelper::writexml($xml) if $opts{delete};
+ GNUpod::XMLhelper::writexml($con->{xml}) if $opts{delete};
 print "==================================\n"; 
 
 

@@ -29,7 +29,7 @@ use Getopt::Long;
 use File::Copy;
 use vars qw(%opts %dupdb);
 
-print "gnupod_addsong.pl Version 0.93 (C) 2002-2003 Adrian Ulrich\n";
+print "gnupod_addsong.pl Version 0.94 (C) 2002-2003 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
@@ -65,12 +65,12 @@ else {
 # Worker
 sub startup {
  my(@files) = @_;
- my($stat, $itunes, $xml) = GNUpod::FooBar::connect(\%opts);
+ my $con = GNUpod::FooBar::connect(\%opts);
 
-usage($stat."\n") if $stat || !@files;
+usage($con->{status}."\n") if $con->{status} || !@files;
 
 unless($opts{restore}) {
- GNUpod::XMLhelper::doxml($xml) or usage("Failed to parse $xml\n");
+ GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}\n");
 }
 
 my $addcount = 0;
@@ -106,7 +106,7 @@ my $addcount = 0;
 
 if($addcount) { #We have to modify the xmldoc
  print "> Writing new XML File\n";
- GNUpod::XMLhelper::writexml($xml);
+ GNUpod::XMLhelper::writexml($con->{xml});
 }
  print "\n Done\n";
 }
