@@ -157,11 +157,11 @@ sub mk_mhod
 #100 - Playlist item or/and PlaylistLayout (used for trash? ;))
 
 my ($type_string, $string, $fqid) = @_;
-
 my $type = $mhod_id{lc($type_string)};
 
 return undef if !$type && !$fqid; #Invalid type string.. no problemo
 #Appnd size for normal mhod's
+
 my $mod = 40;
 
 if(!$fqid) { 
@@ -173,6 +173,11 @@ else {
  #pl mhod's are longer... fix size
  $type = 100;
  $mod += 4;
+}
+
+if($type == 7 && $string !~ /#!#\d+#!#/) {
+warn "iTunesDB.pm: warning: wrong format: '$type_string=\"$string\"'\n";
+warn "             value should be like '#!#NUMBER#!#'\n";
 }
 
 $string = _ipod_string($string); #cache data
@@ -271,16 +276,15 @@ my $ret .= "mhyp";
 # header for new Playlist item (child if mk_mhyp)
 sub mk_mhip
  {
-my ($id) = @_;
-  
+my ($plid, $id) = @_;
+  print STDERR "MK $id // (order?) $plid?\n";
 my $ret = "mhip";
    $ret .= pack("h8", _itop(76));
    $ret .= pack("h8", _itop(76));
    $ret .= pack("h8", _itop(1));
    $ret .= pack("H8", "00");
-   $ret .= pack("h8", _itop($id)); #song id in playlist
-   $ret .= pack("h8", _itop($id)); #ditto.. don't know the difference, but this seems to work
-                                  #maybe a special ID used for playlists?!
+   $ret .= pack("h8", _itop($plid)); #ORDER id
+   $ret .= pack("h8", _itop($id));   #song id in playlist
    $ret .= pack("H96", "00");
   return $ret;
  }
@@ -415,10 +419,15 @@ if($id eq "mhod") { #Seek was okay
     #$foo is now UTF16 (Swapped), but we need an utf8
     $foo = Unicode::String::byteswap2($foo);
     $foo = Unicode::String::utf16($foo)->utf8;
+ 
  if(!$mhod_array[$mty]) {
   print STDOUT "WARNING: unknown type: $mty, returning RAW data (SmartPlaylist's aren't supportet atm..)\n";
   $foo = get_string($seek+40, $xl);
+print "Is at $seek for $xl !!!!\n";
+   open(KK,">/tmp/XLZ"); print KK $foo; close(KK);
+   system("hexdump -vC /tmp/XLZ");
  }
+ 
   return ($ml, $foo, $mty);
 }
 
@@ -437,6 +446,8 @@ sub get_mhip {
   my($oid) = get_mhod($pos+$oof);
   return $oid if $oid == -1; #fatal error..
    my $px = get_int($pos+6*4, 4);
+   my $spx = get_int($pos+5*4,4);
+   print "PX is at $px // spx(order?) $spx\n";
   return ($oid+$oof, $px);
  }
 

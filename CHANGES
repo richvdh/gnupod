@@ -1,3 +1,22 @@
+GNUpod 0.92 - codename 'sachiel' (Skipped 'adam' & 'lilith' ;))
+
+* Fixed a 'gnupod versus iTunes' bug
+  -> iTunes shouldn't try to 'resort' playlist items anymore
+     (Note: iTunes will ALWAYS re-sort the playlists.. that's
+      a 'feature' of iTunes)
+
+* Added 'eq syntax check', you can use (since 0.90?) 
+  'eq="#!#NUMBER#!#' to specify the EQ-Setting per song.
+  mktunes.pl will now check if this syntax is correct.
+  (You'll see a warning if it failed)
+
+* gnupod_addsong.pl's duplicate-checker displayed the
+  wrong number of the dup, works again
+
+
+
+
+
 GNUpod 0.91 
 
 Much changed from 0.90 to 0.91.

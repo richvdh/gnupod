@@ -116,7 +116,8 @@ sub r_mpl {
 my $pl = undef;
 my $fc = 0;
  foreach(@xid) {
-  $pl .= GNUpod::iTunesDB::mk_mhip($_);
+  $cid++; #Whoo! We ReUse the global CID.. first plitem = last file item+1 (or maybe 2 ;) )
+  $pl .= GNUpod::iTunesDB::mk_mhip($cid, $_);
   $pl .= GNUpod::iTunesDB::mk_mhod(undef, undef, $_);
   $fc++;
  }
