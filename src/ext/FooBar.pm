@@ -43,6 +43,7 @@ if(-d $opth->{mount}) {
   #It can also be called GNUtunesDB.xml
   $rr->{xml}            = $rr->{xml}.".xml" if !(-e $rr->{xml});
   $rr->{itunesdb}       = $opth->{mount}."/iPod_Control/iTunes/iTunesDB";
+  $rr->{itunessd}       = $opth->{mount}."/iPod_Control/iTunes/iTunesSD";
   $rr->{playcounts}     = "$rr->{mountpoint}/iPod_Control/iTunes/Play Counts";
   $rr->{itunesdb_md5}   = "$rr->{etc}/.itunesdb_md5";
   $rr->{onthego_invalid}  = "$rr->{etc}/.onthego_invalid";

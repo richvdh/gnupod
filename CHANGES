@@ -1,9 +1,21 @@
-GNUpod 0.98 - codename
+GNUpod 0.98 - codename 'Luna 9'
 
 Summary
 
+- Support for iPod-Shuffle!
+  (I do not know why Apple uses
+   another Database for this thing!!!)
+
+- Fixed 'songnum' for ID3V1 Tags .. ouch
+
 - Workaround for perl5.6 feature/bug
   'addtime' shouldn't be below zero anymore
+
+- Write more tags for m4a files..
+
+- Internal Change: Removed the ugly _itop and _x86itop..
+  I hope i didn't break anything ;)
+
 
 *** OLD STUFF ***
 

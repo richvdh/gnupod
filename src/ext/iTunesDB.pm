@@ -22,6 +22,10 @@
 #
 # This product is not supported/written/published by Apple!
 
+#
+# FIXME: I should add some new fields from http://ipodlinux.org/ITunesDB
+#
+
 package GNUpod::iTunesDB;
 use strict;
 use Unicode::String;
@@ -136,8 +140,61 @@ $SPLDEF{limitsort}{-23} = "rating_low";
 %SPLREDEF = _r_spldef();
 
 
+## IPOD SHUFFLE ####################################################
+# Create iPod shuffle header
+sub mk_itunes_sd_header {
+	my($ref) = @_;
+	my $ret = undef;
+	$ret .= tnp($ref->{files});
+	$ret .= tnp(0x010600);
+	$ret .= tnp(0x12); #Hardcoded header size
+	$ret .= tnp().tnp().tnp();
+	return $ret;
+}
 
+## IPOD SHUFFLE ####################################################
+# Create an entry
+sub mk_itunes_sd_file {
+	my($ref) = @_;
+	my $ret = undef;
+	
+	#The Shuffle needs / , not :
+	$ref->{path} =~ tr/:/\//;
+	my $uc = new Unicode::String($ref->{path});
+	
+	$ret .= tnp(0x00022E);	#Static?
+	$ret .= tnp(0x5AA501);	#unk1
+	$ret .= tnp();					#StartTime
+	$ret .= tnp();					#unk2
+	$ret .= tnp();					#unk3
+	$ret .= tnp();					#StopTime
+	$ret .= tnp();					#unk4
+	$ret .= tnp();					#unk5
+	$ret .= tnp(0x64-($ref->{volume}));			#Volume (64=+-0)
+	
+	my $fixmetype = 1;
+	if($ref->{path} =~ /\.m4.$/i) {
+		$fixmetype = 2;
+	}
+	elsif($ref->{path} =~ /\.wav$/i) {
+		$fixmetype = 4;
+	}
 
+	$ret .= tnp($fixmetype);	#Type: MP3=1 / AAC=2 / WAV=4
+	$ret .= tnp(0x000200);	#Static?
+	$ret .= Unicode::String::byteswap2($uc->utf16);
+	$ret .= "\0" x (522-length($uc->utf16));
+	$ret .= tnp(0x010000);
+	return $ret;
+}
+
+## IPOD SHUFFLE ####################################################
+# ThreeNetworkPack -> ShuffleDB thingy
+sub tnp {
+	my($in) = @_;
+	my $ret = pack("N", $in);
+	return substr($ret,1);
+}
 
 
 
@@ -146,16 +203,19 @@ $SPLDEF{limitsort}{-23} = "rating_low";
 # create an iTunesDB header
 ### XHR: size
 sub mk_mhbd {
- my ($hr) = @_;
+	my ($hr) = @_;
 
- my $ret = "mhbd";
-    $ret .= pack("h8", _itop(104));                 #Header Size
-    $ret .= pack("h8", _itop($hr->{size}+104));     #size of the whole mhdb
-    $ret .= pack("H8", "01");                       #?
-    $ret .= pack("H8", "01");                       #? - changed to 2 from itunes2 to 3 .. version? We are iTunes version 1 ;)
-    $ret .= pack("H8", "02");                       # (Maybe childs?)
-    $ret .= pack("H160", "00");                     #dummy space
- return $ret;
+	my $ret = "mhbd";
+	   $ret .= pack("V", 104);                         #Header Size
+	   $ret .= pack("V", _icl($hr->{size}+104));       #Size of whole mhdb
+	   $ret .= pack("V", 0x1);                         #?
+	   $ret .= pack("V", 0xC);
+	   $ret .= pack("V", 0x2);                        # (Maybe childs?)
+	   $ret .= pack("V", 0xE0ADECAD);                 # UID -> 0xA_Decade_0f_bad_f00d
+	   $ret .= pack("V", 0x0DF0ADFB);
+	   $ret .= pack("V", 0x2);                        #?
+	   $ret .= pack("V17", "00");                     #dummy space
+return $ret;
 }
 
 ## GENERAL #########################################################
@@ -168,10 +228,10 @@ sub mk_mhsd {
  my ($hr) = @_;
 
  my $ret = "mhsd";
-    $ret .= pack("h8", _itop(96));                      #Headersize, static
-    $ret .= pack("h8", _itop($hr->{size}+96));          #Size
-    $ret .= pack("h8", _itop($hr->{type}));             #type .. 1 = song .. 2 = playlist
-    $ret .= pack("H160", "00");                         #dummy space
+    $ret .= pack("V", _icl(96));                      #Headersize, static
+    $ret .= pack("V", _icl($hr->{size}+96));          #Size
+    $ret .= pack("V", _icl($hr->{type}));             #type .. 1 = song .. 2 = playlist
+    $ret .= pack("V20", "00");                         #dummy space
  return $ret;
 }
 
@@ -190,7 +250,7 @@ sub mk_mhit {
 
  if($vol >= 0 && $vol <= 255) { } #Nothing to do
  elsif($vol < 0 && $vol >= -255) {            #Convert value
-  $vol = oct("0xFFFFFFFF") + $vol; 
+  $vol = ((0xFFFFFFFF) + $vol); 
  }
  else {
   print STDERR "** Warning: ID $file_hash{id} has volume set to $file_hash{volume} percent. Volume set to +-0%\n";
@@ -216,42 +276,45 @@ sub mk_mhit {
  }
 
  my $ret = "mhit";
-    $ret .= pack("h8", _itop(156));                           #header size
-    $ret .= pack("h8", _itop(int($hr->{size})+156));          #len of this entry
-    $ret .= pack("h8", _itop($hr->{count}));                  #num of mhods in this mhit
-    $ret .= pack("h8", _itop($c_id));                         #Song index number
-    $ret .= pack("h8", _itop(1));                             #debug flag? - the ipod stops parsing if this isnt == 1
-    $ret .= pack("H8");                                       #dummyspace
-    $ret .= pack("h8", _itop(256+(oct('0x14000000')
-                            *($file_hash{rating}/20))));      #type+rating .. this is very STUPID..
-    $ret .= pack("h8", _itop($file_hash{changetime}));        #Time changed
-    $ret .= pack("h8", _itop($file_hash{filesize}));          #filesize
-    $ret .= pack("h8", _itop($file_hash{time}));              #seconds of song
-    $ret .= pack("h8", _itop($file_hash{songnum}));           #nr. on CD .. we dunno use it (in this version)
-    $ret .= pack("h8", _itop($file_hash{songs}));             #songs on this CD
-    $ret .= pack("h8", _itop($file_hash{year}));              #the year
-    $ret .= pack("h8", _itop($file_hash{bitrate}));           #bitrate
-    $ret .= pack("H4", "00");                                 #??
-    $ret .= pack("h4", _itop( ($file_hash{srate} || 44100),0xffff));    #Srate (note: h4!)
-    $ret .= pack("h8", _itop($vol));                          #Volume
-    $ret .= pack("h8", _itop($file_hash{starttime}));         #Start time?
-    $ret .= pack("h8", _itop($file_hash{stoptime}));          #Stop time?
-    $ret .= pack("h8", _itop($file_hash{soundcheck}));        #Soundcheck from iTunesNorm
-    $ret .= pack("h8", _itop($file_hash{playcount}));
-    $ret .= pack("H8");                                       #Sometimes eq playcount .. ?!
-    $ret .= pack("h8", _itop($file_hash{lastplay}));          #Last playtime..
-    $ret .= pack("h8", _itop($file_hash{cdnum}));             #cd number
-    $ret .= pack("h8", _itop($file_hash{cds}));               #number of cds
-    $ret .= pack("H8");                                       #hardcoded space ?
-    $ret .= pack("h8", _itop($file_hash{addtime}));           #File added @
-    $ret .= pack("h8", _itop($file_hash{bookmark}));          #QTFile Bookmark
-    $ret .= pack("H8");
-    $ret .= pack("H12");                                       #??
-    $ret .= pack("h4", _itop($file_hash{bpm},0xffff));         #BPM
-#Fixme: this was wrong.. so i removed it now..
-#    $ret .= pack("h8", _itop(($file_hash{prerating}/20)*oct('0x140000')));      #This is also stupid: the iTunesDB has a rating history
-    $ret .= pack("H8");                                       # ???
-    $ret .= pack("H56");  
+    $ret .= pack("V", _icl(0xF4));                          #header size
+    $ret .= pack("V", _icl(int($hr->{size})+0xF4));         #len of this entry
+    $ret .= pack("V", _icl($hr->{count}));                  #num of mhods in this mhit
+    $ret .= pack("V", _icl($c_id));                         #Song index number
+    $ret .= pack("V", _icl(1));                             #debug flag? - the ipod stops parsing if this isnt == 1
+    $ret .= pack("V");                                       #dummyspace
+		 #Fixme: Should be: 4(CBR/VBR/AAC) 2 compilation 2 rating (?)
+    $ret .= pack("V", _icl(256+(oct('0x14000000')
+                            *($file_hash{rating}/20))));     #type+rating .. this is very STUPID..
+    $ret .= pack("V", _icl($file_hash{changetime}));        #Time changed
+    $ret .= pack("V", _icl($file_hash{filesize}));          #filesize
+    $ret .= pack("V", _icl($file_hash{time}));              #seconds of song
+    $ret .= pack("V", _icl($file_hash{songnum}));           #nr. on CD .. we dunno use it (in this version)
+    $ret .= pack("V", _icl($file_hash{songs}));             #songs on this CD
+    $ret .= pack("V", _icl($file_hash{year}));              #the year
+    $ret .= pack("V", _icl($file_hash{bitrate}));           #bitrate
+    $ret .= pack("v", "00");                                #??
+    $ret .= pack("v", _icl( ($file_hash{srate} || 44100),0xffff));    #Srate (note: v4!)
+    $ret .= pack("V", _icl($vol));                          #Volume
+    $ret .= pack("V", _icl($file_hash{starttime}));         #Start time?
+    $ret .= pack("V", _icl($file_hash{stoptime}));          #Stop time?
+    $ret .= pack("V", _icl($file_hash{soundcheck}));        #Soundcheck from iTunesNorm
+    $ret .= pack("V", _icl($file_hash{playcount}));         #Playcount
+    $ret .= pack("V", _icl($file_hash{playcount}));         #Sometimes eq playcount .. ?!
+    $ret .= pack("V", _icl($file_hash{lastplay}));          #Last playtime..
+    $ret .= pack("V", _icl($file_hash{cdnum}));             #cd number
+    $ret .= pack("V", _icl($file_hash{cds}));               #number of cds
+    $ret .= pack("V");                                      #hardcoded space ? (Apple DRM id?)
+    $ret .= pack("V", _icl($file_hash{addtime}));           #File added @
+    $ret .= pack("V", _icl($file_hash{bookmark}));          #QTFile Bookmark
+    $ret .= pack("V",  0xDEADBABE);                         #DBID Prefix
+    $ret .= pack("V",  _icl($c_id));                        #DBID Postfix
+    $ret .= pack("v");                                      #??
+    $ret .= pack("v", _icl($file_hash{bpm},0xffff));        #BPM
+    $ret .= pack("V");                                      # ???
+    $ret .= pack("V10");
+    $ret .= pack("V", 0xDEADBABE);
+    $ret .= pack("V", _icl($c_id));
+    $ret .= pack("H135");  
                          
 return $ret;
 }
@@ -304,13 +367,13 @@ sub mk_mhod {
 
  $string = _ipod_string($string); #cache data
  my $ret = "mhod";                 		           #header
- $ret .= pack("h8", _itop(24));                     #size of header
- $ret .= pack("h8", _itop(length($string)+$mod));   # size of header+body
- $ret .= pack("h8", _itop($type));                #type of the entry
- $ret .= pack("H16");                               #dummy space
- $ret .= pack("h8", _itop($fqid));                  #Refers to this id if a PL item
+ $ret .= pack("V", _icl(24));                     #size of header
+ $ret .= pack("V", _icl(length($string)+$mod));   # size of header+body
+ $ret .= pack("V", _icl($type));                #type of the entry
+ $ret .= pack("V2");                               #dummy space
+ $ret .= pack("V", _icl($fqid));                  #Refers to this id if a PL item
                                                    #else ->  1
- $ret .= pack("h8", _itop(length($string)));        #size of string
+ $ret .= pack("V", _icl(length($string)));        #size of string
 
 
  if($type != 100){ #no PL mhod
@@ -368,19 +431,19 @@ $chkrgx = 1 if $checkrule>1;
 $chklim = $checkrule-$chkrgx*2;
 
  my $ret = "mhod";
- $ret .= pack("h8", _itop(24));    #Size of header
- $ret .= pack("h8", _itop(96));
- $ret .= pack("h8", _itop(50));
- $ret .= pack("H16");
- $ret .= pack("h2", _itop($live,0xff)); #LiveUpdate ?
- $ret .= pack("h2", _itop($chkrgx,0xff)); #Check regexps?
- $ret .= pack("h2", _itop($chklim,0xff)); #Check limits?
- $ret .= pack("h2", _itop($int_item,0xff)); #Wich item?
- $ret .= pack("h2", _itop($sort,0xff)); #How to sort
+ $ret .= pack("V", _icl(24));    #Size of header
+ $ret .= pack("V", _icl(96));
+ $ret .= pack("V", _icl(50));
+ $ret .= pack("V2");
+ $ret .= pack("C", _icl($live,0xff)); #LiveUpdate ?
+ $ret .= pack("C", _icl($chkrgx,0xff)); #Check regexps?
+ $ret .= pack("C", _icl($chklim,0xff)); #Check limits?
+ $ret .= pack("C", _icl($int_item,0xff)); #Wich item?
+ $ret .= pack("C", _icl($sort,0xff)); #How to sort
  $ret .= pack("h6");
- $ret .= pack("h8", _itop($hs->{value})); #lval
- $ret .= pack("h2", _itop($mos,0xff));        #MatchOnlySelected (?)
- $ret .= pack("h2", _itop($sort_low, 0xff)); #Set LOW flag..
+ $ret .= pack("V", _icl($hs->{value})); #lval
+ $ret .= pack("C", _icl($mos,0xff));        #MatchOnlySelected (?)
+ $ret .= pack("C", _icl($sort_low, 0xff)); #Set LOW flag..
  $ret .= pack("h116");
 
 }
@@ -469,17 +532,17 @@ sub mk_spldatamhod {
          $to ||=$from; #Set $to == $from is $to is empty
         }
                 
-        $string  = pack("H8", _x86itop($within_magic_a));
-        $string .= pack("H8", _x86itop($from));
-        $string .= pack("H8", _x86itop($within_magic_b));
-        $string .= pack("H8", _x86itop($within_magic_b-$within_range)); #0-0 for non within
-        $string .= pack("H8");
-        $string .= pack("H8", _x86itop($within_key||1));
-        $string .= pack("H8", _x86itop($within_magic_a));
-        $string .= pack("H8", _x86itop($to));
-        $string .= pack("H24");
-        $string .= pack("H8", _x86itop(1));
-        $string .= pack("H40");
+        $string  = pack("N", _icl($within_magic_a));
+        $string .= pack("N", _icl($from));
+        $string .= pack("N", _icl($within_magic_b));
+        $string .= pack("N", _icl($within_magic_b-$within_range)); #0-0 for non within
+        $string .= pack("N");
+        $string .= pack("N", _icl($within_key||1));
+        $string .= pack("N", _icl($within_magic_a));
+        $string .= pack("N", _icl($to));
+        $string .= pack("N3");
+        $string .= pack("N", _icl(1));
+        $string .= pack("N5");
 	}
 	else { #Unknown type, this is fatal!
 	  warn "iTunesDB.pm: ERROR: <spl field=\"$chr->{field}\"... is unknown, skipping SPL\n";
@@ -492,10 +555,10 @@ sub mk_spldatamhod {
      }
      
      $cr .= pack("H6"); #Add data in for() loop... (= new chunk)
-     $cr .= pack("h2", _itop($int_field,0xff));
-     $cr .= pack("H8",_x86itop($action_num+$action_prefix)); #Yepp.. everything here is x86! ouch
+     $cr .= pack("C", _icl($int_field,0xff));
+     $cr .= pack("N", _icl($action_num+$action_prefix)); #Yepp.. everything here is x86! ouch
      $cr .= pack("H94");
-     $cr .= pack("h2", _itop(length($string),0xff));
+     $cr .= pack("C", _icl(length($string),0xff));
      $cr .= $string;
      $CHTM++; #Ok, we got a complete SPL
  }
@@ -503,16 +566,16 @@ sub mk_spldatamhod {
  return undef unless $CHTM; #Ouch, EVERYTHING failed. Refuse to create an empty SPL
 
  my $ret = "mhod";
- $ret .= pack("h8", _itop(24));    #Size of header
- $ret .= pack("h8", _itop(length($cr)+160));    #header+body size
- $ret .= pack("h8", _itop(51));    #type
+ $ret .= pack("V", _icl(24));    #Size of header
+ $ret .= pack("V", _icl(length($cr)+160));    #header+body size
+ $ret .= pack("V", _icl(51));    #type
  $ret .= pack("H16");
  $ret .= "SLst";                   #Magic
  $ret .= pack("H8", reverse("00010001")); #?
  $ret .= pack("h6");
- $ret .= pack("h2", _itop($CHTM,0xff));     #HTM (Childs from cr) FIXME: is this really limited to 0xff childs?
+ $ret .= pack("C", _icl($CHTM,0xff));     #HTM (Childs from cr) FIXME: is this really limited to 0xff childs?
  $ret .= pack("h6");
- $ret .= pack("h2", _itop($anymatch,0xff));     #anymatch rule on or off
+ $ret .= pack("C", _icl($anymatch,0xff));     #anymatch rule on or off
  $ret .= pack("h240");
  $ret .= $cr; #add data
 return $ret;
@@ -529,9 +592,9 @@ sub mk_mhlt
 my ($hr) = @_;
 
 my $ret = "mhlt";
-   $ret .= pack("h8", _itop(92)); 		    #Header size (static)
-   $ret .= pack("h8", _itop($hr->{songs})); #songs in this itunesdb
-   $ret .= pack("H160", "00");                      #dummy space
+   $ret .= pack("V", _icl(92)); 		    #Header size (static)
+   $ret .= pack("V", _icl($hr->{songs})); #songs in this itunesdb
+   $ret .= pack("V20", "00");                      #dummy space
 return $ret;
 }
 
@@ -551,9 +614,9 @@ sub mk_mhlp
 my ($hr) = @_;
 
 my $ret = "mhlp";
-   $ret .= pack("h8", _itop(92));                   #Static header size
-   $ret .= pack("h8", _itop($hr->{playlists}));     #playlists on iPod (including main!)
-   $ret .= pack("h160", "00");                      #dummy space
+   $ret .= pack("V", _icl(92));                   #Static header size
+   $ret .= pack("V", _icl($hr->{playlists}));     #playlists on iPod (including main!)
+   $ret .= pack("V20", "00");                      #dummy space
 return $ret;
 }
 
@@ -574,15 +637,15 @@ my $cmh = 2+$hr->{mhods};
 
 
 my $ret .= "mhyp";
-   $ret .= pack("h8", _itop(108)); #type
-   $ret .= pack("h8", _itop($hr->{size}+108+(length($appnd))));          #size
-   $ret .= pack("h8", _itop($cmh));			      #mhods
-   $ret .= pack("h8", _itop($hr->{files}));   #songs in pl
-   $ret .= pack("h8", _itop($hr->{type}));    # 1 = main .. 0=not main
-   $ret .= pack("H8", "00"); 			      #?
-   $ret .= pack("h8", _itop($hr->{plid}));    #Playlist ID
-   $ret .= pack("H8", "00");                  #?
-   $ret .= pack("H144", "00");       		  #dummy space
+   $ret .= pack("V", _icl(108)); #type
+   $ret .= pack("V", _icl($hr->{size}+108+(length($appnd))));          #size
+   $ret .= pack("V", _icl($cmh));			      #mhods
+   $ret .= pack("V", _icl($hr->{files}));   #songs in pl
+   $ret .= pack("V", _icl($hr->{type}));    # 1 = main .. 0=not main
+   $ret .= pack("V", "00");                 #Timestamp FIXME
+   $ret .= pack("V", _icl($hr->{plid}));    #Playlist ID
+   $ret .= pack("V", "00");                 #?
+   $ret .= pack("H144", "00");              #dummy space
 
  return $ret.$appnd;
 }
@@ -596,12 +659,12 @@ my ($hr) = @_;
 #sid = SongId
 #plid = playlist order ID
 my $ret = "mhip";
-   $ret .= pack("h8", _itop(76));
-   $ret .= pack("h8", _itop(76));
-   $ret .= pack("h8", _itop($hr->{childs})); #Mhod childs !
-   $ret .= pack("H8", "00");
-   $ret .= pack("h8", _itop($hr->{plid}));   #ORDER id
-   $ret .= pack("h8", _itop($hr->{sid}));    #song id in playlist
+   $ret .= pack("V", _icl(76));
+   $ret .= pack("V", _icl(76));
+   $ret .= pack("V", _icl($hr->{childs})); #Mhod childs !
+   $ret .= pack("V", "00");
+   $ret .= pack("V", _icl($hr->{plid}));   #ORDER id
+   $ret .= pack("V", _icl($hr->{sid}));    #song id in playlist
    $ret .= pack("H96", "00");
   return $ret;
  }
@@ -628,40 +691,19 @@ return $utf8string;
 
 
 
-## _INTERNAL ##################################################
-#int to ipod
-sub _itop
-{
-my($in, $checkmax) = @_;
-my($int) = $in =~ /(\d+)/;
-
-$checkmax ||= 0xffffffff;
-
-if($int > $checkmax or $int < 0) {
- _itBUG("_itop: FATAL: $int > $checkmax (<- maximal value)",1);
-}
-
-return scalar(reverse(sprintf("%08X", $int )));
-}
 
 ## _INTERNAL ##################################################
-#int to x86 ipodval (spl!!)
-sub _x86itop
-{
-my($in, $checkmax) = @_;
-my($int) = $in =~ /(\d+)/;
-
-$checkmax ||= 0xffffffff;
-
-if($int > $checkmax) {
- _itBUG("_x86itop: FATAL: $int > $checkmax (<- maximal value)",1);
+# IntCheckLimit
+sub _icl {
+	my($in, $checkmax) = @_;
+	my($int) = $in =~ /(\d+)/;
+	$checkmax ||= 0xffffffff;
+	
+	if($int > $checkmax or $int < 0) {
+		_itBUG("_icl: FATAL: $int > $checkmax (<- Value out of range)",1);
+	}
+	return $int;
 }
-
-
-return scalar((sprintf("%08X", $int )));
-}
-
-
 
 
 

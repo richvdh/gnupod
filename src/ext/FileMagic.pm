@@ -1,5 +1,5 @@
 package GNUpod::FileMagic;
-#  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
+#  Copyright (C) 2002-2005 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
 #  URL: http://www.gnu.org/software/gnupod/
@@ -86,7 +86,7 @@ sub wtf_is {
 }
 
 ########################################################################
-#Handle Non-Native MIDI files :)
+#Handle Non-Native files :)
 sub __is_NonNative {
  my($file, $flags, $con) = @_;
  return undef unless $flags->{decode}; #Decoder is OFF per default!
@@ -141,14 +141,18 @@ sub __is_qt {
  my $cf = ((split(/\//,$file))[-1]);
  $rh{songs}     = int($ret->{tracks});
  $rh{songnum}   = int($ret->{tracknum});
+ $rh{cds}       = int($ret->{cds});
+ $rh{cdnum}     = int($ret->{cdnum});
  $rh{srate}     = int($ret->{srate});
  $rh{time}      = int($ret->{time});
  $rh{bitrate}   = int($ret->{bitrate});
  $rh{filesize}  = int($ret->{filesize});
  $rh{fdesc}     = getutf8($ret->{fdesc});
- $rh{artist}    = getutf8($ret->{artist} || "Unknown Artist");
- $rh{album}     = getutf8($ret->{album}  || "Unknown Album");
- $rh{title}     = getutf8($ret->{title}  || $cf || "Unknown Title");
+ $rh{artist}    = getutf8($ret->{artist}   || "Unknown Artist");
+ $rh{album}     = getutf8($ret->{album}    || "Unknown Album");
+ $rh{title}     = getutf8($ret->{title}    || $cf || "Unknown Title");
+ $rh{genre}     = getutf8($ret->{genre}    || "");
+ $rh{composer}  = getutf8($ret->{composer} || ""); 
  $rh{soundcheck}= _parse_iTunNORM($ret->{iTunNORM});
  return  ({codec=>$ret->{_CODEC}, ref=>\%rh});
 }
@@ -264,6 +268,8 @@ sub __is_mp3 {
  return \%rh;
 }
 
+########
+# Guess a genre
 sub _get_genre {
  my ($string) = @_;
  my $num_to_txt = undef;
@@ -290,17 +296,15 @@ sub pss {
 # Try to 'auto-guess' charset and return utf8
 sub getutf8 {
  my($in) = @_;
- 
+
  return undef unless $in; #Do not fsckup empty input
 
  #Get the ENCODING
  $in =~ s/^(.)//;
  my $encoding = $1;
- if($in eq "") {
-  return undef;
- }
+
  # -> UTF16 with or without BOM
- elsif(ord($encoding) == 1 || ord($encoding) == 2) {
+ if(ord($encoding) == 1 || ord($encoding) == 2) {
   my $bfx = Unicode::String::utf16($in); #Object is utf16
   $bfx->byteswap if $bfx->ord == 0xFFFE;
   $in = $bfx->utf16; #Return utf16 version
@@ -350,7 +354,7 @@ sub _parse_iTunNORM {
 }
 
 #########################################################
-# Stert the converter
+# Start the converter
 sub kick_convert {
  my($prog, $file, $format, $con) = @_;
 
