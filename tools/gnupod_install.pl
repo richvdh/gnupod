@@ -48,7 +48,7 @@ sub killold {
     print " done\n";
    }
    else {
-    print " Could not remofe $file, $!\n";
+    print " Could not remove $file, $!\n";
    }
  }
  else {
@@ -93,7 +93,6 @@ sub remove_docs {
 #Uninstall scripts
 sub remove_scripts {
  my($globme, $bindir) = @_;
- print "Removing GNUpod, please wait...\n";
  print " > Removing Scripts...\n";
  foreach (glob($globme)) {
   my $rmme = $bindir."/".fof($_);

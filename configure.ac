@@ -1,4 +1,4 @@
-AC_INIT(gnupod, 0.95, bug-gnupod@nongnu.org)
+AC_INIT(GNUpod, 0.95, bug-gnupod@nongnu.org)
 AC_PATH_PROGS(PERL, perl-5.8 perl-5.6 perl)
 
 if test $PERL; then
@@ -38,5 +38,16 @@ AC_SUBST(PERL)
 AC_OUTPUT(Makefile)
 
 echo
-echo "I'm happy :)"
-echo "use 'make install' to install GNUpod"
+echo "Looks fine.."
+echo
+echo "Settings:"
+echo
+echo    "Release:        $PACKAGE_NAME $PACKAGE_VERSION"
+echo    "Prefix:         $prefix";
+echo -n "Perl Version:   "
+echo "print \$]" | $PERL
+echo
+
+echo
+echo "-> use 'make install' to install $PACKAGE_NAME"
+echo "-> use 'make uninstall' to remove $PACKAGE_NAME from $prefix"
