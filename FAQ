@@ -9,10 +9,11 @@ TOC
 5 : Does GNUpod support feature $foobar ?
 6 : Can i add File-Format $foobar ?
 7 : How can i add files recursive?
-8 : Why?
-9 : Do you have any specs about the iTunesDB format?
-10: How do i report bugs or feature-requests?
-11: How can i contribute?
+8 : How to get parseable output from gnupod_search.pl?
+9 : Why?
+10: Do you have any specs about the iTunesDB format?
+11: How do i report bugs or feature-requests?
+12: How can i contribute?
 
 
 
@@ -136,7 +137,19 @@ $ find blabla/ | gnupod_addsong.pl -
 (note the '-')
 
 
-8. Why?
+8. How to get parseable output from gnupod_search.pl
+----------------------------------------------------
+
+gnupod_addsong.pl knows the '--view' switch.
+
+Example: 
+gnupod_search.pl --view=i -l "Cure" 2>/dev/null | tail +4
+
+(Hmm.. output breaks if On-The-Go data get's synced..)
+FIXME.. maybe we should have an --out option?
+
+
+9. Why?
 -------
 
 I wanted an iPod and after buying one, i realized that
@@ -148,8 +161,8 @@ i did it myself :)
 ..And i had enough free time to do it :)
 
 
-9. Do you have any specs about the iTunesDB format?
----------------------------------------------------
+10. Do you have any specs about the iTunesDB format?
+----------------------------------------------------
 
 I didn't create a 'whitepaper' or something like this.
 
@@ -163,7 +176,7 @@ Just have a look at iTunesDB.pm and tunes2pod.pl+mktunes.pl
 <pab at blinkenlights.ch>
 
 
-10. How do i report bugs or feature-requests?
+11. How do i report bugs or feature-requests?
 ---------------------------------------------
 
 Send a mail to <bug-gnupod at nongnu.org>
@@ -171,7 +184,7 @@ Send a mail to <bug-gnupod at nongnu.org>
 
 
 
-11. How can i contribute?
+12. How can i contribute?
 -------------------------
 
 Use gnupod and:
