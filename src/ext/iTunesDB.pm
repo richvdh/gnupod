@@ -1,4 +1,4 @@
-# iTunesDB.pm - Version 20040313
+# iTunesDB.pm - Version 20040618
 #  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
@@ -1135,9 +1135,6 @@ sub readPLC {
  my $chunknum = 0;
 
  
- warn "Debug: Filesize : ";
- warn -s $file;
- warn "\n -> Calculated: ".($offset+$chunksize*$chunks)."\n";
  
 
 
@@ -1152,27 +1149,19 @@ sub readPLC {
   if (read(RATING,$buff,4) != 4) { _itBUG("Read failed at $offset while reading LASTPLAY",1) }
   $lastply = GNUpod::FooBar::shx2int($buff);
   
-  #Fixme: what is 8?
-  seek(RATING,$offset+8,0);
-  read(RATING,$buff,4);
-  warn "??? > ".(GNUpod::FooBar::shx2int($buff))."\n";
-  
+  #8 is always zero atm?!
+
   if($chunksize >= 16) { #12+4 - v2 firmware? 
    seek(RATING, $offset+12, 0);
    if (read(RATING, $buff,4) != 4) { _itBUG("Read failed at $offset while reading RATING",1) }
    $rating = GNUpod::FooBar::shx2int($buff);
   }
   
-  ## FIXME: 0.95 blocker: is this okay?!?? don't we need to use $chunksize?!
-  my $songnum = (($offset-(16*6))/16)+1;
+#print " aka $chunknum] \n";
 
-print "$songnum / aka $chunknum] ";
-print "*" x int($pcrh{rating}{songnum}/20);
-print " $pcrh{lastplay}{$songnum}\n";
-
-  $pcrh{playcount}{$songnum} = $playc   if $playc;
-  $pcrh{rating}{$songnum}    = $rating  if $rating;
-  $pcrh{lastplay}{$songnum}  = $lastply if $lastply;
+  $pcrh{playcount}{$chunknum} = $playc   if $playc;
+  $pcrh{rating}{$chunknum}    = $rating  if $rating;
+  $pcrh{lastplay}{$chunknum}  = $lastply if $lastply;
   $offset += $chunksize; #Nex to go!
  }
 
