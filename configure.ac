@@ -10,7 +10,7 @@ exit 1
 fi
 
 dnl Basic modules
-ALL_MODULES="XML::Parser Unicode::String MP3::Info"
+ALL_MODULES="XML::Parser Unicode::String MP3::Info File::Copy"
 
 
 dnl Ugly check for modules

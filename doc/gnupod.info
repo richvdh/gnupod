@@ -551,10 +551,10 @@ anymore wich songs are on it, this very good ;)
 
    You can 'rebuild' an GNUtunesDB using `gnupod_addsong.pl'
 
-     gnupod_addsong.pl --rebuild -m /mnt/ipod
+     gnupod_addsong.pl --restore -m /mnt/ipod
 
    First, `gnupod_INIT.pl' will create a clean, empty GNUtunesDB, it
-won't delete any songs on the iPod.  `gnupod_addsong.pl --rebuild' will
+won't delete any songs on the iPod.  `gnupod_addsong.pl --restore' will
 re-create a GNUtunesDB including the Songs wich are on the iPod
 
    I think nobody will ever have to do this.. but it maybe usefull to

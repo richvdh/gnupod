@@ -29,7 +29,7 @@ tunes2pod.pl:
   * Added SPL-Read code (BETA!)
 
 mktunes.pl
-  * Added INCOMPLETE SPL-Write support
+  * Added SPL-Write support
   * regex-matches are sorted by id
 
 gnupod_addsong.pl:
