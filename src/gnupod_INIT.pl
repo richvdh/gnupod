@@ -29,7 +29,7 @@ use Getopt::Long;
 use vars qw(%opts);
 
 
-#print "gnupod_INIT.pl ###__VERSION__### (C) Adrian Ulrich\n";
+print "gnupod_INIT.pl ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..

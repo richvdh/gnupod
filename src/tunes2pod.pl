@@ -30,7 +30,9 @@ use Getopt::Long;
 
 use vars qw(%opts);
 $| = 1;
-#print "tunes2pod.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
+
+
+print "tunes2pod.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
@@ -40,6 +42,9 @@ GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', force=>'b'}, "tunes2pod");
 
 usage() if $opts{help};
 version() if $opts{version};
+
+
+
 #Normal operation
 converter();
 
