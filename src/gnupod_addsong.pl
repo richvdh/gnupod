@@ -61,10 +61,9 @@ sub startup {
 
  usage($stat."\n") if $stat;
 my ($xmldoc) = GNUpod::XMLhelper::parsexml($xml, cleanit=>$opts{restore}) or usage("Failed to parse $xml\n");
-my ($qh) = GNUpod::XMLhelper::build_quickhash($xmldoc);
  usage("Could not open $xml , did you run gnupod_INIT.pl ?\n") unless $xmldoc;
 
-
+my $addcount = 0;
 #We are ready to copy each file..
  foreach my $file (@files) {
     #Get the filetype
@@ -77,34 +76,40 @@ my ($qh) = GNUpod::XMLhelper::build_quickhash($xmldoc);
    #Get a path
    (${$fh}{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file, keepfile=>$opts{restore});
    #Copy the file
-   if(!$opts{duplicate} && (my $dup = checkdup($qh, $fh))) {
-    print "> $fh->{title} is a duplicate of song $dup, skipping file\n";
+   if(!$opts{duplicate} && (my $dup = checkdup($xmldoc, $fh))) {
+    print "! '$fh->{title}' is a duplicate of song $dup, skipping file\n";
     next;
    }
    if($opts{restore} || File::Copy::copy($file, $target)) {
      print "+ $fh->{title}\n";
      GNUpod::XMLhelper::addfile($xmldoc, $fh);
+     $addcount++;
    }
    else { #We failed..
      print STDERR "-- FATAL -- Could not copy $file to $target: $! ... skipping\n";
    }
    
  }
+
+if($addcount) {
  print "> Writing new XML File\n";
  GNUpod::XMLhelper::write_xml($xml, $xmldoc);
+}
  print "\n Done\n";
 }
 
 sub checkdup {
- my($qh, $fh) = @_;
- foreach my $item (keys(%$qh)) {
-  if($qh->{$item}->{filesize} == $fh->{filesize} &&
-     $qh->{$item}->{bitrate}  == $fh->{bitrate}  &&
-     $qh->{$item}->{time}     == $fh->{time}) {
-    return $item || -1; #This is a duplicate   
-  }
- }
- return undef; #no match
+my($xmldoc, $fh) = @_;
+ foreach my $gnupod (@{$xmldoc->{gnuPod}}) {
+    foreach my $files (@{$gnupod->{files}}) {
+      foreach my $file (@{$files->{file}}) {
+         if($file->{filesize} == $fh->{filesize} &&
+	    $file->{time}     == $fh->{time}     &&
+	    $file->{bitrate}  == $fh->{bitrate}) {
+	     return $file->{id} || -1;
+	    }
+	 }}}
+return undef;
 }
 
 ###############################################################

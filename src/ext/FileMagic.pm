@@ -27,14 +27,15 @@ use MP3::Info qw(:all);
 $^W = undef;
 BEGIN {
  MP3::Info::use_winamp_genres();
+ open(NULLFH, "> /dev/null") or die "Could not open /dev/null, $!\n";
 }
 #Try to discover the file format (mp3 or QT (AAC) )
 sub wtf_is {
 
  my($file) = @_;
- print "FileMagic: $file\n";
+# print "FileMagic: $file\n";
   if(my $h = __is_mp3($file)) {
-   print "--> MP3 detected\n";
+#   print "--> MP3 detected\n";
    return $h;
   }
   elsif(__is_qt($file)) {
@@ -110,7 +111,11 @@ sub pss {
 #Guess charset and try to return valid UTF8 data
 sub getutf8 {
  my($in) = @_;
+ my $oldstderr = *STDERR; #Kill all utf8 warnings.. bad thing..
+ *STDERR = "NULLFH";
  my $bfx = Unicode::String::utf8($in)->utf8;
+ *STDERR = $oldstderr;
+
  return $in if $bfx eq $in; #Input was valid utf8 data
  return Unicode::String::latin1($in)->utf8; #Maybe it was latin1?
 }
