@@ -7,3 +7,7 @@ infodir      = @infodir@
 mandir       = @mandir@
 perlbinary   = @PERL@
 
+all:
+	# Use 'make install' to install GNUpod
+install:
+	${perlbinary} tools/gnupod_install.pl "${perlbinary}" "${bindir}" "${infodir}" "${mandir}"

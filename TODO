@@ -1,1 +1,3 @@
-Many things..
+- Add some fancy options to gnupod_search.pl (as a gnupod_list.pl replacement)
+- Cleanup the gnupod_search.pl delete code (and other FIXME thngs..)
+

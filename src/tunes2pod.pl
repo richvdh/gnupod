@@ -110,6 +110,7 @@ GNUpod::XMLhelper::write_xml($out, \%hout);
 
 
 print STDOUT "\n Done\n";
+exit(0);
 }
 
 

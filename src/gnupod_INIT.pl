@@ -98,7 +98,7 @@ EOF
  if(-e $itunes && !$opts{'disable-convert'}) {
  ## Fixme: Does this work??
   print "Found *existing* iTunesDB, running tunes2pod.pl\n";
-  system("tunes2pod.pl -m $opts{mount}") or die "Failed to run tunes2pod.pl : $!\n";
+  system("tunes2pod.pl -m $opts{mount}");
  }
  else {
   print "No iTunesDB found, creating a dummy file\n";

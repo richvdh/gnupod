@@ -12,26 +12,28 @@ $opts{perlbin}      = $ARGV[0];
 $opts{bindir}       = $ARGV[1];
 $opts{infodir}      = $ARGV[2];
 $opts{mandir}       = $ARGV[3];
-$opts{skip_contrib} = $ARGV[4];
 
-die "Expected 5 arguments, got ".int(@ARGV)."\n make will run me, not you! stupid human!" if !$opts{skip_contrib} || $ARGV[5];
+die "Expected 4 arguments, got ".int(@ARGV)."\n make will run me, not you! stupid human!" if !$opts{mandir} || $ARGV[5];
 
 #ok, we are still alive, let's blow up the system ;)
-print "Installing GNUpod-base using gnupod_install 0.22\n";
-install_scripts("../src/*.pl", $opts{bindir}, $opts{perlbin});
+print "Installing GNUpod-base using gnupod_install 0.23\n";
 
-if($opts{skip_contrib} eq "no") {
-print "Installing contrib\n";
-install_scripts("../src/ext/*.pl", $opts{bindir}, $opts{perlbin});
-install_pm("../src/ext/*.pm", $opts{perlbin});
-}
-install_docs("../doc/gnupod.info", $opts{infodir});
-
+install_scripts("src/*.pl", $opts{bindir}, $opts{perlbin});
+install_pm("src/ext", "GNUpod", $opts{perlbin});
+install_docs("doc/gnupod.info", $opts{infodir});
+killold("$opts{bindir}/gnupod_delete.pl");
 print "done!\n";
 
 
 
 
+sub killold {
+ my($file) = @_;
+ if(-x "$file") {
+  print "Unlinking $file (obsolente)\n";
+  unlink("$file") or warn "ERROR: Deleting $file failed: $!\n";
+ }
+}
 
 
 sub install_docs {
@@ -53,7 +55,6 @@ else {
 # native (or naive? ;) ) copy
 sub ncp {
 my($source, $dest) = @_;
-
 open(SOURCE, "$source") or die "Could not read $source: $!\n";
 open(TARGET, ">$dest") or die "Could not write $dest: $!\n";
  while(<SOURCE>) {
@@ -66,17 +67,20 @@ return undef;
 
 
 sub install_pm {
-my($glob, $perlbin) = @_;
-my $file = undef;
+my($basedir, $modi, $perlbin) = @_;
 die "Strange Perl installation, no \@INC! Can't install Perl-Module(s), killing myself..\n" if !$INC[0];
-  foreach(glob($glob)) 
-  {
-   $file = fof($_);
-    print "Installing $INC[0]/$file\n";
-    ncp($_, "$INC[0]/$file");
-    chmod 0444, "$INC[0]/$file";
-    chown 0, 0, "$INC[0]/$file";
-  }
+
+mkdir("$INC[0]/$modi");
+chmod 0755, "$INC[0]/$modi";
+print "Installing Modules at $INC[0]/$modi\n";
+
+ foreach my $file (glob("$basedir/*.pm")) {
+  my $dest = "$INC[0]/$modi/".fof($file);
+  print " > $file --> $dest\n";
+  ncp($file, $dest);
+  chmod 0444, $dest;
+  chown 0, 0, $dest;
+ }
 }
 
 
@@ -87,7 +91,7 @@ my $file = undef;
  foreach(glob($glob)) 
  {
   $file = fof($_);
-  print " writing $file\n";
+  print " > $_ --> $dest/$file\n";
   
    open(SOURCE, "$_") or die "Could not open $_: $!\n aborting installation\n";
    open(TARGET, ">$dest/$file") or die "Unable to write $dest/$file: $!\n aborting installation\n";

@@ -1,4 +1,25 @@
-#FIXME:: This file is outdated..
+GNUpod 0.90
+
+- This is a *COMPLETE* rewrite of GNUpod, expect new bugs
+  and some new features ;)
+
+Highlights:
+
+- Faster (?)
+- REAL Unicode Support (Perl 5.8 and 5.6)
+- Cleaner Code
+- Support for elements like 'playcount / volume .. etc' (Read the docs)
+
+
+This release isn't perfect but it works nice and i think its good
+enough to be released :)
+
+No Support for AAC (mp4) and SPL (SmartPlayLists) in this release, 
+but AAC Support will be added soon (GNUpod 0.91?) and adding
+SPL Support is possible ;)
+
+
+    ** OLD GNUpod RELEASES **
 gnuPod 0.29-rc1
 - Unicode Support!!
   Use an UNICODE Texteditor to edit the GNUtunesDB..
@@ -14,7 +35,6 @@ gnuPod 0.29-rc1
   kill ID 0
 
 
-     *** OLD RELEASES ***
 gnuPod 0.28
 - Rewritten Playlistcode for tunes2pod.pl
 - tunes2pod.pl doesn't kill your empty GNUtunesDB anymore
