@@ -99,8 +99,9 @@ sub mkotg {
  
  #Get all old playlists and create a new name
  my $otggen = 1;
- foreach(GNUpod::XMLhelper::getpl_names()) {
-   if($_ =~ /^On-The-Go (\d+)/) {
+ foreach(GNUpod::XMLhelper::getpl_attribs()) {
+   my $plname = $_->{name};
+   if($plname =~ /^On-The-Go (\d+)/) {
     $otggen = ($1+1) if $otggen<=$1;
    }
  }

@@ -123,11 +123,12 @@ for(my $i=0;$i<$itinfo->{playlists};$i++) {
   $href->{name} = "NONAME" unless($href->{name}); #Don't create an empty pl
   if(ref($href->{splpref}) eq "HASH" && ref($href->{spldata}) eq "ARRAY") { #SPL Data present
     print ">> Smart-Playlist '$href->{name}' found\n";
-    render_spl($href->{name},$href->{splpref}, $href->{spldata}, $href->{matchrule}, $href->{content});
+    render_spl($href->{name},$href->{splpref}, $href->{spldata}, $href->{matchrule},
+               $href->{content}, $href->{plid});
   }
   else { #Normal playlist  
     print ">> Playlist '$href->{name}' with ".int(@{$href->{content}})." songs\n";
-    GNUpod::XMLhelper::addpl($href->{name});
+    GNUpod::XMLhelper::addpl($href->{name}, {plid=>$href->{plid}});
     foreach(@{$href->{content}}) {
      my $plfh = ();
      $plfh->{add}->{id} = $_;
@@ -159,7 +160,7 @@ exit(0);
 #######################################################
 # create a spl
 sub render_spl {
- my($name, $pref, $data, $mr, $content) = @_;
+ my($name, $pref, $data, $mr, $content, $plid) = @_;
  my $of = undef;
  $of->{liveupdate} = $pref->{live};
  $of->{moselected} = $pref->{mos};
@@ -168,6 +169,7 @@ sub render_spl {
  $of->{limitval}  = $pref->{value};
  $of->{limititem} = $pref->{iitem};
  $of->{checkrule} = $pref->{checkrule};
+ $of->{plid}       = $plid;
 #create this playlist
 GNUpod::XMLhelper::addspl($name, $of);
 

@@ -92,7 +92,7 @@ $SPLDEF{field}{25} = "rating";
 $SPLDEF{field}{31} = "compilation";
 $SPLDEF{field}{35} = "bpm";
 $SPLDEF{field}{39} = "GROUP";
-$SPLDEF{field}{40} = "PLAYLIST";
+$SPLDEF{field}{40} = "playlist";
 
 
 #Checkrule (COMPLETE)
@@ -565,6 +565,7 @@ sub mk_mhyp
 {
 my($hr) = @_;
 
+print "mk_mhpy -> $hr->{name}\n";
 #We need to create a listview-layout and an mhod with the name..
 my $appnd = mk_mhod({stype=>"title", string=>$hr->{name}}).__dummy_listview();   #itunes prefs for this PL & PL name (default PL has  device name as PL name)
 
@@ -573,6 +574,8 @@ my $appnd = mk_mhod({stype=>"title", string=>$hr->{name}}).__dummy_listview();  
 ##have to adjust the childs here
 my $cmh = 2+$hr->{mhods};
 
+warn "mk_mhyp with $hr->{plid}\n";
+
 my $ret .= "mhyp";
    $ret .= pack("h8", _itop(108)); #type
    $ret .= pack("h8", _itop($hr->{size}+108+(length($appnd))));          #size
@@ -580,7 +583,7 @@ my $ret .= "mhyp";
    $ret .= pack("h8", _itop($hr->{files}));   #songs in pl
    $ret .= pack("h8", _itop($hr->{type}));    # 1 = main .. 0=not main
    $ret .= pack("H8", "00"); 			      #?
-   $ret .= pack("H8", "00");                  #?
+   $ret .= pack("h8", _itop($hr->{plid}));    #Playlist ID
    $ret .= pack("H8", "00");                  #?
    $ret .= pack("H144", "00");       		  #dummy space
 
@@ -958,11 +961,13 @@ sub get_pl {
  my @pldata = ();
  
   if(get_string($pos, 4) eq "mhyp") { #Ok, its an mhyp
-      $ret_hash{type} = get_int($pos+20, 4); #Is it a main playlist?
-   my $scount         = get_int($pos+16, 4); #How many songs should we expect?
    my $header_len     = get_int($pos+4, 4);  #Size of the header
-   my $mhyp_len       = get_int($pos+8, 4);   #Size of mhyp
-   my $mhods          = get_int($pos+12,4); #How many mhods we have here
+   my $mhyp_len       = get_int($pos+8, 4);  #Size of mhyp
+   my $mhods          = get_int($pos+12,4);  #How many mhods we have here
+   my $scount         = get_int($pos+16, 4); #How many songs should we expect?
+      $ret_hash{type} = get_int($pos+20, 4); #Is it a main playlist?
+      $ret_hash{plid}  = get_int($pos+28,4);  #UID if the playlist..
+ 
 #Its a MPL, do a fast skip  --> We don't parse the mpl, because we know the content anyway
 if($ret_hash{type}) {
  return ($pos+$mhyp_len, {type=>1}) 

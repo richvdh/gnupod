@@ -167,10 +167,11 @@ sub addpl {
    return;
  }
 
- push(@plorder, $name);
  my %rh = ();
     %rh = %{$opt} if ref($opt) eq "HASH"; #Copy if we got data 
  $rh{name} = $name; #Force the name
+ $rh{plid} = int(rand(99999));
+ push(@plorder, {name=>$name,plid=>$rh{plid}});
  
  $XDAT->{playlists}->{pref}->{$name} = \%rh;
 }
@@ -186,18 +187,20 @@ sub addspl {
    return;
  }
 
- push(@plorder, $name);
+
  my %rh = ();
     %rh = %{$opt} if ref($opt) eq "HASH"; #Copy if we got data 
  $rh{name} = $name; #Force the name
- 
+ $rh{plid} ||= int(rand(99999));
+ push(@plorder, {name=>$name,plid=>$rh{plid}});
+  
  $XDAT->{spls}->{pref}->{$name} = \%rh;
 }
 
 
 ##############################################################
 #Get all playlists
-sub getpl_names {
+sub getpl_attribs {
  return @plorder;
 }
 
@@ -228,7 +231,7 @@ sub eventer {
  return undef unless $href->{Context}[0] eq "gnuPod";
   if($href->{Context}[1] eq "files") {
     #add(s)pl() call done before we got all files? that's bad!
-    warn "** XMLhelper: Found <file ../> item *after* a <playlist ..>, that's bad\n" if getpl_names();
+    warn "** XMLhelper: Found <file ../> item *after* a <playlist ..>, that's bad\n" if getpl_attribs();
     my $xh = mkh($el,@it);         #Create a hash
     @idpub[$xh->{file}->{id}] = 1; #Promote ID
     main::newfile($xh);            #call sub
@@ -301,19 +304,21 @@ sub writexml {
 #End file part
 
 #Print all playlists
- foreach(@plorder) {
-  if(my $shr = get_splpref($_)) { #xmlheader present
+ foreach(getpl_attribs()) {
+  my $current_plname = $_->{name};
+  
+  if(my $shr = get_splpref($current_plname)) { #xmlheader present
       print OUT "\n ".mkfile({smartplaylist=>$shr}, {return=>1,noend=>1})."\n";
        ### items
-        foreach my $sahr (@{$XDAT->{spls}->{data}->{$_}}) {
+        foreach my $sahr (@{$XDAT->{spls}->{data}->{$current_plname}}) {
          print OUT "   $sahr\n";
         }
        ###
       print OUT " </smartplaylist>\n";
   }
-  elsif(my $phr = get_plpref($_)) { #plprefs found..
+  elsif(my $phr = get_plpref($current_plname)) { #plprefs found..
       print OUT "\n ".mkfile({playlist=>$phr}, {return=>1,noend=>1})."\n";
-       foreach(@{$XDAT->{playlists}->{data}->{$_}}) {
+       foreach(@{$XDAT->{playlists}->{data}->{$current_plname}}) {
         print OUT "   $_\n";
        }
       print OUT " </playlist>\n";

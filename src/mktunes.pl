@@ -42,6 +42,7 @@ use vars qw($cid %pldb %spldb %itb %opts %meat %cmeat @MPLcontent);
 
 $| = 1;
 
+use constant MPL_UID => 1234567890;
 print "mktunes.pl ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
@@ -130,7 +131,7 @@ print " - May the iPod be with you!\n\n";
 #########################################################################
 # Create a single playlist
 sub r_mpl {
- my($name, $type, $xidref, $spl) = @_;
+ my($name, $type, $xidref, $spl, $plid) = @_;
 
 my $pl = undef;
 my $fc = 0;
@@ -155,9 +156,10 @@ if(ref($spl) eq "HASH") { #We got splpref!
   $pl .= $cmhip.$cmhod;
  }
  my $plSize = length($pl);
-
+print ">> $name\n";
   #mhyp appends a listview to itself
-  return(GNUpod::iTunesDB::mk_mhyp({size=>$plSize,name=>$name,type=>$type,files=>$fc,mhods=>$mhp}).$pl,$fc);
+  return(GNUpod::iTunesDB::mk_mhyp({size=>$plSize,name=>$name,type=>$type,files=>$fc,
+                                    mhods=>$mhp, plid=>$plid}).$pl,$fc);
 }
 
 
@@ -166,26 +168,25 @@ if(ref($spl) eq "HASH") { #We got splpref!
 sub genpls {
 
  #Create mainPlaylist and set PlayListCount to 1
- my ($pldata,undef) = r_mpl(Unicode::String::utf8($opts{'ipod-name'})->utf8, 1,\@MPLcontent);
+ my ($pldata,undef) = r_mpl(Unicode::String::utf8($opts{'ipod-name'})->utf8, 1,\@MPLcontent, undef,MPL_UID);
  my $plc = 1;
  
 #CID is now used by r_mpl, dont use it yourself anymore
-  foreach(GNUpod::XMLhelper::getpl_names()) {
+  foreach my $plref (GNUpod::XMLhelper::getpl_attribs()) {
+    my $splh = GNUpod::XMLhelper::get_splpref($plref->{name}); #Get SPL Prefs
     
-    my $splh = GNUpod::XMLhelper::get_splpref($_); #Get SPL Prefs
-    
-    my($pl, $xc) = r_mpl($_, 0, $pldb{$_}, $splh); #Kick Playlist creator
+    my($pl, $xc) = r_mpl($plref->{name}, 0, $pldb{$plref->{name}}, $splh, $plref->{plid}); #Kick Playlist creator
     
        if($pl) { #r_mpl got data, we can create a playlist..
         $plc++;         #INC Playlist count
         $pldata .= $pl; #Append data
         #GUI Stuff
         my $plxt = "Smart-" if $splh;
-        print ">> Created $plxt"."Playlist '$_' with $xc file"; print "s" if $xc !=1;
+        print ">> Created $plxt"."Playlist '$plref->{name}' with $xc file"; print "s" if $xc !=1;
         print "\n";
        }
        else {
-        warn "!! SKIPPED Playlist '$_', something went wrong...\n";
+        warn "!! SKIPPED Playlist '$plref->{name}', something went wrong...\n";
        }     
   }
  
