@@ -24,8 +24,8 @@ File: gnupod.info,  Node: Top,  Next: Requirements,  Up: (dir)
 1 GNUpod
 ********
 
-This edition of the `GNUpod Manual', last updated 27. Jun. 2004,
-documents GNUpod Version 0.95
+This edition of the `GNUpod Manual', last updated 30. Jul. 2004,
+documents GNUpod Version 0.96
 
 * Menu:
 
@@ -464,10 +464,20 @@ and ID3Tag name). You can disable the duplicate-detection with the
    gnupod_addsong.pl understands MP3/WAV (RIFF) and M4A (Apple AAC - NO
 DRM!) files.
 
-   Note: gnupod_addsong.pl will try to 'auto-detect' the encoding of
-the ID3 Tag.  Sometimes this works (in most cases ;) ) sometimes it
-doesn't. If it doesn't work for you, feel free do send me an
-example-file: pab@blinkenligts.ch
+   It can also convert FLAC and OGG files on-the-fly:
+
+   Using this example, it would convert the two files into MP3 and add
+them to the iPod.
+
+     gnupod_addsong.pl -m /mnt/ipod myfile.flac myfile.ogg --decode=mp3
+
+   (Note: To use all features of -decode, you will have to install
+Audio::FLAC, Ogg::Vorbis::Header::PurePerl, lame, flac, oggenc and faac)
+
+   gnupod_addsong.pl tries to 'auto-detect' the encoding of the ID3 Tag.
+Sometimes this works (in most cases ;) ) sometimes it doesn't. If it
+doesn't work for you, feel free do send me an example-file:
+pab@blinkenligts.ch
 
    DO NOT umount the iPod yet! First read the section 'Unplug the iPod'!
 
@@ -549,6 +559,9 @@ all songs with a Bitrate > 331.  (See also README.smartplaylists)
    For more examples have a look at `doc/gnutunesdb.example' included
 in the GNUpod tarball.  Also checkout
 http://blinkenlights.ch/gnupod/mkspl.html for a 'JavaScript SPL-Creator'
+
+   You can also use the -playlist option of gnupod_addsong.pl. This
+will create and add the listed songs to the named playlist.
 
    Don't forget to run mktunes before umounting! (See 'Unplug the iPod')
 
@@ -1197,17 +1210,17 @@ Node: Using GNUpod13933
 Node: Preparation14760
 Node: Configuration15492
 Node: Add files15949
-Node: Search files17074
-Node: Remove files17560
-Node: Creating playlists17870
-Node: Unplug the iPod19797
-Node: Recovering files20706
-Node: Coexistence21601
-Node: Problems23069
-Node: GNUtunesDB23452
-Node: Get rid of '-m'24958
-Node: Known bugs and limitations25243
-Node: Reporting Bugs25534
-Node: GNU Free Documentation License25982
+Node: Search files17423
+Node: Remove files17909
+Node: Creating playlists18219
+Node: Unplug the iPod20275
+Node: Recovering files21184
+Node: Coexistence22079
+Node: Problems23547
+Node: GNUtunesDB23930
+Node: Get rid of '-m'25436
+Node: Known bugs and limitations25721
+Node: Reporting Bugs26012
+Node: GNU Free Documentation License26460
 
 End Tag Table

@@ -485,7 +485,19 @@ with the '--duplicate' switch.
 
 gnupod_addsong.pl understands MP3/WAV (RIFF) and M4A (Apple AAC - NO DRM!) files.
 
-Note: gnupod_addsong.pl will try to 'auto-detect' the encoding of the ID3 Tag. 
+It can also convert FLAC and OGG files on-the-fly:
+
+Using this example, it would convert the two files into MP3 and add them to the iPod.
+
+@example
+gnupod_addsong.pl -m /mnt/ipod myfile.flac myfile.ogg --decode=mp3
+@end example
+
+(Note: To use all features of --decode, you will have to install
+ Audio::FLAC, Ogg::Vorbis::Header::PurePerl, lame, flac, oggenc and faac)
+
+
+gnupod_addsong.pl tries to 'auto-detect' the encoding of the ID3 Tag. 
 Sometimes this works (in most cases ;) ) sometimes it doesn't. If it doesn't work for you, 
 feel free do send me an example-file: pab@@blinkenligts.ch
 

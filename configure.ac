@@ -1,4 +1,4 @@
-AC_INIT(GNUpod, 0.96FLACPATH1, bug-gnupod@nongnu.org)
+AC_INIT(GNUpod, 0.96test2, bug-gnupod@nongnu.org)
 
 echo $ECHO_N $PACKAGE_VERSION > .gnupod_version
 
@@ -20,7 +20,7 @@ fi
 
 dnl Basic modules
 ALL_MODULES="Digest::MD5 XML::Parser Unicode::String MP3::Info File::Copy"
-OPT_MODULES="Audio::FLAC"
+OPT_MODULES="Audio::FLAC Ogg::Vorbis::Header::PurePerl"
 
 dnl Ugly check for modules
 IFS=" "
@@ -49,7 +49,7 @@ do
  if test $? = 0; then
   echo " ok"
  else
-  echo " failed!"
+  echo " failed! (this module is OPTIONAL, GNUpod works without $i"
   echo "** $i not found. You can install it using this command:"
   echo "# perl -MCPAN -e 'install $i'"
   echo "** ..but GNUpod will also work without $i"
