@@ -35,6 +35,8 @@ Summary:
 
 - You'll have to install Digest::MD5
 
+- You can also call your GNUtunesDB
+  GNUtunesDB.xml
 
 
 

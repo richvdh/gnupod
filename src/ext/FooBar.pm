@@ -39,7 +39,11 @@ sub connect {
 if(-d $opth->{mount}) {
   $rr->{mountpoint}     = $opth->{mount};
   $rr->{etc}            = $opth->{mount}."/iPod_Control/.gnupod";
+
   $rr->{xml}            = $opth->{mount}."/iPod_Control/.gnupod/GNUtunesDB";
+  #It can also be called GNUtunesDB.xml
+  $rr->{xml}            = $rr->{xml}.".xml"; if -e $rr->{xml}.".xml";
+warn "debug: returning $rr->{xml} for 'xml'\n";
   $rr->{itunesdb}       = $opth->{mount}."/iPod_Control/iTunes/iTunesDB";
   $rr->{playcounts}     = "$rr->{mountpoint}/iPod_Control/iTunes/Play Counts";
   $rr->{itunesdb_md5}   = "$rr->{etc}/.itunesdb_md5";
