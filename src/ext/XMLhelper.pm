@@ -193,7 +193,7 @@ sub cleandoc {
   }
  }
  elsif(ref($r) eq "") { 
- next if !$r; #Dont mess around with nothing
+ next unless defined($r); #Dont mess around with nothing
   my $bfx = Unicode::String::utf8($r)->utf8;
   $r = $bfx if $always || $bfx ne $r; #SOMETIMES, we got weird input from XML::parser..
                            #Unicode::String (utf8 to utf8?) fixes this.. don't know why *g*

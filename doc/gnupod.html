@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
-<!-- Created on September, 20  2003 by texi2html 1.65 -->
+<!-- Created on September, 21  2003 by texi2html 1.65 -->
 <!-- 
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -261,10 +261,12 @@ If your system hangs after loading sbp2 or mounting the iPod you may try to load
 </pre></td></tr></table></P><P>
 
 This will slow down the transfer rate but should act much more stable.
+Note: The FireWire code of Linux 2.4.21 (and newer) seems to be much more 
+stable: try to upgrade your kernel if you have crashes and oopses.
 </P><P>
 
 After loading sbp2, use <CODE>dmesg</CODE> to get some information, the output
-should look like this
+should look like this (If you are running linux 2.4.20 or older)
 </P><P>
 
 <TABLE><tr><td>&nbsp;</td><td class=example><pre>SBP-2 module load options:
@@ -283,6 +285,12 @@ sda: test WP failed, assume Write Enabled
 </pre></td></tr></table></P><P>
 
 In this case, <CODE>/dev/sda</CODE> would be your iPod.
+</P><P>
+
+Linux 2.4.21 (and newer) doesn't show such verbose output and your iPod 
+won't get detectet when loading sbp2. Simply run <CODE>rescan-scsi-bus.h</CODE> 
+wich should find your iPod (See /proc/scsi/scsi). 
+(You can download 'rescan-scsi-bus.sh' at http://www.garloff.de/kurt/linux/rescan-scsi-bus.sh)
 </P><P>
 
 You can now mount the iPod:
@@ -320,7 +328,8 @@ If the Operating System you are running doesn't have write support for HFS+ and 
 HFS+ Formatted (aka 'Mac-iPod') you will have to reformat the iPod.
 </P><P>
 
-Note: Linux 2.4.22 HAS Support for HFS+! It's still experimental but it seems to work very good..
+Note: Linux 2.4.22 HAS Support for HFS+! 
+It's still experimental and may do nasty things. 
 If you build your kernel with HFS+ support, you don't have to convert your iPod :)
 </P><P>
 
@@ -1872,7 +1881,7 @@ the following structure:
 <BR>  
 <FONT SIZE="-1">
 This document was generated
-by <I>Adrian Ulrich</I> on <I>September, 20  2003</I>
+by <I>Adrian Ulrich</I> on <I>September, 21  2003</I>
 using <A HREF="http://www.mathematik.uni-kl.de/~obachman/Texi2html
 "><I>texi2html</I></A>
 </FONT>

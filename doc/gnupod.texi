@@ -176,10 +176,12 @@ modprobe sbp2 sbp2_max_speed=0 sbp2_serialize_io=1 sbp2_force_inquiry_hack=1
 @end example
 
 This will slow down the transfer rate but should act much more stable.
+Note: The FireWire code of Linux 2.4.21 (and newer) seems to be much more 
+stable: try to upgrade your kernel if you have crashes and oopses.
 
 
 After loading sbp2, use @code{@w{dmesg}} to get some information, the output
-should look like this
+should look like this (If you are running linux 2.4.20 or older)
 
 @example
 SBP-2 module load options:
@@ -199,6 +201,10 @@ sda: test WP failed, assume Write Enabled
 
 In this case, @code{@w{/dev/sda}} would be your iPod.
 
+Linux 2.4.21 (and newer) doesn't show such verbose output and your iPod 
+won't get detectet when loading sbp2. Simply run @code{@w{rescan-scsi-bus.h}} 
+wich should find your iPod (See /proc/scsi/scsi). 
+(You can download 'rescan-scsi-bus.sh' at http://www.garloff.de/kurt/linux/rescan-scsi-bus.sh)
 
 You can now mount the iPod:
 @example
@@ -221,7 +227,8 @@ next section 'Convert your Mac iPod' before using @code{@w{mount}}.
 If the Operating System you are running doesn't have write support for HFS+ and your iPod is 
 HFS+ Formatted (aka 'Mac-iPod') you will have to reformat the iPod.
 
-Note: Linux 2.4.22 HAS Support for HFS+! It's still experimental but it seems to work very good..
+Note: Linux 2.4.22 HAS Support for HFS+! 
+It's still experimental and may do nasty things. 
 If you build your kernel with HFS+ support, you don't have to convert your iPod :)
 
 
