@@ -32,7 +32,7 @@ use Getopt::Long;
 use vars qw($cid %pldb %itb %opts %meat %cmeat);
 
 $| = 1;
-print "mktunes.pl Version 0.91 (C) 2002-2003 Adrian Ulrich\n";
+print "mktunes.pl Version 0.91b (C) 2002-2003 Adrian Ulrich\n";
 
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};

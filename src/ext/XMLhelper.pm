@@ -81,8 +81,7 @@ $ret =~ s/"/&quot;/g;
 $ret =~ s/</&lt;/g;
 $ret =~ s/>/&gt;/g;
 $ret =~ s/'/&apos;/g;
-my $bfx = Unicode::String::utf8($ret)->utf8;
-$ret = $bfx if $bfx ne $ret;
+
 return $ret;
 }
 
@@ -158,7 +157,7 @@ sub mkh {
  my($base, @content) = @_;
  my $href = ();
   for(my $i=0;$i<int(@content);$i+=2) {
-   $href->{$base}->{$content[$i]} = $content[$i+1];
+   $href->{$base}->{$content[$i]} = Unicode::String::utf8($content[$i+1])->utf8;
   }
   return $href;
 }
