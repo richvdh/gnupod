@@ -33,11 +33,16 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "top4secret");
-#GNUpod does NOT read configuration because it's called from
-#other scripts. They'll have to setup a correct ENV
+GNUpod::FooBar::GetConfig(\%opts, {nosync=>'b'}, "otgsync");
+#otgsync does just red nosync.. DONT add mount and such funny things!
+
 
 if($opts{top4secret}) {
  go();
+}
+elsif($opts{nosync}) {
+ print "> On-The-Go sync disabled by configuration, skipping work...\n";
+ exit(0);
 }
 else {
  usage("$0 isn't for humans :-)\nGNUpod::FooBar.pm has to execute me\n");
