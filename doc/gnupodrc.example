@@ -1,0 +1,43 @@
+######################################################
+# GNUpod 0.95 Configuration                          #
+#                                                    #
+# release 20040418                                   #
+# Save this file as:                                 #
+# ~/.gnupodrc or $ipod/iPod_Control/.gnupod/gnupodrc #
+######################################################
+
+
+##### GLOBAL OPTIONS #####
+
+##Set the mountpoint for the iPod
+#mount = /mnt/ipod
+
+
+
+
+##### NON GLOBAL OPTIONS ######
+
+# *** tunes2pod.pl ***
+## Uncomment to set '--force' switch to true (DANGEROUS)
+#tunes2pod.force = 1
+
+
+# *** mktunes.pl ***
+## Set --volume boost to +10 percent 
+#mktunes.volume = +10
+
+
+# *** gnupod_search.pl ***
+
+## Always match only once
+#gnupod_search.match-once = 1
+
+
+# *** gnupod_addsong.pl ***
+
+## Disable ID3V2 Tag reading
+#gnupod_addsong.disable-v2 = 1
+
+## Disable ID3V1 Tag reading
+#gnupod_addsong.disable-v1 = 1
+
