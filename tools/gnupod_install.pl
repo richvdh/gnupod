@@ -25,13 +25,14 @@ if($opts{MODE} eq "INSTALL") {
  #ok, we are still alive, let's blow up the system ;)
  print "Installing GNUpod $VINSTALL using gnupod_install 0.24\n";
  install_scripts("src/*.pl", $opts{bindir});
- install_pm("src/ext", "GNUpod", $opts{perlbin});
+ install_pm("src/ext", "GNUpod", $opts{perlbin}, "/");
  install_docs("doc/gnupod.info", $opts{infodir});
  killold("$opts{bindir}/gnupod_delete.pl") if -e "$opts{bindir}/gnupod_delete.pl";
  print "done!\n";
 }
 elsif($opts{MODE} eq "MKPKG") {
  install_scripts("src/*.pl", $opts{bindir});
+ install_pm("src/ext", "GNUpod", $opts{perlbin}, "Z0NK");
 }
 elsif($opts{MODE} eq "REMOVE") {
  print "Removing GNUpod $VINSTALL...\n";
@@ -140,13 +141,13 @@ return undef;
 
 
 sub install_pm {
-my($basedir, $modi, $perlbin) = @_;
+my($basedir, $modi, $perlbin, $pfix) = @_;
 
-mkdir("$INC[0]/$modi", 0755);
-print "Installing Modules at $INC[0]/$modi\n";
+mkdir("$pfix"."$INC[0]/$modi", 0755);
+print "Installing Modules at $pfix$INC[0]/$modi\n";
 
  foreach my $file (glob("$basedir/*.pm")) {
-  my $dest = "$INC[0]/$modi/".fof($file);
+  my $dest = "$pfix"."$INC[0]/$modi/".fof($file);
   print " > $file --> $dest\n";
   ncp($file, $dest);
   chmod 0444, $dest;
