@@ -38,4 +38,15 @@ unless(!$opth->{mount} && (!$opth->{itunes} || !$opth->{xml})) {
  return ($stat, $itb, $xml, $mp);
 }
 
+
+sub shx2int {
+ my($shx) = @_;
+ my $buff = undef;
+   foreach(split(//,$shx)) {
+    $buff = sprintf("%02X",ord($_)).$buff;
+   }
+  return hex($buff);
+   
+}
+
 1;

@@ -24,7 +24,7 @@ package GNUpod::FileMagic;
 use strict;
 use Unicode::String;
 use MP3::Info qw(:all);
-
+use GNUpod::FooBar;
 
 BEGIN {
  MP3::Info::use_winamp_genres();
@@ -37,6 +37,9 @@ sub wtf_is {
  my($file) = @_;
   if(my $h = __is_mp3($file)) {
    return $h;
+  }
+  elsif(my $h = __is_pcm($file)) {
+   return $h
   }
   elsif(__is_qt($file)) {
    print "--> QT File (AAC) Detected\n";
@@ -52,6 +55,53 @@ sub __is_qt {
  return undef;
 }
 
+######################################################################
+# Check if the file is an PCM (WAVE) File
+sub __is_pcm {
+ my($file) = @_;
+
+  open(PCM, "$file") or return undef;
+   #Get the group id and riff type
+   my ($gid, $rty);
+   seek(PCM, 0, 0);
+   read(PCM, $gid, 4);
+   seek(PCM, 8, 0);
+   read(PCM, $rty, 4);
+   
+   return undef unless($gid eq "RIFF" && $rty eq "WAVE");
+
+   my ($bs) = undef;
+   seek(PCM, 24,0);
+   read(PCM, $bs, 4);
+   my $srate = GNUpod::FooBar::shx2int($bs);
+   seek(PCM, 28,0); #srate .. bps ist auf 28
+   read(PCM, $bs, 4);
+   my $bps = GNUpod::FooBar::shx2int($bs);
+   my $size = -s $file;
+
+
+  #Check if something went wrong..
+   if($bps < 1 || $srate < 1) {
+    warn "FileMagic.pm: Looks like '$file' is a crazy pcm-file: bps: *$bps* // srate: *$srate* -> skipping!!\n";
+    return undef;
+   }
+   
+  my %rh = ();
+  $rh{bitrate}  = $bps;
+  $rh{filesize} = $size;
+  $rh{srate}    = $srate;
+  $rh{time}     = int(1000*$size/$bps);
+  $rh{fdesc}    = "RIFF Audio File";
+ 
+  #This maybe wrong.. but maybe it's okay sometimes ;)
+  $rh{title}    = getutf8(((split(/\//, $file))[-1]) || "Unknown Title");
+  $rh{album} =    getutf8(((split(/\//, $file))[-2]) || "Unknown Album");
+  $rh{artist} =   getutf8(((split(/\//, $file))[-3]) || "Unknown Artist");
+
+return \%rh;
+}
+
+######################################################################
 # Read mp3 tags, return undef if file is not an mp3
 sub __is_mp3 {
  my($file) = @_;
@@ -69,6 +119,7 @@ sub __is_mp3 {
 
  $rh{bitrate} = $h->{BITRATE};
  $rh{filesize} = $h->{SIZE};
+ $rh{srate}    = int($h->{FREQUENCY}*1000);
  $rh{time}     = int($h->{SECS}*1000);
  $rh{fdesc}    = "MPEG ${$h}{VERSION} layer ${$h}{LAYER} file";
  my $h = MP3::Info::get_mp3tag($file,1);  #Get the IDv1 tag

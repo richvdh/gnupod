@@ -1,14 +1,26 @@
 GNUpod 0.93 - codename 'Shorthorn'
 
+Summary:
+--------
+- Reading MusicMatch files should work (again)
+- gnupod_addsong.pl can add WAVE files
+- Parsing large iTunesDB files should be faster
+  (-> we skip the MainPlayList)
+
+
+Details:
+--------
 iTunesDB.pm and co:
  * Can read and write Playlist-Elements without child
    tunes2pod.pl couldn't read files written by
    (newer) MusicMatch releases.. this should fix the issue :)
  * Don't parse MasterPlaylists, do a seek()
    -> Speeds up parsing
+ * Read and Write SamplingRate (Helps audible.com files?)
 
 FileMagic.pm
  * Fixed (Again?) ID3 reading (Charset handling still broken?!)
+ * Read SamplingRate for MP3 Files
 
 
 

@@ -25,6 +25,7 @@
 package GNUpod::iTunesDB;
 use strict;
 use Unicode::String;
+use GNUpod::FooBar;
 
 use vars qw(%mhod_id @mhod_array);
 
@@ -116,7 +117,8 @@ my $ret = "mhit";
    $ret .= pack("h8", _itop($file_hash{songs}));             #songs on this CD
    $ret .= pack("h8", _itop($file_hash{year}));              #the year
    $ret .= pack("h8", _itop($file_hash{bitrate}));           #bitrate
-   $ret .= pack("H8", "000044AC");                          #Srate*something ?!?
+   $ret .= pack("H4", "00");                                #??
+   $ret .= pack("h4", _itop($file_hash{srate} || 44100));    #Srate (note: h4!)
    $ret .= pack("h8", _itop($vol));                         #Volume
    $ret .= pack("h8", _itop($file_hash{starttime}));        #Start time?
    $ret .= pack("h8", _itop($file_hash{stoptime}));          #Stop time?
@@ -504,22 +506,15 @@ return $ret
 # Get a INT value
 sub get_int {
 my($start, $anz) = @_;
-
-my($buffer, $xx, $xr) = undef;
+my $buffer = undef;
 # paranoia checks
 $start = int($start);
 $anz = int($anz);
-
 #seek to the given position
 seek(FILE, $start, 0);
 #start reading
 read(FILE, $buffer, $anz);
-   foreach(split(//, $buffer)) {
-    $xx = sprintf("%02X", ord($_));
-   $xr = "$xx$xr";
-  }
-  $xr = oct("0x".$xr);
- return $xr;
+ return GNUpod::FooBar::shx2int($buffer);
 }
 
 
@@ -777,6 +772,7 @@ $ret{songnum}  = get_int($sum+44,4);
 $ret{songs}    = get_int($sum+48,4);
 $ret{year}     = get_int($sum+52,4);
 $ret{bitrate}  = get_int($sum+56,4);
+$ret{srate}    = get_int($sum+62,2); #What is 60-61 ?!!
 $ret{volume}   = get_int($sum+64,4);
 $ret{starttime}= get_int($sum+68,4);
 $ret{stoptime} = get_int($sum+72,4);
