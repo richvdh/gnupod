@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
@@ -61,7 +61,7 @@ sub startup {
 
  usage($stat."\n") if $stat;
 my ($xmldoc) = GNUpod::XMLhelper::parsexml($xml, cleanit=>$opts{restore}) or usage("Failed to parse $xml\n");
-
+my ($qh) = GNUpod::XMLhelper::build_quickhash($xmldoc);
  usage("Could not open $xml , did you run gnupod_INIT.pl ?\n") unless $xmldoc;
 
 
@@ -77,7 +77,12 @@ my ($xmldoc) = GNUpod::XMLhelper::parsexml($xml, cleanit=>$opts{restore}) or usa
    #Get a path
    (${$fh}{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file, keepfile=>$opts{restore});
    #Copy the file
+   if(!$opts{duplicate} && (my $dup = checkdup($qh, $fh))) {
+    print "> $fh->{title} is a duplicate of song $dup, skipping file\n";
+    next;
+   }
    if($opts{restore} || File::Copy::copy($file, $target)) {
+     print "+ $fh->{title}\n";
      GNUpod::XMLhelper::addfile($xmldoc, $fh);
    }
    else { #We failed..
@@ -90,7 +95,17 @@ my ($xmldoc) = GNUpod::XMLhelper::parsexml($xml, cleanit=>$opts{restore}) or usa
  print "\n Done\n";
 }
 
-
+sub checkdup {
+ my($qh, $fh) = @_;
+ foreach my $item (keys(%$qh)) {
+  if($qh->{$item}->{filesize} == $fh->{filesize} &&
+     $qh->{$item}->{bitrate}  == $fh->{bitrate}  &&
+     $qh->{$item}->{time}     == $fh->{time}) {
+    return $item || -1; #This is a duplicate   
+  }
+ }
+ return undef; #no match
+}
 
 ###############################################################
 # Basic help

@@ -22,18 +22,17 @@ package GNUpod::FileMagic;
 #
 # This product is not supported/written/published by Apple!
 
-use MP3::Info qw(:all :utf8);
+use MP3::Info qw(:all);
 #use GNUpod::QTparser;
-
+$^W = undef;
 BEGIN {
  MP3::Info::use_winamp_genres();
- MP3::Info::use_mp3_utf8(TRUE);
 }
 #Try to discover the file format (mp3 or QT (AAC) )
 sub wtf_is {
 
  my($file) = @_;
- print "FooBar: $file\n";
+ print "FileMagic: $file\n";
   if(my $h = __is_mp3($file)) {
    print "--> MP3 detected\n";
    return $h;
@@ -57,51 +56,64 @@ sub __is_qt {
 sub __is_mp3 {
  my($file) = @_;
  
- my $cf = $file;
- $cf =~ tr/a-zA-Z0-9//cd;
- 
- my %rh = ();
  my $h = MP3::Info::get_mp3info($file);
- 
  return undef unless $h; #No mp3
  
-
+#This is our default fallback:
+#If we didn't find a title, we'll use the
+#Filename.. why? because you are not able
+#to play the file without an filename ;)
+ my $cf = ((split(/\//,$file))[-1]);
+ 
+ my %rh = ();
 
  $rh{bitrate} = $h->{BITRATE};
  $rh{filesize} = $h->{SIZE};
  $rh{time}     = int($h->{SECS}*1000);
  $rh{fdesc}    = "MPEG ${$h}{VERSION} layer ${$h}{LAYER} file";
- $h = MP3::Info::get_mp3tag($file);
- $hs = MP3::Info::get_mp3tag($file); #Get the IDv2 tag
+ $h = MP3::Info::get_mp3tag($file, 1);  #Get the IDv1 tag
+ $hs = MP3::Info::get_mp3tag($file, 2); #Get the IDv2 tag
+
+#IDv2 is stronger than IDv1..
+ #Try to parse things like 01/01
+ my @songa = pss($hs->{TRCK} || $h->{TRACKNUM});
+ my @cda   = pss($hs->{TPOS});
  
-  foreach(keys %$h) {
-   printf "%s => %s\n", $_, $h->{$_};
-  }
- print "22222\n";
-  foreach(keys %$hs) {
-   printf "%s => %s\n", $_, $hs->{$_};
-  }
-  
- print STDERR "FIXME: UTF8 sux?\n"; 
- print STDERR "Fixme: We need to split POS/SET in songnum!\n";
-   # $rh{songs}
-     $rh{songnum} =  $hs->{TRCK} || $h->{TRACKNUM} || 0;
-   # $rh{cdnum}
-   # $rh{cds}
-     $rh{year} =     $hs->{TYER} || $h->{YEAR} || 0;
-     $rh{title} =    $hs->{TPE2} || $h->{TITLE} || $cf || "";
-     $rh{album} =    $hs->{TALB} || $h->{ALBUM} || "Unknown Album";
-     $rh{artist} =   $hs->{TPE1} || $h->{ARTIST}  || "Unknown Artist";
-     $rh{genre} =                   $h->{GENRE}   || "";
-     $rh{comment} =  $hs->{COMM} || $h->{COMMENT} || "";
-     $rh{composer} =  $hs->{TCOM} || "";
-     $rh{playcount}=  int($hs->{PCNT}) || 0;
-#foreach(keys %rh) {
-# print "RET: $_ -> ".Unicode::String::utf8($rh{$_})."\n";
-#}
-
-print "Fixme: we need to handle id3v2 better!\n";
-
+     $rh{songs}    =  int($songa[1]);
+     $rh{songnum} =  int($songa[0]);
+     $rh{cdnum}   =  int($cda[0]);
+     $rh{cds}    =   int($cda[1]);
+     $rh{year} =     getutf8($hs->{TYER} || $h->{YEAR} || 0);
+     $rh{title} =    getutf8($hs->{TPE2} || $h->{TITLE} || $cf || "");
+     $rh{album} =    getutf8($hs->{TALB} || $h->{ALBUM} || "Unknown Album");
+     $rh{artist} =   getutf8($hs->{TPE1} || $h->{ARTIST}  || "Unknown Artist");
+     $rh{genre} =    getutf8(               $h->{GENRE}   || "");
+     $rh{comment} =  getutf8($hs->{COMM} || $h->{COMMENT} || "");
+     $rh{composer} = getutf8($hs->{TCOM} || "");
+     $rh{playcount}= int($hs->{PCNT}) || 0;
  return \%rh;
 }
+
+
+########
+# Guess format
+sub pss {
+ my($string) = @_;
+ if(my($s,$n) = $string =~ /(\d+)\/(\d+)/) {
+  return($s,$n);
+ }
+ else {
+  return int($string);
+ }
+}
+
+#Guess charset and try to return valid UTF8 data
+sub getutf8 {
+ my($in) = @_;
+ my $bfx = Unicode::String::utf8($in)->utf8;
+ return $in if $bfx eq $in; #Input was valid utf8 data
+ return Unicode::String::latin1($in)->utf8; #Maybe it was latin1?
+}
+
 1;
+
