@@ -10,8 +10,7 @@ exit 1
 fi
 
 dnl Basic modules
-dnl We need XML::Parser because we force XML::Simple to use it (no XML::SAX)
-ALL_MODULES="XML::Parser XML::Simple Unicode::String"
+ALL_MODULES="XML::Parser Unicode::String"
 
 
 dnl Ugly check for modules

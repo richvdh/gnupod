@@ -3,3 +3,4 @@
 * FileMagic (qt parser)  is just a dummy, but i got a 'working' parser..
   ..should be ready soon.. (0.93?)
 * GNUpod doesn't like playlists with the same name
+* GNUpod doesn't like duplicate id's

@@ -1,4 +1,12 @@
-GNUpod 0.91 (ServicePack 1 ;) )
+GNUpod 0.91 
+
+Much changed from 0.90 to 0.91.
+I removed XML::Simple and use (again)
+XML::Parser (Event based GNUpod..)
+0.91 needs much less memory...
+
+I hope i didn't break anything.. but 
+
 
 gnupod_search.pl:
   * -d doesn't delete all songs anymore.. hups..

@@ -58,8 +58,7 @@ Requirements
    * Perl 5.6 or 5.8
 
    * The Perl modules MP3::Info, File::Copy, Unicode::String,
-     XML::Simple (and XML::Parser, GNUpod doesn't like XML::Sax) and
-     Getopt::Long
+     and XML::Parser
 
    * Basic knowledge of the shell
 

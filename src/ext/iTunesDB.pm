@@ -1,4 +1,4 @@
-# iTunesDB.pm - Version 20030728
+# iTunesDB.pm - Version 20030923
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
@@ -21,57 +21,6 @@
 # iTunes and iPod are trademarks of Apple
 #
 # This product is not supported/written/published by Apple!
-
-## Release 20030824
-
-=head1 NAME
-
-iTunesDB - Read/Write the DB File of an iPod
-
-=head1 SYNOPSIS
-
-   use iTunesDB;
-
-=head1 DESCRIPTION
-
-With this module, you can read and write an iTunesDB.
-Apple uses this Format to store information about
-Songs (Name, Comment, Rating, Bitrate...) and Playlists
-on (eg.) the iPod.
-
-Because Apple doesn't publish any (free) information
-about the format, this module maybe (is) incomplete.
-Some (mostly useless) features are *not* supportet atm.
-
-Reverse-Engineering rocks ;-)
-
-=head1 EXPORTED_SYMBOLS
-
-iTunesDB.pm doesn't export anything.
-
-=head1 READING AN iTunesDB
-
-Reading an iTunesDB is very easy, you'll only
-have to do something like this: (FIXME!!)
-
- use iTunesDB;
- my $xmldoc = iTunesDB::parseitunes($ARGV[0]);
-
-
-You'll get the hashref '$xmldoc'.
-
-You can use XML::Simple::XMLout to
-see the XML-Doc
-(Note: XML::Simple is loaded by
- iTunesDB.pm)
-
- XML::Simple::XMLout($xmldoc,keeprot=>1);
-
-
-..foo
-
-=cut
-
 
 package GNUpod::iTunesDB;
 use strict;
