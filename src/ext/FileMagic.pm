@@ -26,7 +26,6 @@ use Unicode::String;
 use MP3::Info qw(:all);
 use GNUpod::FooBar;
 use GNUpod::QTfile;
-use Audio::FLAC;
 
 BEGIN {
  MP3::Info::use_winamp_genres();
@@ -86,8 +85,21 @@ sub __is_flac {
  #Check if file has a flac header
  return undef if($flacbuff ne "fLaC");
  
- my $flac = Audio::FLAC->new( shift );
- my $ftag = $flac->tags(); 
+ 
+ my $ftag = undef;
+
+ ## This is a UGLY trick to cheat perl!
+ ## 1. Create a string
+ my $nocompile = "use Audio::FLAC; \$ftag = Audio::FLAC->new( \$file )->tags();";
+ eval $nocompile; #2. eval it!
+ ## 3. = no errors without Audio::FLAC! :)
+
+ if ($@ || ref($ftag) ne "HASH") {
+  warn "FileMagic.pm: Could not read FLAC-Metadata from $file\n";
+  warn "FileMagic.pm: Maybe Audio::FLAC is not installed?\n";
+  warn "Error: $@\n";
+  return undef;
+ }
  
  my %rh = ();
  my $cf = ((split(/\//,$file))[-1]);

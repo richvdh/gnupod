@@ -1,4 +1,4 @@
-AC_INIT(GNUpod, 0.95test2, bug-gnupod@nongnu.org)
+AC_INIT(GNUpod, 0.95, bug-gnupod@nongnu.org)
 
 echo $ECHO_N $PACKAGE_VERSION > .gnupod_version
 
@@ -21,8 +21,8 @@ exit 1
 fi
 
 dnl Basic modules
-ALL_MODULES="Digest::MD5 XML::Parser Unicode::String MP3::Info File::Copy Audio::FLAC"
-
+ALL_MODULES="Digest::MD5 XML::Parser Unicode::String MP3::Info File::Copy"
+OPT_MODULES="Audio::FLAC"
 
 dnl Ugly check for modules
 IFS=" "
@@ -41,12 +41,27 @@ do
   echo "# perl -MCPAN -e 'install $i'"
   exit 1
  fi
-
 done
+
+for i in $OPT_MODULES
+do
+
+ echo -n "checking for optional $i..."
+ $PERL -e "use $i" 2> /dev/null
+ if test $? = 0; then
+  echo " ok"
+ else
+  echo " failed!"
+  echo "** $i not found. You can install it using this command:"
+  echo "# perl -MCPAN -e 'install $i'"
+  echo "** ..but GNUpod will also work without $i"
+ fi
+done
+
 
 $PERL -e "use MP3::Info; exit(1) if(\$MP3::Info::VERSION < 1.01); exit(0);"
  if test $? = 0; then
-echo "MP3::Info works okay"
+echo "installed version of MP3::Info looks good"
  else
   echo " ** PLEASE UPGRADE MP3::Info TO VERSION 1.01 OR NEWER ** "
   echo " ** YOU CAN USE GNUPOD WITH YOUR CURRENT VERSION BUT  ** "

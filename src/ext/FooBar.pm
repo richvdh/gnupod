@@ -204,7 +204,6 @@ sub _otg_needs_sync {
 # Check for broken onTheGo data (= GNUtunesDB <-> iTunesDB out of sync)
 sub _otgdata_broken {
  my($rr) = @_;
- warn "** SOMEONE ASKED ABOUT BROKEN OTG DATA.. **\n";
  return (-e $rr->{onthego_invalid});
 }
 
@@ -212,7 +211,6 @@ sub _otgdata_broken {
 # Set otgdata synched
 sub setvalid_otgdata {
  my($rr) = @_;
- warn "** OTG DATA IS NOW VALID **\n";
  return undef unless -e $rr->{onthego_invalid};
  unlink($rr->{onthego_invalid});
 }
@@ -220,7 +218,6 @@ sub setvalid_otgdata {
 # Set otgdata synched
 sub setINvalid_otgdata {
  my($rr) = @_;
- warn "** OTG DATA IS NOW *** IN *** VALID **\n";
  open(OTGINVALID, ">$rr->{onthego_invalid}") or die "Can't write $rr->{onthego_invalid}\n";
   print OTGINVALID undef;
  close(OTGINVALID);
