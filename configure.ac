@@ -1,4 +1,4 @@
-AC_INIT(gnupod, 0.28, bug-gnupod@nongnu.org)
+AC_INIT(gnupod, 0.29-rc1, bug-gnupod@nongnu.org)
 AC_PATH_PROGS(PERL, perl-5.8 perl-5.6 perl)
 SKIP_CONTRIB="no"
 
@@ -47,4 +47,5 @@ AC_SUBST(PERL)
 AC_OUTPUT(Makefile)
 
 echo
+echo "I'm happy :)"
 echo "use 'make install' to install GNUpod"

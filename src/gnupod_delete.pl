@@ -1,8 +1,9 @@
+
 use strict;
 use XML::Parser;
 use Getopt::Mixed qw(nextOption);
-use Unicode::String qw(latin1 utf8) ;
-Unicode::String->stringify_as('utf8');
+use Unicode::String qw(utf8);
+
 
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
@@ -28,7 +29,7 @@ Unicode::String->stringify_as('utf8');
 # This product is not supported/written/published by Apple!
 
 use vars qw($filedata %pldata $trash %paratt %opts %dull_helper @playlist_pos);
-print "gnupod delete 0.7 (C) 2002-2003 Adrian Ulrich\n";
+print "gnupod delete 0.8-rc1 (C) 2002-2003 Adrian Ulrich\n";
 print "Part of the gnupod-tools collection\n";
 print "This tool removes files from your iPod and updates the gnuPod file\n\n";
 
@@ -80,12 +81,18 @@ return 0;
 sub writedb
 {
  open(GPH, "> $opts{m}/iPod_Control/.gnupod/GNUtunesDB") or die "Fatal: failed to write GNUtunesDB: $!\n";
- print GPH "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n<gnuPod>\n<files>\n$filedata</files>\n\n";
+ binmode(GPH);
+
+#Be sure to write UTF8 data
+ $filedata = utf8($filedata);
+ 
+ print GPH "<?xml version=\"1.0\"?>\n<gnuPod>\n<files>\n$filedata</files>\n\n";
  foreach (@playlist_pos)
  {
-  print GPH "<playlist name=\"$_\">\n$pldata{$_}</playlist>\n\n";
+  print GPH utf8("<playlist name=\"$_\">\n$pldata{$_}</playlist>\n\n");
  }
  print GPH "</gnuPod>";
+ close(GPH);
 }
 
 
@@ -102,6 +109,7 @@ sub start_handler
 {
 my($p, @el) = @_;
 my ($parent) = $p->current_element;
+
 
 if($el[0] eq "playlist"){
  die "FATAL ERROR: <playlist> Element found, but no </files> was found!\n -> Correct your GNUtunesDB!\n" if !$dull_helper{files_end_found};
@@ -129,9 +137,7 @@ if($el[0] eq "playlist"){
 #set some parent info for next element
   for(my $j=1;$j<=int(@el)-1;$j+=2)
   {
-      my ($cs) = new Unicode::String(xmlstring($el[$j+1]));
-      $cs = $cs->latin1();
-   $paratt{$el[$j]} = $cs;
+   $paratt{$el[$j]} = $el[$j+1];
   }
 }
 
@@ -151,18 +157,16 @@ sub rm_o_matic
 {
  my(%zipfel, $kill, $ok_line);
  my($type, @el) = @_;
- 
      #get attributes for this element
      for(my $i=1;$i<=int(@el)-1;$i+=2)
      {
-      my($value) = new Unicode::String(xmlstring($el[$i+1]));
-      $value = $value->latin1();
+      my $value = xmlstring($el[$i+1]);
       $zipfel{$el[$i]} = $value;
      }
    
       for(my $j=0;$j<int(@ARGV);$j++)
       {
-       if($ARGV[$j] == $zipfel{id})
+       if(($ARGV[$j] == $zipfel{id}) && defined($zipfel{id}))
         {
 	  $kill = 1; #this ID is on the kill list!
 	  last;

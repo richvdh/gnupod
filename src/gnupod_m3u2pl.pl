@@ -1,7 +1,7 @@
 use strict;
 
 use Getopt::Mixed qw(nextOption);
-         
+use Unicode::String qw(utf8);
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
@@ -52,11 +52,11 @@ sub go
 {
  foreach(@ARGV) {
    my $plname = fileof(xmlstring($_));
-   print STDERR "<playlist name=\"$plname\">\n";
+   print STDERR utf8("<playlist name=\"$plname\">\n");
    print "> $plname\n" if $opts{d};
    if(open(FILE, "$_")) {
     while(my $i = <FILE>) {
-     print STDERR mkfoo($i);
+     print STDERR utf8(mkfoo($i));
     }   
    close(FILE);
    }

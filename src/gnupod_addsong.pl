@@ -4,7 +4,7 @@ use File::Copy;
 use XML::Parser;
 use Getopt::Mixed qw(nextOption);
 use Unicode::String qw(latin1 utf8) ;
-Unicode::String->stringify_as('utf8');
+
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
@@ -30,7 +30,7 @@ Unicode::String->stringify_as('utf8');
 
 use vars qw($out $max_id @duphelper %opts);
 
-print "gnupod addsong 0.7 (C) 2002-2003 Adrian Ulrich\n";
+print "gnupod addsong 0.8-rc1 (C) 2002-2003 Adrian Ulrich\n";
 print "Part of the gnupod-tools collection\n";
 print "This tool copies files to your iPod and updates the GNUtunesDB\n\n";
 
@@ -46,6 +46,9 @@ while(my($goption, $gvalue)=nextOption()) {
  $gvalue = 1 if !$gvalue;
  $opts{substr($goption, 0,1)} = $gvalue;
 }
+#A Rebuild shouldn't check for dups..
+$opts{n} = 1 if $opts{r};
+
 Getopt::Mixed::cleanup();
 &chck_opts;
 &stdtest;
@@ -174,8 +177,17 @@ my($old, $i);
    $old = $old.$i;
   }
   close(GPH);
-  
   $new_content .= "</files>";
+  
+  #We are going to write UTF8 data.. 
+  $new_content = utf8($new_content);
+  
+  #Replace XML header.. maybe other encoding is defined..
+  #This is an ugly hack.. and will be replaced. FIXME
+  $old =~ s/<\?xml[^>]+>/<?xml version="1.0"?>/m;
+  $old = utf8($old);
+  
+  
   $old =~ s/<\/files>/$new_content/m;
   open(GPH, "> $opts{m}/iPod_Control/.gnupod/GNUtunesDB") or die "Could not open gnutunesdb! (W)\nYou got zombies!\n";
    print GPH $old;

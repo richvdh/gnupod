@@ -1,3 +1,19 @@
+gnuPod 0.29-rc1
+- Unicode Support!!
+  Use an UNICODE Texteditor to edit the GNUtunesDB..
+  (Like 'yudit' or the gnome2 texteditor)
+  Your old latin1 GNUtunesDB will get converted to an
+  UTF8 version after running tunes2pod.pl/gnupod_addsong.pl or
+  gnupod_delete.pl
+
+  UTF8 Support isn't testet very well, and gnuPod 0.28 maybe more
+  Stable for you.. but as you can see: somebody is working on it ;)
+- 'Rebuild' mode does now *never* check for duplicates
+- gnupod_delete doesn't kill some playlists if you tried to
+  kill ID 0
+
+
+     *** OLD RELEASES ***
 gnuPod 0.28
 - Rewritten Playlistcode for tunes2pod.pl
 - tunes2pod.pl doesn't kill your empty GNUtunesDB anymore
@@ -7,7 +23,6 @@ gnuPod 0.28
 - mktunes.pl is now *much* faster!!
 - the GNUtunesDB written by gnupod_delete.pl looks
   nicer now :) (id= is now always the first element..)
-     *** OLD RELEASES ***
 
 gnuPod 0.27 codename 'codename'
 - We are now on gnu.org

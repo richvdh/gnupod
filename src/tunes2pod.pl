@@ -1,6 +1,6 @@
 
 use Getopt::Mixed qw(nextOption);
-
+use Unicode::String qw(utf8 utf16 byteswap2);
 
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
@@ -46,7 +46,7 @@ $mhod_id[12] = "composer";
 $ipodmagic = "6d 68 62 64 68 00 00 00";
 
 
-print "tunes2pod 0.7 (C) 2002-2003 Adrian Ulrich\n";
+print "tunes2pod 0.8-rc1 (C) 2002-2003 Adrian Ulrich\n";
 print "Part of the gnupod-tools collection\n";
 print "This tool converts a iTunesDB to a GNUpodDB file\n\n";
 
@@ -99,7 +99,7 @@ my($now, $qq, $c, $mpl, $cont, $plname);
    utime ($now, $now, "$opts{m}/iPod_Control/iTunes/iTunesDB"); #touch the iTunesDB, it has to be older than the gnuPod file
 	    
 # gnutunes header
-print GNUTUNES "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n<gnuPod>\n<files>\n";
+print GNUTUNES "<?xml version=\"1.0\"?>\n<gnuPod>\n<files>\n";
 
 
 $qq = 292; #the HARDCODED start of the first mhit #FIXME .. shouldn't be hardcooded...
@@ -272,7 +272,11 @@ $xl = getshoe($seek+28,4);           #Entrylength
   else {
   #get the TYPE of the DB-Entry
   $foo = getstr($seek+40, $xl); #string of the entry
-  $foo =~ tr/\0//d; #we have many \0.. killem!
+  
+  #$foo is now UTF16 (Swapped), but we need an utf8
+  $foo = byteswap2($foo);
+  $foo = utf16($foo)->utf8;
+
   return ($ml, $mty, $foo);
  }
 }

@@ -27,7 +27,7 @@ use Getopt::Mixed qw(nextOption);
 
 use vars qw(%opts);
 
-print "gnupod INIT 0.6 (C) 2002-2003 Adrian Ulrich\n";
+print "gnupod INIT 0.8-rc1 (C) 2002-2003 Adrian Ulrich\n";
 print "Part of the gnupod-tools collection\n";
 print "This tool creates the default directory-tree for your iPod\n\n";
 
@@ -125,7 +125,7 @@ open(FOO, "> $opts{m}/iPod_Control/iTunes/iTunesDB") or die "\nCould not create 
 close(FOO);
 
 open(FOO, "> $opts{m}/iPod_Control/.gnupod/GNUtunesDB");
-print FOO "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
+print FOO "<?xml version=\"1.0\"?>\n";
 print FOO "<gnuPod>\n<files>\n</files>\n</gnuPod>\n";
 close(FOO);
 print "\ndone!\n";

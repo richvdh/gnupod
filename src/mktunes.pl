@@ -3,10 +3,7 @@ use strict;
 
 use XML::Parser;
 use Getopt::Mixed qw(nextOption);
-use Unicode::String qw(latin1 utf8) ;
-Unicode::String->stringify_as('utf8');
-no utf8; #disable UTF8 (fix for pack()).. i hope this 'fix' works for RH8
-         #maybe we'll support UTF8 in a future release.. but not now.. :/
+use Unicode::String qw(utf8 utf16 byteswap2);
          
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
@@ -44,7 +41,7 @@ $sid = $dull_helper{files};
 
 
 
-print "mktunes.pl 0.7 (C) 2002-2003 Adrian Ulrich\n";
+print "mktunes.pl 0.8-rc1 (C) 2002-2003 Adrian Ulrich\n";
 print "Part of the gnupod-tools collection\n";
 print "This tool updates your iTunesDB with the content of the gnuPodDB\n\n";
 
@@ -552,20 +549,15 @@ return $ret;
 
 
 
-# 'hello' -> 'h\0e\0l\0\l\0o' .. :) ..now with buggy latin1 support :/
-# FIXME: is the iPod using unicode?
-# Does anyone got a unicode ID3 mp3?
+#Convert utf8 (what we got from XML::Parser) to utf16 (ipod)
 sub ipod_string {
-my($xx, $i, $ret);
-($xx) = @_;
+my ($utf8string) = @_;
+#We got utf8 from parser, the iPod likes utf16.., swapped..
 
-#We convert UNICODE to latin1, FIXME
-$xx = new Unicode::String($xx); 
-$xx = $xx->latin1();
-for($i=0;$i<=length($xx)-1;$i++) {
-$ret .= substr($xx, $i, 1)."\0";
- }
-return $ret;
+$utf8string = utf8($utf8string)->utf16;
+$utf8string = byteswap2($utf8string);
+return $utf8string;
+
 }
 
 

@@ -2,7 +2,7 @@ use strict;
 
 use XML::Parser;
 use Getopt::Mixed qw(nextOption);
-         
+
 #  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
