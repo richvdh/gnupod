@@ -34,6 +34,8 @@ sub connect {
   
 
  $rr->{status} = "No mountpoint defined / missing in and out file";
+($rr->{bindir}) = $0 =~ m%^(.+)/%;
+warn "Runtime: $rr->{bindir}\n";
 unless(!$opth->{mount} && (!$opth->{itunes} || !$opth->{xml})) {
   $rr->{itunesdb}   = $opth->{itunes} || $opth->{mount}."/iPod_Control/iTunes/iTunesDB";
   $rr->{etc}        = $opth->{mount}."/iPod_Control/.gnupod";
@@ -57,25 +59,61 @@ unless(!$opth->{mount} && (!$opth->{itunes} || !$opth->{xml})) {
 # Call tunes2pod
 sub do_itbsync {
  my($con) = @_;
- $ENV{IPOD_MOUNTPOINT} = $con->{mountpoint};
- 
- if(system("tunes2pod.pl > /dev/null")) {
-  die "** FATAL **: tunes2pod.pl died!\n
-  You can disable auto-sync (= autorun of tunes2pod.pl)
-  by removing '$con->{etc}/.itunesdb_md5'\n";
- }
- print "> GNUtunesDB sync done!\n";
+
+my $XBIN = "$con->{bindir}/tunes2pod.pl";
+
+if(-x $XBIN) {
+  eval {
+    warn "BEFORE: $ENV{IPOD_MOUNTPOINT}\n";
+    $ENV{IPOD_MOUNTPOINT} = $con->{mountpoint};
+    warn "DEBUGEVAL: Set env to $ENV{IPOD_MOUNTPOINT}\n";
+    if(system("$XBIN > /dev/null")) {
+      die "Unexpected die of $XBIN\n
+      You can disable auto-sanc (=autorun of $XBIN)
+      by removing '$con->{etc}/.itunesdb_md5'\n";
+    }
+  };
+  
+  if($@) {
+   die "$XBIN failed: $@\n";
+  }
+  
+ warn "DEBUGEVAL: After eval: $ENV{IPOD_MOUNTPOINT}\n";
+ print "> GNUtunesDB synced\n";
+}
+else {
+ warn "FooBar.pm: Could not execute $XBIN, autosync SKIPPED!\n";
+}
+
 }
 
 ######################################################################
 # Call gnupod_otgsync.pl
 sub do_otgsync {
  my($con) = @_;
- $ENV{IPOD_MOUNTPOINT} = $con->{mountpoint};
- if(system("gnupod_otgsync.pl --top4secret")) {
-  warn "** UUUPS **: gnupod_otgsync.pl died!\n";
- }
- print "> On-The-Go Playlist synced\n";
+ 
+my $XBIN = "$con->{bindir}/gnupod_otgsync.pl";
+
+if(-x $XBIN) {
+  eval {
+    warn "BEFORE: $ENV{IPOD_MOUNTPOINT}\n";
+     $ENV{IPOD_MOUNTPOINT} = $con->{mountpoint};
+     warn "DEBUGEVAL: Set env to $ENV{IPOD_MOUNTPOINT}\n";
+     
+     if(system("$XBIN --top4secret")) {
+      warn "** UUUPS **: $XBIN died! On-The-Go list lost, sorry!\n";
+     }
+     else {
+      print "> On-The-Go data synced\n";
+     }
+  };
+   warn "DEBUGEVAL: After eval: $ENV{IPOD_MOUNTPOINT}\n";
+}
+else {
+ warn "FooBar.pm: Could not execute $XBIN, autosync SKIPPED!\n";
+} 
+ 
+
 }
 
 

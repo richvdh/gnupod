@@ -869,6 +869,7 @@ sub readPLC {
   my $xin = GNUpod::FooBar::shx2int($buff);
   my $xnum = (($os-108)/16+1);
   $pcrh{$xnum} = ($xin/20) if $xin;
+  warn "debug: $xnum has $xin\n" if $xin;
   $os += 16;
  }
 

@@ -103,7 +103,7 @@ sub newfile {
  my($el) =  @_;
  push(@keeper, int($el->{file}->{id}));
  #Adjust rating
- $el->{file}->{rating} = $ratingref->{int(@keeper)-1};
+ $el->{file}->{rating} = $ratingref->{int(@keeper)-1} if $ratingref;
    GNUpod::XMLhelper::mkfile($el);
 }
 
