@@ -21,6 +21,9 @@ XMLhelper.pm:
   * Added check for playlist duplicates
   * Fixed escape bug for <playlist name=..
 
+FileMagic.pm
+  * Fixed (?) ID3v2 reading
+
 tunes2pod.pl:
   * Added paranoia checks (stricter parsing)
   * Added SPL-Read code (BETA!)

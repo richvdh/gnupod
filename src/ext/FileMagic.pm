@@ -27,6 +27,7 @@ use MP3::Info qw(:all);
 
 BEGIN {
  MP3::Info::use_winamp_genres();
+ MP3::Info::use_mp3_utf8(0);
  open(NULLFH, "> /dev/null") or die "Could not open /dev/null, $!\n";
 }
 #Try to discover the file format (mp3 or QT (AAC) )
@@ -69,10 +70,9 @@ sub __is_mp3 {
  $rh{filesize} = $h->{SIZE};
  $rh{time}     = int($h->{SECS}*1000);
  $rh{fdesc}    = "MPEG ${$h}{VERSION} layer ${$h}{LAYER} file";
- $h = MP3::Info::get_mp3tag($file);  #Get the IDv1 tag
+ $h = MP3::Info::get_mp3tag($file,1);  #Get the IDv1 tag
  $hs = MP3::Info::get_mp3tag($file, 2,1); #Get the IDv2 tag ### BROKEN! FIXME
-
-
+ 
 
 #IDv2 is stronger than IDv1..
  #Try to parse things like 01/01
@@ -107,9 +107,11 @@ sub pss {
  }
 }
 
-
+#########
+# Try to 'auto-guess' charset and return utf8
 sub getutf8 {
  my($in) = @_;
+
  $in =~ s/^(.)//;
  my $encoding = $1;
 
@@ -137,7 +139,6 @@ sub getutf8 {
  }
  return $in;
 }
-
 
 1;
 

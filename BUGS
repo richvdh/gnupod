@@ -3,3 +3,4 @@
 * FileMagic (qt parser)  is just a dummy, but i got a 'working' parser..
   ..should be ready soon.. (0.93?)
 * GNUpod doesn't like duplicate id's
+* Smartplaylist support isn't tested very well

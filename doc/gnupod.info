@@ -24,8 +24,8 @@ File: gnupod.info,  Node: Top,  Next: Requirements,  Up: (dir)
 GNUpod
 ******
 
-   This edition of the `GNUpod Manual', last updated 20. Sep. 2003,
-documents GNUpod Version 0.91
+   This edition of the `GNUpod Manual', last updated 05. Oct. 2003,
+documents GNUpod Version 0.92
 
 * Menu:
 
@@ -57,8 +57,8 @@ Requirements
 
    * Perl 5.6 or 5.8
 
-   * The Perl modules MP3::Info, File::Copy, Unicode::String,
-     and XML::Parser
+   * The Perl modules MP3::Info, File::Copy, Unicode::String, and
+     XML::Parser
 
    * Basic knowledge of the shell
 
@@ -267,7 +267,7 @@ partition map and force the kernel to re-read the new (empty) map
      Partition number (1-4): 1
      First cylinder (1-608, default 1): [just press enter]
      Using default value 1
-     Last cylinder or +size or +sizeM or +sizeK (1-608, default 608): 5S [Look out: 5S .. S as in Ship]
+     Last cylinder or +size or +sizeM or +sizeK (1-608, default 608): +32M [32M is the default for 1.x iPods]
      
      Command (m for help): n
      Command action
@@ -275,7 +275,7 @@ partition map and force the kernel to re-read the new (empty) map
         p primary partition (1-4)
      p
      Partition number (1-4): 2
-     First cylinder (6-608, default 6): 6 [is okay, or even needed.. just press enter]
+     First cylinder (6-608, default 6): 6 [Just use the default value, press ENTER (don't worry if it isn't 6)]
      Using default value 6
      Last cylinder or +size or +sizeM or +sizeK (6-608, default 608): [press ENTER]
      Using default value 608 [If you don't own a 5gb iPod, this value will be different, don't care about it]
@@ -301,8 +301,9 @@ partition map and force the kernel to re-read the new (empty) map
      Calling ioctl() to re-read partition table.
      Syncing disks.
 
-   Puh.. this was hard :) Now we can rewrite the Firmwarebackup we
-created above.
+   Note: The first partition doesn't have to be 32M, it just needs
+enought space to hold the firmware image (6M would be okay for firmware
+130.bin).  Now we can rewrite the Firmwarebackup we created above.
      dd if=backup_firmware of=/dev/sda1
 
    You may ask why we now write the Firmware to sda1 while we read it
@@ -584,10 +585,6 @@ and you would lose any changes you made with iTunes. Running
 `tunes2pod.pl' will write a new GNUtunesDB wich reflects the content of
 the current iTunesDB.
 
-   You don't have to worry about this too much...  GNUpod tells you
-when you need to run `tunes2pod.pl' and will refuse to touch anything
-until you executed it.
-
    You sould avoid the use of 'extended playlist support' if you use
 your iPod with other programs.
 
@@ -676,7 +673,9 @@ File: gnupod.info,  Node: Known bugs and limitations,  Next: Reporting Bugs,  Pr
 Known bugs and limitations
 ==========================
 
-   * No Support for SPL (SmartPlayLists)
+   * Smartplaylist support is incomplete (No liveupdate)
+
+   * You can't add m4a (AAC) files atm
 
 
 File: gnupod.info,  Node: Reporting Bugs,  Prev: Known bugs and limitations,  Up: Problems
@@ -1138,25 +1137,25 @@ permit their use in free software.
 Tag Table:
 Node: Top849
 Node: Requirements1437
-Node: Installing GNUpod2013
-Node: Installation of GNUpod2436
-Node: Using FireWire with GNU/Linux3470
-Node: Convert your Mac iPod6900
-Node: Firmware update11774
-Node: Using GNUpod13546
-Node: Preparation14298
-Node: Add files15021
-Node: Search files15983
-Node: Remove files16463
-Node: Creating playlists16768
-Node: Unplug the iPod17962
-Node: Recovering files18864
-Node: Coexistence19583
-Node: Problems21207
-Node: GNUtunesDB21586
-Node: Get rid of '-m'23087
-Node: Known bugs and limitations23367
-Node: Reporting Bugs23582
-Node: GNU Free Documentation License24022
+Node: Installing GNUpod1947
+Node: Installation of GNUpod2370
+Node: Using FireWire with GNU/Linux3404
+Node: Convert your Mac iPod6835
+Node: Firmware update11864
+Node: Using GNUpod13636
+Node: Preparation14388
+Node: Add files15111
+Node: Search files16073
+Node: Remove files16553
+Node: Creating playlists16858
+Node: Unplug the iPod18052
+Node: Recovering files18954
+Node: Coexistence19673
+Node: Problems21135
+Node: GNUtunesDB21514
+Node: Get rid of '-m'23015
+Node: Known bugs and limitations23295
+Node: Reporting Bugs23566
+Node: GNU Free Documentation License24006
 
 End Tag Table

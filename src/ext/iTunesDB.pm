@@ -30,7 +30,6 @@ use vars qw(%mhod_id @mhod_array);
 
 #mk_mhod() will take care of lc() entries
 %mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, "comment", 8, "composer", 12);# "SPLPREF",50, "SPLDATA",51, "PLTHING", 100) ;
-
  foreach(keys(%mhod_id)) {
   $mhod_array[$mhod_id{$_}] = $_;
  }
@@ -254,18 +253,37 @@ if(ref($hs->{data}) ne "ARRAY") {
 
  my $cr = undef;
  foreach my $chr (@{$hs->{data}}) {
-  my $string = Unicode::String::utf8($chr->{string})->utf16;
-   if(length($string) > 254) {
-    warn "iTunesDB.pm: splstring to long for iTunes, cropping\n";
-    $string = substr($string,0,254);
-   }
-  $cr .= pack("H6");
-  $cr .= pack("h2", _itop($chr->{field}));
-  $cr .= pack("H6", reverse("010000"));
-  $cr .= pack("h2", _itop($chr->{action}));
-  $cr .= pack("H94");
-  $cr .= pack("h2", _itop(length($string)));
-  $cr .= $string;
+     my $string = undef;
+     if($chr->{field} =~ /^(2|3|4|8|9|14|18)$/) {
+        $string = Unicode::String::utf8($chr->{string})->utf16;
+     }
+     else {
+        my ($from, $to) = $chr->{string} =~ /(\d+):?(\d*)/;
+        $to ||=$from;
+        $string  = pack("H8");
+        $string .= pack("H8", _x86itop($from));
+        $string .= pack("H24");
+        $string .= pack("H8", _x86itop(1));
+        $string .= pack("H8");
+        $string .= pack("H8", _x86itop($to));
+        $string .= pack("H24");
+        $string .= pack("H8", _x86itop(1));
+        $string .= pack("H40");
+      #  __hd($string);
+     }
+
+     if(length($string) > 254) { #length field is limited to 0xfe!
+        warn "iTunesDB.pm: splstring to long for iTunes, cropping\n";
+        $string = substr($string,0,254);
+     }
+     
+     $cr .= pack("H6");
+     $cr .= pack("h2", _itop($chr->{field}));
+     $cr .= pack("H6", reverse("010000"));
+     $cr .= pack("h2", _itop($chr->{action}));
+     $cr .= pack("H94");
+     $cr .= pack("h2", _itop(length($string)));
+     $cr .= $string;
  }
 
  my $ret = "mhod";
@@ -412,6 +430,17 @@ my($int) = $in =~ /(\d+)/;
 return scalar(reverse(sprintf("%08X", $int )));
 }
 
+## _INTERNAL ##################################################
+#int to x86 ipodval (spl!!)
+sub _x86itop
+{
+my($in) = @_;
+my($int) = $in =~ /(\d+)/;
+return scalar((sprintf("%08X", $int )));
+}
+
+
+
 
 
 ## _INTERNAL ##################################################
@@ -493,6 +522,31 @@ read(FILE, $buffer, $anz);
  return $xr;
 }
 
+
+###########################################
+# Get a x86INT value
+sub get_x86_int {
+my($start, $anz) = @_;
+
+my($buffer, $xx, $xr) = undef;
+# paranoia checks
+$start = int($start);
+$anz = int($anz);
+
+#seek to the given position
+seek(FILE, $start, 0);
+#start reading
+read(FILE, $buffer, $anz);
+   foreach(split(//, $buffer)) {
+    $xx = sprintf("%02X", ord($_));
+   $xr .= $xx;
+  }
+  $xr = oct("0x".$xr);
+ return $xr;
+}
+
+
+
 ####################################################
 # Get all SPL items
 sub read_spldata {
@@ -505,29 +559,21 @@ my @ret = ();
   my $field = get_int($diff+3, 1);
   my $action= get_int($diff+7, 1);
   my $slen  = get_int($diff+55,1); #Whoa! This is true: string is limited to 0xfe (254) chars!! (iTunes4)
-  my $string= get_string($diff+56, $slen);
-  #This sucks! no byteswap here..
-  #Is this an iTunes bug?!
-  $string = Unicode::String::utf16($string)->utf8;
-=head
-  my @xr = ();
-  $xr[2] = "SongName";
-  $xr[4] = "Artist";
-  $xr[7] = "Year";
-  $xr[8] = "Genre";
-  $xr[9] = "Kind";
-  $xr[14] = "Comment";
-  $xr[18] = "Composer";
- 
-  my @xm = ();
-  $xm[1] = "IS";
-  $xm[2] = "CONTAINS";
-  $xm[4] = "STARTS_WITH";
-  $xm[8] = "ENDS_WITH";
-  $xm[16] = "GTHAN";
-=cut
+  my $rs    = undef; #ReturnSting
+   if($field =~ /^(2|3|4|8|9|14|18)$/) { #Is a string type
+    my $string= get_string($diff+56, $slen);
+    #No byteswap here?? why???
+    $rs = Unicode::String::utf16($string)->utf8;
+   }
+   else { #Is INT (Or range)
+#    print "*** $field is a int val with  ($slen?)\n";
+#    __hd(get_string($diff+56, $slen));
+    my $xfint = get_x86_int($diff+56+4,4);
+    my $xtint = get_x86_int($diff+56+28,4);
+    $rs = "$xfint:$xtint";
+   }
   $diff += $slen+56;
-  push(@ret, {field=>$field,action=>$action,string=>$string});
+  push(@ret, {field=>$field,action=>$action,string=>$rs});
  }
  return \@ret;
 }

@@ -607,10 +607,6 @@ iTunesDB directly. After you did something with eg. iTunes, the GNUtunesDB would
 lose any changes you made with iTunes. Running @code{@w{tunes2pod.pl}} will write a new GNUtunesDB wich
 reflects the content of the current iTunesDB.
 
-You don't have to worry about this too much...
-GNUpod tells you when you need to run @code{@w{tunes2pod.pl}} and will refuse to 
-touch anything until you executed it.
-
 
 You sould avoid the use of 'extended playlist support' if you use your iPod with other programs.
 
@@ -694,7 +690,8 @@ export IPOD_MOUNTPOINT="/mnt/ipod"
 @section Known bugs and limitations
 
 @itemize @bullet
-@item No Support for SPL (SmartPlayLists)
+@item Smartplaylist support is incomplete (No liveupdate)
+@item You can't add m4a (AAC) files atm
 @end itemize
 
 

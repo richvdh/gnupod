@@ -40,7 +40,7 @@ A: GNUpod will never (?) have a GUI,
 
 
 Q: What about 'SmartPlaylists' ?
-A: I'm working on support for SPL's,
+A: See 'README.smartplaylists'
    but GNUpod has a much more powerful
    Feature: 'regex' and 'iregex' playlists.
    Read the docs :)

@@ -11,7 +11,7 @@ fields set, but GNUpod doesn't add any songs to this
 SPL (iTunes will do it if you set 'liveupdate="1"')
 
 If you convert an iTunesDB written by iTunes4 with
-SPL's, you won't loose the songs in the SPL:
+SPL's, you'll not  loose the songs in the SPL:
 GNUpod set's '<splcont id=..' to keep the IDs.
 
 
@@ -22,10 +22,30 @@ liveupdate
 
 Example of a smartplaylist:
 
-<smartplaylist name="Example" limititem="05" checkrule="2" moselected="1" limitval="1" matchany="1" liveupdate="0" limitsort="2">
+*****************************************************************
+*NOTE: This may change.. spl support is still 'beta             *
+*Don't create spl's yourself (wouldn't make sense, because      *
+*liveupdate doesn't work..) only let tunes2pod.pl create them :)*
+*****************************************************************
+
+<smartplaylist name="Example" limititem="5" checkrule="2" moselected="1" limitval="1" matchany="1" liveupdate="0" limitsort="2">
  <spl action="1" field="4" string="TestoStado" />
  <spl action="1" field="4" string="Foo" />
 </smartplaylist>
+
+Fields:
+ <smartplaylist..
+
+name           : Playlist name
+limititem      : Limit has to match this item
+limitval       : Limit to VALUE 'limititem' sort by 'limitsort'
+limitsort      : Sort by
+checkrule      : 1=only match 'limit'
+                 2=only match '<spl' items
+                 3=match both
+matchany       : Match any '<spl' field
+moselected     : Match only marked songs (?)
+liveupdate     : Do a liveupdate
 
 
 Key/Val list: INCOMPLETE

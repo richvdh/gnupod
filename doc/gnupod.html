@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
-<!-- Created on September, 21  2003 by texi2html 1.65 -->
+<!-- Created on October, 5  2003 by texi2html 1.65 -->
 <!-- 
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -67,8 +67,8 @@ Adrian Ulrich
 </TR></TABLE>
 <H1> 1. GNUpod </H1>
 <!--docid::SEC1::-->
-This edition of the <CITE>GNUpod Manual</CITE>, last updated 20. Sep. 2003,
-documents GNUpod Version 0.91
+This edition of the <CITE>GNUpod Manual</CITE>, last updated 05. Oct. 2003,
+documents GNUpod Version 0.92
 <P>
 
 <BLOCKQUOTE><TABLE BORDER=0 CELLSPACING=0> 
@@ -118,7 +118,7 @@ To use GNUpod, the follwing is needed:
 <LI>Firewire card that is supported by the Operating System
 <LI>Write support for HFS+ or FAT32
 <LI>Perl 5.6 or 5.8
-<LI>The Perl modules MP3::Info, File::Copy, Unicode::String and XML::Parser
+<LI>The Perl modules MP3::Info, File::Copy, Unicode::String, and XML::Parser
 <LI>Basic knowledge of the shell
 </UL>
 <P>
@@ -392,7 +392,7 @@ p we want primary
 Partition number (1-4): 1
 First cylinder (1-608, default 1): [just press enter]
 Using default value 1
-Last cylinder or +size or +sizeM or +sizeK (1-608, default 608): 5S [Look out: 5S .. S as in Ship]
+Last cylinder or +size or +sizeM or +sizeK (1-608, default 608): +32M [32M is the default for 1.x iPods]
 
 Command (m for help): n
 Command action
@@ -400,7 +400,7 @@ Command action
    p primary partition (1-4)
 p
 Partition number (1-4): 2
-First cylinder (6-608, default 6): 6 [is okay, or even needed.. just press enter]
+First cylinder (6-608, default 6): 6 [Just use the default value, press ENTER (don't worry if it isn't 6)]
 Using default value 6
 Last cylinder or +size or +sizeM or +sizeK (6-608, default 608): [press ENTER]
 Using default value 608 [If you don't own a 5gb iPod, this value will be different, don't care about it]
@@ -427,7 +427,8 @@ Calling ioctl() to re-read partition table.
 Syncing disks.
 </pre></td></tr></table></P><P>
 
-Puh.. this was hard :)
+Note: The first partition doesn't have to be 32M, it just needs enought space to hold the firmware 
+image (6M would be okay for firmware 130.bin).
 Now we can rewrite the Firmwarebackup we created above.
 <TABLE><tr><td>&nbsp;</td><td class=example><pre>dd if=backup_firmware of=/dev/sda1
 </pre></td></tr></table></P><P>
@@ -860,11 +861,6 @@ lose any changes you made with iTunes. Running <CODE>tunes2pod.pl</CODE> will wr
 reflects the content of the current iTunesDB.
 </P><P>
 
-You don't have to worry about this too much...
-GNUpod tells you when you need to run <CODE>tunes2pod.pl</CODE> and will refuse to 
-touch anything until you executed it.
-</P><P>
-
 You sould avoid the use of 'extended playlist support' if you use your iPod with other programs.
 </P><P>
 
@@ -1010,7 +1006,8 @@ You don't have to use the '-m' switch if you set IPOD_MOUNTPOINT.
 <P>
 
 <UL>
-<LI>No Support for SPL (SmartPlayLists)
+<LI>Smartplaylist support is incomplete (No liveupdate)
+<LI>You can't add m4a (AAC) files atm
 </UL>
 <P>
 
@@ -1881,7 +1878,7 @@ the following structure:
 <BR>  
 <FONT SIZE="-1">
 This document was generated
-by <I>Adrian Ulrich</I> on <I>September, 21  2003</I>
+by <I>Adrian Ulrich</I> on <I>October, 5  2003</I>
 using <A HREF="http://www.mathematik.uni-kl.de/~obachman/Texi2html
 "><I>texi2html</I></A>
 </FONT>
