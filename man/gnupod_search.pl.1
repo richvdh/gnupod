@@ -1,6 +1,6 @@
-.TH GNUPOD_SEARCH "1" "July 2004" "gnupod_search.pl 0.96" "User Commands"
+.TH GNUPOD_SEARCH "1" "July 2004" "gnupod_search.pl 0.97" "User Commands"
 .SH NAME
-gnupod_search.pl \- manual page for gnupod_search.pl 0.96
+gnupod_search.pl \- manual page for gnupod_search.pl 0.97
 .SH SYNOPSIS
 .B gnupod_search.pl
 [\fIOPTION\fR]...
@@ -43,6 +43,14 @@ Modify output, default is 'ialt'
 t = title    a = artist   r = rating      p = path
 
 l = album    g = genre    c = playcount   i = id
+.TP
+\fB\-\-rename="KEY=VALUE"\fR
+Rename KEY into VALUE for matched songs.
+
+Example: Rename the Artist 'Jon Doe' into 'Jo\fBh\fRn Doe'
+
+gnupod_search.pl --artist="Jon Doe" --rename="artist=John Doe"
+
 .SH AUTHOR
 Written by Adrian Ulrich
 .SH "REPORTING BUGS"
