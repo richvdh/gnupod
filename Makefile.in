@@ -10,4 +10,6 @@ perlbinary   = @PERL@
 all:
 	# Use 'make install' to install GNUpod
 install:
-	${perlbinary} tools/gnupod_install.pl "${perlbinary}" "${bindir}" "${infodir}" "${mandir}"
+	${perlbinary} tools/gnupod_install.pl INSTALL "${perlbinary}" "${bindir}" "${infodir}" "${mandir}"
+uninstall:
+	${perlbinary} tools/gnupod_install.pl REMOVE  "${perlbinary}" "${bindir}" "${infodir}" "${mandir}"

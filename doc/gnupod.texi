@@ -349,7 +349,8 @@ rmmod sbp2
 
 Unplug the iPod and pray. If everything went well, the iPod boots up :).
 If not, reread this section, if you are lost, feel free to drop me a mail: bug-gnupod@@nongnu.org
-
+(Btw: If you can't get the iPod into diskmode again, try this: Reboot the iPod by pressing
+ 'MENU+PLAY' ~ 5 seconds. While the iPod is booting, press (and hold) |<<+>>| (=Forced Diskmode))
 
 It's a good idea to edit @code{@w{/etc/fstab}} and add a line for the iPod:
 @example

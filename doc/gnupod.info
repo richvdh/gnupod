@@ -322,7 +322,10 @@ like. After mkfs.vfat is done, we remove sbp2:
 
    Unplug the iPod and pray. If everything went well, the iPod boots up
 :).  If not, reread this section, if you are lost, feel free to drop me
-a mail: bug-gnupod@nongnu.org
+a mail: bug-gnupod@nongnu.org (Btw: If you can't get the iPod into
+diskmode again, try this: Reboot the iPod by pressing  'MENU+PLAY' ~ 5
+seconds. While the iPod is booting, press (and hold) |<<+>>| (=Forced
+Diskmode))
 
    It's a good idea to edit `/etc/fstab' and add a line for the iPod:
      /dev/sda2    /mnt/ipod    vfat    noauto,user  0 0
@@ -1183,22 +1186,22 @@ Node: Installing GNUpod1964
 Node: Installation of GNUpod2387
 Node: Using FireWire with GNU/Linux3500
 Node: Convert your Mac iPod6909
-Node: Firmware update11984
-Node: Using GNUpod13757
-Node: Preparation14580
-Node: Configuration15307
-Node: Add files15760
-Node: Search files16880
-Node: Remove files17361
-Node: Creating playlists17666
-Node: Unplug the iPod19505
-Node: Recovering files20409
-Node: Coexistence21299
-Node: Problems22762
-Node: GNUtunesDB23141
-Node: Get rid of '-m'24642
-Node: Known bugs and limitations24922
-Node: Reporting Bugs25205
-Node: GNU Free Documentation License25648
+Node: Firmware update12173
+Node: Using GNUpod13946
+Node: Preparation14769
+Node: Configuration15496
+Node: Add files15949
+Node: Search files17069
+Node: Remove files17550
+Node: Creating playlists17855
+Node: Unplug the iPod19694
+Node: Recovering files20598
+Node: Coexistence21488
+Node: Problems22951
+Node: GNUtunesDB23330
+Node: Get rid of '-m'24831
+Node: Known bugs and limitations25111
+Node: Reporting Bugs25394
+Node: GNU Free Documentation License25837
 
 End Tag Table

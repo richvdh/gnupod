@@ -8,38 +8,59 @@
 use strict; #of course :)
 
 my %opts = ();
-$opts{perlbin}      = $ARGV[0];
-$opts{bindir}       = $ARGV[1];
-$opts{infodir}      = $ARGV[2];
-$opts{mandir}       = $ARGV[3];
+$opts{MODE}         = $ARGV[0];
+$opts{perlbin}      = $ARGV[1];
+$opts{bindir}       = $ARGV[2];
+$opts{infodir}      = $ARGV[3];
+$opts{mandir}       = $ARGV[4];
 
-die "Expected 4 arguments, got ".int(@ARGV)."\n make will run me, not you! stupid human!" if !$opts{mandir} || $ARGV[5];
+die "Expected 5 arguments, got ".int(@ARGV)."\n make will run me, not you! stupid human!" if !$opts{mandir} || $ARGV[5];
+die "Strange Perl installation, no \@INC! Can't install Perl-Module(s), killing myself..\n" if !$INC[0];
 
-#ok, we are still alive, let's blow up the system ;)
-print "Installing GNUpod-base using gnupod_install 0.23\n";
-
-install_scripts("src/*.pl", $opts{bindir}, $opts{perlbin});
-install_pm("src/ext", "GNUpod", $opts{perlbin});
-install_docs("doc/gnupod.info", $opts{infodir});
-killold("$opts{bindir}/gnupod_delete.pl");
-print "done!\n";
-
-
-
-
-sub killold {
- my($file) = @_;
- if(-x "$file") {
-  print "Unlinking $file (obsolente)\n";
-  unlink("$file") or warn "ERROR: Deleting $file failed: $!\n";
- }
+if($opts{MODE} eq "INSTALL") {
+ #ok, we are still alive, let's blow up the system ;)
+ print "Installing GNUpod-base using gnupod_install 0.24\n";
+ install_scripts("src/*.pl", $opts{bindir}, $opts{perlbin});
+ install_pm("src/ext", "GNUpod", $opts{perlbin});
+ install_docs("doc/gnupod.info", $opts{infodir});
+ killold("$opts{bindir}/gnupod_delete.pl") if -e "$opts{bindir}/gnupod_delete.pl";
+ print "done!\n";
+}
+elsif($opts{MODE} eq "REMOVE") {
+ remove_scripts("src/*.pl", $opts{bindir});
+ remove_pm("src/ext/*.pm", "GNUpod");
+ remove_docs("gnupod", $opts{infodir});
+}
+else {
+ die "Unknown mode: $opts{MODE}\n";
 }
 
 
+
+##########################
+# Unlink files
+sub killold {
+ my($file) = @_;
+ if(-e "$file") {
+#  print "Unlinking $file\n";
+   if(unlink("$file")) {
+    print " done\n";
+   }
+   else {
+    print " Could not remofe $file, $!\n";
+   }
+ }
+ else {
+  print " file $file did not exist\n";
+ }
+}
+
+##########################
+#Install Docs
 sub install_docs {
 my($file, $infodir) = @_;
 print "Installing documentation\n";
-if(system("install-info --info-dir=$infodir $file")) {
+if(system("install-info" ,"--info-dir=$infodir", $file)) {
  print "** install-info failed, documentation *NOT* installed\n";
  print "** See 'doc/gnupod.html' for an HTML version...\n";
 }
@@ -50,6 +71,49 @@ else {
 }
 
 }
+
+##########################
+#Uninstall docs
+sub remove_docs {
+ my($file, $infodir) = @_;
+ print "Removing $file from $infodir\n";
+ if(system("install-info", "--dir-file=$infodir/dir", "--delete",$file)) {
+  print " > Could not remove documentation, maybe you didn't install the docs ;)\n";
+ }
+ else {
+  print " > Removing stale infofile ";
+  killold($infodir."/".$file.".info");
+  print " > Documentation removed\n"; 
+  
+ }
+}
+
+##########################
+#Uninstall scripts
+sub remove_scripts {
+ my($globme, $bindir) = @_;
+ print "Removing GNUpod, please wait...\n";
+ print " > Removing Scripts...\n";
+ foreach (glob($globme)) {
+  my $rmme = $bindir."/".fof($_);
+  print "   -> Removing $rmme  ";
+   killold($rmme);
+ }
+}
+
+##########################
+#Uninstall Modules
+sub remove_pm {
+ my($globme, $modi) = @_;
+ print " > Removing Modules at $INC[0]/$modi\n";
+ foreach (glob($globme)) {
+  my $rmme = $INC[0]."/$modi/".fof($_);
+  print "   -> Removing $rmme  ";
+   killold($rmme);
+ }
+ rmdir($INC[0]."/$modi") or print "Could not remove $INC[0]/$modi: $!\n";
+}
+
 
 
 # native (or naive? ;) ) copy
@@ -68,7 +132,6 @@ return undef;
 
 sub install_pm {
 my($basedir, $modi, $perlbin) = @_;
-die "Strange Perl installation, no \@INC! Can't install Perl-Module(s), killing myself..\n" if !$INC[0];
 
 mkdir("$INC[0]/$modi", 0755);
 print "Installing Modules at $INC[0]/$modi\n";
