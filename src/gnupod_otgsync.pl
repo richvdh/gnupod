@@ -103,14 +103,20 @@ my(@xotg) = @_;
 # Eventhandler for FILE items
 sub newfile {
  my($el) =  @_;
+ 
+ #This has to be 'in-sync' with the mktunes.pl method
+ # (GNUtunesDB_id <-> iTunesDB_id)
+ # in mktunes.pl, every <file.. will create a new
+ # id, like here :)
  push(@keeper, int($el->{file}->{id}));
  
  if($plcref) { #PlayCountref exists (=v2 ipod) -> adjust
   #Adjust rating
   $el->{file}->{rating}    = $plcref->{rating}{int(@keeper)-1};
   $el->{file}->{playcount} += $plcref->{playcount}{int(@keeper)-1};
-  print "PC: $el->{file}->{playcount}\n" if $el->{file}->{playcount};
+  print "$el->{file}->{id} > INC:".$plcref->{playcount}{int(@keeper)-1}."\n" if $plcref->{playcount}{int(@keeper)-1};
  }
+ #Add content
    GNUpod::XMLhelper::mkfile($el);
 }
 
@@ -118,12 +124,13 @@ sub newfile {
 # Eventhandler for PLAYLIST items
 sub newpl {
  my($el,$name,$plt) = @_;
+ #Add playlist to output
   GNUpod::XMLhelper::mkfile($el,{$plt."name"=>$name});
 }
 
 ############################################
 # Die with status
 sub usage {
- die "$_[0]";
+ die "died: $_[0]\n";
 }
 

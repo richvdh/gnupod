@@ -96,9 +96,11 @@ foreach( ("rating", "prerating") ) {
 
 #Check for stupid input
 my ($c_id) = $file_hash{id} =~ /(\d+)/;
+
 if($c_id < 1) {
-  print STDERR "Warning: ID has can't be $c_id, has to be > 0\n";
-  print STDERR "         This song *won't* be visible on the iPod\n";
+  print STDERR "Warning: ID can't be '$c_id', has to be > 0\n";
+  print STDERR "  ---->  This song *won't* be visible on the iPod\n";
+  print STDERR "  ---->  This may confuse other scripts...\n";
 }
 
 my $ret = "mhit";

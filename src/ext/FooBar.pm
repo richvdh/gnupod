@@ -192,6 +192,7 @@ sub setsync {
 ######################################################################
 # SetSync for onthego
 sub setsync_otg {
+my($rr) = @_;
 warn "**** otg setsync call $$\n";
 
  if(unlink($rr->{onthego})) {

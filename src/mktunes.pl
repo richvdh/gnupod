@@ -212,7 +212,6 @@ sub newfile {
   $cmeat{$_}{lc($el->{file}->{$_})} .= $cid." ";
  }
  
-# print "Building $el->{file}->{id} with iTunesID $cid\n";
  
  $itb{mhit}{_len_} += build_mhit($cid, $el->{file}); 
 }
