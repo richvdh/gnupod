@@ -1,0 +1,73 @@
+.TH GNUPOD_ADDSONG "1" "June 2004" "gnupod_addsong.pl 0.95" "User Commands"
+.SH NAME
+gnupod_addsong.pl \- manual page for gnupod_addsong.pl 0.95
+.SH SYNOPSIS
+.B gnupod_addsong.pl
+[\fIOPTION\fR]...
+.SH DESCRIPTION
+Upload Music to the iPod.
+This Version can read MP3 AAC/ALAC (no DRM) and PCM (aka .wav) files.
+It can even read FLAC files if Audio::FLAC is aviable and 
+the \-\-decode switch was used. (Note: The iPod can't play FLAC files, in this case, 
+gnupod_addsong.pl converts the FLAC files 'on-the-fly' using 'flac')
+.TP
+\fB\-\-help\fR
+display this help and exit
+.TP
+\fB\-\-version\fR
+output version information and exit
+.TP
+\fB\-m\fR, \fB\-\-mount=DIRECTORY\fR
+iPod mountpoint. Default is $IPOD_MOUNTPOINT
+.TP
+\fB\-r\fR, \fB\-\-restore\fR
+Restore the iPod. Use this if your iPod is messed up. You will lose all playlists
+.TP
+\fB\-d\fR, \fB\-\-duplicate\fR
+Allow duplicate files. Per default, gnupod_addsong.pl checks for duplicate files. 
+Use this switch to disable the check.
+.TP
+\fB\-\-disable\-v1\fR
+Do not read ID3v1 Tags
+.TP
+\fB\-\-disable\-v2\fR
+Do not read ID3v2 Tags
+.TP
+\fB\-\-decode\fR
+Convert FLAC files to WAVE 'onthefly' (You will need Audio::FLAC and 'flac')
+.TP
+\fB\-\-set\-artist=STRING\fR
+Force Artist
+.TP
+\fB\-\-set\-album=STRING\fR
+Force Album
+.TP
+\fB\-\-set\-genre=STRING\fR
+Force Genre
+.TP
+\fB\-\-set\-rating=INT\fR
+Force Rating: 0 = 0 starts / 20 = 1 star / 40 = 2 stars / 60 = 3 stars / 80 = 4 stars / 100 = 5 stars
+.TP
+\fB\-\-set\-playcount=INT\fR
+Force Playcount
+.SH AUTHOR
+Written by Adrian Ulrich
+.SH "REPORTING BUGS"
+Report bugs to <bug-gnupod@nongnu.org>
+.SH COPYRIGHT
+Copyright \(co Adrian Ulrich
+.br
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+The full documentation for
+.B gnupod
+is maintained as a Texinfo manual.  If the
+.B info program
+and
+.B GNUpod
+are properly installed at your site, the command
+.IP
+.B info gnupod
+.PP
+should give you access to the complete manual.
