@@ -107,7 +107,10 @@ sub mkfile {
   }
 
   if($magic->{plname}) {
-   push(@{$XDAT->{playlists}->{$magic->{plname}}}, $r);
+   push(@{$XDAT->{playlists}->{data}->{$magic->{plname}}}, $r);
+  }
+  elsif($magic->{splname}) {
+   push(@{$XDAT->{spls}->{data}->{$magic->{splname}}}, $r);
   }
   else {
    push(@{$XDAT->{files}}, $r);
@@ -117,8 +120,23 @@ sub mkfile {
 ##############################################################
 # Add a playlist to output
 sub addpl {
+#Check done by eventer
+#die "Playlist has no name, fix your XML-Doc\n" unless $_[0];
  push(@plorder, $_[0]);
 }
+
+##############################################################
+# Add a SmartPlaylist to output
+sub addspl {
+ my($name, $opt) = @_;
+
+#Check done by eventer..
+#die "Smart-Playlist has no name, fix your XML-Doc\n" unless $name;
+ push(@plorder, $name);
+ $opt->{name} = $name;
+ $XDAT->{spls}->{pref}->{$name} = $opt;
+}
+
 
 ##############################################################
 #Get all playlists
@@ -144,11 +162,19 @@ sub eventer {
   }
   elsif($href->{Context}[1] eq "playlist") {
    die "Fatal XML Error: playlist without name found!\n" if $cpn eq "";
-   #mkfile(mkh($el, @it), $cpn);
-   main::newpl(mkh($el, @it), $cpn);
+   main::newpl(mkh($el, @it), $cpn, "pl");
+  }
+  elsif($href->{Context}[1] eq "" && $el eq "smartplaylist") {
+    my $xh = mkh($el,@it);
+    $cpn = $xh->{$el}->{name};
+    addspl($cpn,$xh->{$el});
+  }
+  elsif($href->{Context}[1] eq "smartplaylist") {
+   die "Fatal XML Error: smartplaylist without name found!\n" if $cpn eq "";
+   main::newpl(mkh($el, @it), $cpn,"spl");  
   }
   else {
-   #print "?? $href->{Context}[0] // $href->{Context}[1] // $href->{Context}[2] // $el\n";
+   print "?? $href->{Context}[0] // $href->{Context}[1] // $href->{Context}[2] // $el\n";
   }
 }
 
@@ -191,11 +217,25 @@ sub writexml {
  }
 print OUT " </files>\n";
  foreach(@plorder) {
-  print OUT "\n <playlist name=\"$_\">\n";
-   foreach(@{$XDAT->{playlists}->{$_}}) {
-    print OUT "   $_\n";
-   }
-  print OUT " </playlist>\n";
+  #addspl() will create {pref}->{$_}->{name} .. so this 'if' is safe
+  if(my $shr = $XDAT->{spls}->{pref}->{$_}) {
+      print OUT "\n <smartplaylist ";
+         foreach(keys(%$shr)) { print OUT "$_=\"$shr->{$_}\" "; }
+      print OUT ">\n";    
+       ### items
+        foreach my $sahr (@{$XDAT->{spls}->{data}->{$_}}) {
+         print OUT "   $sahr\n";
+        }
+       ###
+      print OUT " </smartplaylist>\n";
+  }
+  else {
+      print OUT "\n <playlist name=\"$_\">\n";
+       foreach(@{$XDAT->{playlists}->{data}->{$_}}) {
+        print OUT "   $_\n";
+       }
+      print OUT " </playlist>\n";
+  }
  }
 print OUT "</gnuPod>\n";
 close(OUT);

@@ -93,22 +93,10 @@ for(my $i=0;$i<$itinfo->{playlists};$i++) {
    exit(1);
   }
   next if $href->{type}; #Don't list the MPL
-  if($href->{splpref} || $href->{spldata}) {
+  
+  if(ref($href->{splpref}) eq "HASH" && ref($href->{spldata}) eq "ARRAY") { #SPL Data present
     print ">> Smart-Playlist '$href->{name}' skipped\n";
-        ########################
-         print "  ]] Prefs dump: ";
-         foreach(keys(%{$href->{splpref}})) {
-          print "$_=\"$href->{splpref}{$_}\" ";
-         }
-         print "\n";
-         foreach my $hrx (@{$href->{spldata}}) {
-          print "  )) RULE: ";
-            foreach(keys(%$hrx)) {
-             print "  $_=\"$hrx->{$_}\" ";
-            }
-            print "\n";
-         }
-        ########################
+    render_spl($href->{name},$href->{splpref}, $href->{spldata}, $href->{matchrule});
   }
   else { #Normal playlist  
     print ">> Playlist '$href->{name}' with ".int(@{$href->{content}})." songs\n";
@@ -135,6 +123,27 @@ exit(0);
 
 
 
+sub render_spl {
+ my($name, $pref, $data, $mr) = @_;
+ 
+ my $of = undef;
+ $of->{liveupdate} = $pref->{live};
+ $of->{moselected} = $pref->{mos};
+ $of->{matchany}   = $mr;
+ 
+
+if($pref->{limitomatic}) {
+   $of->{limitsort} = $pref->{isort};
+   $of->{limitval}  = $pref->{value};
+   $of->{limititem} = $pref->{iitem};
+}
+GNUpod::XMLhelper::addspl($name, $of);
+if($pref->{matchomatic}) { #We have to match
+  foreach my $xr (@{$data}) {
+    GNUpod::XMLhelper::mkfile({spl=>$xr}, {splname=>$name});
+  }
+}
+}
 
 
 

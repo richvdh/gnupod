@@ -91,14 +91,13 @@ my $ntm = keys(%opts)-1-$opts{once}-$opts{delete};
 # Eventhandler for PLAYLIST items
 sub newpl {
  return unless $opts{delete}; #Just searching
- my ($el, $name) = @_;
+ my ($el, $name, $plt) = @_;
  if(ref($el->{add}) eq "HASH") { #Add action
   if(defined($el->{add}->{id}) && int(keys(%{$el->{add}})) == 1) { #Only id
    return unless($keeplist[$el->{add}->{id}]); #ID not on keeplist. dropt it
   }
  }
-
-  GNUpod::XMLhelper::mkfile($el,{plname=>$name});
+  GNUpod::XMLhelper::mkfile($el,{$plt."name"=>$name});
 }
 
 ###############################################################

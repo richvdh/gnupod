@@ -119,7 +119,7 @@ my $fc = 0;
   $cid++; #Whoo! We ReUse the global CID.. first plitem = last file item+1 (or maybe 2 ;) )
   $pl .= GNUpod::iTunesDB::mk_mhip({plid=>$cid, sid=>$_});
   print "MKX $_\n";
-  $pl .= GNUpod::iTunesDB::mk_mhod({fqid=>$_,stype=>"PLTHING"});
+  $pl .= GNUpod::iTunesDB::mk_mhod({fqid=>$_});
   $fc++;
  }
  my $plSize = length($pl);

@@ -430,14 +430,16 @@ read(FILE, $buffer, $anz);
  return $xr;
 }
 
-
-sub DBG_spl {
+####################################################
+# Get all SPL items
+sub read_spldata {
  my($hr) = @_;
  
  #print "Trying to decode a spl wich has $hr->{htm} items\n";
 
-my $diff = $hr->{start}+56;
+my $diff = $hr->{start}+160;
 my @ret = ();
+
  for(1..$hr->{htm}) {
   my $field = get_x86_int($diff, 4);#/16777216;
   my $action= get_x86_int($diff+7, 1);
@@ -446,8 +448,6 @@ my @ret = ();
   #This sucks! no byteswap here.. apple uses x86 endian.. why??
   #Is this an iTunes bug?!
   $string = Unicode::String::utf16($string)->utf8;
- # my $dbg = get_string($diff+56,$slen);
- # hd($dbg);
   my @xr = ();
   $xr[2] = "SongName";
   $xr[4] = "Artist";
@@ -463,38 +463,36 @@ my @ret = ();
   $xm[4] = "STARTS_WITH";
   $xm[8] = "ENDS_WITH";
   $xm[16] = "GTHAN";
- # print "**$field**$action**  --> $xr[$field] /$xm[$action]/ '$string'($slen)\n";
   $diff += $slen+56;
   push(@ret, {field=>$field,action=>$action,string=>$string});
  }
  return \@ret;
 }
 
-sub hd {
-   open(KK,">/tmp/XLZ"); print KK $_[0]; close(KK);
-   system("hexdump -vC /tmp/XLZ");
-}
 
-
-sub DBG_fifty {
+#################################################
+# Read SPLpref data
+sub read_splpref {
  my($hs) = @_;
  my $limit = get_int($hs->{start}+32,4);
- 
  my $live = get_int($hs->{start}+24,1);
  my $chkrgx  = get_int($hs->{start}+25,1);
  my $chklim  = get_int($hs->{start}+26,1);
  my $item = get_int($hs->{start}+27,1);
  my $sort = get_int($hs->{start}+28,1);
  my $mos   = get_int($hs->{start}+36,1);
- my @xit = ("", "min", "artist", "songs", "", "GigaByte");
- my @xso = ("", "", "random", "", "album", "", "", "genre");
- $xso[23] = "rating";
- 
-# print "Live: $live // Check_Regexp $chkrgx // Check Limit $chklim // MatchOS $mos\n";
-# print "> limitval: $limit -> what? $xit[$item]($item) sort by $xso[$sort]($sort)\n";
  return({live=>$live, matchomatic=>$chkrgx, limitomatic=>$chklim,
-         value=>$limit, iitem=>$item, isort=>$sort});
+         value=>$limit, iitem=>$item, isort=>$sort,mos=>$mos});
 }
+
+#################################################
+# Do a hexDump ..
+sub __hd {
+   open(KK,">/tmp/XLZ"); print KK $_[0]; close(KK);
+   system("hexdump -vC /tmp/XLZ");
+}
+
+
 ###########################################
 #get a SINGLE mhod entry:
 # return+seek = new_mhod should be there
@@ -505,10 +503,14 @@ my $id  = get_string($seek, 4);          #are we lost?
 my $ml  = get_int($seek+8, 4);           #Length of this mhod
 my $mty = get_int($seek+12, 4);          #type number
 my $xl  = get_int($seek+28,4);           #String length
+
+## That's spl stuff..
+## Apple is very stupid and mixed some things.. puh.
+my $htm = get_x86_int($seek+32,4); #Only set for 51
+my $anym= get_x86_int($seek+36,4); #Only set for 51
 my $spldata = undef;
 my $splpref = undef;
-my $htm = get_x86_int($seek+32,4);
-my $anym= get_x86_int($seek+36,4);
+
 
 if($id eq "mhod") { #Seek was okay
     my $foo = get_string($seek+($ml-$xl), $xl); #string of the entry            #maybe a 'no conv' flag would be better
@@ -516,16 +518,17 @@ if($id eq "mhod") { #Seek was okay
     $foo = Unicode::String::byteswap2($foo);
     $foo = Unicode::String::utf16($foo)->utf8;
 
+ ##Special handling for SPLs
  if($mty == 51) {
    $foo = undef;
-   $spldata = DBG_spl({start=>$seek+104, htm=>$htm});
+   $spldata = read_spldata({start=>$seek, htm=>$htm});
  }
  elsif($mty == 50) {
   $foo = undef;
-  $splpref = DBG_fifty({start=>$seek, end=>$ml});
+  $splpref = read_splpref({start=>$seek, end=>$ml});
  }
-
- return({size=>$ml,string=>$foo,type=>$mty,spldata=>$spldata,splpref=>$splpref,anymatch=>$anym});
+ 
+ return({size=>$ml,string=>$foo,type=>$mty,spldata=>$spldata,splpref=>$splpref,matchrule=>$anym});
 
 }
 else {
@@ -574,13 +577,14 @@ read(FILE, $buffer, $anz);
 # Get a playlist
 sub get_pl {
  my($pos) = @_;
+
  my %ret_hash = ();
  my @pldata = ();
  
   if(get_string($pos, 4) eq "mhyp") { #Ok, its an mhyp
-   my $pl_type    = get_int($pos+20, 4); #Is it a main playlist?
-   my $scount     = get_int($pos+16, 4); #How many songs should we expect?
-   my $header_len = get_int($pos+4, 4);
+      $ret_hash{type} = get_int($pos+20, 4); #Is it a main playlist?
+   my $scount         = get_int($pos+16, 4); #How many songs should we expect?
+   my $header_len     = get_int($pos+4, 4);  #Size of the header
    
    $pos += $header_len; #set pos to start of first mhod
   
@@ -594,22 +598,19 @@ sub get_pl {
     $pos += $oid;
     my $mhh = get_mhod($pos);
     $oid = $mhh->{size};
-     if($mhh->{type} == 1) {
-       $plname = $mhh->{string};
+
+     if($mhh->{type} == 1) { #We found the PLname
+       $ret_hash{name} = $mhh->{string};
      }
-     elsif($mhh->{type} == 50) {
+     elsif(ref($mhh->{splpref}) eq "HASH") { #50er mhod (splpref)
        $ret_hash{splpref} = \%{$mhh->{splpref}};
      }
-     elsif($mhh->{type} == 51) {
+     elsif(ref($mhh->{spldata}) eq "ARRAY") { #51 mhod (spldata)
        $ret_hash{spldata} = \@{$mhh->{spldata}};
+       $ret_hash{matchrule} = $mhh->{matchrule};
      }
-    #1 = name
-    #100 = style
-    #50  = splpref
-    #51  = spldata
    }
-   $ret_hash{name} = $plname;
-   $ret_hash{type} = $pl_type; 
+    
    #Now get the items
  for(my $i = 0; $i<$scount;$i++) {
     my $mhih = get_mhip($pos);
