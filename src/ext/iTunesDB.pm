@@ -127,11 +127,19 @@ foreach( ("rating", "prerating") ) {
  }
 }
 
+
+#Check for stupid input
+my ($c_id) = $file_hash{id} =~ /(\d+)/;
+if($c_id < 1) {
+  print STDERR "Warning: ID has can't be $c_id, has to be > 0\n";
+  print STDERR "         This song *won't* be visible on the iPod\n";
+}
+
 my $ret = "mhit";
    $ret .= pack("h8", _itop(156));                           #header size
    $ret .= pack("h8", _itop(int($hod_length)+156));           #len of this entry
    $ret .= pack("h8", _itop($hodcount));                     #num of mhods in this mhit
-   $ret .= pack("h8", _itop($file_hash{id}));                 #Song index number
+   $ret .= pack("h8", _itop($c_id));                 #Song index number
    $ret .= pack("h8", _itop(1));                             #?
    $ret .= pack("H8");                                      #dummyspace
    $ret .= pack("h8", _itop(256+(oct('0x14000000')
@@ -347,10 +355,9 @@ return sprintf("%08X", $x);
 #int to ipod
 sub _itop
 {
-my($int) = @_;
-$int =~ /(\d+)/; #Paranoia checking..
-$int = $1;
-return scalar(reverse(sprintf("%08X", $int)));
+my($in) = @_;
+my($int) = $in =~ /(\d+)/;
+return scalar(reverse(sprintf("%08X", $int )));
 }
 
 

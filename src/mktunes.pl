@@ -34,7 +34,8 @@ sub startup {
 my($stat, $itunes, $xml) = GNUpod::FooBar::connect(\%opts);
 
 usage("$stat\n") if $stat;
-($xmldoc) = GNUpod::XMLhelper::parsexml($xml) or usage("Failed to parse $xml\n");
+($xmldoc) = GNUpod::XMLhelper::parsexml($xml);
+ usage("Could not open $xml, did you run gnupod_INIT.pl ?\n") unless $xmldoc;
 
  my $quickhash = GNUpod::XMLhelper::build_quickhash($xmldoc);
 

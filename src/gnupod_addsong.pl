@@ -15,18 +15,37 @@ print "GNU General Public License v2 or later.\n";
 print "-------------------------------------------------------------\n\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
-GetOptions(\%opts, "help|h", "mount|m=s");
+#Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
+GetOptions(\%opts, "help|h", "mount|m=s", "restore|r", "duplicate|d");
 
 usage() if $opts{help};
 
-startup(@ARGV);
 
+
+if($opts{restore}) {
+ print "If you use --restore, you'll *lose* your playlists\n";
+ print " Hit ENTER to continue or CTRL+C to abort\n\n";
+ <STDIN>;
+ $opts{duplicate} = 1; #Don't skip dups on restore
+ startup(glob("$opts{mount}/iPod_Control/Music/F*/*"));
+}
+else {
+ startup(@ARGV);
+}
+
+
+
+####################################################
+# Worker
 sub startup {
  my(@files) = @_;
  my($stat, $itunes, $xml) = GNUpod::FooBar::connect(\%opts);
 
  usage($stat."\n") if $stat;
-my ($xmldoc) = GNUpod::XMLhelper::parsexml($xml) or usage("Failed to parse $xml\n");
+my ($xmldoc) = GNUpod::XMLhelper::parsexml($xml, cleanit=>$opts{restore}) or usage("Failed to parse $xml\n");
+
+ usage("Could not open $xml , did you run gnupod_INIT.pl ?\n") unless $xmldoc;
+
 
 #We are ready to copy each file..
  foreach my $file (@files) {
@@ -38,10 +57,9 @@ my ($xmldoc) = GNUpod::XMLhelper::parsexml($xml) or usage("Failed to parse $xml\
     }
    
    #Get a path
-   (${$fh}{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file);
+   (${$fh}{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file, keepfile=>$opts{restore});
    #Copy the file
-   if(File::Copy::copy($file, $target)) {
-#  if(1) { print "FIXME:: Didn't copy!\n";
+   if($opts{restore} || File::Copy::copy($file, $target)) {
      GNUpod::XMLhelper::addfile($xmldoc, $fh);
    }
    else { #We failed..
@@ -56,7 +74,8 @@ my ($xmldoc) = GNUpod::XMLhelper::parsexml($xml) or usage("Failed to parse $xml\
 
 
 
-
+###############################################################
+# Basic help
 sub usage {
 my($rtxt) = @_;
 die << "EOF";
@@ -65,6 +84,8 @@ Usage: gnupod_addsong.pl [-h] [-m directory | -x GNUtunesDB] File1 File2 ...
 
    -h, --help             : This ;)
    -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT
+   -r, --restore          : Restore the iPod (create a new GNUtunesDB from scratch)
+   -d, --duplicate        : Allow duplicate files
 
 EOF
 }
