@@ -43,7 +43,6 @@ if(-d $opth->{mount}) {
   $rr->{itunesdb}       = $opth->{mount}."/iPod_Control/iTunes/iTunesDB";
   $rr->{playcounts}     = "$rr->{mountpoint}/iPod_Control/iTunes/Play Counts";
   $rr->{itunesdb_md5}   = "$rr->{etc}/.itunesdb_md5";
-  $rr->{playcounts_md5} = "$rr->{etc}/.playcounts_md5";
   $rr->{onthego}        = "$rr->{mountpoint}/iPod_Control/iTunes/OTGPlaylistInfo";
   $rr->{status}         = undef;
 
@@ -162,12 +161,6 @@ warn "debug: otgsync need? (request from $$)\n";
  return 1 if(GNUpod::iTunesDB::readOTG($rr->{onthego}));
  
  if(-e $rr->{playcounts}) { #PlayCounts file exists..
-  if(-r "$rr->{playcounts_md5}") { #We got a md5 hash
-   my $plmd = getmd5line("$rr->{playcounts_md5}");
-   #MD5 is the same
-   return 0 if $plmd eq getmd5($rr->{playcounts});
-  }
-  #Playcounts file, but no md5, parse it..
   return 1;
  }
 
@@ -193,6 +186,20 @@ sub setsync {
  my($rr) = @_;
  setsync_itunesdb($rr);
  setsync_playcounts($rr);
+ setsync_otg($rr);
+}
+
+######################################################################
+# SetSync for onthego
+sub setsync_otg {
+warn "**** otg setsync call $$\n";
+
+ if(unlink($rr->{onthego})) {
+  return undef;
+ }
+
+warn "Could not setsync for onthego\n";
+return 1;
 }
 
 ######################################################################
@@ -200,6 +207,11 @@ sub setsync {
 sub setsync_playcounts {
 my($rr) = @_;
 warn "**** playcounts setsync call $$\n";
+
+if(unlink($rr->{playcounts})) {
+ return undef;
+}
+=head1
 #We also create an MD5 sum of the playcounts file
  if(-r $rr->{playcounts}) { #Test this, because getmd5 would die
   open(MDX,">$rr->{playcounts_md5}") or die "Can't write pc-md5-sum, $!\n";
@@ -207,6 +219,7 @@ warn "**** playcounts setsync call $$\n";
   close(MDX);
   return undef;
  }
+=cut
  warn "Can't set sync for playcounts to true: file not found\n";
  return 1;
 }
