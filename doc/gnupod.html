@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
-<!-- Created on March, 8  2003 by texi2html 1.65 -->
+<!-- Created on September, 14  2003 by texi2html 1.65 -->
 <!-- 
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -67,15 +67,15 @@ Adrian Ulrich
 </TR></TABLE>
 <H1> 1. GNUpod </H1>
 <!--docid::SEC1::-->
-This edition of the <CITE>GNUpod Manual</CITE>, last updated 8. Mar. 2003,
-documents GNUpod Version 0.28
+This edition of the <CITE>GNUpod Manual</CITE>, last updated 24. Aug. 2003,
+documents GNUpod Version 0.90
 <P>
 
 <BLOCKQUOTE><TABLE BORDER=0 CELLSPACING=0> 
 <TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC2">2. Requirements</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">What you will need to use GNUpod</TD></TR>
 <TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC3">3. Installing GNUpod</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">How to install GNUpod and setup FireWire</TD></TR>
 <TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC8">4. Using GNUpod</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">How to use the GNUpod-tools</TD></TR>
-<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC17">5. Problems</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">..and solutions</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC17">5. Problems</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">The FAQ</TD></TR>
 </TABLE>
 
 <br>
@@ -118,8 +118,7 @@ To use GNUpod, the follwing is needed:
 <LI>Firewire card that is supported by the Operating System
 <LI>Write support for HFS+ or FAT32
 <LI>Perl 5.6 or 5.8
-<LI>The Perl modules MP3::Info, File::Copy, Unicode::String, XML::Parser and Getopt::Long
-<LI>The Perl module XML::Simple if you are going to use the 'gnupod extensions' (recommended)
+<LI>The Perl modules MP3::Info, File::Copy, Unicode::String, XML::Simple (and XML::Parser, GNUpod doesn't like XML::Sax) and Getopt::Long
 <LI>Basic knowledge of the shell
 </UL>
 <P>
@@ -179,10 +178,6 @@ make install
 </pre></td></tr></table></P><P>
 
 The <CODE>configure</CODE> script checks if the desired Perl modules are installed.
-Please note: it is possible to install GNUpod without XML::Simple installed (use <CODE>--disable-contrib</CODE>)
-, but in this case 
-the commands <CODE>gnupod_search.pl</CODE>, <CODE>gnupod_list.pl</CODE> and 
-<CODE>gnupod_renumber.pl</CODE> won't be installed.
 </P><P>
 
 On Debian GNU/Linux you'll simply have to run this commands to install the required Perl modules:
@@ -325,15 +320,14 @@ If the Operating System you are running doesn't have write support for HFS+ and 
 HFS+ Formatted (aka 'Mac-iPod') you will have to reformat the iPod.
 </P><P>
 
-Note: The only Operating System with write support for HFS+ wich i know is Darwin/OSX. If you are using 
-GNU/Linux and own a Mac-iPod you'll have to convert your iPod.
-If you own a Win-iPod, you can skip this section.
+Note: Linux 2.4.22 HAS Support for HFS+! It's still experimental but it seems to work very good..
+If you build your kernel with HFS+ support, you don't have to convert your iPod :)
 </P><P>
 
 The first step is to upgrade your iPod to Firmware 1.1.0 or newer.
 (YES: 1.1.0 can read FAT32, but Apple never shipped FAT32 formatted iPods with 1.1.0. 
 Firmware 1.1.0 seems to use less power (has 1.20 a rtc problem?), but the name of the 
-iPod won't show up in the 'Info' menu... ;-) ) 
+iPod won't show up in the 'Info' menu and it may crash on very large MP3 files. 
 </P><P>
 
 You can do this with Mac OSX using the Apple Firmware upgrader, it's aviable from:
@@ -345,7 +339,7 @@ Have a look at the next section to learn how to do this.
 </P><P>
 
 Also note that you will need a fdisk for DOS-Style partitions. The kernel you are running has also to support 
-DOS-Style partitions.
+DOS-Style partitions (to access the device after you converted it) and Mac partitions (to read the firmware).
 If you are using GNU/Linux on x86, your fdisk should be fine, but if you are running GNU/Linux on 
 (for example) PowerPC you may have to get a suitable fdisk from the util-linux package wich can
 be retrieved from: ftp://ftp.kernel.org/pub/linux/utils/util-linux/
@@ -445,6 +439,10 @@ After writing back the Firmware we can format the iPod:
 Unplug the iPod and pray. If everything went well, the iPod boots up :).
 If not, reread this section, if you are lost, feel free to drop me a mail: bug-gnupod@gnu.org
 </P><P>
+
+It's a good idea to edit <CODE>/etc/fstab</CODE> and add a line for the iPod:
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>/dev/sda2    /mnt/ipod    vfat    noauto,user  0 0
+</pre></td></tr></table></P><P>
 
 <A NAME="Firmware update"></A>
 <HR SIZE="6">
@@ -563,16 +561,13 @@ But please don't blame me if your iPod dies...
 Mount the iPod (i assume you mount it at /mnt/ipod) as described in 'Using FireWire with GNUpod'
 </P><P>
 
-If the iPod is freshly formatted (= empty - no songs), run
-<TABLE><tr><td>&nbsp;</td><td class=example><pre>gnupod_INIT -m /mnt/ipod
+If the iPod is freshly formatted or you never used GNUpod before with this iPod, run
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>gnupod_INIT.pl -m /mnt/ipod
 </pre></td></tr></table></P><P>
 
-If the iPod isn't empty and you never used gnuPod before, run
-<TABLE><tr><td>&nbsp;</td><td class=example><pre>mkdir /mnt/ipod/iPod_Control/.gnupod
-touch /mnt/ipod/iPod_Control/.gnupod/GNUtunesDB
-touch /mnt/ipod/iPod_Control/iTunes/iTunesDB
-tunes2pod.pl -m /mnt/ipod
-</pre></td></tr></table></P><P>
+gnupod_INIT.pl will create the default directory tree and creates an empty GNUtunesDB 
+(or if it finds an iTunesDB, it runs tunes2pod.pl to convert the iTunesDB to an GNUtunesDB)
+</P><P>
 
 Your iPod is now ready for GNUpod!
 </P><P>
@@ -613,6 +608,11 @@ It isn't possible to add the same MP3 multiple times, gnupod_addsong.pl detects 
 (Duplicate = same filesize/time and ID3Tag name).
 </P><P>
 
+Note: gnupod_addsong.pl will try to 'auto-detect' the encoding of the ID3 Tag. 
+Sometimes this works (in most cases ;) ) sometimes it doesn't. If it doesn't work for you, 
+feel free do send me an example-file: pab@blinkenligts.ch
+</P><P>
+
 DO NOT umount the iPod yet! First read the section 'Unplug the iPod'!
 </P><P>
 
@@ -641,6 +641,7 @@ Maybe you would like to search for the artist called 'Schlummiguch'. In this cas
 <TABLE><tr><td>&nbsp;</td><td class=example><pre>gnupod_search.pl -m /mnt/ipod -a "Schlummiguch"
 </pre></td></tr></table></P><P>
 
+Note: gnupod_search.pl assumes RegExp input.
 Please have a look at <CODE>gnupod_search.pl --help</CODE> for more information.
 </P><P>
 
@@ -662,29 +663,10 @@ Please have a look at <CODE>gnupod_search.pl --help</CODE> for more information.
 <!--docid::SEC12::-->
 <P>
 
-Every file on the iPod has an unique ID, to delete a file, you'll have to know the ID.
-</P><P>
-
-To get the desired ID, open the file <CODE>iPod_Control/.gnupod/GNUtunesDB</CODE> stored on your iPod.
-</P><P>
-
-To delete the file with id="1", simply use
-<TABLE><tr><td>&nbsp;</td><td class=example><pre>gnupod_delete.pl -m /mnt/ipod 1
+Removing files is done using <CODE>gnupod_search.pl -d</CODE>.
+To Remove all files from the artist 'Schlummiguch', run
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>gnupod_search.pl -m /mnt/ipod -a "Schlummiguch" -d
 </pre></td></tr></table></P><P>
-
-But there is also a much more confortable way to do this. You can use <CODE>gnupod_search.pl</CODE> to tell 
-<CODE>gnupod_delete.pl</CODE> wich songs it should remove.
-</P><P>
-
-Remember how we searched for the artist 'Schlummiguch' in the previous section?
-</P><P>
-
-This command would delete every song of the artist Schlummiguch:
-<TABLE><tr><td>&nbsp;</td><td class=example><pre>gnupod_delete -m /mnt/ipod `gnupod_search -m /mnt/ipod -a "Schlummiguch" -n`
-</pre></td></tr></table></P><P>
-
-Note: we added the '-n' switch to the search command and we use backticks!
-</P><P>
 
 <A NAME="Creating playlists"></A>
 <HR SIZE="6">
@@ -763,7 +745,7 @@ parse the GNUtunesDB XML file and convert it into the iTunesDB format.
 </P><P>
 
 Simply run
-<TABLE><tr><td>&nbsp;</td><td class=example><pre>mktunes.pl -s -m /mnt/ipod
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>mktunes.pl -m /mnt/ipod
 </pre></td></tr></table></P><P>
 
 After <CODE>mktunes.pl</CODE> is done, you can umount the iPod and remove the sbp2 module
@@ -800,8 +782,7 @@ very good ;)
 You can 'rebuild' an GNUtunesDB using <CODE>gnupod_addsong.pl</CODE>
 </P><P>
 
-<TABLE><tr><td>&nbsp;</td><td class=example><pre>gnupod_INIT.pl -m /mnt/ipod
-gnupod_addsong.pl --rebuild -m /mnt/ipod
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>gnupod_addsong.pl --rebuild -m /mnt/ipod
 </pre></td></tr></table></P><P>
 
 First, <CODE>gnupod_INIT.pl</CODE> will create a clean, empty GNUtunesDB, it won't delete any songs on the iPod.
@@ -899,14 +880,14 @@ The songs are still in the playlists, but the expressions you wrote are 'lost'.
 <P>
 
 <BLOCKQUOTE><TABLE BORDER=0 CELLSPACING=0> 
-<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC18">5.1 RedHat8</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">How to get GNUpod working on RedHat 8</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC18">5.1 GNUtunesDB</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">What is the GNUtunesDB?</TD></TR>
 <TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC19">5.2 Get rid of '-m'</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">You don't like the -m switch?</TD></TR>
 <TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC20">5.3 Known bugs and limitations</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">GNUpod isn't perfect :)</TD></TR>
 <TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC21">5.4 Reporting Bugs</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">How to report a Bug</TD></TR>
 </TABLE></BLOCKQUOTE>
 <P>
 
-<A NAME="RedHat8"></A>
+<A NAME="GNUtunesDB"></A>
 <HR SIZE="6">
 <A NAME="SEC18"></A>
 <TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
@@ -920,29 +901,43 @@ The songs are still in the playlists, but the expressions you wrote are 'lost'.
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
 </TR></TABLE>
-<H2> 5.1 RedHat8 </H2>
+<H2> 5.1 GNUtunesDB </H2>
 <!--docid::SEC18::-->
 <P>
 
-If you are using RedHat8, GNUpod may seem to work, but the iPod won't show any songs/playlists.
+We talked alot about the 'GNUtunesDB' and the 'iTunesDB' files, but 
+why do we need this two files and what's the difference ?
 </P><P>
 
-The Perl binary included with RedHat8 doesn't work as it should if you enabled UTF8 as locale (default?).
+Well, you can find the iTunesDB on your iPod at <CODE>iPod_Control/iTunes/iTunesDB</CODE> .
+This file is read by the iPod when you 'boot' the device.
+The iTunesDB is a small Database and stores information about all MP3s on the iPod 
+(Title, Artist, Path, Bitrate...) and all Playlists: everything the iPod needs to know.
 </P><P>
 
-Before running any GNUpod command (in particular <CODE>mktunes.pl</CODE> and <CODE>tunes2pod.pl</CODE>) execute
-<TABLE><tr><td>&nbsp;</td><td class=example><pre>unset LANG
-</pre></td></tr></table></P><P>
+The iTunesDB is a proprietary file format created by Apple.
+</P><P>
 
-Other solutions:
-<UL>
-<LI>Recompile Perl
-<LI>Install another distribution
-</UL>
-<P>
+The GNUtunesDB (<CODE>iPod_Control/.gnupod/GNUtunesDB</CODE>) holds the same information like 
+the iTunesDB, but it's a simple XML file: easy to understand by humans and easy to edit by hand.
+</P><P>
 
-This is NOT a GNUpod bug. I will not answear any RedHat8 specific bugreports.
-RedHat8 was your choice. This broken distribution is not my problem.. it's yours.. sorry
+Everytime you run <CODE>tunes2pod.pl</CODE>, the iTunesDB will get parsed and converted into an 
+XML File (the GNUtunesDB). 
+<CODE>mktunes.pl</CODE> does the opposite: it parses the XML file and creates an iTunesDB (for the 
+iPod and iTunes)
+</P><P>
+
+Only mktunes.pl and tunes2pod.pl have to worry about the iTunesDB format: all other tools 
+(gnupod_addsong.pl for example) only have to deal with the XML file called GNUtunesDB.
+</P><P>
+
+It's important to keep the iTunesDB and GNUtunesDB 'in sync', so everytime you changed the 
+GNUtunesDB (by hand or using gnupod_something.pl) you'll have to run <CODE>mktunes.pl</CODE>.
+</P><P>
+
+If 'you' changed the iTunesDB (using gtkPod/iTunes/Ehpod), run <CODE>tunes2pod.pl</CODE> *before* 
+using any other GNUpod commands.
 </P><P>
 
 <A NAME="Get rid of '-m'"></A>
@@ -987,8 +982,7 @@ You don't have to use the '-m' switch if you set IPOD_MOUNTPOINT.
 <P>
 
 <UL>
-<LI>Not all options of iTunes are supported (eg. Rating)
-<LI>Latin1 ist the only supported charset
+<LI>No Support for SPL (SmartPlayLists)
 </UL>
 <P>
 
@@ -1646,7 +1640,7 @@ to permit their use in free software.
 <A NAME="TOC17" HREF="gnupod.html#SEC17">5. Problems</A>
 <BR>
 <BLOCKQUOTE>
-<A NAME="TOC18" HREF="gnupod.html#SEC18">5.1 RedHat8</A>
+<A NAME="TOC18" HREF="gnupod.html#SEC18">5.1 GNUtunesDB</A>
 <BR>
 <A NAME="TOC19" HREF="gnupod.html#SEC19">5.2 Get rid of '-m'</A>
 <BR>
@@ -1859,7 +1853,7 @@ the following structure:
 <BR>  
 <FONT SIZE="-1">
 This document was generated
-by <I>Adrian Ulrich</I> on <I>March, 8  2003</I>
+by <I>Adrian Ulrich</I> on <I>September, 14  2003</I>
 using <A HREF="http://www.mathematik.uni-kl.de/~obachman/Texi2html
 "><I>texi2html</I></A>
 </FONT>

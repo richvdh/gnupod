@@ -1,0 +1,4 @@
+* the iTunesDB format is not 'open' (no specification provided)
+  We don't support all features
+* FileMagic (qt parser)  is just a dummy, but i got a 'working' parser..
+  ..should be ready in rc1

@@ -49,7 +49,7 @@ documents GNUpod Version @value{VERSION}
 * Requirements::                    What you will need to use GNUpod
 * Installing GNUpod::               How to install GNUpod and setup FireWire
 * Using GNUpod::                    How to use the GNUpod-tools
-* Problems and Questions::          The FAQ
+* Problems::                        The FAQ
 
 
 
@@ -76,8 +76,7 @@ To use GNUpod, the follwing is needed:
 @item Firewire card that is supported by the Operating System
 @item Write support for HFS+ or FAT32
 @item Perl 5.6 or 5.8
-@item The Perl modules MP3::Info, File::Copy, Unicode::String, XML::Parser and Getopt::Long
-@item The Perl module XML::Simple if you are going to use the 'gnupod extensions' (recommended)
+@item The Perl modules MP3::Info, File::Copy, Unicode::String, XML::Simple (and XML::Parser, GNUpod doesn't like XML::Sax) and Getopt::Long
 @item Basic knowledge of the shell
 @end itemize
 
@@ -112,10 +111,6 @@ make install
 @end example
 
 The @w{@code{configure}} script checks if the desired Perl modules are installed.
-Please note: it is possible to install GNUpod without XML::Simple installed (use @code{@w{--disable-contrib}})
-, but in this case 
-the commands @w{@code{gnupod_search.pl}}, @w{@code{gnupod_list.pl}} and 
-@w{@code{gnupod_renumber.pl}} won't be installed.
 
 On Debian GNU/Linux you'll simply have to run this commands to install the required Perl modules:
 @example
@@ -226,9 +221,8 @@ next section 'Convert your Mac iPod' before using @code{@w{mount}}.
 If the Operating System you are running doesn't have write support for HFS+ and your iPod is 
 HFS+ Formatted (aka 'Mac-iPod') you will have to reformat the iPod.
 
-Note: The only Operating System with write support for HFS+ wich i know is Darwin/OSX. If you are using 
-GNU/Linux and own a Mac-iPod you'll have to convert your iPod.
-If you own a Win-iPod, you can skip this section.
+Note: Linux 2.4.22 HAS Support for HFS+! It's still experimental but it seems to work very good..
+If you build your kernel with HFS+ support, you don't have to convert your iPod :)
 
 
 The first step is to upgrade your iPod to Firmware 1.1.0 or newer.
@@ -458,6 +452,11 @@ gnupod_addsong.pl -m /mnt/ipod /mnt/mp3/seiken_densetsu2_ost/* /mnt/mp3/xenogear
 It isn't possible to add the same MP3 multiple times, gnupod_addsong.pl detects duplicates 
 (Duplicate = same filesize/time and ID3Tag name).
 
+Note: gnupod_addsong.pl will try to 'auto-detect' the encoding of the ID3 Tag. 
+Sometimes this works (in most cases ;) ) sometimes it doesn't. If it doesn't work for you, 
+feel free do send me an example-file: pab@@blinkenligts.ch
+
+
 DO NOT umount the iPod yet! First read the section 'Unplug the iPod'!
 
 
@@ -471,31 +470,18 @@ Maybe you would like to search for the artist called 'Schlummiguch'. In this cas
 gnupod_search.pl -m /mnt/ipod -a "Schlummiguch"
 @end example
 
+Note: gnupod_search.pl assumes RegExp input.
 Please have a look at @code{@w{gnupod_search.pl --help}} for more information.
 
 @node Remove files
 @section Remove files
 
-Every file on the iPod has an unique ID, to delete a file, you'll have to know the ID.
-
-To get the desired ID, open the file @code{@w{iPod_Control/.gnupod/GNUtunesDB}} stored on your iPod.
-
-To delete the file with id="1", simply use
+Removing files is done using @code{@w{gnupod_search.pl -d}}.
+To Remove all files from the artist 'Schlummiguch', run
 @example
-gnupod_delete.pl -m /mnt/ipod 1
+gnupod_search.pl -m /mnt/ipod -a "Schlummiguch" -d
 @end example
 
-But there is also a much more confortable way to do this. You can use @code{@w{gnupod_search.pl}} to tell 
-@code{@w{gnupod_delete.pl}} wich songs it should remove.
-
-Remember how we searched for the artist 'Schlummiguch' in the previous section?
-
-This command would delete every song of the artist Schlummiguch:
-@example
-gnupod_delete -m /mnt/ipod `gnupod_search -m /mnt/ipod -a "Schlummiguch" -n`
-@end example
-
-Note: we added the '-n' switch to the search command and we use backticks!
 
 @node Creating playlists
 @section Creating playlists
@@ -543,7 +529,7 @@ parse the GNUtunesDB XML file and convert it into the iTunesDB format.
 
 Simply run
 @example
-mktunes.pl -s -m /mnt/ipod
+mktunes.pl -m /mnt/ipod
 @end example
 
 After @code{@w{mktunes.pl}} is done, you can umount the iPod and remove the sbp2 module
@@ -565,7 +551,6 @@ very good ;)
 You can 'rebuild' an GNUtunesDB using @code{gnupod_addsong.pl}
 
 @example
-gnupod_INIT.pl -m /mnt/ipod
 gnupod_addsong.pl --rebuild -m /mnt/ipod
 @end example
 
@@ -629,7 +614,7 @@ The songs are still in the playlists, but the expressions you wrote are 'lost'.
 
 @c ===========================================================================================
 @node Problems, GNU Free Documentation License, Using GNUpod, Top
-@chapter Problems and Questions
+@chapter Problems
 
 @menu
 * GNUtunesDB::                      What is the GNUtunesDB?
@@ -683,8 +668,7 @@ export IPOD_MOUNTPOINT="/mnt/ipod"
 @section Known bugs and limitations
 
 @itemize @bullet
-@item Not all options of iTunes are supported (eg. Rating)
-@item Latin1 ist the only supported charset
+@item No Support for SPL (SmartPlayLists)
 @end itemize
 
 
