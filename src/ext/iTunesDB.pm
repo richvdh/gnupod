@@ -30,7 +30,6 @@ use GNUpod::FooBar;
 use vars qw(%mhod_id @mhod_array);
 
 #mk_mhod() will take care of lc() entries
-#fixme: checkout 13.. is it language?
 %mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, "comment", 8, "composer", 12, "group", 13);# "SPLPREF",50, "SPLDATA",51, "PLTHING", 100) ;
  foreach(keys(%mhod_id)) {
   $mhod_array[$mhod_id{$_}] = $_;
@@ -285,7 +284,7 @@ if(ref($hs->{data}) ne "ARRAY") {
         $string = substr($string,0,254);
      }
      
-  warn "Fixme: not is broken\n";
+  warn "Fixme: not is broken - writing packH6 directly\n";
   
   
      $cr .= pack("H6");
@@ -573,7 +572,7 @@ print "***\n";
  for(1..$hr->{htm}) {
   my $field = get_int($diff+3, 1);
   my $doesNot = get_int($diff+4,3);
-print "Fixme: not is borken (read and write)\n";
+print "Fixme: not is borken (read and write) hexdump:\n";
 __hd(get_string($diff+4,3)); 
 print "*$doesNot\n"; 
   my $action= get_int($diff+7, 1);
