@@ -19,7 +19,7 @@ You'll need FAAC 1.24 (<-- yes: version >= 1.24) for this.
 
 * Get it at www.audiocoding.com
 * Install FAAD2 (NOT FAAC, You'll have to install FAAD2 before
-  installing flac, because FAAD2 provides the mp4v2 lib used
+  installing faac, because FAAD2 provides the mp4v2 lib used
   by faac!)
 * Install FAAC >= 1.24
 * Encode your Files with the -w switch, you can also set the tags

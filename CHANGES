@@ -1,10 +1,15 @@
 GNUpod 0.98 - codename 'Luna 9'
 
 Summary
+-------
 
 - Support for iPod-Shuffle!
   (I do not know why Apple uses
    another Database for this thing!!!)
+   Thanks to:
+     * Chris Scott for testing and providing samples
+     * Jeff Thieleke (From FooPod)
+     * ..and Rodja Trappe (Samples + Testing)
 
 - Fixed 'songnum' for ID3V1 Tags .. ouch
 
@@ -22,6 +27,7 @@ Summary
 GNUpod 0.97 - codename guezli
 
 Summary
+-------
 
 - 0.96 didn't write 'tracknum' for OGG Files, fixed now..
   Thanks to Ed Wandasiewicz for reporting this bug

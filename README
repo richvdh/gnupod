@@ -40,3 +40,20 @@ tunes2pod.pl        Convert the iTunesDB into a GNUtunesDB.xml
 You'll have to use mktunes.pl if you added/deleted/changed something
 on the iPod.
 
+
+Supported iPods
+---------------
+
+* First Generation iPod (No SPL support)
+* Second Generation iPod (No SPL support)
+* Third Generation iPod (Almost everything supported)
+* Fourth Generation iPod (Almost everything supported)
+* iPod Mini (Almost everything supported)
+* iPod-Photo (Guess it works.. Had no bugreports)
+* iPod-Shuffle (Supported since GNUpod 0.98)
+ See: http://www.scoutingaround.com/computers/ipod/ipod_generations.html
+
+*Note* GNUpod does not support DRM-Stuff!
+iTMS is not aviable where i live (Switzerland), so i can't test it...
+Maybe you should give 'finetunes.net' and 'allofmp3.com' a try...
+(DRM Free Music)

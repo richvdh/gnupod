@@ -157,7 +157,7 @@ sub mk_itunes_sd_header {
 sub mk_itunes_sd_file {
 	my($ref) = @_;
 	my $ret = undef;
-	
+
 	#The Shuffle needs / , not :
 	$ref->{path} =~ tr/:/\//;
 	my $uc = new Unicode::String($ref->{path});
@@ -206,11 +206,11 @@ sub mk_mhbd {
 	my ($hr) = @_;
 
 	my $ret = "mhbd";
-	   $ret .= pack("V", 104);                         #Header Size
-	   $ret .= pack("V", _icl($hr->{size}+104));       #Size of whole mhdb
-	   $ret .= pack("V", 0x1);                         #?
-	   $ret .= pack("V", 0xC);
-	   $ret .= pack("V", 0x2);                        # (Maybe childs?)
+	   $ret .= pack("V", 104);                        #Header Size
+	   $ret .= pack("V", _icl($hr->{size}+104));      #Size of whole mhdb
+	   $ret .= pack("V", 0x1);                        #?
+	   $ret .= pack("V", 0xC);                        # Version, we are iTunes 4.7 -> 12
+	   $ret .= pack("V", 0x2);                        # Childs, currently always 2
 	   $ret .= pack("V", 0xE0ADECAD);                 # UID -> 0xA_Decade_0f_bad_f00d
 	   $ret .= pack("V", 0x0DF0ADFB);
 	   $ret .= pack("V", 0x2);                        #?

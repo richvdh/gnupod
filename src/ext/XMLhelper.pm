@@ -1,5 +1,5 @@
 package GNUpod::XMLhelper;
-#  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
+#  Copyright (C) 2002-2005 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
 #  URL: http://www.gnu.org/software/gnupod/
@@ -32,7 +32,7 @@ use constant MAX_PATHLENGTH => 64;
 #Try X times to find a path
 use constant MAX_PATHLOOP => 1024;
 
-## Release 20041127
+## Release 20050203
 
 my $cpn = undef; #Current PlaylistName
 my @idpub = ();
@@ -187,14 +187,14 @@ sub mkfile {
 sub addpl {
 	my($name, $opt) = @_;
 	if(ref($XDAT->{playlists}->{pref}->{$name}) eq "HASH") {
-		warn "XMLhelper.pm: Playlist '$name' is a duplicate, skipping addpl()\n";
+		warn "XMLhelper.pm: No need to create '$name', playlist exists already!\n";
 		return;
 	}
 
 	my %rh = ();
 	   %rh = %{$opt} if ref($opt) eq "HASH"; #Copy if we got data 
 	$rh{name} = $name;            #Force the name
-	$rh{plid} = int(rand(99999)); #We create our own id
+	$rh{plid} ||= int(rand(99999)); #We create our own id
 	push(@plorder, {name=>$name,plid=>$rh{plid},sort=>$rh{sort}});
  
 	$XDAT->{playlists}->{pref}->{$name} = \%rh;
@@ -207,7 +207,7 @@ sub addspl {
 	my($name, $opt) = @_;
  
 	if(ref($XDAT->{spls}->{pref}->{$name}) eq "HASH") {
-		warn "XMLhelper.pm: Playlist '$name' is a duplicate, skipping addspl()\n";
+		warn "XMLhelper.pm: No need to create '$name', smartplaylist exists already!\n";
 		return;
 	}
 

@@ -29,7 +29,7 @@ use GNUpod::FooBar;
 use Getopt::Long;
 
 
-use vars qw($cid %pldb %spldb %itb %its %opts %meat %cmeat @MPLcontent);
+use vars qw($cid %pldb %spldb %itb %opts %meat %cmeat @MPLcontent);
 #cid = CurrentID
 #pldb{name}  = array with id's
 #spldb{name} = '<spl' prefs
@@ -41,7 +41,6 @@ use vars qw($cid %pldb %spldb %itb %its %opts %meat %cmeat @MPLcontent);
 #                    wouldn't boot if it finds a hidden-id in the
 #                    OTGPlaylist!!
 
-$| = 1; #Do not buffer output
 
 use constant MPL_UID => 1234567890; #This is the MasterPlaylist ID
 
@@ -68,6 +67,10 @@ sub startup {
 	usage("$con->{status}\n") if $con->{status};
 	print "! Volume-adjust set to $opts{volume} percent\n" if defined($opts{volume});
 
+	#Open the iTunesSD and write a dummy header
+	open(ITS, ">$con->{itunessd}") or die "*** Sorry: Could not write your iTunesSD: $!\n";
+	syswrite(ITS,GNUpod::iTunesDB::mk_itunes_sd_header());
+	
 	print "> Parsing XML and creating FileDB\n";
 	GNUpod::XMLhelper::doxml($con->{xml}) or usage("Could not read $con->{xml}, did you run gnupod_INIT.pl ?");
 
@@ -116,14 +119,11 @@ sub startup {
 	close(ITB);
 	## Finished!
 
-	## Write the iTunesSD for the iPod-Shuffle
-	print "> Writing iTunesSD...\n";
-	open(ITS, ">$con->{itunessd}") or die "*** Sorry: Could not write your iTunesSD: $!\n";
-	binmode(ITS);
-	print ITS GNUpod::iTunesDB::mk_itunes_sd_header({files=>$itb{INFO}{FILES}});
-	print ITS $its{files}{data};
+	#Fix iTunesSD .. Seek to beginning and write a correct header
+	print "> Fixing iTunesSD...\n";
+	sysseek(ITS,0,0);
+	syswrite(ITS,GNUpod::iTunesDB::mk_itunes_sd_header({files=>$itb{INFO}{FILES}}));
 	close(ITS);
-
 
 	print "> Updating Sync-Status\n";
 	GNUpod::FooBar::setsync_itunesdb($con);
@@ -273,8 +273,10 @@ sub newfile {
 	}
 
 	$itb{mhit}{_len_} += build_mhit($cid, $el->{file}); 
-	$its{files}{data} .= GNUpod::iTunesDB::mk_itunes_sd_file({path=>$el->{file}->{path},
-	                                                          volume=>$el->{file}->{volume}});
+
+	#Append to iTunesSD
+	syswrite(ITS,GNUpod::iTunesDB::mk_itunes_sd_file({path=>$el->{file}->{path},
+	                                                  volume=>$el->{file}->{volume}}));
 }
 
 
@@ -290,7 +292,7 @@ sub newpl   {
 		xmk_newspl($el, $name);
 	}
 	else {
-		warn "mktunes.pl: unknown pltype '$pltype'\n";
+		warn "mktunes.pl: unknown pltype '$pltype', skipped\n";
 	}
 }
 
