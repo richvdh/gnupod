@@ -1,4 +1,4 @@
-#  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
+#  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
 #  URL: http://www.gnu.org/software/gnupod/
@@ -40,7 +40,8 @@ go();
 
 
 sub go {
- 
+ #Disable autosync
+ $opts{_no_sync} = 1;
  my $con = GNUpod::FooBar::connect(\%opts);
  usage("$con->{status}\n") if $con->{status};
 
@@ -108,14 +109,16 @@ else {
  
   GNUpod::XMLhelper::writexml($con->{xml});
 
-#Fixme: bindir would be good!
+ 
  if(-e $con->{itunesdb} && !$opts{'disable-convert'}) {
+ #We have an iTunesDB, call tunes2pod.pl
   print "Found *existing* iTunesDB, running tunes2pod.pl\n";
-  system("tunes2pod.pl --force -m $opts{mount}");
+  system("$con->{bindir}/tunes2pod.pl --force -m $opts{mount}");
  }
  else {
+ #No iTunesDB, run mktunes.pl
   print "No iTunesDB found, running mktunes.pl\n";
-  system("mktunes.pl -m $opts{mount}");
+  system("$con->{bindir}/mktunes.pl -m $opts{mount}");
  }
  
  print "\n Done\n   Your iPod is now ready for GNUpod :)\n";

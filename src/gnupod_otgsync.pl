@@ -71,7 +71,6 @@ $ratingref  = GNUpod::iTunesDB::readPLC($con->{playcounts});
   mkotg(@xotg) if int(@xotg);
   GNUpod::XMLhelper::writexml($con->{xml});
   unlink($con->{onthego}) or warn "Failed to unlink $con->{onthego} , $!\n";
-  unlink($con->{playcounts}) or warn "Failed to unlink $con->{playcounts}, $!\n";
  }
 }
 

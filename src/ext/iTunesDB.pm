@@ -532,12 +532,7 @@ $anz = int($anz);
 seek(FILE, $start, 0);
 #start reading
 read(FILE, $buffer, $anz);
-   foreach(split(//, $buffer)) {
-    $xx = sprintf("%02X", ord($_));
-   $xr .= $xx;
-  }
-  $xr = oct("0x".$xr);
- return $xr;
+ return GNUpod::FooBar::shx2_x86_int($buffer);
 }
 
 

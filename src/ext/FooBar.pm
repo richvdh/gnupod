@@ -63,26 +63,21 @@ sub do_itbsync {
 my $XBIN = "$con->{bindir}/tunes2pod.pl";
 
 if(-x $XBIN) {
-  eval {
-    warn "BEFORE: $ENV{IPOD_MOUNTPOINT}\n";
+    my $OLDENV = $ENV{IPOD_MOUNTPOINT};
     $ENV{IPOD_MOUNTPOINT} = $con->{mountpoint};
-    warn "DEBUGEVAL: Set env to $ENV{IPOD_MOUNTPOINT}\n";
+   print "> GNUtunesDB sync needed...\n";
     if(system("$XBIN > /dev/null")) {
       die "Unexpected die of $XBIN\n
       You can disable auto-sanc (=autorun of $XBIN)
       by removing '$con->{etc}/.itunesdb_md5'\n";
     }
-  };
-  
-  if($@) {
-   die "$XBIN failed: $@\n";
-  }
-  
- warn "DEBUGEVAL: After eval: $ENV{IPOD_MOUNTPOINT}\n";
- print "> GNUtunesDB synced\n";
+    
+    $ENV{IPOD_MOUNTPOINT} = $OLDENV;
+  print "> GNUtunesDB synced\n";
 }
 else {
  warn "FooBar.pm: Could not execute $XBIN, autosync SKIPPED!\n";
+ warn "Looks like GNUpod isn't installed correct! did you run 'make install?'\n";
 }
 
 }
@@ -95,22 +90,21 @@ sub do_otgsync {
 my $XBIN = "$con->{bindir}/gnupod_otgsync.pl";
 
 if(-x $XBIN) {
-  eval {
-    warn "BEFORE: $ENV{IPOD_MOUNTPOINT}\n";
+     my $OLDENV = $ENV{IPOD_MOUNTPOINT}
      $ENV{IPOD_MOUNTPOINT} = $con->{mountpoint};
-     warn "DEBUGEVAL: Set env to $ENV{IPOD_MOUNTPOINT}\n";
-     
+     print "> On-The-Go data sync needed...\n";
      if(system("$XBIN --top4secret")) {
       warn "** UUUPS **: $XBIN died! On-The-Go list lost, sorry!\n";
      }
      else {
       print "> On-The-Go data synced\n";
      }
-  };
-   warn "DEBUGEVAL: After eval: $ENV{IPOD_MOUNTPOINT}\n";
+  
+   $ENV{IPOD_MOUNTPOINT} = $OLDENV;
 }
 else {
  warn "FooBar.pm: Could not execute $XBIN, autosync SKIPPED!\n";
+ warn "Looks like GNUpod isn't installed correct! did you run 'make install?'\n";
 } 
  
 
@@ -118,7 +112,7 @@ else {
 
 
 ######################################################################
-# Get int value
+# Get int value (Network format)
 sub shx2int {
  my($shx) = @_;
  my $buff = undef;
@@ -129,35 +123,64 @@ sub shx2int {
 }
 
 ######################################################################
+# Get int value (x86)
+sub shx2_x86_int {
+ my($shx) = @_;
+ my $buff = undef;
+  foreach(split(//, $shx)) {
+    $buff .= sprintf("%02X", ord($_));
+  }
+ return hex($buff);
+}
+
+
+######################################################################
 # Returns '1' if we MAY have to sync..
 sub _itb_needs_sync {
  my($rr) = @_;
 warn "debug: havetosync call ($$)\n";
- if(-r "$rr->{etc}/.itunesdb_md5") {
+ if(-r "$rr->{etc}/.itunesdb_md5" && -r $rr->{itunesdb}) {
    my $itmd = getmd5($rr->{itunesdb});
-   open(MDX,"$rr->{etc}/.itunesdb_md5");
-   my $otmd = <MDX>;
-   chomp($otmd);
-   close(MDX);
+   my $otmd = getmd5line("$rr->{etc}/.itunesdb_md5");
    return 1 if $otmd ne $itmd;
   }
   return undef;
 }
 
+
 ######################################################################
 # Checks if we need to do an OTG-Sync
-# Note: If we need an update, we are going to parse
-# the otg twice: i know, that's ugly.. but it's so fast that it
-# doesn't matter..
 sub _otg_needs_sync {
  my($rr) = @_;
- if(GNUpod::iTunesDB::readOTG($rr->{onthego}) ||
-    GNUpod::iTunesDB::readPLC($rr->{playcounts})) {
-  warn "debugn: returning 'otg sync needed'\n";
-  return 1;    
+
+ #OTG Sync needed
+ return 1 if(GNUpod::iTunesDB::readOTG($rr->{onthego}));
+ 
+ if(-e $rr->{playcounts}) { #PlayCounts file exists..
+  if(-r "$rr->{etc}/.playcounts_md5") { #We got a md5 hash
+   my $plmd = getmd5line("$rr->{etc}/.playcounts_md5");
+   #MD5 is the same
+   return 0 if $plmd eq getmd5($rr->{playcounts});
+  }
+  #Playcounts file, but no md5, parse it..
+  return 1;
  }
+
+ #No OTG and no PLC file, no sync needed
+ return 0;
 }
 
+
+######################################################################
+# Getmd5line
+sub getmd5line {
+ my($file) = @_;
+   open(MDX, "$file") || warn "Could not open $file, md5 will fail!\n";
+    my $plmd = <MDX>;
+   close(MDX);
+   chomp($plmd);
+   return $plmd;
+}
 
 ######################################################################
 # Call this to set GNUtunesDB <-> iTuneDB 'in-sync'
@@ -168,6 +191,14 @@ sub setsync {
  open(MDX,">$rr->{etc}/.itunesdb_md5") or die "Can't write md5-sum, $!\n";
   print MDX getmd5($rr->{itunesdb})."\n";
  close(MDX);
+ 
+#We also create an MD5 sum of the playcounts file
+ if(-r $rr->{playcounts}) { #Test this, because getmd5 would die
+  open(MDX,">$rr->{etc}/.playcounts_md5") or die "Can't write pc-md5-sum, $!\n";
+   print MDX getmd5($rr->{playcounts});
+  close(MDX);
+ }
+ 
 }
 
 

@@ -1,5 +1,5 @@
 package GNUpod::FileMagic;
-#  Copyright (C) 2002-2003 Adrian Ulrich <pab at blinkenlights.ch>
+#  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
 #  URL: http://www.gnu.org/software/gnupod/
@@ -32,9 +32,10 @@ BEGIN {
  MP3::Info::use_mp3_utf8(0);
  open(NULLFH, "> /dev/null") or die "Could not open /dev/null, $!\n";
 }
+
+########################################################################
 #Try to discover the file format (mp3 or QT (AAC) )
 sub wtf_is {
-
  my($file) = @_;
   if(my $h = __is_mp3($file)) {
    return $h;
@@ -45,12 +46,14 @@ sub wtf_is {
   elsif(my $h = __is_qt($file)) {
    return $h
   }
-  else {
-   print "Unknown file type: $file\n";
-  }
-  return undef;
+
+   print "I Unknown file type: $file\n";  
+   return undef;
 }
 
+
+#######################################################################
+# Check if the QTparser thinks, it's a QT-AAC (= m4a) file
 sub __is_qt {
  my($file) = @_;
  my $ret = GNUpod::QTfile::parsefile($file);
@@ -59,16 +62,18 @@ sub __is_qt {
  my %rh = ();
  if($ret->{time} < 0) {
   warn "QTfile parsing failed, invalid time!\n";
-  warn "You found a bug\n";
+  warn "You found a bug - send an email to: pab\@blinkenlights.ch\n";
   return undef;
  }
  
- $rh{time} = $ret->{time};
- $rh{filesize} = $ret->{filesize};
- $rh{fdesc}    = $ret->{fdesc};
- $rh{artist} = $ret->{artist} || "Unknown Artist";
- $rh{album}  = $ret->{album}  || "Unknown Album";
- $rh{title}  = $ret->{title}  || "Unknown Title";
+ my $cf = ((split(/\//,$file))[-1]);
+ 
+ $rh{time}     = int($ret->{time});
+ $rh{filesize} = int($ret->{filesize});
+ $rh{fdesc}    = getutf8($ret->{fdesc});
+ $rh{artist}   = getutf8($ret->{artist} || "Unknown Artist");
+ $rh{album}    = getutf8($ret->{album}  || "Unknown Album");
+ $rh{title}    = getutf8($ret->{title}  || $cf || "Unknown Title");
  return  \%rh;
 }
 

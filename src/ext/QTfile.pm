@@ -27,6 +27,7 @@ package GNUpod::QTfile;
 # by iTunes
 
 use strict;
+use GNUpod::FooBar;
 use vars qw(%hchild %reth);
 
 #Some static def
@@ -138,7 +139,7 @@ sub get_atom {
 # Get INT vaules
 sub getoct {
 my($offset, $len) = @_;
-  return unpack("I", rseek($offset,$len));
+  GNUpod::FooBar::shx2_x86_int(rseek($offset,$len));
 }
 
 ####################################################

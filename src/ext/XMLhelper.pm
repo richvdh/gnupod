@@ -80,9 +80,8 @@ $ret =~ s/&/&amp;/g;
 $ret =~ s/"/&quot;/g;
 $ret =~ s/</&lt;/g;
 $ret =~ s/>/&gt;/g;
-#$ret =~ s/'/&apos;/g;
 
-return $ret;
+return Unicode::String::utf8($ret)->utf8;
 }
 
 
@@ -90,6 +89,8 @@ return $ret;
 
 ###############################################################
 # Create a new child (for playlists or file)
+# This is XML-Safe -> XDAT->{foo}->{data} or XDAT->{files}
+# is XML ENCODED UTF8 DATA !!!!!!!!!!!!
 sub mkfile {
  my($hr, $magic) = @_;
  my $r = undef;
@@ -127,6 +128,7 @@ sub mkfile {
 
 ##############################################################
 # Add a playlist to output (Called by eventer or tunes2pod.pl)
+# This thing doesn't create xml-encoded output!
 sub addpl {
  my($name, $opt) = @_;
  if(ref($XDAT->{playlists}->{pref}->{$name}) eq "HASH") {
@@ -147,6 +149,7 @@ sub addpl {
 
 ##############################################################
 # Add a SmartPlaylist to output (Called by eventer or tunes2pod.pl)
+# Like addpl(), 'output' isn't xml-encoded
 sub addspl {
  my($name, $opt) = @_;
  if(ref($XDAT->{spls}->{pref}->{$name}) eq "HASH") {
@@ -183,6 +186,7 @@ sub get_splpref {
 sub get_plpref {
  return $XDAT->{playlists}->{pref}->{$_[0]};
 }
+
 ##############################################################
 # Call events
 sub eventer {
