@@ -1,0 +1,1868 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<!-- Created on March, 8  2003 by texi2html 1.65 -->
+<!-- 
+Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Olaf Bachmann <obachman@mathematik.uni-kl.de>
+Send bugs and suggestions to <texi2html@mathematik.uni-kl.de>
+ 
+-->
+<HEAD>
+<TITLE>GNUpod Manual: </TITLE>
+
+<META NAME="description" CONTENT="GNUpod Manual: ">
+<META NAME="keywords" CONTENT="GNUpod Manual: ">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META NAME="Generator" CONTENT="texi2html 1.65">
+
+</HEAD>
+
+<BODY LANG="en" BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000FF" VLINK="#800080" ALINK="#FF0000">
+
+<A NAME="SEC_Top"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<CENTER>
+<H1>GNUpod</H1>
+<H2>Manage your iPod</H2>
+Adrian Ulrich
+</CENTER>
+<HR>
+<P></P>  
+<H2> Overview: </H2>
+<BLOCKQUOTE>  
+<A NAME="TOC1" HREF="gnupod.html#SEC1">1. GNUpod</A>
+<BR>
+<A NAME="TOC2" HREF="gnupod.html#SEC2">2. Requirements</A>
+<BR>
+<A NAME="TOC3" HREF="gnupod.html#SEC3">3. Installing GNUpod</A>
+<BR>
+<A NAME="TOC8" HREF="gnupod.html#SEC8">4. Using GNUpod</A>
+<BR>
+<A NAME="TOC17" HREF="gnupod.html#SEC17">5. Problems</A>
+<BR>
+<A NAME="TOC22" HREF="gnupod.html#SEC22">A. GNU Free Documentation License</A>
+<BR>
+</BLOCKQUOTE>
+<HR SIZE=1>
+<A NAME="SEC1"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC2"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H1> 1. GNUpod </H1>
+<!--docid::SEC1::-->
+This edition of the <CITE>GNUpod Manual</CITE>, last updated 8. Mar. 2003,
+documents GNUpod Version 0.28
+<P>
+
+<BLOCKQUOTE><TABLE BORDER=0 CELLSPACING=0> 
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC2">2. Requirements</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">What you will need to use GNUpod</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC3">3. Installing GNUpod</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">How to install GNUpod and setup FireWire</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC8">4. Using GNUpod</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">How to use the GNUpod-tools</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC17">5. Problems</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">..and solutions</TD></TR>
+</TABLE>
+
+<br>
+Appendices
+<br>
+
+<br>
+<TABLE BORDER=0 CELLSPACING=0>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC22">A. GNU Free Documentation License</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">This manual is under the GNU Free
+                                    Documentation License.</TD></TR>
+</TABLE>
+
+<br>
+</BLOCKQUOTE>
+<P>
+
+<A NAME="Requirements"></A>
+<HR SIZE="6">
+<A NAME="SEC2"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC1"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC3"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC3"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H1> 2. Requirements </H1>
+<!--docid::SEC2::-->
+<P>
+
+To use GNUpod, the follwing is needed:
+</P><P>
+
+<UL>
+<LI>iPod (HFS+ or FAT32)
+<LI>Firewire card that is supported by the Operating System
+<LI>Write support for HFS+ or FAT32
+<LI>Perl 5.6 or 5.8
+<LI>The Perl modules MP3::Info, File::Copy, Unicode::String, XML::Parser and Getopts::Mixed
+<LI>The Perl module XML::Simple if you are going to use the 'gnupod extensions' (recommended)
+<LI>Basic knowledge of the shell
+</UL>
+<P>
+
+GNUpod is known to run on GNU/Linux, FreeBSD, Darwin (Mac OSX) and Solaris 9.
+</P><P>
+
+<A NAME="Installing GNUpod"></A>
+<HR SIZE="6">
+<A NAME="SEC3"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC2"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC4"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC2"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC8"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H1> 3. Installing GNUpod </H1>
+<!--docid::SEC3::-->
+<BLOCKQUOTE><TABLE BORDER=0 CELLSPACING=0> 
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC4">3.1 Installation of GNUpod</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">How to install the Scripts</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC5">3.2 Using FireWire with GNU/Linux</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">Setup FireWire on Linux</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC6">3.3 Convert your Mac iPod</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">How to convert an HFS+ formatted iPod</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC7">3.4 Firmware update</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">How to upgrade the Firmware using GNU/Linux</TD></TR>
+</TABLE></BLOCKQUOTE>
+<P>
+
+<A NAME="Installation of GNUpod"></A>
+<HR SIZE="6">
+<A NAME="SEC4"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC3"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC5"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 3.1 Installation of GNUpod </H2>
+<!--docid::SEC4::-->
+<P>
+
+The installation of GNUpod is very simple:
+</P><P>
+
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>tar -xzvf gnupod-tools-VERSION.tar.gz
+cd gnupod-tools/
+./configure
+make install
+</pre></td></tr></table></P><P>
+
+The <CODE>configure</CODE> script checks if the desired Perl modules are installed.
+Please note: it is possible to install GNUpod without XML::Simple installed (use <CODE>--disable-contrib</CODE>)
+, but in this case 
+the commands <CODE>gnupod_search.pl</CODE>, <CODE>gnupod_list.pl</CODE> and 
+<CODE>gnupod_renumber.pl</CODE> won't be installed.
+</P><P>
+
+On Debian GNU/Linux you'll simply have to run this commands to install the required Perl modules:
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>apt-get install libfile-ncopy-perl
+apt-get install libmp3-info-perl
+apt-get install libunicode-string-perl
+apt-get install libxml-parser-perl
+apt-get install libxml-simple-perl
+</pre></td></tr></table></P><P>
+
+If you are using a RPM-based Distribution (Mandrake, RedHat, SuSE..) try http://www.rpmfind.net.
+</P><P>
+
+Another way is to install the modules 'by hand'.
+</P><P>
+
+http://search.cpan.org 
+</P><P>
+
+will help you to find the needed tarballs.
+If you don't know how to install them, please read 
+</P><P>
+
+http://cpan.org/misc/cpan-faq.html#How_install_Perl_modules
+</P><P>
+
+<A NAME="Using FireWire with GNU/Linux"></A>
+<HR SIZE="6">
+<A NAME="SEC5"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC4"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC6"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 3.2 Using FireWire with GNU/Linux </H2>
+<!--docid::SEC5::-->
+<P>
+
+Of course the Linux kernel must support FireWire. If the one you are using doesn't have FireWire support you'll have 
+to recompile your Kernel. (It's also a good idea to update the Kernel when you are doing this...)
+</P><P>
+
+If you don't know how to compile the Linux kernel, please read http://www.kernelnewbies.org/faq/index.php3#compile
+</P><P>
+
+To get FireWire working, you should configure the Kernel like this:
+</P><P>
+
+<UL>
+<LI>Code maturity level options - y
+<LI>IEEE1394 (FireWire)/IEEE 1394 (FireWire) support (Experimental) - y
+<LI>OHCI-1394 support - m
+<LI>SBP-2 support - m
+</UL>
+<P>
+
+Feel free to build OHCI-1394 into the kernel ('y'), but make sure to compile 
+SBP-2 support as module. It won't work (good) if you say 'y' there!
+If you don't own an OHCI-1394 FireWire card you may need to use the LYNX driver instead.
+But OHCI-1394 is the most common used, please also have a look at http://www.linux1394.org
+</P><P>
+
+After you rebootet with the new Kernel, you should now be able to mount the iPod.
+First load the OHCI-1394 module if you did say 'm' to OHCI-1394 support.
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>modprobe ohci1394
+</pre></td></tr></table></P><P>
+
+Now plugin the iPod and wait until you can see the 'hook-symbol' and load the sbp2 module using
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>modprobe sbp2
+</pre></td></tr></table></P><P>
+
+Please keep in mind that FireWire support is still experimental and you may see Kernel Oopses and other nasty things.
+If your system hangs after loading sbp2 or mounting the iPod you may try to load sbp2 like this:
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>modprobe sbp2 sbp2_max_speed=0 sbp2_serialize_io=1 sbp2_force_inquiry_hack=1
+</pre></td></tr></table></P><P>
+
+This will slow down the transfer rate but should act much more stable.
+</P><P>
+
+After loading sbp2, use <CODE>dmesg</CODE> to get some information, the output
+should look like this
+</P><P>
+
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>SBP-2 module load options:
+- Max speed supported: S400
+- Max sectors per I/O supported: 255
+- Max outstanding commands supported: 8
+- Max outstanding commands per lun supported: 1
+- Serialized I/O (debug): no
+- Exclusive login: yes
+  Vendor: Apple     Model: iPod              Rev: 1.21
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+Attached scsi removable disk sdb at scsi1, channel 0, id 0, lun 0
+SCSI device sdb: 9780750 512-byte hdwr sectors (5008 MB)
+sda: test WP failed, assume Write Enabled
+ sda: sda1 sda2
+</pre></td></tr></table></P><P>
+
+In this case, <CODE>/dev/sda</CODE> would be your iPod.
+</P><P>
+
+You can now mount the iPod:
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>mount -t vfat /dev/sda2 /mnt/ipod -o sync
+</pre></td></tr></table></P><P>
+
+It's a good idea to add a line like this to the fstab
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>/dev/sda2   /mnt/ipod   vfat   defaults,user,noauto,sync,umask=000
+</pre></td></tr></table></P><P>
+
+Note: As you can see, we assume an FAT32/VFAT formatted iPod (<CODE>-t
+vfat</CODE>), if you own a HFS+ formatted iPod (aka. Mac-iPod) please have a look at the 
+next section 'Convert your Mac iPod' before using <CODE>mount</CODE>.
+</P><P>
+
+<A NAME="Convert your Mac iPod"></A>
+<HR SIZE="6">
+<A NAME="SEC6"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC5"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC7"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 3.3 Convert your Mac iPod </H2>
+<!--docid::SEC6::-->
+<P>
+
+If the Operating System you are running doesn't have write support for HFS+ and your iPod is 
+HFS+ Formatted (aka 'Mac-iPod') you will have to reformat the iPod.
+</P><P>
+
+Note: The only Operating System with write support for HFS+ wich i know is Darwin/OSX. If you are using 
+GNU/Linux and own a Mac-iPod you'll have to convert your iPod.
+If you own a Win-iPod, you can skip this section.
+</P><P>
+
+The first step is to upgrade your iPod to Firmware 1.1.0 or newer.
+(YES: 1.1.0 can read FAT32, but Apple never shipped FAT32 formatted iPods with 1.1.0. 
+Firmware 1.1.0 seems to use less power (has 1.20 a rtc problem?), but the name of the 
+iPod won't show up in the 'Info' menu... ;-) ) 
+</P><P>
+
+You can do this with Mac OSX using the Apple Firmware upgrader, it's aviable from:
+http://www.apple.com/ipod/download/
+</P><P>
+
+If you don't own Mac OSX you can update the Mac-iPod using Linux.
+Have a look at the next section to learn how to do this.
+</P><P>
+
+Also note that you will need a fdisk for DOS-Style partitions. The kernel you are running has also to support 
+DOS-Style partitions.
+If you are using GNU/Linux on x86, your fdisk should be fine, but if you are running GNU/Linux on 
+(for example) PowerPC you may have to get a suitable fdisk from the util-linux package wich can
+be retrieved from: ftp://ftp.kernel.org/pub/linux/utils/util-linux/
+</P><P>
+
+Compile and install the pc-fdisk (and only the pc-fdisk!)
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>tar -xjvf util-linux-X.XXx.tar.bz2
+cd util-linux-X.XXx
+./configure
+cd fdisk
+make
+cp fdisk /usr/sbin/pc-fdisk
+</pre></td></tr></table></P><P>
+
+We assume your iPod at <CODE>/dev/sda</CODE>. (No, don't mount the iPod, simply plugin the iPod and make sure it
+got detected with <CODE>dmesg</CODE>.
+</P><P>
+
+Here we go:
+</P><P>
+
+First, we 'backup' the current Firmware
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>dd if=/dev/sda2 of=backup_firmware
+</pre></td></tr></table></P><P>
+
+This should result in a ~32Mb big file,now we have to kill the old partition map and force the kernel 
+to re-read the new (empty) map
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>dd if=/dev/zero of=/dev/sda bs=1M count=10
+rmmod sbp2 &#38;&#38; insmod sbp2
+</pre></td></tr></table></P><P>
+
+Now we can use 'pc-fdisk' to create a new partition layout:
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>pc-fdisk /dev/sda [start fdisk]
+
+
+Command (m for help): n [make new partition]
+Command action
+   e extended
+   p primary partition (1-4)
+p we want primary
+Partition number (1-4): 1
+First cylinder (1-608, default 1): [just press enter]
+Using default value 1
+Last cylinder or +size or +sizeM or +sizeK (1-608, default 608): 5S [Look out: 5S .. S as in Ship]
+
+Command (m for help): n
+Command action
+   e extended
+   p primary partition (1-4)
+p
+Partition number (1-4): 2
+First cylinder (6-608, default 6): 6 [is okay, or even needed.. just press enter]
+Using default value 6
+Last cylinder or +size or +sizeM or +sizeK (6-608, default 608): [press ENTER]
+Using default value 608 [If you don't own a 5gb iPod, this value will be different, don't care about it]
+
+Command (m for help): t [Modify type]
+Partition number (1-4): 1
+Hex code (type L to list codes): 0 [we don't care about the warning below]
+Type 0 means free space to many systems
+(but not to Linux). Having partitions of
+type 0 is probably unwise. You can delete
+a partition using the `d' command.
+Changed system type of partition 1 to 0 (Empty)
+
+Command (m for help): t
+Partition number (1-4): 2 [this is where data will go]
+Hex code (type L to list codes): b [b=FAT32]
+Changed system type of partition 2 to b (Win95 FAT32)
+
+
+Command (m for help): w [Writing new partition. Can take a while.]
+The partition table has been altered!
+
+Calling ioctl() to re-read partition table.
+Syncing disks.
+</pre></td></tr></table></P><P>
+
+Puh.. this was hard :)
+Now we can rewrite the Firmwarebackup we created above.
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>dd if=backup_firmware of=/dev/sda1
+</pre></td></tr></table></P><P>
+
+You may ask why we now write the Firmware to sda1 while we read it from sda2, the answear is simple:
+Before running fdisk, the iPod was a Mac-iPod with a different Partition layout, but now the iPod is a Win-iPod, belive me: sda1 
+is correct.
+</P><P>
+
+After writing back the Firmware we can format the iPod:
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>mkfs.vfat -F 32 -n "LUNIX" /dev/sda2
+</pre></td></tr></table></P><P>
+
+"LUNIX" is the name of the iPod, you can use another name if you like. After mkfs.vfat is done, we remove sbp2:
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>rmmod sbp2
+</pre></td></tr></table></P><P>
+
+Unplug the iPod and pray. If everything went well, the iPod boots up :).
+If not, reread this section, if you are lost, feel free to drop me a mail: bug-gnupod@gnu.org
+</P><P>
+
+<A NAME="Firmware update"></A>
+<HR SIZE="6">
+<A NAME="SEC7"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC6"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC8"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 3.4 Firmware update </H2>
+<!--docid::SEC7::-->
+<P>
+
+** Don't update the Firmware just for fun, only do it if you need a 
+new Firmware or/and the documentation told you to do this **
+</P><P>
+
+Setup Firewire as described in 'Using FireWire with GNU/Linux', load the modules and make sure sbp2 detected your iPod.
+Do not try to mount the iPod. We assume your iPod at <CODE>/dev/sda</CODE>.
+</P><P>
+
+First you need to get a new Firmware wich you can download from http://www.iweenie.com/ipod.shtml
+</P><P>
+
+If you got a FAT32 formatted iPod (..or you plan to 'convert' the iPod after upgrading the Firmware), you'll need 
+Version 1.1.0 or newer.
+</P><P>
+
+Let's say, you downloaded the File 121.zip (Firmware version 1.2.1), you'll have now to unzip this file.
+Unzip should be preinstalled on most Systems (if not, you can get it from http://www.info-zip.org/pub/infozip/UnZip.html).
+</P><P>
+
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>unzip 121.zip 
+Archive:  121.zip
+  inflating: 121.bin  
+</pre></td></tr></table></P><P>
+
+Ok, we are now ready to write the new firmware to the iPod.
+</P><P>
+
+If your iPod is HFS+ Formatted (your kernel supports 'mac-style' partitions??), use
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>dd if=121.bin of=/dev/sda2
+</pre></td></tr></table></P><P>
+
+to upgrade the Firmware. If you own a FAT32 Formatted (your kernel supports 'dos-style' partitions??) iPod, use
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>dd if=121.bin of=/dev/sda1
+</pre></td></tr></table></P><P>
+
+After <CODE>dd</CODE> finished (it can take some time), remove sbp2
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>rmmod sbp2
+</pre></td></tr></table></P><P>
+
+You can now unplug the iPod and pray ;)
+</P><P>
+
+It could be possible to damage the iPod with this action, but the iPod is very clever looking for new Firmware.
+Even if you uploaded 121.zip to the iPod it shouldn't reflash itself with the bad
+Firmware... (because the zip file wouldn't have a correct checksum) 
+</P><P>
+
+But please don't blame me if your iPod dies...
+</P><P>
+
+<A NAME="Using GNUpod"></A>
+<HR SIZE="6">
+<A NAME="SEC8"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC7"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC9"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC3"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC17"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H1> 4. Using GNUpod </H1>
+<!--docid::SEC8::-->
+<BLOCKQUOTE><TABLE BORDER=0 CELLSPACING=0> 
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC9">4.1 Preparation</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">How to mount and prepare the iPod for GNUpod</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC10">4.2 Add files</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">How to add MP3 files to the iPod</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC11">4.3 Search files</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">How to search for files on the iPod</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC12">4.4 Remove files</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">How to delete files on the iPod</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC13">4.5 Creating playlists</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">How to create a playlist</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC14">4.6 Unplug the iPod</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">How to unplug the iPod (Not a joke.. read it)</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC15">4.7 Recovering files</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">How to rebuild the Database if you lost the iTunesDB &#38; GNUtunesDB</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC16">4.8 Coexistence</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">iTunes/Music Match/xtunes/Ehpod user? Read this!</TD></TR>
+</TABLE></BLOCKQUOTE>
+<P>
+
+<A NAME="Preparation"></A>
+<HR SIZE="6">
+<A NAME="SEC9"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC8"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC10"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 4.1 Preparation </H2>
+<!--docid::SEC9::-->
+<P>
+
+Mount the iPod (i assume you mount it at /mnt/ipod) as described in 'Using FireWire with GNUpod'
+</P><P>
+
+If the iPod is freshly formatted (= empty - no songs), run
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>gnupod_INIT -m /mnt/ipod
+</pre></td></tr></table></P><P>
+
+If the iPod isn't empty and you never used gnuPod before, run
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>mkdir /mnt/ipod/iPod_Control/.gnupod
+touch /mnt/ipod/iPod_Control/.gnupod/GNUtunesDB
+touch /mnt/ipod/iPod_Control/iTunes/iTunesDB
+tunes2pod.pl -m /mnt/ipod
+</pre></td></tr></table></P><P>
+
+Your iPod is now ready for GNUpod!
+</P><P>
+
+<A NAME="Add files"></A>
+<HR SIZE="6">
+<A NAME="SEC10"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC9"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC11"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 4.2 Add files </H2>
+<!--docid::SEC10::-->
+<P>
+
+To add files, we use the script called <CODE>gnupod_addsong.pl</CODE>.
+</P><P>
+
+First, mount the iPod (eg. at /mnt/ipod) if it isn't mounted.
+</P><P>
+
+If you would like to add the file /tmp/foo.mp3, run gnupod_addsong.pl like this:
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>gnupod_addsong.pl -m /mnt/ipod /tmp/foo.mp3
+</pre></td></tr></table></P><P>
+
+You can also use wildcards:
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>gnupod_addsong.pl -m /mnt/ipod /mnt/mp3/seiken_densetsu2_ost/* /mnt/mp3/xenogears/ost?/*
+</pre></td></tr></table></P><P>
+
+It isn't possible to add the same MP3 multiple times, gnupod_addsong.pl detects duplicates 
+(Duplicate = same filesize/time and ID3Tag name).
+</P><P>
+
+DO NOT umount the iPod yet! First read the section 'Unplug the iPod'!
+</P><P>
+
+<A NAME="Search files"></A>
+<HR SIZE="6">
+<A NAME="SEC11"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC10"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC12"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 4.3 Search files </H2>
+<!--docid::SEC11::-->
+<P>
+
+GNUpod includes a tool called <CODE>gnupod_search.pl</CODE> wich helps you searching for files.
+</P><P>
+
+Maybe you would like to search for the artist called 'Schlummiguch'. In this case, run
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>gnupod_search.pl -m /mnt/ipod -a "Schlummiguch"
+</pre></td></tr></table></P><P>
+
+Please have a look at <CODE>gnupod_search.pl --help</CODE> for more information.
+</P><P>
+
+<A NAME="Remove files"></A>
+<HR SIZE="6">
+<A NAME="SEC12"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC11"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC13"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 4.4 Remove files </H2>
+<!--docid::SEC12::-->
+<P>
+
+Every file on the iPod has an unique ID, to delete a file, you'll have to know the ID.
+</P><P>
+
+To get the desired ID, open the file <CODE>iPod_Control/.gnupod/GNUtunesDB</CODE> stored on your iPod.
+</P><P>
+
+To delete the file with id="1", simply use
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>gnupod_delete.pl -m /mnt/ipod 1
+</pre></td></tr></table></P><P>
+
+But there is also a much more confortable way to do this. You can use <CODE>gnupod_search.pl</CODE> to tell 
+<CODE>gnupod_delete.pl</CODE> wich songs it should remove.
+</P><P>
+
+Remember how we searched for the artist 'Schlummiguch' in the previous section?
+</P><P>
+
+This command would delete every song of the artist Schlummiguch:
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>gnupod_delete -m /mnt/ipod `gnupod_search -m /mnt/ipod -a "Schlummiguch" -n`
+</pre></td></tr></table></P><P>
+
+Note: we added the '-n' switch to the search command and we use backticks!
+</P><P>
+
+<A NAME="Creating playlists"></A>
+<HR SIZE="6">
+<A NAME="SEC13"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC12"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC14"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 4.5 Creating playlists </H2>
+<!--docid::SEC13::-->
+<P>
+
+Open the file <CODE>iPod_Control/.gnupod/GNUtunesDB</CODE> in a editor (It's a XML File).
+</P><P>
+
+To create a playlist named 'sweet' wich holds the songs with the ID 1 and 2, create something like this:
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>&#60;playlist name="sweet"&#62;
+ &#60;add id="1" /&#62;
+ &#60;add id="2" /&#62;
+&#60;/playlist&#62;
+</pre></td></tr></table></P><P>
+
+You are not limited to use 'id', you can also use other attributes:
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>&#60;playist name="bogus"&#62;
+ &#60;add album="seiken densetsu" bitrate="256" /&#62;
+&#60;/playlist&#62;
+</pre></td></tr></table>This would add every song from the album 'Seiken Densetsu' (&#60;add.. is case INsensitive) with a bitrate of 256kbit/s.
+</P><P>
+
+Since GNUpod 0.26 it's also possible to use Regular Expressions (Regex).
+See <CODE>perldoc perlre</CODE> to learn more about this
+</P><P>
+
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>&#60;playlist name="Regex Demo"&#62;
+ &#60;regex album="^A" /&#62;
+ &#60;iregex album="^b" /&#62;
+&#60;/playlist&#62;
+</pre></td></tr></table></P><P>
+
+&#60;regex is case sensitive, use &#60;iregex to do case insensitive matching.
+</P><P>
+
+For more examples have a look at <CODE>doc/gnutunesdb.example</CODE> included in the GNUpod tarball.
+</P><P>
+
+Don't forget to run mktunes before umounting! (See 'Unplug the iPod')
+</P><P>
+
+<A NAME="Unplug the iPod"></A>
+<HR SIZE="6">
+<A NAME="SEC14"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC13"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC15"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 4.6 Unplug the iPod </H2>
+<!--docid::SEC14::-->
+<P>
+
+Before umounting the iPod, you have to call <CODE>mktunes.pl</CODE> wich will 
+parse the GNUtunesDB XML file and convert it into the iTunesDB format.
+</P><P>
+
+Simply run
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>mktunes.pl -s -m /mnt/ipod
+</pre></td></tr></table></P><P>
+
+After <CODE>mktunes.pl</CODE> is done, you can umount the iPod and remove the sbp2 module
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>umount /mnt/ipod
+rmmod sbp2
+</pre></td></tr></table></P><P>
+
+Added songs won't be visible on the iPod if you did not run mktunes.pl before umounting the iPod. 
+(If you forgot to run <CODE>mktunes.pl</CODE> before unpluging/umounting, simply mount the iPod again and run it)
+</P><P>
+
+<A NAME="Recovering files"></A>
+<HR SIZE="6">
+<A NAME="SEC15"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC14"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC16"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 4.7 Recovering files </H2>
+<!--docid::SEC15::-->
+<P>
+
+If you lost your iTunesDB and your GNUtunesDB, your iPod won't know anymore wich songs are on it, this 
+very good ;)
+</P><P>
+
+You can 'rebuild' an GNUtunesDB using <CODE>gnupod_addsong.pl</CODE>
+</P><P>
+
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>gnupod_INIT.pl -m /mnt/ipod
+gnupod_addsong.pl --rebuild -m /mnt/ipod
+</pre></td></tr></table></P><P>
+
+First, <CODE>gnupod_INIT.pl</CODE> will create a clean, empty GNUtunesDB, it won't delete any songs on the iPod.
+<CODE>gnupod_addsong.pl --rebuild</CODE> will re-create a GNUtunesDB including the Songs wich are on the iPod
+</P><P>
+
+I think nobody will ever have to do this.. but it maybe usefull to know that it's possible
+(Note: Of course you'll lose your Playlists)
+</P><P>
+
+<A NAME="Coexistence"></A>
+<HR SIZE="6">
+<A NAME="SEC16"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC15"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC17"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 4.8 Coexistence </H2>
+<!--docid::SEC16::-->
+<P>
+
+GNUpod can coexist with iTunes and other programs for the iPod.
+</P><P>
+
+If you want to use an iPod with GNUpod and used something other than GNUpod (maybe iTunes)
+ to perform the last update (adding songs, editing playists.. doing something..), you'll have to
+ use <CODE>tunes2pod.pl</CODE> to update the (outdatet) GNUtunesDB.
+</P><P>
+
+Mount the iPod and run 
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>tunes2pod.pl -m /mnt/ipod
+</pre></td></tr></table></P><P>
+
+The iPod is now ready again for GNUpod.
+</P><P>
+
+You have to do this because GNUpod stores it's information in the GNUtunesDB, other programs are accessing the 
+iTunesDB directly. After you did something with eg. iTunes, the GNUtunesDB would be 'outdatet' and you would 
+lose any changes you made with iTunes. Running <CODE>tunes2pod.pl</CODE> will write a new GNUtunesDB wich
+reflects the content of the current iTunesDB.
+</P><P>
+
+You don't have to worry about this too much...
+GNUpod tells you when you need to run <CODE>tunes2pod.pl</CODE> and will refuse to 
+touch anything until you executed it.
+</P><P>
+
+You sould avoid the use of 'extended playlist support' if you use your iPod with other programs.
+</P><P>
+
+The Playlist part of this file...
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>&#60;files&#62;
+&#60;file id="1" title="hello" album="foo"..
+&#60;file id="2" title="boing" album="foo"..
+&#60;/files&#62;
+&#60;playlist name="extended"&#62;
+ &#60;add album="foo" /&#62;
+&#60;/playlist&#62;
+</pre></td></tr></table></P><P>
+
+..would look like this after using tunes2pod.pl
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>...
+&#60;playist name="extended"&#62;
+ &#60;add id="1" /&#62;
+ &#60;add id="2" /&#62;
+&#60;/playlist&#62;
+</pre></td></tr></table></P><P>
+
+The songs are still in the playlists, but the expressions you wrote are 'lost'.
+</P><P>
+
+<A NAME="Problems"></A>
+<HR SIZE="6">
+<A NAME="SEC17"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC16"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC18"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC8"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC22"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H1> 5. Problems </H1>
+<!--docid::SEC17::-->
+<P>
+
+<BLOCKQUOTE><TABLE BORDER=0 CELLSPACING=0> 
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC18">5.1 RedHat8</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">How to get GNUpod working on RedHat 8</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC19">5.2 Get rid of '-m'</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">You don't like the -m switch?</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC20">5.3 Known bugs and limitations</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">GNUpod isn't perfect :)</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="gnupod.html#SEC21">5.4 Reporting Bugs</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">How to report a Bug</TD></TR>
+</TABLE></BLOCKQUOTE>
+<P>
+
+<A NAME="RedHat8"></A>
+<HR SIZE="6">
+<A NAME="SEC18"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC17"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC19"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 5.1 RedHat8 </H2>
+<!--docid::SEC18::-->
+<P>
+
+If you are using RedHat8, GNUpod may seem to work, but the iPod won't show any songs/playlists.
+</P><P>
+
+The Perl binary included with RedHat8 doesn't work as it should if you enabled UTF8 as locale (default?).
+</P><P>
+
+Before running any GNUpod command (in particular <CODE>mktunes.pl</CODE> and <CODE>tunes2pod.pl</CODE>) execute
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>unset LANG
+</pre></td></tr></table></P><P>
+
+Other solutions:
+<UL>
+<LI>Recompile Perl
+<LI>Install another distribution
+</UL>
+<P>
+
+This is NOT a GNUpod bug. I will not answear any RedHat8 specific bugreports.
+RedHat8 was your choice. This broken distribution is not my problem.. it's yours.. sorry
+</P><P>
+
+<A NAME="Get rid of '-m'"></A>
+<HR SIZE="6">
+<A NAME="SEC19"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC18"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC20"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 5.2 Get rid of '-m' </H2>
+<!--docid::SEC19::-->
+<P>
+
+You don't have to use the '-m' switch if you set IPOD_MOUNTPOINT.
+(Example for the BASH)
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>export IPOD_MOUNTPOINT="/mnt/ipod"
+</pre></td></tr></table></P><P>
+
+<A NAME="Known bugs and limitations"></A>
+<HR SIZE="6">
+<A NAME="SEC20"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC19"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC21"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 5.3 Known bugs and limitations </H2>
+<!--docid::SEC20::-->
+<P>
+
+<UL>
+<LI>Not all options of iTunes are supported (eg. Rating)
+<LI>Latin1 ist the only supported charset
+</UL>
+<P>
+
+<A NAME="Reporting Bugs"></A>
+<HR SIZE="6">
+<A NAME="SEC21"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC20"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC22"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 5.4 Reporting Bugs </H2>
+<!--docid::SEC21::-->
+<P>
+
+To report a bug, send a mail to bug-gnupod@gnu.org
+</P><P>
+
+Include as much information as possible.
+</P><P>
+
+You may want to attach the files iPod_Control/.gnupod/GNUtunesDB and iPod_Control/iTunes/iTunesDB.
+But please use gzip or bzip2 to compress the files.
+</P><P>
+
+Please do not send me any mp3 files without asking me.
+</P><P>
+
+<A NAME="GNU Free Documentation License"></A>
+<HR SIZE="6">
+<A NAME="SEC22"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC21"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC23"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC17"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H1> A. GNU Free Documentation License </H1>
+<!--docid::SEC22::-->
+<center>
+ Version 1.2, November 2002
+</center>
+<P>
+
+<TABLE><tr><td>&nbsp;</td><td class=display><pre style="font-family: serif">Copyright &copy; 2000,2001,2002 Free Software Foundation, Inc.
+59 Temple Place, Suite 330, Boston, MA  02111-1307, USA
+
+Everyone is permitted to copy and distribute verbatim copies
+of this license document, but changing it is not allowed.
+</pre></td></tr></table></P><P>
+
+<OL>
+<LI>
+PREAMBLE
+<P>
+
+The purpose of this License is to make a manual, textbook, or other
+functional and useful document <EM>free</EM> in the sense of freedom: to
+assure everyone the effective freedom to copy and redistribute it,
+with or without modifying it, either commercially or noncommercially.
+Secondarily, this License preserves for the author and publisher a way
+to get credit for their work, while not being considered responsible
+for modifications made by others.
+</P><P>
+
+This License is a kind of "copyleft", which means that derivative
+works of the document must themselves be free in the same sense.  It
+complements the GNU General Public License, which is a copyleft
+license designed for free software.
+</P><P>
+
+We have designed this License in order to use it for manuals for free
+software, because free software needs free documentation: a free
+program should come with manuals providing the same freedoms that the
+software does.  But this License is not limited to software manuals;
+it can be used for any textual work, regardless of subject matter or
+whether it is published as a printed book.  We recommend this License
+principally for works whose purpose is instruction or reference.
+</P><P>
+
+<LI>
+APPLICABILITY AND DEFINITIONS
+<P>
+
+This License applies to any manual or other work, in any medium, that
+contains a notice placed by the copyright holder saying it can be
+distributed under the terms of this License.  Such a notice grants a
+world-wide, royalty-free license, unlimited in duration, to use that
+work under the conditions stated herein.  The "Document", below,
+refers to any such manual or work.  Any member of the public is a
+licensee, and is addressed as "you".  You accept the license if you
+copy, modify or distribute the work in a way requiring permission
+under copyright law.
+</P><P>
+
+A "Modified Version" of the Document means any work containing the
+Document or a portion of it, either copied verbatim, or with
+modifications and/or translated into another language.
+</P><P>
+
+A "Secondary Section" is a named appendix or a front-matter section
+of the Document that deals exclusively with the relationship of the
+publishers or authors of the Document to the Document's overall
+subject (or to related matters) and contains nothing that could fall
+directly within that overall subject.  (Thus, if the Document is in
+part a textbook of mathematics, a Secondary Section may not explain
+any mathematics.)  The relationship could be a matter of historical
+connection with the subject or with related matters, or of legal,
+commercial, philosophical, ethical or political position regarding
+them.
+</P><P>
+
+The "Invariant Sections" are certain Secondary Sections whose titles
+are designated, as being those of Invariant Sections, in the notice
+that says that the Document is released under this License.  If a
+section does not fit the above definition of Secondary then it is not
+allowed to be designated as Invariant.  The Document may contain zero
+Invariant Sections.  If the Document does not identify any Invariant
+Sections then there are none.
+</P><P>
+
+The "Cover Texts" are certain short passages of text that are listed,
+as Front-Cover Texts or Back-Cover Texts, in the notice that says that
+the Document is released under this License.  A Front-Cover Text may
+be at most 5 words, and a Back-Cover Text may be at most 25 words.
+</P><P>
+
+A "Transparent" copy of the Document means a machine-readable copy,
+represented in a format whose specification is available to the
+general public, that is suitable for revising the document
+straightforwardly with generic text editors or (for images composed of
+pixels) generic paint programs or (for drawings) some widely available
+drawing editor, and that is suitable for input to text formatters or
+for automatic translation to a variety of formats suitable for input
+to text formatters.  A copy made in an otherwise Transparent file
+format whose markup, or absence of markup, has been arranged to thwart
+or discourage subsequent modification by readers is not Transparent.
+An image format is not Transparent if used for any substantial amount
+of text.  A copy that is not "Transparent" is called "Opaque".
+</P><P>
+
+Examples of suitable formats for Transparent copies include plain
+ASCII without markup, Texinfo input format, LaTeX input
+format, <FONT SIZE="-1">SGML</FONT> or <FONT SIZE="-1">XML</FONT> using a publicly available
+<FONT SIZE="-1">DTD</FONT>, and standard-conforming simple <FONT SIZE="-1">HTML</FONT>,
+PostScript or <FONT SIZE="-1">PDF</FONT> designed for human modification.  Examples
+of transparent image formats include <FONT SIZE="-1">PNG</FONT>, <FONT SIZE="-1">XCF</FONT> and
+<FONT SIZE="-1">JPG</FONT>.  Opaque formats include proprietary formats that can be
+read and edited only by proprietary word processors, <FONT SIZE="-1">SGML</FONT> or
+<FONT SIZE="-1">XML</FONT> for which the <FONT SIZE="-1">DTD</FONT> and/or processing tools are
+not generally available, and the machine-generated <FONT SIZE="-1">HTML</FONT>,
+PostScript or <FONT SIZE="-1">PDF</FONT> produced by some word processors for
+output purposes only.
+</P><P>
+
+The "Title Page" means, for a printed book, the title page itself,
+plus such following pages as are needed to hold, legibly, the material
+this License requires to appear in the title page.  For works in
+formats which do not have any title page as such, "Title Page" means
+the text near the most prominent appearance of the work's title,
+preceding the beginning of the body of the text.
+</P><P>
+
+A section "Entitled XYZ" means a named subunit of the Document whose
+title either is precisely XYZ or contains XYZ in parentheses following
+text that translates XYZ in another language.  (Here XYZ stands for a
+specific section name mentioned below, such as "Acknowledgements",
+"Dedications", "Endorsements", or "History".)  To "Preserve the Title"
+of such a section when you modify the Document means that it remains a
+section "Entitled XYZ" according to this definition.
+</P><P>
+
+The Document may include Warranty Disclaimers next to the notice which
+states that this License applies to the Document.  These Warranty
+Disclaimers are considered to be included by reference in this
+License, but only as regards disclaiming warranties: any other
+implication that these Warranty Disclaimers may have is void and has
+no effect on the meaning of this License.
+</P><P>
+
+<LI>
+VERBATIM COPYING
+<P>
+
+You may copy and distribute the Document in any medium, either
+commercially or noncommercially, provided that this License, the
+copyright notices, and the license notice saying this License applies
+to the Document are reproduced in all copies, and that you add no other
+conditions whatsoever to those of this License.  You may not use
+technical measures to obstruct or control the reading or further
+copying of the copies you make or distribute.  However, you may accept
+compensation in exchange for copies.  If you distribute a large enough
+number of copies you must also follow the conditions in section 3.
+</P><P>
+
+You may also lend copies, under the same conditions stated above, and
+you may publicly display copies.
+</P><P>
+
+<LI>
+COPYING IN QUANTITY
+<P>
+
+If you publish printed copies (or copies in media that commonly have
+printed covers) of the Document, numbering more than 100, and the
+Document's license notice requires Cover Texts, you must enclose the
+copies in covers that carry, clearly and legibly, all these Cover
+Texts: Front-Cover Texts on the front cover, and Back-Cover Texts on
+the back cover.  Both covers must also clearly and legibly identify
+you as the publisher of these copies.  The front cover must present
+the full title with all words of the title equally prominent and
+visible.  You may add other material on the covers in addition.
+Copying with changes limited to the covers, as long as they preserve
+the title of the Document and satisfy these conditions, can be treated
+as verbatim copying in other respects.
+</P><P>
+
+If the required texts for either cover are too voluminous to fit
+legibly, you should put the first ones listed (as many as fit
+reasonably) on the actual cover, and continue the rest onto adjacent
+pages.
+</P><P>
+
+If you publish or distribute Opaque copies of the Document numbering
+more than 100, you must either include a machine-readable Transparent
+copy along with each Opaque copy, or state in or with each Opaque copy
+a computer-network location from which the general network-using
+public has access to download using public-standard network protocols
+a complete Transparent copy of the Document, free of added material.
+If you use the latter option, you must take reasonably prudent steps,
+when you begin distribution of Opaque copies in quantity, to ensure
+that this Transparent copy will remain thus accessible at the stated
+location until at least one year after the last time you distribute an
+Opaque copy (directly or through your agents or retailers) of that
+edition to the public.
+</P><P>
+
+It is requested, but not required, that you contact the authors of the
+Document well before redistributing any large number of copies, to give
+them a chance to provide you with an updated version of the Document.
+</P><P>
+
+<LI>
+MODIFICATIONS
+<P>
+
+You may copy and distribute a Modified Version of the Document under
+the conditions of sections 2 and 3 above, provided that you release
+the Modified Version under precisely this License, with the Modified
+Version filling the role of the Document, thus licensing distribution
+and modification of the Modified Version to whoever possesses a copy
+of it.  In addition, you must do these things in the Modified Version:
+</P><P>
+
+<OL>
+<LI>
+Use in the Title Page (and on the covers, if any) a title distinct
+from that of the Document, and from those of previous versions
+(which should, if there were any, be listed in the History section
+of the Document).  You may use the same title as a previous version
+if the original publisher of that version gives permission.
+<P>
+
+<LI>
+List on the Title Page, as authors, one or more persons or entities
+responsible for authorship of the modifications in the Modified
+Version, together with at least five of the principal authors of the
+Document (all of its principal authors, if it has fewer than five),
+unless they release you from this requirement.
+<P>
+
+<LI>
+State on the Title page the name of the publisher of the
+Modified Version, as the publisher.
+<P>
+
+<LI>
+Preserve all the copyright notices of the Document.
+<P>
+
+<LI>
+Add an appropriate copyright notice for your modifications
+adjacent to the other copyright notices.
+<P>
+
+<LI>
+Include, immediately after the copyright notices, a license notice
+giving the public permission to use the Modified Version under the
+terms of this License, in the form shown in the Addendum below.
+<P>
+
+<LI>
+Preserve in that license notice the full lists of Invariant Sections
+and required Cover Texts given in the Document's license notice.
+<P>
+
+<LI>
+Include an unaltered copy of this License.
+<P>
+
+<LI>
+Preserve the section Entitled "History", Preserve its Title, and add
+to it an item stating at least the title, year, new authors, and
+publisher of the Modified Version as given on the Title Page.  If
+there is no section Entitled "History" in the Document, create one
+stating the title, year, authors, and publisher of the Document as
+given on its Title Page, then add an item describing the Modified
+Version as stated in the previous sentence.
+<P>
+
+<LI>
+Preserve the network location, if any, given in the Document for
+public access to a Transparent copy of the Document, and likewise
+the network locations given in the Document for previous versions
+it was based on.  These may be placed in the "History" section.
+You may omit a network location for a work that was published at
+least four years before the Document itself, or if the original
+publisher of the version it refers to gives permission.
+<P>
+
+<LI>
+For any section Entitled "Acknowledgements" or "Dedications", Preserve
+the Title of the section, and preserve in the section all the
+substance and tone of each of the contributor acknowledgements and/or
+dedications given therein.
+<P>
+
+<LI>
+Preserve all the Invariant Sections of the Document,
+unaltered in their text and in their titles.  Section numbers
+or the equivalent are not considered part of the section titles.
+<P>
+
+<LI>
+Delete any section Entitled "Endorsements".  Such a section
+may not be included in the Modified Version.
+<P>
+
+<LI>
+Do not retitle any existing section to be Entitled "Endorsements" or
+to conflict in title with any Invariant Section.
+<P>
+
+<LI>
+Preserve any Warranty Disclaimers.
+</OL>
+<P>
+
+If the Modified Version includes new front-matter sections or
+appendices that qualify as Secondary Sections and contain no material
+copied from the Document, you may at your option designate some or all
+of these sections as invariant.  To do this, add their titles to the
+list of Invariant Sections in the Modified Version's license notice.
+These titles must be distinct from any other section titles.
+</P><P>
+
+You may add a section Entitled "Endorsements", provided it contains
+nothing but endorsements of your Modified Version by various
+parties--for example, statements of peer review or that the text has
+been approved by an organization as the authoritative definition of a
+standard.
+</P><P>
+
+You may add a passage of up to five words as a Front-Cover Text, and a
+passage of up to 25 words as a Back-Cover Text, to the end of the list
+of Cover Texts in the Modified Version.  Only one passage of
+Front-Cover Text and one of Back-Cover Text may be added by (or
+through arrangements made by) any one entity.  If the Document already
+includes a cover text for the same cover, previously added by you or
+by arrangement made by the same entity you are acting on behalf of,
+you may not add another; but you may replace the old one, on explicit
+permission from the previous publisher that added the old one.
+</P><P>
+
+The author(s) and publisher(s) of the Document do not by this License
+give permission to use their names for publicity for or to assert or
+imply endorsement of any Modified Version.
+</P><P>
+
+<LI>
+COMBINING DOCUMENTS
+<P>
+
+You may combine the Document with other documents released under this
+License, under the terms defined in section 4 above for modified
+versions, provided that you include in the combination all of the
+Invariant Sections of all of the original documents, unmodified, and
+list them all as Invariant Sections of your combined work in its
+license notice, and that you preserve all their Warranty Disclaimers.
+</P><P>
+
+The combined work need only contain one copy of this License, and
+multiple identical Invariant Sections may be replaced with a single
+copy.  If there are multiple Invariant Sections with the same name but
+different contents, make the title of each such section unique by
+adding at the end of it, in parentheses, the name of the original
+author or publisher of that section if known, or else a unique number.
+Make the same adjustment to the section titles in the list of
+Invariant Sections in the license notice of the combined work.
+</P><P>
+
+In the combination, you must combine any sections Entitled "History"
+in the various original documents, forming one section Entitled
+"History"; likewise combine any sections Entitled "Acknowledgements",
+and any sections Entitled "Dedications".  You must delete all
+sections Entitled "Endorsements."
+</P><P>
+
+<LI>
+COLLECTIONS OF DOCUMENTS
+<P>
+
+You may make a collection consisting of the Document and other documents
+released under this License, and replace the individual copies of this
+License in the various documents with a single copy that is included in
+the collection, provided that you follow the rules of this License for
+verbatim copying of each of the documents in all other respects.
+</P><P>
+
+You may extract a single document from such a collection, and distribute
+it individually under this License, provided you insert a copy of this
+License into the extracted document, and follow this License in all
+other respects regarding verbatim copying of that document.
+</P><P>
+
+<LI>
+AGGREGATION WITH INDEPENDENT WORKS
+<P>
+
+A compilation of the Document or its derivatives with other separate
+and independent documents or works, in or on a volume of a storage or
+distribution medium, is called an "aggregate" if the copyright
+resulting from the compilation is not used to limit the legal rights
+of the compilation's users beyond what the individual works permit.
+When the Document is included an aggregate, this License does not
+apply to the other works in the aggregate which are not themselves
+derivative works of the Document.
+</P><P>
+
+If the Cover Text requirement of section 3 is applicable to these
+copies of the Document, then if the Document is less than one half of
+the entire aggregate, the Document's Cover Texts may be placed on
+covers that bracket the Document within the aggregate, or the
+electronic equivalent of covers if the Document is in electronic form.
+Otherwise they must appear on printed covers that bracket the whole
+aggregate.
+</P><P>
+
+<LI>
+TRANSLATION
+<P>
+
+Translation is considered a kind of modification, so you may
+distribute translations of the Document under the terms of section 4.
+Replacing Invariant Sections with translations requires special
+permission from their copyright holders, but you may include
+translations of some or all Invariant Sections in addition to the
+original versions of these Invariant Sections.  You may include a
+translation of this License, and all the license notices in the
+Document, and any Warrany Disclaimers, provided that you also include
+the original English version of this License and the original versions
+of those notices and disclaimers.  In case of a disagreement between
+the translation and the original version of this License or a notice
+or disclaimer, the original version will prevail.
+</P><P>
+
+If a section in the Document is Entitled "Acknowledgements",
+"Dedications", or "History", the requirement (section 4) to Preserve
+its Title (section 1) will typically require changing the actual
+title.
+</P><P>
+
+<LI>
+TERMINATION
+<P>
+
+You may not copy, modify, sublicense, or distribute the Document except
+as expressly provided for under this License.  Any other attempt to
+copy, modify, sublicense or distribute the Document is void, and will
+automatically terminate your rights under this License.  However,
+parties who have received copies, or rights, from you under this
+License will not have their licenses terminated so long as such
+parties remain in full compliance.
+</P><P>
+
+<LI>
+FUTURE REVISIONS OF THIS LICENSE
+<P>
+
+The Free Software Foundation may publish new, revised versions
+of the GNU Free Documentation License from time to time.  Such new
+versions will be similar in spirit to the present version, but may
+differ in detail to address new problems or concerns.  See
+<A HREF="http://www.gnu.org/copyleft/">http://www.gnu.org/copyleft/</A>.
+</P><P>
+
+Each version of the License is given a distinguishing version number.
+If the Document specifies that a particular numbered version of this
+License "or any later version" applies to it, you have the option of
+following the terms and conditions either of that specified version or
+of any later version that has been published (not as a draft) by the
+Free Software Foundation.  If the Document does not specify a version
+number of this License, you may choose any version ever published (not
+as a draft) by the Free Software Foundation.
+</OL>
+<P>
+
+<HR SIZE="6">
+<A NAME="SEC23"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC22"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H3> A.0.1 ADDENDUM: How to use this License for your documents </H3>
+<!--docid::SEC23::-->
+<P>
+
+To use this License in a document you have written, include a copy of
+the License in the document and put the following copyright and
+license notices just after the title page:
+</P><P>
+
+<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>  Copyright (C)  <VAR>year</VAR>  <VAR>your name</VAR>.
+  Permission is granted to copy, distribute and/or modify this document
+  under the terms of the GNU Free Documentation License, Version 1.2
+  or any later version published by the Free Software Foundation;
+  with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
+  A copy of the license is included in the section entitled ``GNU
+  Free Documentation License''.
+</FONT></pre></td></tr></table></P><P>
+
+If you have Invariant Sections, Front-Cover Texts and Back-Cover Texts,
+replace the "with...Texts." line with this:
+</P><P>
+
+<TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>    with the Invariant Sections being <VAR>list their titles</VAR>, with
+    the Front-Cover Texts being <VAR>list</VAR>, and with the Back-Cover Texts
+    being <VAR>list</VAR>.
+</FONT></pre></td></tr></table></P><P>
+
+If you have Invariant Sections without Cover Texts, or some other
+combination of the three, merge those two alternatives to suit the
+situation.
+</P><P>
+
+If your document contains nontrivial examples of program code, we
+recommend releasing these examples in parallel under your choice of
+free software license, such as the GNU General Public License,
+to permit their use in free software.
+</P><P>
+
+<table><tr><th valign=top>Jump to: &nbsp; </th><td><A HREF="gnupod.html#cp_D" style="text-decoration:none"><b>D</b></A>
+ &nbsp; 
+<A HREF="gnupod.html#cp_F" style="text-decoration:none"><b>F</b></A>
+ &nbsp; 
+<A HREF="gnupod.html#cp_I" style="text-decoration:none"><b>I</b></A>
+ &nbsp; 
+<A HREF="gnupod.html#cp_R" style="text-decoration:none"><b>R</b></A>
+ &nbsp; 
+<A HREF="gnupod.html#cp_S" style="text-decoration:none"><b>S</b></A>
+ &nbsp; 
+</td></tr></table><br><P></P>
+<TABLE border=0>
+<TR><TD></TD><TH ALIGN=LEFT>Index Entry</TH><TH ALIGN=LEFT> Section</TH></TR>
+<TR><TD COLSPAN=3> <HR></TD></TR>
+<TR><TH><A NAME="cp_D"></A>D</TH><TD></TD><TD></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="gnupod.html#SEC2">Darwin</A></TD><TD valign=top><A HREF="gnupod.html#SEC2">2. Requirements</A></TD></TR>
+<TR><TD COLSPAN=3> <HR></TD></TR>
+<TR><TH><A NAME="cp_F"></A>F</TH><TD></TD><TD></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="gnupod.html#SEC22">FDL, GNU Free Documentation License</A></TD><TD valign=top><A HREF="gnupod.html#SEC22">A. GNU Free Documentation License</A></TD></TR>
+<TR><TD COLSPAN=3> <HR></TD></TR>
+<TR><TH><A NAME="cp_I"></A>I</TH><TD></TD><TD></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="gnupod.html#SEC4">installation</A></TD><TD valign=top><A HREF="gnupod.html#SEC4">3.1 Installation of GNUpod</A></TD></TR>
+<TR><TD COLSPAN=3> <HR></TD></TR>
+<TR><TH><A NAME="cp_R"></A>R</TH><TD></TD><TD></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="gnupod.html#SEC2">requirements</A></TD><TD valign=top><A HREF="gnupod.html#SEC2">2. Requirements</A></TD></TR>
+<TR><TD COLSPAN=3> <HR></TD></TR>
+<TR><TH><A NAME="cp_S"></A>S</TH><TD></TD><TD></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="gnupod.html#SEC2">Solaris</A></TD><TD valign=top><A HREF="gnupod.html#SEC2">2. Requirements</A></TD></TR>
+<TR><TD COLSPAN=3> <HR></TD></TR>
+</TABLE><P></P><table><tr><th valign=top>Jump to: &nbsp; </th><td><A HREF="gnupod.html#cp_D" style="text-decoration:none"><b>D</b></A>
+ &nbsp; 
+<A HREF="gnupod.html#cp_F" style="text-decoration:none"><b>F</b></A>
+ &nbsp; 
+<A HREF="gnupod.html#cp_I" style="text-decoration:none"><b>I</b></A>
+ &nbsp; 
+<A HREF="gnupod.html#cp_R" style="text-decoration:none"><b>R</b></A>
+ &nbsp; 
+<A HREF="gnupod.html#cp_S" style="text-decoration:none"><b>S</b></A>
+ &nbsp; 
+</td></tr></table><br><HR SIZE="6">
+<A NAME="SEC_Contents"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H1>Table of Contents</H1>
+<BLOCKQUOTE>
+<A NAME="TOC1" HREF="gnupod.html#SEC1">1. GNUpod</A>
+<BR>
+<A NAME="TOC2" HREF="gnupod.html#SEC2">2. Requirements</A>
+<BR>
+<A NAME="TOC3" HREF="gnupod.html#SEC3">3. Installing GNUpod</A>
+<BR>
+<BLOCKQUOTE>
+<A NAME="TOC4" HREF="gnupod.html#SEC4">3.1 Installation of GNUpod</A>
+<BR>
+<A NAME="TOC5" HREF="gnupod.html#SEC5">3.2 Using FireWire with GNU/Linux</A>
+<BR>
+<A NAME="TOC6" HREF="gnupod.html#SEC6">3.3 Convert your Mac iPod</A>
+<BR>
+<A NAME="TOC7" HREF="gnupod.html#SEC7">3.4 Firmware update</A>
+<BR>
+</BLOCKQUOTE>
+<A NAME="TOC8" HREF="gnupod.html#SEC8">4. Using GNUpod</A>
+<BR>
+<BLOCKQUOTE>
+<A NAME="TOC9" HREF="gnupod.html#SEC9">4.1 Preparation</A>
+<BR>
+<A NAME="TOC10" HREF="gnupod.html#SEC10">4.2 Add files</A>
+<BR>
+<A NAME="TOC11" HREF="gnupod.html#SEC11">4.3 Search files</A>
+<BR>
+<A NAME="TOC12" HREF="gnupod.html#SEC12">4.4 Remove files</A>
+<BR>
+<A NAME="TOC13" HREF="gnupod.html#SEC13">4.5 Creating playlists</A>
+<BR>
+<A NAME="TOC14" HREF="gnupod.html#SEC14">4.6 Unplug the iPod</A>
+<BR>
+<A NAME="TOC15" HREF="gnupod.html#SEC15">4.7 Recovering files</A>
+<BR>
+<A NAME="TOC16" HREF="gnupod.html#SEC16">4.8 Coexistence</A>
+<BR>
+</BLOCKQUOTE>
+<A NAME="TOC17" HREF="gnupod.html#SEC17">5. Problems</A>
+<BR>
+<BLOCKQUOTE>
+<A NAME="TOC18" HREF="gnupod.html#SEC18">5.1 RedHat8</A>
+<BR>
+<A NAME="TOC19" HREF="gnupod.html#SEC19">5.2 Get rid of '-m'</A>
+<BR>
+<A NAME="TOC20" HREF="gnupod.html#SEC20">5.3 Known bugs and limitations</A>
+<BR>
+<A NAME="TOC21" HREF="gnupod.html#SEC21">5.4 Reporting Bugs</A>
+<BR>
+</BLOCKQUOTE>
+<A NAME="TOC22" HREF="gnupod.html#SEC22">A. GNU Free Documentation License</A>
+<BR>
+<BLOCKQUOTE>
+<BLOCKQUOTE>
+<A NAME="TOC23" HREF="gnupod.html#SEC23">A.0.1 ADDENDUM: How to use this License for your documents</A>
+<BR>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+<HR SIZE=1>
+<A NAME="SEC_OVERVIEW"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H1>Short Table of Contents</H1>
+<BLOCKQUOTE>
+<A NAME="TOC1" HREF="gnupod.html#SEC1">1. GNUpod</A>
+<BR>
+<A NAME="TOC2" HREF="gnupod.html#SEC2">2. Requirements</A>
+<BR>
+<A NAME="TOC3" HREF="gnupod.html#SEC3">3. Installing GNUpod</A>
+<BR>
+<A NAME="TOC8" HREF="gnupod.html#SEC8">4. Using GNUpod</A>
+<BR>
+<A NAME="TOC17" HREF="gnupod.html#SEC17">5. Problems</A>
+<BR>
+<A NAME="TOC22" HREF="gnupod.html#SEC22">A. GNU Free Documentation License</A>
+<BR>
+
+</BLOCKQUOTE>
+<HR SIZE=1>
+<A NAME="SEC_About"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="gnupod.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H1>About this document</H1>
+This document was generated 
+using <A HREF="http://www.mathematik.uni-kl.de/~obachman/Texi2html
+"><I>texi2html</I></A>
+<P></P>  
+The buttons in the navigation panels have the following meaning:
+<P></P>
+<table border = "1">
+<TR>
+<TH> Button </TH>
+<TH> Name </TH>
+<TH> Go to </TH>
+<TH> From 1.2.3 go to</TH>
+</TR>
+<TR>
+<TD ALIGN="CENTER">
+ [ &lt; ] </TD>
+<TD ALIGN="CENTER">
+Back
+</TD>
+<TD>
+previous section in reading order
+</TD>
+<TD>
+1.2.2
+</TD>
+</TR>
+<TR>
+<TD ALIGN="CENTER">
+ [ &gt; ] </TD>
+<TD ALIGN="CENTER">
+Forward
+</TD>
+<TD>
+next section in reading order
+</TD>
+<TD>
+1.2.4
+</TD>
+</TR>
+<TR>
+<TD ALIGN="CENTER">
+ [ &lt;&lt; ] </TD>
+<TD ALIGN="CENTER">
+FastBack
+</TD>
+<TD>
+previous or up-and-previous section 
+</TD>
+<TD>
+1.1
+</TD>
+</TR>
+<TR>
+<TD ALIGN="CENTER">
+ [ Up ] </TD>
+<TD ALIGN="CENTER">
+Up
+</TD>
+<TD>
+up section
+</TD>
+<TD>
+1.2
+</TD>
+</TR>
+<TR>
+<TD ALIGN="CENTER">
+ [ &gt;&gt; ] </TD>
+<TD ALIGN="CENTER">
+FastForward
+</TD>
+<TD>
+next or up-and-next section
+</TD>
+<TD>
+1.3
+</TD>
+</TR>
+<TR>
+<TD ALIGN="CENTER">
+ [Top] </TD>
+<TD ALIGN="CENTER">
+Top
+</TD>
+<TD>
+cover (top) of document
+</TD>
+<TD>
+ &nbsp; 
+</TD>
+</TR>
+<TR>
+<TD ALIGN="CENTER">
+ [Contents] </TD>
+<TD ALIGN="CENTER">
+Contents
+</TD>
+<TD>
+table of contents
+</TD>
+<TD>
+ &nbsp; 
+</TD>
+</TR>
+<TR>
+<TD ALIGN="CENTER">
+ [Index] </TD>
+<TD ALIGN="CENTER">
+Index
+</TD>
+<TD>
+concept index
+</TD>
+<TD>
+ &nbsp; 
+</TD>
+</TR>
+<TR>
+<TD ALIGN="CENTER">
+ [ ? ] </TD>
+<TD ALIGN="CENTER">
+About
+</TD>
+<TD>
+this page
+</TD>
+<TD>
+ &nbsp; 
+</TD>
+</TR>
+</TABLE>
+<P></P>
+where the <STRONG> Example </STRONG> assumes that the current position 
+is at <STRONG> Subsubsection One-Two-Three </STRONG> of a document of 
+the following structure:
+<UL>
+<LI> 1. Section One  </LI>
+<UL>
+<LI>1.1 Subsection One-One</LI>
+<UL>
+<LI> ... </LI>
+</UL>
+<LI>1.2 Subsection One-Two</LI>
+<UL>
+<LI>1.2.1 Subsubsection One-Two-One
+</LI><LI>1.2.2 Subsubsection One-Two-Two
+</LI><LI>1.2.3 Subsubsection One-Two-Three &nbsp; &nbsp; <STRONG>
+&lt;== Current Position </STRONG>
+</LI><LI>1.2.4 Subsubsection One-Two-Four
+</LI></UL>
+<LI>1.3 Subsection One-Three</LI>
+<UL>
+<LI> ... </LI>
+</UL>
+<LI>1.4 Subsection One-Four</LI>
+</UL>
+</UL>
+
+<HR SIZE=1>
+<BR>  
+<FONT SIZE="-1">
+This document was generated
+by <I>Adrian Ulrich</I> on <I>March, 8  2003</I>
+using <A HREF="http://www.mathematik.uni-kl.de/~obachman/Texi2html
+"><I>texi2html</I></A>
+</FONT>
+
+</BODY>
+</HTML>
