@@ -52,11 +52,11 @@ sub go {
  print "Pass 2: Checking Files on the iPod...\n";
  checkGNUtunes();
  
- print "..finished\n\n";
- print "  Total Playtime : ".int($TRACKER{TIME}/1000/60/60)." h\n";
- print "  Space used     : ".int($TRACKER{SIZE}/1024/1024/1024)." GB\n";
- print "  iPod files     : $TRACKER{GLOBFILES}\n";
- print "  GNUpod files   : $TRACKER{ITFILES}\n";
+ print   "..finished\n\n";
+ print   "  Total Playtime : ".int($TRACKER{TIME}/1000/60/60)." h\n";
+ printf ("  Space used     : %.2f GB\n",( $TRACKER{SIZE}/1024/1024/1024 ) );
+ print   "  iPod files     : $TRACKER{GLOBFILES}\n";
+ print   "  GNUpod files   : $TRACKER{ITFILES}\n";
  
  if($TRACKER{GLOBFILES} == $TRACKER{ITFILES} && $TRACKER{ERR} == 0) {
   print " -> Everything is fine :)\n";

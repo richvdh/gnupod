@@ -3,7 +3,15 @@ GNUpod 0.97 - codename
 Summary
 
 - 0.96 didn't write 'tracknum' for OGG Files, fixed now..
-  Thanks to <> for reporting..
+  Thanks to Ed Wandasiewicz for reporting this bug
+
+- You can now add MIDI files ;-) (with timidity)
+
+- Added --set-songnum option for gnupod_addsong.pl
+
+- Rewritten ConverterCore.. shouldn't break anything...
+
+
 
 
 *** OLD STUFF ***

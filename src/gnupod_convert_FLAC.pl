@@ -43,6 +43,8 @@ if($gimme eq "GET_META") {
    warn "Error: $@\n";
    exit(1);
  }
+ 
+ 
 print "_ARTIST:$ftag->{ARTIST}\n";
 print "_ALBUM:$ftag->{ALBUM}\n";
 print "_TITLE:$ftag->{TITLE}\n";

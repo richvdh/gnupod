@@ -27,8 +27,17 @@ use MP3::Info qw(:all);
 use GNUpod::FooBar;
 use GNUpod::QTfile;
 
-use constant FLAC_CONVERTER => 'gnupod_convert_FLAC.pl';
-use constant OGG_CONVERTER =>  'gnupod_convert_OGG.pl';
+#
+# How to add a converter:
+# 1. Define the first 4 bytes in NN_HEADERS
+# 2. write a decoder: gnupod_convert_BLA.pl
+# done!
+#
+
+my $NN_HEADERS = {'MThd' => { encoder=>'gnupod_convert_MIDI.pl', ftyp=>'MIDI'},
+                  'fLaC' => { encoder=>'gnupod_convert_FLAC.pl', ftyp=>'FLAC'},
+                  'OggS' => { encoder=>'gnupod_convert_OGG.pl',  ftyp=>'OGG'}};
+               
 
 
 
@@ -59,11 +68,8 @@ sub wtf_is {
   elsif(!-r $file) {
    warn "FileMagic.pm: Can't read '$file'\n";
   }
-  elsif(my $xflac = __is_flac($file,$flags,$con)) {             ## NON NATIVE
-   return($xflac->{ref}, {ftyp=>"FLAC"}, $xflac->{encoder});
-  }
-  elsif(my $xflac = __is_ogg($file,$flags,$con)) {              ## NON NATIVE
-   return($xflac->{ref}, {ftyp=>"OGG"}, $xflac->{encoder});
+  elsif(my $nnat  = __is_NonNative($file,$flags,$con)) { #Handle non-native formats
+   return($nnat->{ref}, {ftyp=>$nnat->{codec}}, $nnat->{encoder});
   }
   elsif(my $xqt = __is_qt($file,$flags)) {
    return ($xqt->{ref},  {ftyp=>$xqt->{codec}, format=>"m4a", extension=>"m4a|m4p|m4b"});
@@ -80,26 +86,27 @@ sub wtf_is {
 }
 
 ########################################################################
-#Handle Non-Native flac
-sub __is_flac {
- my($file, $flags,$con) = @_;
- 
+#Handle Non-Native MIDI files :)
+sub __is_NonNative {
+ my($file, $flags, $con) = @_;
  return undef unless $flags->{decode}; #Decoder is OFF per default!
  
- open(TFLAC, $file) or return undef;
-  my $flacbuff = undef;
-  read(TFLAC,$flacbuff,4);
- close(TFLAC);
+ open(TNN, $file) or return undef;
+  my $buff = undef;
+  read(TNN,$buff,4);
+ close(TNN);
  
- #Check if file has a flac header
- return undef if($flacbuff ne "fLaC");
+ my $encoder = $NN_HEADERS->{$buff}->{encoder};
+ return undef unless $encoder; #Nope
  
- #Read TAG using converter-api
- my $metastuff = converter_readmeta(FLAC_CONVERTER, $file,$con);
- return undef unless ref($metastuff) eq "HASH";
+ #Still here? -> We know how to decode this stuff
+ my $metastuff = converter_readmeta($encoder, $file, $con);
+ return undef unless ref($metastuff) eq "HASH"; #Failed .. hmm
+ 
  my %rh = ();
  my $cf = ((split(/\//,$file))[-1]);
  my @songa = pss($metastuff->{_TRACKNUM});
+
 
  $rh{artist}   = getutf8($metastuff->{_ARTIST} || "Unknown Artist");
  $rh{album}    = getutf8($metastuff->{_ALBUM}  || "Unknown Album");
@@ -107,46 +114,13 @@ sub __is_flac {
  $rh{genre}    = getutf8($metastuff->{_GENRE}  || "");
  $rh{songs}    = int($songa[1]);
  $rh{songnum}  = int($songa[0]); 
- $rh{comment}  = getutf8($metastuff->{_COMMENT} || "");
- $rh{fdesc}    = getutf8($metastuff->{_VENDOR} || "FLAC file without vendor");
-  
+ $rh{comment}  = getutf8($metastuff->{_COMMENT} || $metastuff->{FORMAT}." file");
+ $rh{fdesc}    = getutf8($metastuff->{_VENDOR} || "Converted using $encoder"); 
 
- return {ref=>\%rh, encoder=>FLAC_CONVERTER};
+
+ return {ref=>\%rh, encoder=>$encoder, codec=>$NN_HEADERS->{$buff}->{ftyp} };
 }
 
-########################################################################
-#Handle Non-Native OGG
-sub __is_ogg {
- my($file, $flags,$con) = @_;
- 
- return undef unless $flags->{decode}; #Decoder is OFF per default!
- 
- open(TOGG, $file) or return undef;
-  my $oggbuff = undef;
-  read(TOGG,$oggbuff,4);
- close(TOGG);
- 
- #Check if file has a ogg header
- return undef if($oggbuff ne "OggS");
- 
- #Read TAG using converter-api
- my $metastuff = converter_readmeta(OGG_CONVERTER, $file,$con);
- return undef unless ref($metastuff) eq "HASH";
- my %rh = ();
- my $cf = ((split(/\//,$file))[-1]);
- my @songa = pss($metastuff->{_TRACKNUM});
-
- $rh{artist}   = getutf8($metastuff->{_ARTIST} || "Unknown Artist");
- $rh{album}    = getutf8($metastuff->{_ALBUM}  || "Unknown Album");
- $rh{title}    = getutf8($metastuff->{_TITLE}  || $cf || "Unknown Title");
- $rh{genre}    = getutf8($metastuff->{_GENRE}  || "");
- $rh{songs}    = int($songa[1]);
- $rh{songnum}  = int($songa[0]); 
- $rh{comment}  = getutf8($metastuff->{_COMMENT} || "");
-  
-
- return {ref=>\%rh, encoder=>OGG_CONVERTER};
-}
 
 
 
@@ -317,9 +291,11 @@ sub pss {
 # Try to 'auto-guess' charset and return utf8
 sub getutf8 {
  my($in) = @_;
-
+ 
+ return undef unless $in; #Do not fsckup empty input
  $in =~ s/^(.)//;
  my $encoding = $1;
+
 
  if(ord($encoding) > 0 && ord($encoding) < 32) {
    warn "FileMagic.pm: warning: unsupportet ID3 Encoding found: ".ord($encoding)."\n";

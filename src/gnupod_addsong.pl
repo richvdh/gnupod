@@ -39,8 +39,10 @@ $int_count = 3; #The user has to send INT (Ctrl+C) x times until we stop
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode=s", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
-                   "set-artist=s", "set-album=s", "set-genre=s", "set-rating=i", "set-playcount=i", "playlist|p=s");
-GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b', 'disable-v1'=>'b', 'disable-v2'=>'b'},
+                   "set-artist=s", "set-album=s", "set-genre=s", "set-rating=i", "set-playcount=i",
+                   "set-songnum", "playlist|p=s");
+GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b',
+                                   'disable-v1'=>'b', 'disable-v2'=>'b', 'set-songnum'=>'b'},
                           "gnupod_addsong");
 
 
@@ -122,6 +124,8 @@ sub startup {
    $fh->{genre}     = $opts{'set-genre'}     if $opts{'set-genre'};
    $fh->{rating}    = $opts{'set-rating'}    if $opts{'set-rating'};
    $fh->{playcount} = $opts{'set-playcount'} if $opts{'set-playcount'};
+   $fh->{songnum}   = 1+$addcount            if $opts{'set-songnum'};
+   
    #Set the addtime to unixtime(now)+MACTIME (the iPod uses mactime)
    $fh->{addtime} = time()+MACTIME;
 
@@ -284,6 +288,7 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
        --set-genre=string          Set Genre  (Override ID3 Tag)
        --set-rating=int            Set Rating
        --set-playcount=int         Set Playcount
+       --set-songnum               Override 'Songnum/Tracknum' field
 
 Report bugs to <bug-gnupod\@nongnu.org>
 EOF

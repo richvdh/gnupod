@@ -28,6 +28,8 @@ use GNUpod::FooBar;
 use Getopt::Long;
 use vars qw(%opts @keeplist);
 
+use constant DEFAULT_SPACE => 32;
+
 print "gnupod_search.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
@@ -111,6 +113,7 @@ sub pview {
  
  #Build refs
  my %qh = ();
+ $qh{n}{k} = $orf->{songnum};   $qh{n}{w} = 4;  $qh{t}{n} = "SNUM";
  $qh{t}{k} = $orf->{title};                     $qh{t}{s} = "TITLE";
  $qh{a}{k} = $orf->{artist};                    $qh{a}{s} = "ARTIST";
  $qh{r}{k} = $orf->{rating};    $qh{r}{w} = 4;  $qh{r}{s} = "RTNG";
@@ -119,6 +122,7 @@ sub pview {
  $qh{g}{k} = $orf->{genre};                     $qh{g}{s} = "GENRE";
  $qh{c}{k} = $orf->{playcount}; $qh{c}{w} = 4;  $qh{c}{s} = "CNT";
  $qh{i}{k} = $orf->{id};        $qh{i}{w} = 4;  $qh{i}{s} = "ID";
+ $qh{u}{k} = GNUpod::XMLhelper::realpath($opts{mount},$orf->{path}); $qh{u}{w} = 96; $qh{u}{s} = "UNIXPATH";
  
  #Prepare view
  
@@ -128,7 +132,7 @@ sub pview {
       my $cs = $qh{$_}{k};           #CurrentString
          $cs = $qh{$_}{s} if $xhead; #Replace it if HEAD is needed
  
-      my $cl = $qh{$_}{w}||32;       #Current length
+      my $cl = $qh{$_}{w}||DEFAULT_SPACE;       #Current length
          $ll += $cl+1;               #Incrase LineLength
      printf("%-*s",$cl,$cs);
   }
@@ -167,8 +171,9 @@ Usage: gnupod_search.pl [-h] [-m directory] File1 File2 ...
    -o, --match-once        Search doesn't need to match multiple times (eg. -a & -l)
        --delete            REMOVE (!) matched songs
        --view=ialt         Modify output, default=ialt
-                            t = title    a = artist   r = rating      p = path
+                            t = title    a = artist   r = rating      p = iPod Path
                             l = album    g = genre    c = playcount   i = id
+                            u = UnixPath n = Songnum
 
 Note: Argument for title/artist/album.. has to be UTF8 encoded, *not* latin1!
 

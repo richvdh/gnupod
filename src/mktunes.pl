@@ -202,19 +202,20 @@ sub build_mhit {
  $chr{id} = $oid;
 my ($nhod,$cmhod,$cmhod_count) = undef;
 
- foreach(keys(%chr)) {
-  next unless $chr{$_}; #Dont create empty fields
+ foreach my $def (keys(%chr)) {
+  next unless $chr{$def}; #Dont create empty fields
 
   #Crop title if enabled
-  $chr{$_} = Unicode::String::utf8($chr{$_})->substr(0,18)->utf8 if $_ eq "title" && $opts{energy};
-  $nhod = GNUpod::iTunesDB::mk_mhod({stype=>$_, string=>$chr{$_}});
+  $chr{$def} = Unicode::String::utf8($chr{$def})->substr(0,18)->utf8 if $def eq "title" && $opts{energy};
+  
+  $nhod = GNUpod::iTunesDB::mk_mhod({stype=>$def, string=>$chr{$def}});
   next unless $nhod; #mk_mhod refused work, go to next item
   $cmhod .= $nhod;
   $cmhod_count++;
  }
  
   push(@MPLcontent,$oid);
- 
+
      #Volume adjust
      if($opts{volume}) {
       $chr{volume} += int($opts{volume});
@@ -225,12 +226,11 @@ my ($nhod,$cmhod,$cmhod_count) = undef;
       }
      }
      
-     
      #Ok, we created the mhod's for this item, now we have to create an mhit
      my $mhit = GNUpod::iTunesDB::mk_mhit({size=>length($cmhod), count=>$cmhod_count, fh=>\%chr}).$cmhod;
      $itb{mhit}{_data_} .= $mhit;
      my $length = length($mhit);
-     $itb{INFO}{FILES}++; #Count all files (Needed for iTunesDB header (first part)
+     $itb{INFO}{FILES}++; #Count all files (Needed for iTunesDB header (first part))
 
 return $length;
 }
