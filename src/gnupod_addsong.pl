@@ -135,7 +135,7 @@ sub usage {
 my($rtxt) = @_;
 die << "EOF";
 $rtxt
-Usage: gnupod_addsong.pl [-h] [-m directory | -x GNUtunesDB] File1 File2 ...
+Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
 
    -h, --help             : This ;)
    -m, --mount=directory  : iPod mountpoint, default is \$IPOD_MOUNTPOINT

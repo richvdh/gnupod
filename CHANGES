@@ -1,6 +1,6 @@
 GNUpod 0.92 - codename 'sachiel' (Skipped 'adam' & 'lilith' ;))
 
--> This version supports SmartPlaylists!
+-> This version supports SmartPlaylists (BETA!)
 
 iTunesDB.pm:
   * Fixed the very old 'gnupod versus iTunes' bug
@@ -18,6 +18,8 @@ iTunesDB.pm:
 XMLhelper.pm:
   * Misc cleanups
   * Added SPL-Support
+  * Added check for playlist duplicates
+  * Fixed escape bug for <playlist name=..
 
 tunes2pod.pl:
   * Added paranoia checks (stricter parsing)

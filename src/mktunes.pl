@@ -259,7 +259,7 @@ sub xmk_newpl {
          $ntm++;
        }
        foreach(keys(%mk)) {
-        push(@{${$name}}, $_) if $mk{$_} == $ntm;
+        push(@{$pldb{$name}}, $_) if $mk{$_} == $ntm;
        }
        
      }

@@ -80,7 +80,7 @@ $ret =~ s/&/&amp;/g;
 $ret =~ s/"/&quot;/g;
 $ret =~ s/</&lt;/g;
 $ret =~ s/>/&gt;/g;
-$ret =~ s/'/&apos;/g;
+#$ret =~ s/'/&apos;/g;
 
 return $ret;
 }
@@ -90,6 +90,7 @@ return $ret;
 
 ###############################################################
 # Create a new child (for playlists or file)
+# This is called by main::something.. not by myself
 sub mkfile {
  my($hr, $magic) = @_;
  my $r = undef;
@@ -118,18 +119,51 @@ sub mkfile {
 }
 
 ##############################################################
-# Add a playlist to output
+# Add a playlist to output (Called by eventer or tunes2pod.pl)
+# Creates a pref hash and the xmlheader
 sub addpl {
- push(@plorder, $_[0]);
+ my($name, $opt) = @_;
+ if(!$name || ref($XDAT->{playlists}->{pref}->{$name}) eq "HASH") {
+  warn "XMLhelper.pm: Playlist '$name' is a duplicate, skipping addpl()\n";
+  return;
+ }
+ push(@plorder, $name);
+
+ #Escape the prefs
+ my %rh = ();
+ my $xmlret = "";
+ $rh{name} = $name;
+ #Create the hash and the xml header
+  foreach (keys(%$opt)) {
+   $rh{$_} = $opt->{$_};
+   $xmlret .= xescaped($_)."=\"".xescaped($opt->{$_})."\" ";
+  }
+ $XDAT->{playlists}->{pref}->{$name} = \%rh;
+ $XDAT->{playlists}->{xmlheader}->{$name} = $xmlret;
 }
 
 ##############################################################
-# Add a SmartPlaylist to output
+# Add a SmartPlaylist to output (Called by eventer or tunes2pod.pl)
+# Creates a pref hash and the xmlheader
 sub addspl {
  my($name, $opt) = @_;
+ if(!$name || ref($XDAT->{spls}->{pref}->{$name}) eq "HASH") {
+  warn "XMLhelper.pm: Playlist '$name' is a duplicate, skipping addspl()\n";
+  return;
+ }
+
  push(@plorder, $name);
- $opt->{name} = $name;
- $XDAT->{spls}->{pref}->{$name} = $opt;
+ my %rh = ();
+ my $xmlret = "";
+ $rh{name} = $name;
+ #Create the hash and the xml header
+  foreach (keys(%$opt)) {
+   $rh{$_} = $opt->{$_};
+   $xmlret .= xescaped($_)."=\"".xescaped($opt->{$_})."\" ";
+  }
+  
+ $XDAT->{spls}->{pref}->{$name} = \%rh;
+ $XDAT->{spls}->{xmlheader}->{$name} = $xmlret;
 }
 
 
@@ -139,10 +173,17 @@ sub getpl_names {
  return @plorder;
 }
 
+##############################################################
+# Get SPL Prefs
 sub get_splpref {
  return $XDAT->{spls}->{pref}->{$_[0]};
 }
 
+##############################################################
+# Get PL prefs
+sub get_plpref {
+ return $XDAT->{playlists}->{pref}->{$_[0]};
+}
 ##############################################################
 # Call events
 sub eventer {
@@ -156,8 +197,9 @@ sub eventer {
     main::newfile($xh);            #call sub
   } 
   elsif($href->{Context}[1] eq "" && $el eq "playlist") {
-    $cpn = mkh($el,@it)->{$el}->{name}; #Update current name
-    addpl($cpn); #Add this playlist
+    my $xh = mkh($el, @it); #Create hash
+    $cpn = $xh->{$el}->{name}; #Get current name
+    addpl($cpn,$xh->{$el}); #Add this playlist
   }
   elsif($href->{Context}[1] eq "playlist") {
    die "Fatal XML Error: playlist without name found!\n" if $cpn eq "";
@@ -209,7 +251,7 @@ sub writexml {
 
  print OUT "<?xml version='1.0' standalone='yes'?>\n";
  print OUT "<gnuPod>\n <files>\n";
-#Do file part
+#Do file part, it's present as XML
  foreach(@{$XDAT->{files}}) {
   print OUT "  $_\n";
  }
@@ -218,11 +260,8 @@ sub writexml {
 
 #Print all playlists
  foreach(@plorder) {
-  #addspl() will create {pref}->{$_}->{name} .. so this 'if' is safe
-  if(my $shr = get_splpref($_)) { #prefs present = is a spl
-      print OUT "\n <smartplaylist ";
-         foreach(keys(%$shr)) { print OUT "$_=\"$shr->{$_}\" "; }
-      print OUT ">\n";    
+  if(my $shr = $XDAT->{spls}->{xmlheader}->{$_}) { #xmlheader present
+      print OUT "\n <smartplaylist $shr>\n";
        ### items
         foreach my $sahr (@{$XDAT->{spls}->{data}->{$_}}) {
          print OUT "   $sahr\n";
@@ -230,12 +269,15 @@ sub writexml {
        ###
       print OUT " </smartplaylist>\n";
   }
-  else { #No prefs -> normal playlist
-      print OUT "\n <playlist name=\"$_\">\n";
+  elsif(my $phr = $XDAT->{playlists}->{xmlheader}->{$_}) { #plprefs found..
+      print OUT "\n <playlist $phr>\n";
        foreach(@{$XDAT->{playlists}->{data}->{$_}}) {
         print OUT "   $_\n";
        }
       print OUT " </playlist>\n";
+  }
+  else {
+   warn "XMLhelper.pm: bug found: unhandled plitem $_\n";
   }
  }
 print OUT "</gnuPod>\n";
