@@ -39,11 +39,11 @@ use vars qw(%mhod_id @mhod_array);
 # create an iTunesDB header
 sub mk_mhbd
 {
-my ($mhdb_size) = @_;
+my ($hr) = @_;
 
 my $ret = "mhbd";
    $ret .= pack("h8", _itop(104));                  #Header Size
-   $ret .= pack("h8", _itop($mhdb_size+104));       #size of the whole mhdb
+   $ret .= pack("h8", _itop($hr->{size}+104));       #size of the whole mhdb
    $ret .= pack("H8", "01");                       #?
    $ret .= pack("H8", "01");                       #? - changed to 2 from itunes2 to 3 .. version? We are iTunes version 1 ;)
    $ret .= pack("H8", "02");                       #?
@@ -57,12 +57,12 @@ return $ret;
 # mhsd2 holds playlists
 sub mk_mhsd
 {
-my ($fsize, $type) = @_;
+my ($hr) = @_;
 
 my $ret = "mhsd";
    $ret .= pack("h8", _itop(96));                      #Headersize, static
-   $ret .= pack("h8", _itop($fsize+96));               #Size
-   $ret .= pack("h8", _itop($type));                   #type .. 1 = song .. 2 = playlist
+   $ret .= pack("h8", _itop($hr->{size}+96));               #Size
+   $ret .= pack("h8", _itop($hr->{type}));                   #type .. 1 = song .. 2 = playlist
    $ret .= pack("H160", "00");                        #dummy space
 return $ret;
 }
@@ -71,30 +71,31 @@ return $ret;
 # Create an mhit entry, needs to know about the length of his
 # mhod(s) (You have to create them yourself..!)
 sub mk_mhit {
-my($hod_length, $hodcount, %file_hash) = @_;
+my($hr) = @_;
+my $file_hash = $hr->{fh};
 
 #We have to fix 'volume'
-my $vol = sprintf("%.0f",( int($file_hash{volume})*2.55 ));
+my $vol = sprintf("%.0f",( int($file_hash->{volume})*2.55 ));
 
 if($vol >= 0 && $vol <= 255) { } #Nothing to do
 elsif($vol < 0 && $vol >= -255) {            #Convert value
  $vol = oct("0xFFFFFFFF") + $vol; 
 }
 else {
- print STDERR "** Warning: ID $file_hash{id} has volume set to $file_hash{volume} percent. Volume set to +-0%\n";
+ print STDERR "** Warning: ID $file_hash->{id} has volume set to $file_hash->{volume} percent. Volume set to +-0%\n";
  $vol = 0; #We won't nuke the iPod with an ultra high volume setting..
 }
 
 foreach( ("rating", "prerating") ) {
- if($file_hash{$_} < 0 || $file_hash{$_} > 5) {
-  print STDERR "Warning: Song $file_hash{id} has an invalid $_: $file_hash{$_}\n";
-  $file_hash{$_} = 0;
+ if($file_hash->{$_} < 0 || $file_hash->{$_} > 5) {
+  print STDERR "Warning: Song $file_hash->{id} has an invalid $_: $file_hash->{$_}\n";
+  $file_hash->{$_} = 0;
  }
 }
 
 
 #Check for stupid input
-my ($c_id) = $file_hash{id} =~ /(\d+)/;
+my ($c_id) = $file_hash->{id} =~ /(\d+)/;
 if($c_id < 1) {
   print STDERR "Warning: ID has can't be $c_id, has to be > 0\n";
   print STDERR "         This song *won't* be visible on the iPod\n";
@@ -102,35 +103,35 @@ if($c_id < 1) {
 
 my $ret = "mhit";
    $ret .= pack("h8", _itop(156));                           #header size
-   $ret .= pack("h8", _itop(int($hod_length)+156));           #len of this entry
-   $ret .= pack("h8", _itop($hodcount));                     #num of mhods in this mhit
+   $ret .= pack("h8", _itop(int($hr->{size})+156));           #len of this entry
+   $ret .= pack("h8", _itop($hr->{count}));                     #num of mhods in this mhit
    $ret .= pack("h8", _itop($c_id));                 #Song index number
    $ret .= pack("h8", _itop(1));                             #?
    $ret .= pack("H8");                                      #dummyspace
    $ret .= pack("h8", _itop(256+(oct('0x14000000')
-                            *$file_hash{rating})));           #type+rating .. this is very STUPID..
+                            *$file_hash->{rating})));           #type+rating .. this is very STUPID..
    $ret .= pack("h8", _mactime());                           #timestamp (we create a dummy timestamp, iTunes doesn't seem to make use of this..?!)
-   $ret .= pack("h8", _itop($file_hash{filesize}));          #filesize
-   $ret .= pack("h8", _itop($file_hash{time}));              #seconds of song
-   $ret .= pack("h8", _itop($file_hash{songnum}));           #nr. on CD .. we dunno use it (in this version)
-   $ret .= pack("h8", _itop($file_hash{songs}));             #songs on this CD
-   $ret .= pack("h8", _itop($file_hash{year}));              #the year
-   $ret .= pack("h8", _itop($file_hash{bitrate}));           #bitrate
+   $ret .= pack("h8", _itop($file_hash->{filesize}));          #filesize
+   $ret .= pack("h8", _itop($file_hash->{time}));              #seconds of song
+   $ret .= pack("h8", _itop($file_hash->{songnum}));           #nr. on CD .. we dunno use it (in this version)
+   $ret .= pack("h8", _itop($file_hash->{songs}));             #songs on this CD
+   $ret .= pack("h8", _itop($file_hash->{year}));              #the year
+   $ret .= pack("h8", _itop($file_hash->{bitrate}));           #bitrate
    $ret .= pack("H8", "000044AC");                          #Srate*something ?!?
    $ret .= pack("h8", _itop($vol));                         #Volume
-   $ret .= pack("h8", _itop($file_hash{starttime}));        #Start time?
-   $ret .= pack("h8", _itop($file_hash{stoptime}));          #Stop time?
+   $ret .= pack("h8", _itop($file_hash->{starttime}));        #Start time?
+   $ret .= pack("h8", _itop($file_hash->{stoptime}));          #Stop time?
    $ret .= pack("H8");
-   $ret .= pack("h8", _itop($file_hash{playcount}));
+   $ret .= pack("h8", _itop($file_hash->{playcount}));
    $ret .= pack("H8");                                      #Sometimes eq playcount .. ?!
    $ret .= pack("h8");                                      #Last playtime.. FIXME
-   $ret .= pack("h8", _itop($file_hash{cdnum}));            #cd number
-   $ret .= pack("h8", _itop($file_hash{cds}));              #number of cds
+   $ret .= pack("h8", _itop($file_hash->{cdnum}));            #cd number
+   $ret .= pack("h8", _itop($file_hash->{cds}));              #number of cds
    $ret .= pack("H8");                                      #hardcoded space 
    $ret .= pack("h8", _mactime());                          #dummy timestamp again...
    $ret .= pack("H16");
    $ret .= pack("H8");                          #??
-   $ret .= pack("h8", _itop($file_hash{prerating}*oct('0x140000')));      #This is also stupid: the iTunesDB has a rating history
+   $ret .= pack("h8", _itop($file_hash->{prerating}*oct('0x140000')));      #This is also stupid: the iTunesDB has a rating history
    $ret .= pack("H8");                          # ???
    $ret .= pack("H56");                                     #
 return $ret;
@@ -156,7 +157,11 @@ sub mk_mhod
 #51  - SPL Stuff
 #100 - Playlist item or/and PlaylistLayout (used for trash? ;))
 
-my ($type_string, $string, $fqid) = @_;
+my ($hr) = @_;
+my $type_string = $hr->{stype};
+my $string = $hr->{string};
+my $fqid = $hr->{fqid};
+
 my $type = $mhod_id{lc($type_string)};
 
 return undef if !$type && !$fqid; #Invalid type string.. no problemo
@@ -214,11 +219,11 @@ return $ret;
 # header for all files (like you use mk_mhlp for playlists)
 sub mk_mhlt
 {
-my ($songnum) = @_;
+my ($hr) = @_;
 
 my $ret = "mhlt";
    $ret .= pack("h8", _itop(92)); 		    #Header size (static)
-   $ret .= pack("h8", _itop($songnum));              #songs in this itunesdb
+   $ret .= pack("h8", _itop($hr->{songs})); #songs in this itunesdb
    $ret .= pack("H160", "00");                      #dummy space
 return $ret;
 }
@@ -236,11 +241,11 @@ return $ret;
 sub mk_mhlp
 {
 
-my ($list_count) = @_;
+my ($hr) = @_;
 
 my $ret = "mhlp";
    $ret .= pack("h8", _itop(92));                   #Static header size
-   $ret .= pack("h8", _itop($list_count));          #playlists on iPod (including main!)
+   $ret .= pack("h8", _itop($hr->{playlists}));          #playlists on iPod (including main!)
    $ret .= pack("h160", "00");                     #dummy space
 return $ret;
 }
@@ -250,19 +255,18 @@ return $ret;
 # Creates an header for a new playlist (child of mk_mhlp)
 sub mk_mhyp
 {
-my ($plc_size, $listname, $type, $anz) = @_;
-
+my($hr) = @_;
 
 #We need to create a listview-layout and an mhod with the name..
-my $appnd = __dummy_listview().mk_mhod("title", $listname);   #itunes prefs for this PL & PL name (default PL has  device name as PL name)
+my $appnd = __dummy_listview().mk_mhod({stype=>"title", string=>$hr->{name}});   #itunes prefs for this PL & PL name (default PL has  device name as PL name)
 
  
 my $ret .= "mhyp";
    $ret .= pack("h8", _itop(108)); #type?
-   $ret .= pack("h8", _itop($plc_size+108+(length($appnd))));          #size
+   $ret .= pack("h8", _itop($hr->{size}+108+(length($appnd))));          #size
    $ret .= pack("H8", "02");			      #? 
-   $ret .= pack("h8", _itop($anz));     		      #songs in pl
-   $ret .= pack("h8", _itop($type));  	              # 1 = main .. 0=not main
+   $ret .= pack("h8", _itop($hr->{files}));   #songs in pl
+   $ret .= pack("h8", _itop($hr->{type}));    # 1 = main .. 0=not main
    $ret .= pack("H8", "00"); 			      #?
    $ret .= pack("H8", "00");                          #?
    $ret .= pack("H8", "00");                          #?
@@ -276,15 +280,17 @@ my $ret .= "mhyp";
 # header for new Playlist item (child if mk_mhyp)
 sub mk_mhip
  {
-my ($plid, $id) = @_;
-  print STDERR "MK $id // (order?) $plid?\n";
+my ($hr) = @_;
+#sid = SongId
+#plid = playlist order ID
+  print STDERR "MK $hr->{sid} // (order?) $hr->{plid}\n";
 my $ret = "mhip";
    $ret .= pack("h8", _itop(76));
    $ret .= pack("h8", _itop(76));
    $ret .= pack("h8", _itop(1));
    $ret .= pack("H8", "00");
-   $ret .= pack("h8", _itop($plid)); #ORDER id
-   $ret .= pack("h8", _itop($id));   #song id in playlist
+   $ret .= pack("h8", _itop($hr->{plid})); #ORDER id
+   $ret .= pack("h8", _itop($hr->{sid}));   #song id in playlist
    $ret .= pack("H96", "00");
   return $ret;
  }
@@ -341,28 +347,36 @@ $ret = "mhod";                          #header
 $ret .= pack("H8", reverse("18"));      #size of header
 $ret .= pack("H8", reverse("8802"));    #$slen+40 - size of header+body
 $ret .= pack("H8", reverse("64"));      #type of the entry
-$ret .= pack("H48", "00");
-$ret .= pack("H8", reverse("840001"));  #?
-$ret .= pack("H8", reverse("05"));      #?
+$ret .= pack("H48", "00");                #?
+$ret .= pack("H8", reverse("840001"));  #? (Static?)
+$ret .= pack("H8", reverse("01"));      #?
 $ret .= pack("H8", reverse("09"));      #?
-$ret .= pack("H8", reverse("03"));      #?
-$ret .= pack("H32", reverse("010012")); #static? (..or width of col?)
-$ret .= pack("H32", reverse("0200C8")); #static?
-$ret .= pack("H32", reverse("0D003C")); #?
-$ret .= pack("H32", reverse("04007D")); #static?
-$ret .= pack("H32", reverse("03007D")); #static?
-$ret .= pack("H32", reverse("080064")); #static?
-
-$ret .= pack("H8", reverse("170064")); #static?
-$ret .= pack("H8", reverse("01"));      #bool? (Visible?)
+$ret .= pack("H8", reverse("00"));      #?
+$ret .= pack("H8",reverse("010025")); #static? (..or width of col?)
+$ret .= pack("H8",reverse("00"));     #how to sort
 $ret .= pack("H16", "00");
-$ret .= pack("H8", reverse("140050")); #static? 
-$ret .= pack("H8", reverse("01"));      #bool? (Visible?)
+$ret .= pack("H8", reverse("0200c8"));
+$ret .= pack("H8", reverse("01"));
+$ret .= pack("H16","00");
+$ret .= pack("H8", reverse("0d003c"));
+$ret .= pack("H24","00");
+$ret .= pack("H8", reverse("04007d"));
+$ret .= pack("H24", "00");
+$ret .= pack("H8", reverse("03007d"));
+$ret .= pack("H24", "00");
+$ret .= pack("H8", reverse("080064"));
+$ret .= pack("H24", "00");
+$ret .= pack("H8", reverse("170064"));
+$ret .= pack("H8", reverse("01"));
 $ret .= pack("H16", "00");
-$ret .= pack("H8", reverse("15007D")); #static? 
-$ret .= pack("H8", reverse("01"));      #bool? (Visible?)
-$ret .= pack("H912", "00");
-
+$ret .= pack("H8", reverse("140050"));
+$ret .= pack("H8", reverse("01"));
+$ret .= pack("H16", "00");
+$ret .= pack("H8", reverse("15007d"));
+$ret .= pack("H8", reverse("01"));
+$ret .= pack("H752", "00");
+$ret .= pack("H8", reverse("65"));
+$ret .= pack("H152", "00");
 
 # Every playlist has such an mhod, it tells iTunes (and other programs?) how the
 # the playlist shall look (visible coloums.. etc..)
@@ -447,7 +461,7 @@ sub get_mhip {
   return $oid if $oid == -1; #fatal error..
    my $px = get_int($pos+6*4, 4);
    my $spx = get_int($pos+5*4,4);
-   print "PX is at $px // spx(order?) $spx\n";
+   print STDERR "PX is at $px // spx(order?) $spx\n";
   return ($oid+$oof, $px);
  }
 

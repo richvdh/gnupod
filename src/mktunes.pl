@@ -59,11 +59,11 @@ GNUpod::XMLhelper::doxml($xml);
 
 
 # Create header for mhits
- $itb{mhlt}{_data_}   = GNUpod::iTunesDB::mk_mhlt($itb{INFO}{FILES});
+ $itb{mhlt}{_data_}   = GNUpod::iTunesDB::mk_mhlt({songs=>$itb{INFO}{FILES}});
  $itb{mhlt}{_len_}    = length($itb{mhlt}{_data_});
 
 # Create header for the mhit header
- $itb{mhsd_1}{_data_} = GNUpod::iTunesDB::mk_mhsd($itb{mhit}{_len_}+$itb{mhlt}{_len_}, 1);
+ $itb{mhsd_1}{_data_} = GNUpod::iTunesDB::mk_mhsd({size=>$itb{mhit}{_len_}+$itb{mhlt}{_len_}, type=>1});
  $itb{mhsd_1}{_len_} = length($itb{mhsd_1}{_data_});
 
 
@@ -74,7 +74,7 @@ print "> Creating playlists:\n";
  $itb{playlist}{_data_} = genpls();
  $itb{playlist}{_len_}  = length($itb{playlist}{_data_});
 # Create headers for the playlist part..
- $itb{mhsd_2}{_data_} = GNUpod::iTunesDB::mk_mhsd($itb{playlist}{_len_}, 2);
+ $itb{mhsd_2}{_data_} = GNUpod::iTunesDB::mk_mhsd({size=>$itb{playlist}{_len_}, type=>2});
  $itb{mhsd_2}{_len_}  = length($itb{mhsd_2}{_data_});
 
 
@@ -93,7 +93,7 @@ foreach my $xk (keys(%itb)) {
 print "> Writing file...\n";
 open(ITB, ">$itunes") or die "** Sorry: Could not write your iTunesDB: $!\n";
  binmode(ITB); #Maybe this helps win32? ;)
- print ITB GNUpod::iTunesDB::mk_mhbd($fl);  #Main header
+ print ITB GNUpod::iTunesDB::mk_mhbd({size=>$fl});  #Main header
  print ITB $itb{mhsd_1}{_data_};            #Header for FILE part
  print ITB $itb{mhlt}{_data_};              #mhlt stuff
  print ITB $itb{mhit}{_data_};              #..now the mhit stuff
@@ -117,12 +117,13 @@ my $pl = undef;
 my $fc = 0;
  foreach(@xid) {
   $cid++; #Whoo! We ReUse the global CID.. first plitem = last file item+1 (or maybe 2 ;) )
-  $pl .= GNUpod::iTunesDB::mk_mhip($cid, $_);
-  $pl .= GNUpod::iTunesDB::mk_mhod(undef, undef, $_);
+  $pl .= GNUpod::iTunesDB::mk_mhip({plid=>$cid, sid=>$_});
+  print "MKX $_\n";
+  $pl .= GNUpod::iTunesDB::mk_mhod({fqid=>$_});
   $fc++;
  }
  my $plSize = length($pl);
- return (GNUpod::iTunesDB::mk_mhyp($plSize, $name, $type, $fc).$pl,$fc);
+  return(GNUpod::iTunesDB::mk_mhyp({size=>$plSize,name=>$name,type=>$type,files=>$fc}).$pl,$fc);
 }
 
 
@@ -141,7 +142,7 @@ sub genpls {
     print "\n";
   }
  
- return GNUpod::iTunesDB::mk_mhlp($plc).$pldata;
+ return GNUpod::iTunesDB::mk_mhlp({playlists=>$plc}).$pldata;
 }
 
 
@@ -154,7 +155,7 @@ sub build_mhit {
 my ($nhod,$cmhod,$cmhod_count) = undef;
  foreach(keys(%$href)) {
   next unless $href->{$_};
-  $nhod = GNUpod::iTunesDB::mk_mhod($_, $href->{$_});
+  $nhod = GNUpod::iTunesDB::mk_mhod({stype=>$_, string=>$href->{$_}});
   $cmhod .= $nhod;
   $cmhod_count++ if defined $nhod;
  }
@@ -169,7 +170,7 @@ my ($nhod,$cmhod,$cmhod_count) = undef;
      }
      
      #Ok, we created the mhod's for this item, now we have to create an mhit
-     my $mhit = GNUpod::iTunesDB::mk_mhit(length($cmhod), $cmhod_count, %{$href}).$cmhod;
+     my $mhit = GNUpod::iTunesDB::mk_mhit({size=>length($cmhod), count=>$cmhod_count, fh=>\%{$href}}).$cmhod;
      $itb{mhit}{_data_} .= $mhit;
      my $length = length($mhit);
      $itb{INFO}{FILES}++;
