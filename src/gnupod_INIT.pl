@@ -1,3 +1,4 @@
+###__PERLBIN__###
 #  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
@@ -28,7 +29,7 @@ use Getopt::Long;
 use vars qw(%opts);
 
 
-print "gnupod_INIT.pl Version 0.95rc1 (C) 2002-2004 Adrian Ulrich\n";
+print "gnupod_INIT.pl ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..

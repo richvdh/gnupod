@@ -1,5 +1,16 @@
-AC_INIT(GNUpod, 0.95, bug-gnupod@nongnu.org)
+AC_INIT(GNUpod, 0.95rc2, bug-gnupod@nongnu.org)
+
+echo -n $PACKAGE_VERSION > .gnupod_version
+
+if test -d CVS; then
+ echo " *** THIS IS A CVS VERSION OF GNUPOD ***"
+ echo -n "-CVS" >> .gnupod_version
+fi
+
 AC_PATH_PROGS(PERL, perl-5.8 perl-5.6 perl)
+
+
+
 
 if test $PERL; then
 echo "GNUpod will use $PERL"
@@ -38,15 +49,24 @@ AC_SUBST(PERL)
 AC_OUTPUT(Makefile)
 
 echo
-echo "Looks fine.."
 echo
 echo "Settings:"
 echo
-echo    "Release:        $PACKAGE_NAME $PACKAGE_VERSION"
-echo    "Prefix:         $prefix";
-echo -n "Perl Version:   "
-echo "print \$]" | $PERL
+echo -n "Release:        "
+ cat .gnupod_version
 echo
+
+echo -n "Perl Version:   "
+ $PERL tools/getVERSION.pl
+echo
+
+
+echo    "Prefix:         $prefix";
+
+echo -n "Perl INC:       "
+ $PERL tools/getINC.pl
+echo
+
 
 echo
 echo "-> use 'make install' to install $PACKAGE_NAME"

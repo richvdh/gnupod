@@ -1,3 +1,4 @@
+###__PERLBIN__###
 #  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
@@ -40,7 +41,7 @@ use vars qw($cid %pldb %spldb %itb %opts %meat %cmeat @MPLcontent);
 #                    OTGPlaylist!!
 
 $| = 1;
-print "mktunes.pl Version 0.95rc1 (C) 2002-2004 Adrian Ulrich\n";
+print "mktunes.pl ###__VERSION__### (C) Adrian Ulrich\n";
 
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};

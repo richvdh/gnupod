@@ -14,20 +14,24 @@ $opts{bindir}       = $ARGV[2];
 $opts{infodir}      = $ARGV[3];
 $opts{mandir}       = $ARGV[4];
 
+
+my $VINSTALL = `cat .gnupod_version`;
+
+die "File .gnupod_version does not exist, did you run configure?\n" unless $VINSTALL;
 die "Expected 5 arguments, got ".int(@ARGV)."\n make will run me, not you! stupid human!" if !$opts{mandir} || $ARGV[5];
 die "Strange Perl installation, no \@INC! Can't install Perl-Module(s), killing myself..\n" if !$INC[0];
 
 if($opts{MODE} eq "INSTALL") {
  #ok, we are still alive, let's blow up the system ;)
- print "Installing GNUpod-base using gnupod_install 0.24\n";
- install_scripts("src/*.pl", $opts{bindir}, $opts{perlbin});
+ print "Installing GNUpod $VINSTALL using gnupod_install 0.24\n";
+ install_scripts("src/*.pl", $opts{bindir});
  install_pm("src/ext", "GNUpod", $opts{perlbin});
  install_docs("doc/gnupod.info", $opts{infodir});
  killold("$opts{bindir}/gnupod_delete.pl") if -e "$opts{bindir}/gnupod_delete.pl";
  print "done!\n";
 }
 elsif($opts{MODE} eq "REMOVE") {
- print "Removing GNUpod...\n";
+ print "Removing GNUpod $VINSTALL...\n";
  remove_scripts("src/*.pl", $opts{bindir});
  remove_pm("src/ext/*.pm", "GNUpod");
  remove_docs("gnupod", $opts{infodir});
@@ -122,6 +126,8 @@ my($source, $dest) = @_;
 open(SOURCE, "$source") or die "Could not read $source: $!\n";
 open(TARGET, ">$dest") or die "Could not write $dest: $!\n";
  while(<SOURCE>) {
+  $_ =~ s/###__PERLBIN__###/#!$opts{perlbin}/;
+  $_ =~ s/###__VERSION__###/$VINSTALL/;
   print TARGET $_;
  }
 close(SOURCE); close(TARGET);
@@ -147,21 +153,14 @@ print "Installing Modules at $INC[0]/$modi\n";
 
 
 sub install_scripts {
-my ($glob, $dest, $perlbin) = @_;
+my ($glob, $dest) = @_;
 my $file = undef;
 
  foreach(glob($glob)) 
  {
   $file = fof($_);
   print " > $_ --> $dest/$file\n";
-  
-   open(SOURCE, "$_") or die "Could not open $_: $!\n aborting installation\n";
-   open(TARGET, ">$dest/$file") or die "Unable to write $dest/$file: $!\n aborting installation\n";
-   print TARGET "\#!$perlbin\n";
-   while(<SOURCE>) {
-    print TARGET $_;
-   }
-   close(SOURCE); close(TARGET);
+   ncp($_,"$dest/$file");
    #'fix' premissions...
    chmod 0755, "$dest/$file";
    # root shall be the owner (or whoever has uid/gid 0)

@@ -1,3 +1,4 @@
+###__PERLBIN__###
 #  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #

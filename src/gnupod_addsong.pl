@@ -1,3 +1,4 @@
+###__PERLBIN__###
 #  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
@@ -31,7 +32,7 @@ use File::Copy;
 use constant MACTIME => 2082931200; #Mac EPOCH offset
 use vars qw(%opts %dupdb $int_count);
 
-print "gnupod_addsong.pl Version 0.95rc1 (C) 2002-2004 Adrian Ulrich\n";
+print "gnupod_addsong.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
 
 $int_count = 3; #The user has to send INT (Ctrl+C) x times until we stop
 
