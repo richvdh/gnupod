@@ -134,7 +134,7 @@ my @METADEF = ("album",   "\xA9alb",
  }
  
 
- if( my $cDat = $lx{metadat}{'::moov:mvhd'}[0] ) {
+ if( my $cDat = $lx{metadat}{'::moov::mvhd'}[0] ) {
  #Calculate the time... 
  $reth{time} = int( get_string_oct(8,4,$cDat)/
                     get_string_oct(4,4,$cDat)*1000 );
@@ -188,6 +188,7 @@ sub get_atom {
    $len = $hchild{$typ};
   }
   elsif($len >= 16 && $cChain !~ /(::mdat|::free)$/) {  #No child -> final element -> data!
+#   print "+$cChain ($len)\n";
    push(@{$lt->{metadat}->{$cChain}},rseek($pos+16,$len-16));
   }
 
