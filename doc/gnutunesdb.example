@@ -1,67 +1,53 @@
-<?xml version="1.0"?>
+<?xml version='1.0' standalone='yes'?>
 <gnuPod>
-<files>
- <file id="1" bitrate="192" time="305200" path=":iPod_Control:Music:F01:Track_08___Kanon_D_dur__normal_.mp3" genre="Soundtrack" filesize="7324948" album="S2_INC" artist="Soundtrack" title="Kanon D-dur (normal)" year="1997" />
- <file id="2" bitrate="192" time="304155" path=":iPod_Control:Music:F07:Track_09___Kanon_D_dur__W_quinte.mp3" genre="Soundtrack" filesize="7299871" album="S2_INC" artist="Soundtrack" comment="W Quintett" title="Kanon D-dur" year="1997" />
- <file id="3" bitrate="192" time="117119" path=":iPod_Control:Music:F12:Track_41___A_15__Tenpo_chi_.mp3" genre="Soundtrack" filesize="2810989" album="S2_INC" artist="Soundtrack" title="A-15 &quot;Tenpo chi&quot;" year="1997" />
- <file id="4" bitrate="192" time="131072" path=":iPod_Control:Music:F02:Track_42___A_15__Tenpo_chi_Rizum.mp3" filesize="3145856" album="S2_INC" artist="Soundtrack" title="Tenpo chi Rizumo" />
- <file id="5" bitrate="128" time="242920" path=":iPod_Control:Music:F17:02___Zankoku_Na_Tenshi_No_These.mp3" filesize="3886856" album="Refrain" artist="Soundtrack" comment="Evangelion Refrain" title="Cruel Angel&apos;s Thesis - Ambiv" year="1997" />
- <file id="6" bitrate="192" time="20100"  path=":iPod_Control:Music:F04:Track_04___Violin_Tuning.mp3" genre="Soundtrack" filesize="482538" album="S2_INC" artist="Soundtrack" title="Violin Tuning" year="1997" />
- <file id="7" bitrate="192" time="107192" path=":iPod_Control:Music:F16:Track_05___OP_1_Strings__Tenpo_c.mp3" genre="Soundtrack" filesize="2572752" album="S2_INC" artist="Soundtrack" comment="The Heady Feeling of Freedom" title="OP-1 Strings &quot;Tenpo chi&quot;" year="1998" />
-
- <!-- You can also change the Volume of a song :) //-->
- <file id="8" bitrate="123" time="345" path="foo" volume="70" />  <!-- +70% volume //-->
- <file id="9" bitrate="123" time="345" path="bar" volume="-90" /> <!-- -90% volume //-->
-
- <!-- Rating + Playcount are also supported //-->
- <file id="10" bitrate="256" time="2332" rating="4" playcount="33" path="blubb" /> <!-- 4 stars rated + playcount = 33 //-->
-
-
- <!-- You can also set the start/stop time of a song //-->
- <file id="11" bitrate="256" time="5000" starttime="50" stoptime="4555" />
-
-</files>
-
-
-
-<!-- holds 'Kanon D-dur (normal)' and 'A-15 Tenpo chi' //-->
-<playlist name="IDs">
-<add id="1" />
-<add id="3" />
-</playlist>
-
-
-
-<!-- this is an example of the 'extended playlist' feature
-     
-     DO NOT use this feature if you are using your iPod with
-     another program than gnuPod!
-     (Running tunes2pod would 'replace' your extended PL with
-      the IDs)
- //-->
- 
-<playlist name="Extended">
- <add bitrate="192" /> <!-- Adds EVERY item with a bitrate=192 (in this example: every song except id 1248 //-->
- <add genre="Soundtrack" year="1997" /> <!-- Add items with genre=soundtrack AND year=1997 (in this example: every song except id 1266 //-->
-</playlist>
-
-<playlist name="Regex sample 1">
- <regex album="\d" />  <!-- Add songs if the album name contains a number 
-                            In this example, we would add every song except ID5 (Album=Refrain)//-->
- <iregex title="^a" /> <!-- Add songs if the title starts with 'a' OR 'A' (note: iregex), would add id 3 //-->
- <regex title="^O" />  <!-- Add songs if the title starts with 'O' (NOT 'o' - regex is case SENSITIVE), would add id 7 //-->
-</playlist>
-
-<!-- Feel free to mix //-->
-<playlist name="Mixed">
- <regex album="\d" />
- <add id="3" />
-</playlist>
-
-<!-- This is XML, you can use UTF8
-     Yudit (www.yudit.org) is a very good unicode editor //-->
-<playlist name="劇場版">
- <iregex album="Eva" />
-</playlist>
-
+  <files>
+    <file bitrate="192" stoptime="0" songs="0" time="305200" rating="0" cdnum="0" cds="0" playcount="0" starttime="0" id="1" prerating="0" volume="0" songnum="0" path=":iPod_Control:Music:F01:Track_08___Kanon_D_dur__normal_.mp3" genre="Soundtrack" filesize="7324948" album="S2_INC" artist="Soundtrack" title="Kanon D-dur (normal)" year="1997" />
+    <file bitrate="192" stoptime="0" songs="0" time="304155" rating="0" cdnum="0" cds="0" playcount="0" starttime="0" id="2" prerating="0" volume="0" songnum="0" path=":iPod_Control:Music:F07:Track_09___Kanon_D_dur__W_quinte.mp3" genre="Soundtrack" filesize="7299871" artist="Soundtrack" album="S2_INC" comment="W Quintett" title="Kanon D-dur" year="1997" />
+    <file bitrate="192" stoptime="0" songs="0" time="117119" rating="0" cdnum="0" cds="0" playcount="0" starttime="0" id="3" prerating="0" volume="0" songnum="0" path=":iPod_Control:Music:F12:Track_41___A_15__Tenpo_chi_.mp3" genre="Soundtrack" filesize="2810989" album="S2_INC" artist="Soundtrack" title="A-15 &quot;Tenpo chi&quot;" year="1997" />
+    <file bitrate="192" stoptime="0" songs="0" time="131072" rating="0" cdnum="0" cds="0" playcount="0" starttime="0" id="4" prerating="0" volume="0" songnum="0" path=":iPod_Control:Music:F02:Track_42___A_15__Tenpo_chi_Rizum.mp3" filesize="3145856" artist="Soundtrack" album="S2_INC" title="Tenpo chi Rizumo" year="0" />
+    <file bitrate="128" stoptime="0" songs="0" time="242920" rating="0" cdnum="0" cds="0" playcount="0" starttime="0" id="5" prerating="0" volume="0" songnum="0" path=":iPod_Control:Music:F17:02___Zankoku_Na_Tenshi_No_These.mp3" filesize="3886856" artist="Soundtrack" album="Refrain" comment="Evangelion Refrain" title="Cruel Angel's Thesis - Ambiv" year="1997" />
+    <file bitrate="192" stoptime="0" songs="0" time="20100" rating="0" cdnum="0" cds="0" playcount="0" starttime="0" id="6" prerating="0" volume="0" songnum="0" path=":iPod_Control:Music:F04:Track_04___Violin_Tuning.mp3" genre="Soundtrack" filesize="482538" album="S2_INC" artist="Soundtrack" title="Violin Tuning" year="1997" />
+    <file bitrate="192" stoptime="0" songs="0" time="107192" rating="0" cdnum="0" cds="0" playcount="0" starttime="0" id="7" prerating="0" volume="0" songnum="0" path=":iPod_Control:Music:F16:Track_05___OP_1_Strings__Tenpo_c.mp3" genre="Soundtrack" filesize="2572752" artist="Soundtrack" album="S2_INC" comment="The Heady Feeling of Freedom" title="OP-1 Strings &quot;Tenpo chi&quot;" year="1998" />
+    <file bitrate="123" stoptime="0" songs="0" time="345" rating="0" cdnum="0" cds="0" playcount="0" starttime="0" id="8" prerating="0" volume="70" songnum="0" path="foo" filesize="0" year="0" />
+    <file bitrate="123" stoptime="0" songs="0" time="345" rating="0" cdnum="0" cds="0" playcount="0" starttime="0" id="9" prerating="0" volume="-90" songnum="0" path="bar" filesize="0" year="0" />
+    <file bitrate="256" stoptime="0" songs="0" time="2332" rating="4" cdnum="0" cds="0" playcount="33" starttime="0" id="10" prerating="0" volume="0" songnum="0" path="blubb" filesize="0" year="0" />
+    <file prerating="0" bitrate="256" volume="0" stoptime="4555" songs="0" songnum="0" time="5000" rating="0" cdnum="0" filesize="0" cds="0" playcount="0" starttime="50" id="11" year="0" />
+  </files>
+  <playlist name="IDs">
+    <add id="1" />
+    <add id="3" />
+  </playlist>
+  <playlist name="Extended">
+    <add id="6" />
+    <add id="4" />
+    <add id="1" />
+    <add id="3" />
+    <add id="7" />
+    <add id="2" />
+    <add id="6" />
+    <add id="1" />
+    <add id="3" />
+    <add id="2" />
+  </playlist>
+  <playlist name="Regex sample 1">
+    <add id="6" />
+    <add id="4" />
+    <add id="1" />
+    <add id="3" />
+    <add id="7" />
+    <add id="2" />
+    <add id="7" />
+    <add id="3" />
+  </playlist>
+  <playlist name="Mixed">
+    <add id="3" />
+    <add id="6" />
+    <add id="4" />
+    <add id="1" />
+    <add id="3" />
+    <add id="7" />
+    <add id="2" />
+  </playlist>
+  <playlist name="劇場版">
+  </playlist>
 </gnuPod>

@@ -52,6 +52,9 @@ sub startup {
 my($stat, $itunes, $xml) = GNUpod::FooBar::connect(\%opts);
 
 usage("$stat\n") if $stat;
+
+print "! Volume-adjust set to $opts{volume} percent\n" if defined($opts{volume});
+
 print "> Parsing XML...\n";
 ($xmldoc) = GNUpod::XMLhelper::parsexml($xml);
  usage("Could not open $xml, did you run gnupod_INIT.pl ?\n") unless $xmldoc;
@@ -186,7 +189,7 @@ foreach my $cpl (@xpl) {
 		     
 		     }
 		  }
-		} else { print "Unhandled action: $action\n"; }
+		} else { print "** WARNING: Unhandled action: $action:$pel\n"; }
 	       
 	    }
 	  
@@ -218,119 +221,6 @@ foreach my $cpl (@xpl) {
 }
 
 return GNUpod::iTunesDB::mk_mhlp($playlistc).$pldata;
-=head1
-## FIXME: Maybe we should SORT the playlists by name?
-##        iTunes does it.. hmm.. but it's stupid ;-)
-
-#..now do the ones specified..
-foreach my $cpl (@xpl) {
- #Hu.. we have to create a new playlist
- my %pldata = ();
-
-print "DEBUG: ".($cpl->{name})."\n";
-   #########################################################################################
-   ## MATCH Routines.. this is very ugly and we could speedup many things..
-   ## But it works as it should.. send me a patch if you like :)
-   
-  foreach my $cadd(@{$cpl->{add}}) {
-    ## New element ##
-    my %matchkey = (); #Clean matchkey
-    my $smc = 0;
-    print ">> ".($cadd->{id})."\n";
-    foreach my $key (keys(%{$cadd})) {
-     $smc++; #We have to match every item..
-
-     if($key eq "id" && int(keys(%{$cadd})) == 1) { #Do a FastMatch
-      $matchkey{${$cadd}{$key}} = $smc;
-     }
-     else { #Slow but ultrahyper flexible matching for 'add' target
-
-        foreach my $xid (keys(%{$quickhash})) {
-	  foreach my $xkey (keys(%{${$quickhash}{$xid}})) {
-	    next if $xkey ne $key;
-	    next if lc(${$quickhash}{$xid}{$xkey}) ne lc((${$cadd}{$key}));
-	     #If we are still here, it did match!
-	     $matchkey{$xid}++;
-	  }
-	}
-     
-     }
-    }
-    ## End new add element
-     #Promote matched items..
-     foreach(keys(%matchkey)) {
-       $pldata{$_} = 1 if($matchkey{$_} == $smc);
-     }
-   }
-   ## END ADD KEYWORD
-   
-   foreach my $cregex(@{$cpl->{regex}}) {
-    my %matchkey = ();
-    my $smc = 0;
-    foreach my $key (keys(%{$cregex})) {
-     $smc++;
-        foreach my $xid (keys(%{$quickhash})) {
-	  foreach my $xkey (keys(%{${$quickhash}{$xid}})) {
-            next if $xkey ne $key;
-	    #As you can see: no checking is done, we trust the user..
-	    #But we are just a script, no suid root and such things..
-	    #Happy regexp-bombing ;-)
-	    if (${$quickhash}{$xid}{$xkey} =~ /${$cregex}{$key}/) {
-	     $matchkey{$xid}++;
-	     }
-	  }
-	}     
-    }
-     #Promote matched items..
-     foreach(keys(%matchkey)) {
-       $pldata{$_} = 1 if($matchkey{$_} == $smc);
-     }
-   }
-   ## END REGEX KEYWORD
-   
-#Same as regex, but with /i switch..
-   foreach my $cregex(@{$cpl->{iregex}}) {
-    my %matchkey = ();
-    my $smc = 0;
-    foreach my $key (keys(%{$cregex})) {
-     $smc++;
-        foreach my $xid (keys(%{$quickhash})) {
-	  foreach my $xkey (keys(%{${$quickhash}{$xid}})) {
-            next if $xkey ne $key;
-	    if (${$quickhash}{$xid}{$xkey} =~ /${$cregex}{$key}/i) {
-	     $matchkey{$xid}++;
-	     }
-	  }
-	}     
-    }
-     #Promote matched items..
-     foreach(keys(%matchkey)) {
-       $pldata{$_} = 1 if($matchkey{$_} == $smc);
-     }
-   }
-   ## END IREGEX KEYWORD
-   #### FIXME.:: What about these stupid smartplaylists?
- 
-   #########################################################################################
-   #########################################################################################
-  
- ### CREATE A NEW PLAYLIST FROM %pldata ###    
-    my $pltemp = undef;
-    my $plfc  = 0; #PlayListFileCount
-     foreach(keys(%pldata)) {
-       $pltemp .= GNUpod::iTunesDB::mk_mhip($_);
-       $pltemp .= GNUpod::iTunesDB::mk_mhod(undef, undef, $_);
-       $plfc++;
-     }
-      #Add header for $pltemp;
-      $pldata .= GNUpod::iTunesDB::mk_mhyp(length($pltemp), $cpl->{name}, 0, $plfc).$pltemp;
-  
-      print ">> Adding Playlist '$cpl->{name}' with $plfc item";
-      print "s" if $plfc != 1; print "\n";
-  $playlistc++;
-}
- return GNUpod::iTunesDB::mk_mhlp($playlistc).$pldata;
-=cut
 
 }
 
@@ -360,7 +250,9 @@ my $nhod = undef;
      if($opts{volume}) {
       $href->{volume} += int($opts{volume});
       if(abs($href->{volume}) > 100) {
+        print "** Warning: volume=\"$href->{volume}\" out of range: Volume set to ";
         $href->{volume} = ($href->{volume}/abs($href->{volume})*100);
+        print "$href->{volume}% for id $href->{id}\n";
       }
      }
      
@@ -393,6 +285,7 @@ Usage: mktunes.pl [-h] [-m directory | -i iTunesDB | -x GNUtunesDB] [-v VALUE]
    -i, --itunes=iTunesDB  : Specify an alternate iTunesDB
    -x, --xml=file         : GNUtunesDB (XML File)
    -v, --volume=VALUE     : Adjust volume +-VALUE% (example: -v -20)
+                            (Works with Firmware 1.x and 2.x!)
 
 EOF
 }

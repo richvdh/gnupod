@@ -29,8 +29,8 @@ use GNUpod::FooBar;
 use Getopt::Long;
 
 use vars qw(%opts);
-
-print "tunes2pod.pl Version 0.90 (C) 2002-2003 Adrian Ulrich\n";
+$| = 1;
+print "tunes2pod.pl Version 0.91 (C) 2002-2003 Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
@@ -53,14 +53,21 @@ GNUpod::iTunesDB::open_itunesdb($in) or usage("Could not open $in\n");
 #..and how many files are in this iTunesDB
 my($pos, $pdi,$xpct_songs, $xpc_pl) = GNUpod::iTunesDB::get_starts();
 
+print "> Has $xpct_songs songs";
+
 my $href = undef;
 my @xar  = ();
 my %hout = ();
  for(my $i=0;$i<$xpct_songs;$i++) {
+##This would me a status-bar like thing..
+##But i don't have a licence for status bars ;)
+#  my $l = $i/$xpct_songs*40;
+#  print "\r";
+#  print "." x int($l);
   ($pos,$href) = GNUpod::iTunesDB::get_mhits($pos); #get_nod_a returns wher it's guessing the next MHIT, if it fails, it returns '-1'
   #Seek failed.. this shouldn't happen..  
   if($pos == -1) {
-   print STDERR "*** FATAL: Expected to find $xpct_songs files,\n";
+   print STDERR "\n*** FATAL: Expected to find $xpct_songs files,\n";
    print STDERR "*** but i failed to get nr. $i\n";
    print STDERR "*** Your iTunesDB maybe corrupt or you found\n";
    print STDERR "*** a bug in GNUpod. Please send this\n";
@@ -74,7 +81,7 @@ my %hout = ();
 #<files> part built
 $hout{gnuPod}{files}{file} = \@xar;
 my $found_files = int(@xar);
-print STDOUT "> Found $found_files files, ok\n";
+print STDOUT "\r> Found $found_files files, ok\n";
 
 
 #Now get each playlist

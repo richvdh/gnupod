@@ -24,8 +24,8 @@ File: gnupod.info,  Node: Top,  Next: Requirements,  Up: (dir)
 GNUpod
 ******
 
-   This edition of the `GNUpod Manual', last updated 24. Aug. 2003,
-documents GNUpod Version 0.90
+   This edition of the `GNUpod Manual', last updated 20. Sep. 2003,
+documents GNUpod Version 0.91
 
 * Menu:
 
@@ -301,7 +301,7 @@ created above.
    You may ask why we now write the Firmware to sda1 while we read it
 from sda2, the answear is simple: Before running fdisk, the iPod was a
 Mac-iPod with a different Partition layout, but now the iPod is a
-Win-iPod, belive me: sda1 is correct.
+Windows-iPod, belive me: sda1 is correct.
 
    After writing back the Firmware we can format the iPod:
      mkfs.vfat -F 32 -n "LUNIX" /dev/sda2
@@ -400,6 +400,12 @@ with this iPod, run
    gnupod_INIT.pl will create the default directory tree and creates an
 empty GNUtunesDB (or if it finds an iTunesDB, it runs tunes2pod.pl to
 convert the iTunesDB to an GNUtunesDB)
+
+   Use
+     gnupod_INIT.pl -m /mnt/ipod --france
+
+   if you would like to enable the 'EU-Volume-Limit' (=decrase max.
+volume).  This only works for iPods running Firmware 1.x
 
    Your iPod is now ready for GNUpod!
 
@@ -507,6 +513,14 @@ parse the GNUtunesDB XML file and convert it into the iTunesDB format.
 
    Simply run
      mktunes.pl -m /mnt/ipod
+
+   Note: Since GNUpod 0.91, mktunes.pl has a '-volume' option wich you
+can use to boost the Volume.
+
+     mktunes.pl -m /mnt/ipod --volume 40
+
+   This would adjust the volume +40 percent. (You can also use '-100'
+to get a silent iPod ;) )
 
    After `mktunes.pl' is done, you can umount the iPod and remove the
 sbp2 module
@@ -1121,21 +1135,21 @@ Node: Installing GNUpod2013
 Node: Installation of GNUpod2436
 Node: Using FireWire with GNU/Linux3470
 Node: Convert your Mac iPod6425
-Node: Firmware update11302
-Node: Using GNUpod13074
-Node: Preparation13826
-Node: Add files14373
-Node: Search files15335
-Node: Remove files15815
-Node: Creating playlists16120
-Node: Unplug the iPod17314
-Node: Recovering files17976
-Node: Coexistence18695
-Node: Problems20319
-Node: GNUtunesDB20698
-Node: Get rid of '-m'22199
-Node: Known bugs and limitations22479
-Node: Reporting Bugs22694
-Node: GNU Free Documentation License23134
+Node: Firmware update11306
+Node: Using GNUpod13078
+Node: Preparation13830
+Node: Add files14553
+Node: Search files15515
+Node: Remove files15995
+Node: Creating playlists16300
+Node: Unplug the iPod17494
+Node: Recovering files18396
+Node: Coexistence19115
+Node: Problems20739
+Node: GNUtunesDB21118
+Node: Get rid of '-m'22619
+Node: Known bugs and limitations22899
+Node: Reporting Bugs23114
+Node: GNU Free Documentation License23554
 
 End Tag Table

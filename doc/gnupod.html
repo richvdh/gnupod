@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
-<!-- Created on September, 14  2003 by texi2html 1.65 -->
+<!-- Created on September, 20  2003 by texi2html 1.65 -->
 <!-- 
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -67,8 +67,8 @@ Adrian Ulrich
 </TR></TABLE>
 <H1> 1. GNUpod </H1>
 <!--docid::SEC1::-->
-This edition of the <CITE>GNUpod Manual</CITE>, last updated 24. Aug. 2003,
-documents GNUpod Version 0.90
+This edition of the <CITE>GNUpod Manual</CITE>, last updated 20. Sep. 2003,
+documents GNUpod Version 0.91
 <P>
 
 <BLOCKQUOTE><TABLE BORDER=0 CELLSPACING=0> 
@@ -424,7 +424,7 @@ Now we can rewrite the Firmwarebackup we created above.
 </pre></td></tr></table></P><P>
 
 You may ask why we now write the Firmware to sda1 while we read it from sda2, the answear is simple:
-Before running fdisk, the iPod was a Mac-iPod with a different Partition layout, but now the iPod is a Win-iPod, belive me: sda1 
+Before running fdisk, the iPod was a Mac-iPod with a different Partition layout, but now the iPod is a Windows-iPod, belive me: sda1 
 is correct.
 </P><P>
 
@@ -567,6 +567,14 @@ If the iPod is freshly formatted or you never used GNUpod before with this iPod,
 
 gnupod_INIT.pl will create the default directory tree and creates an empty GNUtunesDB 
 (or if it finds an iTunesDB, it runs tunes2pod.pl to convert the iTunesDB to an GNUtunesDB)
+</P><P>
+
+Use
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>gnupod_INIT.pl -m /mnt/ipod --france
+</pre></td></tr></table></P><P>
+
+if you would like to enable the 'EU-Volume-Limit' (=decrase max. volume).
+This only works for iPods running Firmware 1.x
 </P><P>
 
 Your iPod is now ready for GNUpod!
@@ -747,6 +755,17 @@ parse the GNUtunesDB XML file and convert it into the iTunesDB format.
 Simply run
 <TABLE><tr><td>&nbsp;</td><td class=example><pre>mktunes.pl -m /mnt/ipod
 </pre></td></tr></table></P><P>
+
+Note: Since GNUpod 0.91, mktunes.pl has a '--volume' option wich you can use to 
+boost the Volume.
+</P><P>
+
+<TABLE><tr><td>&nbsp;</td><td class=example><pre>mktunes.pl -m /mnt/ipod --volume 40
+</pre></td></tr></table></P><P>
+
+This would adjust the volume +40 percent. (You can also use '-100' to get 
+a silent iPod ;) )
+</P><P>
 
 After <CODE>mktunes.pl</CODE> is done, you can umount the iPod and remove the sbp2 module
 <TABLE><tr><td>&nbsp;</td><td class=example><pre>umount /mnt/ipod
@@ -1853,7 +1872,7 @@ the following structure:
 <BR>  
 <FONT SIZE="-1">
 This document was generated
-by <I>Adrian Ulrich</I> on <I>September, 14  2003</I>
+by <I>Adrian Ulrich</I> on <I>September, 20  2003</I>
 using <A HREF="http://www.mathematik.uni-kl.de/~obachman/Texi2html
 "><I>texi2html</I></A>
 </FONT>
