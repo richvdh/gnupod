@@ -1,12 +1,27 @@
-GNUpod 0.96 - codename
+GNUpod 0.96 - codename 'kartoffelsaft'
 
 Summary
 -------
 
-- Added --playlist switch to gnupod_addsong.pl
-  This adds
+- Changed --decode switch from gnupod_addsong.pl
+  You can now select the output format of --decode
+  -> pcm(old default) / MP3 (using lame) / AAC (using FAAC)  
+  Example: # gnupod_addsong.pl --decode=mp3 *.flac
+  (Idea and original patch from <daniel at kefa.co.uk>)
+
+- GNUpod can now also convert OGG-Vorbis files
+  (Use --decode=XXX , same as FLAC)
+
+- Added --playlist=STRING switch to gnupod_addsong.pl
+  This creates the playlist 'STRING' and adds all songs
+  passed to gnupod_addsong.pl to this playlist.
   (Thanks to Bob Cotton)
+
+- Many changes for the M4A parser, should work better now
+  (Searches the SOUND Stream!)
+
 - Write tracknum for AAC/ALAC files (doh!)
+
 - Support for Bookmarks (Just rename .m4a files into .m4b)
 
 

@@ -28,6 +28,9 @@ use GNUpod::FooBar;
 use GNUpod::QTfile;
 
 use constant FLAC_CONVERTER => 'gnupod_convert_FLAC.pl';
+use constant OGG_CONVERTER =>  'gnupod_convert_OGG.pl';
+
+
 
 BEGIN {
  MP3::Info::use_winamp_genres();
@@ -57,6 +60,9 @@ sub wtf_is {
   }
   elsif(my $xflac = __is_flac($file,$flags,$con)) {
    return($xflac->{ref}, {ftyp=>"FLAC"}, $xflac->{encoder});
+  }
+  elsif(my $xflac = __is_ogg($file,$flags,$con)) {
+   return($xflac->{ref}, {ftyp=>"OGG"}, $xflac->{encoder});
   }
   elsif(my $xqt = __is_qt($file,$flags)) {
    return ($xqt->{ref},  {ftyp=>$xqt->{codec}, format=>"m4a", extension=>"m4a|m4p|m4b"});
@@ -105,6 +111,40 @@ sub __is_flac {
   
 
  return {ref=>\%rh, encoder=>FLAC_CONVERTER};
+}
+
+########################################################################
+#Handle Non-Native OGG
+sub __is_ogg {
+ my($file, $flags,$con) = @_;
+ 
+ return undef unless $flags->{decode}; #Decoder is OFF per default!
+ 
+ open(TFLAC, $file) or return undef;
+  my $oggbuff = undef;
+  read(TFLAC,$oggbuff,4);
+ close(TFLAC);
+ 
+ #Check if file has a ogg header
+ return undef if($oggbuff ne "OggS");
+ 
+ #Read TAG using converter-api
+ my $metastuff = converter_readmeta(OGG_CONVERTER, $file,$con);
+ return undef unless ref($metastuff) eq "HASH";
+ my %rh = ();
+ my $cf = ((split(/\//,$file))[-1]);
+ my @songa = pss($metastuff->{_TRACKNUM});
+
+ $rh{artist}   = getutf8($metastuff->{_ARTIST} || "Unknown Artist");
+ $rh{album}    = getutf8($metastuff->{_ALBUM}  || "Unknown Album");
+ $rh{title}    = getutf8($metastuff->{_TITLE}  || $cf || "Unknown Title");
+ $rh{genre}    = getutf8($metastuff->{_GENRE}  || "");
+ $rh{songs}    = int($songa[1]);
+ $rh{songnum}  = int($songa[0]); 
+ $rh{comment}  = getutf8($metastuff->{_COMMENT} || "");
+  
+
+ return {ref=>\%rh, encoder=>OGG_CONVERTER};
 }
 
 
@@ -315,7 +355,7 @@ sub kick_convert {
 
  $prog = "$con->{bindir}/$prog";
 
- open(KICKOMATIC, "-|") or exec($prog, $file, "GET_$format") or die "Could not exec $prog\n";
+ open(KICKOMATIC, "-|") or exec($prog, $file, "GET_$format") or die "kick_convert: Could not exec $prog\n";
   my $newP = <KICKOMATIC>;
   chomp($newP);
  close(KICKOMATIC);

@@ -144,6 +144,13 @@ sub startup {
 
     #Ok, we got a converted file, fillout the gaps
     my($conv_fh, $conv_media_h) = GNUpod::FileMagic::wtf_is($path_of_converted_file);
+    
+    unless($conv_fh) {
+     warn "* [***] Internal problem: $converter did not produce valid data.\n";
+     warn "* [***] Something is wrong with $path_of_converted_file (file not deleted, debug it! :) )\n";
+     next;
+    }
+    
     #We didn't know things like 'filesize' before...
     $fh->{time}     = $conv_fh->{time};
     $fh->{bitrate}  = $conv_fh->{bitrate};
