@@ -165,7 +165,8 @@ sub addpl {
  }
 
  push(@plorder, $name);
- my %rh = %{$opt};
+ my %rh = ();
+    %rh = %{$opt} if ref($opt) eq "HASH"; #Copy if we got data 
  $rh{name} = $name; #Force the name
  
  $XDAT->{playlists}->{pref}->{$name} = \%rh;
@@ -183,7 +184,8 @@ sub addspl {
  }
 
  push(@plorder, $name);
- my %rh = %{$opt};
+ my %rh = ();
+    %rh = %{$opt} if ref($opt) eq "HASH"; #Copy if we got data 
  $rh{name} = $name; #Force the name
  
  $XDAT->{spls}->{pref}->{$name} = \%rh;

@@ -70,9 +70,15 @@
      and tell me, if it works for you ;) -->
 
 <!-- Note: SPL isn't well suported on 1.x Firmware-iPods (not a GNUpod limitation) //-->
-<smartplaylist name="Example" limititem="5" checkrule="2" moselected="1" limitval="1" matchany="1" liveupdate="0" limitsort="2">
- <spl action="1" field="4" string="TestoStado" />
- <spl action="1" field="4" string="Foo" />
-</smartplaylist>
+
+      <smartplaylist checkrule="spl" liveupdate="1" name="Example SPL1" >
+        <spl action="eq" field="playcount" string="0" />
+        <spl action="IS" field="artist" string="Jon Doe" />
+      </smartplaylist>
+     
+       <smartplaylist checkrule="spl" liveupdate="1" name="Example SPL2" >
+        <spl action="gt" field="bitrate" string="311" />
+      </smartplaylist>
+
 
 </gnuPod>
