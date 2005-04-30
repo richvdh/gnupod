@@ -369,7 +369,8 @@ new Firmware or/and the documentation told you to do this **
 Setup Firewire as described in 'Using FireWire with GNU/Linux', load the modules and make sure sbp2 detected your iPod.
 Do not try to mount the iPod. We assume your iPod at @code{@w{/dev/sda}}.
 
-First you need to get a new Firmware which you can download from http://www.iweenie.com/ipod.shtml
+First you need to get a new Firmware. If you own OSX, download and install the iPod updater. 
+Open the Shell and change into the .app Folder. The Firmware is there somewhere ;-)
 
 If you got a FAT32 formatted iPod (..or you plan to 'convert' the iPod after upgrading the Firmware), you'll need 
 Version 1.1.0 or newer.

@@ -370,6 +370,49 @@ sub kick_convert {
  return undef;
 }
 
+#########################################################
+# Start the ReEncoder
+sub kick_reencode {
+	my($quality, $file, $format, $con) = @_;
+	
+	$quality = int($quality);
+	
+	#Lame's limits
+	return undef if $quality < 0; #=Excellent Quality
+	return undef if $quality > 9; #=Bad Quality
+	
+	my $tmpout = "/tmp/gnuPod_ReEncode_".$$.int(rand(0xFFFF));
+	if($format eq 'm4a') {
+		#Faac is not as nice as lame: We have to decode ourself.. and fixup the $quality value
+		$quality = 100 - ($quality*10);
+		my $pcmout = $tmpout.".wav";
+		my $ret = system( ("faad", "-o", $pcmout, $file) );
+		#Ok, we've got a pcm version.. encode it!
+		$tmpout .= ".m4a";
+		my $ret = system( ("faac", "-w", "-q", $quality, "-o", $tmpout, $pcmout) );
+		unlink($pcmout);
+		if($ret) {
+			unlink($tmpout);
+			return undef;
+		}
+		else {
+			return $tmpout;
+		}
+	}
+	elsif($format eq 'mp3') {
+		$tmpout .= ".mp3";
+		my $ret = system( ("lame", "--silent", "-V", $quality, $file, $tmpout) );
+		if($ret) {
+			#We failed for some reason..
+			unlink($tmpout);
+		}
+		else {
+			return $tmpout;
+		}
+	}
+	return undef;
+}
+
 
 #########################################################
 # Read metadata from converter

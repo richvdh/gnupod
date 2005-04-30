@@ -1,11 +1,21 @@
-GNUpod 0.99 - codename
+GNUpod 0.98.1 - codename
 
 Summary
 -------
 
 - Added support for multiple On-The-Go playlists.
+
+- gnupod_addsong.pl can now reenocde aac and mp3 'on-the-fly'
+  Usage: gnupod_addsong.pl --reencode 6 *.mp3
+  This would reenocde everything with 'lame -V 6'
+  Use this if you don't have much space left (iPod Shuffle?!)
+
 - Added support for m4a 'gnre' tags
 
+- Fixed some iPod-Shuffle issues
+   * mktunes.pl removes the iTunesShuffle leftover
+
+*** OLD STUFF ***
 
 GNUpod 0.98 - codename 'Luna 9'
 
@@ -33,7 +43,6 @@ Summary
 - Switched from Audio::FLAC to Audio::FLAC::Header
 
 
-*** OLD STUFF ***
 
 GNUpod 0.97 - codename guezli
 

@@ -129,7 +129,7 @@ sub startup {
 	print "> Updating Sync-Status\n";
 	GNUpod::FooBar::setsync_itunesdb($con);
 	GNUpod::FooBar::setvalid_otgdata($con);
-
+	GNUpod::FooBar::wipe_shufflestat($con);
 	print "You can now umount your iPod. [Files: ".int($itb{INFO}{FILES})."]\n";
 	print " - May the iPod be with you!\n\n";
 }

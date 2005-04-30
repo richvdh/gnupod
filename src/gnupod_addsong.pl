@@ -40,7 +40,7 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode=s", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
                    "set-artist=s", "set-album=s", "set-genre=s", "set-rating=i", "set-playcount=i",
-                   "set-songnum", "playlist|p=s");
+                   "set-songnum", "playlist|p=s", "reencode|e=i");
 GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b',
                                    'disable-v1'=>'b', 'disable-v2'=>'b', 'set-songnum'=>'b'},
                           "gnupod_addsong");
@@ -52,25 +52,25 @@ version() if $opts{version};
 
 $SIG{'INT'} = \&handle_int;
 if($opts{restore}) {
- print "If you use --restore, you'll *lose* your playlists\n";
- print " Hit ENTER to continue or CTRL+C to abort\n\n";
- <STDIN>;
- delete($opts{decode});    #We don't decode anything
- $opts{duplicate} = 1;     #Don't skip dups on restore
- $opts{decode}    = undef; #Do not encode, only native files are on an iPod
- startup(glob("$opts{mount}/iPod_Control/Music/*/*"));
+	print "If you use --restore, you'll *lose* your playlists\n";
+	print " Hit ENTER to continue or CTRL+C to abort\n\n";
+	<STDIN>;
+	delete($opts{decode});    #We don't decode anything
+	$opts{duplicate} = 1;     #Don't skip dups on restore
+	$opts{decode}    = undef; #Do not encode, only native files are on an iPod
+	startup(glob("$opts{mount}/iPod_Control/Music/*/*"));
 }
 elsif($ARGV[0] eq "-" && @ARGV == 1) {
- print STDERR "Reading from STDIN, hit CTRL+D (EOF) when finished\n";
- my @files = ();
-  while(<STDIN>) {
-   chomp;
-   push(@files, $_); #This eats memory, but it isn't so bad...
-  }
-  startup(@files);
+	print STDERR "Reading from STDIN, hit CTRL+D (EOF) when finished\n";
+	my @files = ();
+	while(<STDIN>) {
+		chomp;
+		push(@files, $_); #This eats memory, but it isn't so bad...
+	}
+	startup(@files);
 }
 else {
- startup(@ARGV);
+	startup(@ARGV);
 }
 
 
@@ -78,129 +78,144 @@ else {
 ####################################################
 # Worker
 sub startup {
- my(@files) = @_;
- 
- #Don't sync if restore is true
- $opts{_no_sync} = $opts{restore};
- 
- my $con = GNUpod::FooBar::connect(\%opts);
- usage($con->{status}."\n") if $con->{status} || !@files;
+	my(@files) = @_;
+	
+	#Don't sync if restore is true
+	$opts{_no_sync} = $opts{restore};
 
- unless($opts{restore}) { #We parse the old file, if we are NOT restoring the iPod
-  GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
- }
+	my $con = GNUpod::FooBar::connect(\%opts);
+	usage($con->{status}."\n") if $con->{status} || !@files;
 
- if ($opts{playlist}) { #Create this playlist
-  print "> Adding songs to Playlist '$opts{playlist}'\n";
-  GNUpod::XMLhelper::addpl($opts{playlist}); #Fixme: this may printout a warning..
- } 
+	unless($opts{restore}) { #We parse the old file, if we are NOT restoring the iPod
+		GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
+	}
 
- my $addcount = 0;
+	if ($opts{playlist}) { #Create this playlist
+		print "> Adding songs to Playlist '$opts{playlist}'\n";
+		GNUpod::XMLhelper::addpl($opts{playlist}); #Fixme: this may printout a warning..
+	} 
 
- #We are ready to copy each file..
- foreach my $file (@files) {
-    #Skip all songs if user sent INT
-    next if !$int_count;
-    #Skip all dirs
-    next if -d $file;
+	my $addcount = 0;
+	#We are ready to copy each file..
+	foreach my $file (@files) {
+		#Skip all songs if user sent INT
+		next if !$int_count;
+		#Skip all dirs
+		next if -d $file;
+		
+		#Get the filetype
+		my ($fh,$media_h,$converter) =  GNUpod::FileMagic::wtf_is($file, {noIDv1=>$opts{'disable-v1'}, 
+		                                                                  noIDv2=>$opts{'disable-v2'},
+		                                                                  decode=>$opts{'decode'}},$con);
+
+		unless($fh) {
+			warn "* [****] Skipping '$file', unknown file type\n";
+			next;
+		}
+		my $wtf_ftyp = $media_h->{ftyp};      #'codec' .. maybe ALAC
+		my $wtf_frmt = $media_h->{format};    #container ..maybe M4A
+		my $wtf_ext  = $media_h->{extension}; #Possible extensions (regexp!)
+		
+		#wtf_is found a filetype, override data if needed
+		$fh->{artist}    = $opts{'set-artist'}    if $opts{'set-artist'};
+		$fh->{album}     = $opts{'set-album'}     if $opts{'set-album'};
+		$fh->{genre}     = $opts{'set-genre'}     if $opts{'set-genre'};
+		$fh->{rating}    = $opts{'set-rating'}    if $opts{'set-rating'};
+		$fh->{playcount} = $opts{'set-playcount'} if $opts{'set-playcount'};
+		$fh->{songnum}   = 1+$addcount            if $opts{'set-songnum'};
+		
+		#Set the addtime to unixtime(now)+MACTIME (the iPod uses mactime)
+		#This breaks perl < 5.8 if we don't use int(time()) !
+		$fh->{addtime} = int(time())+MACTIME;
+
+
+		#Check for duplicates
+		if(!$opts{duplicate} && (my $dup = checkdup($fh,$converter))) {
+			print "! [!!!] '$file' is a duplicate of song $dup, skipping file\n";
+			create_playlist_now($opts{playlist}, $dup); #We also add duplicates to a playlist..
+			next;
+		}
+
+		if($converter) {
+			print "> Converting '$file' from $wtf_ftyp into $opts{decode}, please wait...\n";
+			my $path_of_converted_file = GNUpod::FileMagic::kick_convert($converter,$file, uc($opts{decode}), $con);
+			unless($path_of_converted_file) {
+				print "! [!!!] Could not convert $file\n";
+				next;
+			}
+			#Ok, we got a converted file, fillout the gaps
+			my($conv_fh, $conv_media_h) = GNUpod::FileMagic::wtf_is($path_of_converted_file, undef, $con);
+			
+			unless($conv_fh) {
+				warn "* [***] Internal problem: $converter did not produce valid data.\n";
+				warn "* [***] Something is wrong with $path_of_converted_file (file not deleted, debug it! :) )\n";
+				next; 	
+			}
     
-    #Get the filetype
-    my ($fh,$media_h,$converter) =  GNUpod::FileMagic::wtf_is($file, {noIDv1=>$opts{'disable-v1'}, 
-                                                                      noIDv2=>$opts{'disable-v2'},
-								                                      decode=>$opts{'decode'}},$con);
+			#We didn't know things like 'filesize' before...
+			$fh->{time}     = $conv_fh->{time};
+			$fh->{bitrate}  = $conv_fh->{bitrate};
+			$fh->{srate}    = $conv_fh->{srate};        
+			$fh->{filesize} = $conv_fh->{filesize};   
+			$wtf_frmt = $conv_media_h->{format};    #Set the new format (-> container)
+			$wtf_ext  = $conv_media_h->{extension}; #Set the new possible extension
+			#BUT KEEP ftyp! (= codec)
+			$file = $path_of_converted_file; #Point $file to new file
+		}
+		elsif(defined($opts{reencode})) {
+			print "> ReEncoding '$file' with quality ".int($opts{reencode}).", please wait...\n";
+			my $path_of_converted_file = GNUpod::FileMagic::kick_reencode($opts{reencode},$file,$wtf_frmt,$con);
+			
+			if($path_of_converted_file) {
+				#Ok, we could convert.. check if it made sense:
+				if( (-s $path_of_converted_file) < (-s $file) ) {
+					#Ok, output is smaller, we are going to use thisone
+					#1. Replace path to file
+					$file = $path_of_converted_file;
+					#2. Set converted-state : This will unlink the file after copy finished!
+					$converter = 1;
+				}
+				else {
+					#Nope.. input was smaller, converting was silly..
+					print "* [***] Reencoded output bigger than input! Adding source file\n";
+					unlink($path_of_converted_file) or warn "Could not unlink $path_of_converted_file, $!\n";
+					#Ok, do nothing! 
+				}
+			}
+			else {
+				print "* [***] ReEncoding of file failed! Adding given file\n";
+			}
+		}
+		
+		
+		#Get a path
+		(${$fh}{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file, 
+		                                                        {format=>$wtf_frmt, extension=>$wtf_ext, keepfile=>$opts{restore}});
 
-    unless($fh) {
-    warn "* [****] Skipping '$file', unknown file type\n";
-     next;
-    }
-    
-   my $wtf_ftyp = $media_h->{ftyp};      #'codec' .. maybe ALAC
-   my $wtf_frmt = $media_h->{format};    #container ..maybe M4A
-   my $wtf_ext  = $media_h->{extension}; #Possible extensions (regexp!)
-   
-   #wtf_is found a filetype, override data if needed
-   $fh->{artist}    = $opts{'set-artist'}    if $opts{'set-artist'};
-   $fh->{album}     = $opts{'set-album'}     if $opts{'set-album'};
-   $fh->{genre}     = $opts{'set-genre'}     if $opts{'set-genre'};
-   $fh->{rating}    = $opts{'set-rating'}    if $opts{'set-rating'};
-   $fh->{playcount} = $opts{'set-playcount'} if $opts{'set-playcount'};
-   $fh->{songnum}   = 1+$addcount            if $opts{'set-songnum'};
-   
-   #Set the addtime to unixtime(now)+MACTIME (the iPod uses mactime)
-	 #This breaks perl < 5.8 if we don't use int(time()) !
-   $fh->{addtime} = int(time())+MACTIME;
+		if(!defined($target)) {
+			warn "*** FATAL *** Skipping '$file' , no target found!\n";
+		}
+		elsif($opts{restore} || File::Copy::copy($file, $target)) {
+			printf("+ [%-4s][%3d] %-32s | %-32s | %-24s\n",
+			uc($wtf_ftyp),1+$addcount, $fh->{title}, $fh->{album},$fh->{artist});
 
-
-   #Check for duplicates
-   if(!$opts{duplicate} && (my $dup = checkdup($fh,$converter))) {
-    print "! [!!!] '$file' is a duplicate of song $dup, skipping file\n";
-    create_playlist_now($opts{playlist}, $dup); #We also add duplicates to a playlist..
-    next;
-   }
-
-   ## Ok, file is not a duplicate
-
-   
-   if($converter) {
-    print "> Converting '$file' from $wtf_ftyp into $opts{decode}, please wait...\n";
-    my $path_of_converted_file = GNUpod::FileMagic::kick_convert($converter,$file, uc($opts{decode}), $con);
-    unless($path_of_converted_file) {
-     print "! [!!!] Could not convert $file\n";
-     next;
-    }
-
-    #Ok, we got a converted file, fillout the gaps
-    my($conv_fh, $conv_media_h) = GNUpod::FileMagic::wtf_is($path_of_converted_file, undef, $con);
-    
-    unless($conv_fh) {
-     warn "* [***] Internal problem: $converter did not produce valid data.\n";
-     warn "* [***] Something is wrong with $path_of_converted_file (file not deleted, debug it! :) )\n";
-     next;
-    }
-    
-    #We didn't know things like 'filesize' before...
-    $fh->{time}     = $conv_fh->{time};
-    $fh->{bitrate}  = $conv_fh->{bitrate};
-    $fh->{srate}    = $conv_fh->{srate};        
-    $fh->{filesize} = $conv_fh->{filesize};   
-    $wtf_frmt = $conv_media_h->{format};    #Set the new format (-> container)
-    $wtf_ext  = $conv_media_h->{extension}; #Set the new possible extension
-    #BUT KEEP ftyp! (= codec)
-    
-    $file = $path_of_converted_file; #Point $file to new file
-   }
-
-
-   #Get a path
-   (${$fh}{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file, 
-                                                           {format=>$wtf_frmt, extension=>$wtf_ext, keepfile=>$opts{restore}});
-
-   
-   if(!defined($target)) {
-    warn "*** FATAL *** Skipping '$file' , no target found!\n";
-   }
-   elsif($opts{restore} || File::Copy::copy($file, $target)) {
-     printf("+ [%-4s][%3d] %-32s | %-32s | %-24s\n",
-	    uc($wtf_ftyp),1+$addcount, $fh->{title}, $fh->{album},$fh->{artist});
-     
-     my $id = GNUpod::XMLhelper::mkfile({file=>$fh},{addid=>1}); #Try to add an id
-     create_playlist_now($opts{playlist}, $id);
-     $addcount++; #Inc. addcount
-   }
-   else { #We failed..
-     warn "*** FATAL *** Could not copy '$file' to '$target': $!\n";
-   }
-   unlink($file) if $converter; #File is in $tmp if $converter is set...
- }
+			my $id = GNUpod::XMLhelper::mkfile({file=>$fh},{addid=>1}); #Try to add an id
+			create_playlist_now($opts{playlist}, $id);
+			$addcount++; #Inc. addcount
+		}
+		else { #We failed..
+			warn "*** FATAL *** Could not copy '$file' to '$target': $!\n";
+		}
+		unlink($file) if $converter; #File is in $tmp if $converter is set...
+	}
 
  
  
- if($opts{playlist} || $addcount) { #We have to modify the xmldoc
-  print "> Writing new XML File, added $addcount file(s)\n";
-  GNUpod::XMLhelper::writexml($con);
- }
- 
- print "\n Done\n";
+	if($opts{playlist} || $addcount) { #We have to modify the xmldoc
+		print "> Writing new XML File, added $addcount file(s)\n";
+		GNUpod::XMLhelper::writexml($con);
+	}
+	print "\n Done\n";
 }
 
 
@@ -284,6 +299,10 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
        --disable-v1                Do not read ID3v1 Tags (MP3 Only)
        --disable-v2                Do not read ID3v2 Tags (MP3 Only)
        --decode=pcm|mp3|aac|aacbm  Convert FLAC Files to WAVE/MP3 or AAC 'on-the-fly'
+   -e  --reencode=int              Reencode MP3/AAC files with new quality 'on-the-fly'
+                                   (0 = Good .. 9 = Bad)
+                                   You may be able to save some space if you do not need
+                                   crystal-clear sound ;-)
        --set-artist=string         Set Artist (Override ID3 Tag)
        --set-album=string          Set Album  (Override ID3 Tag)
        --set-genre=string          Set Genre  (Override ID3 Tag)
@@ -298,7 +317,7 @@ EOF
 sub version {
 die << "EOF";
 gnupod_addsong.pl (gnupod) ###__VERSION__###
-Copyright (C) Adrian Ulrich 2002-2004
+Copyright (C) Adrian Ulrich 2002-2005
 
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

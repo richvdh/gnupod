@@ -44,6 +44,7 @@ if(-d $opth->{mount}) {
   $rr->{xml}            = $rr->{xml}.".xml" if !(-e $rr->{xml});
   $rr->{itunesdb}       = $opth->{mount}."/iPod_Control/iTunes/iTunesDB";
   $rr->{itunessd}       = $opth->{mount}."/iPod_Control/iTunes/iTunesSD";
+  $rr->{shufflestat}    = $opth->{mount}."/iPod_Control/iTunes/iTunesShuffle";
   $rr->{playcounts}     = "$rr->{mountpoint}/iPod_Control/iTunes/Play Counts";
   $rr->{itunesdb_md5}   = "$rr->{etc}/.itunesdb_md5";
   $rr->{onthego_invalid}  = "$rr->{etc}/.onthego_invalid";
@@ -247,6 +248,15 @@ sub setsync {
  setsync_playcounts($rr);
  setsync_otg($rr);
  setvalid_otgdata($rr);
+}
+
+######################################################################
+# Remove the Shuffle Database of the iPodShuffle
+sub wipe_shufflestat {
+	my($rr) = @_;
+	if(-e $rr->{shufflestat}) {
+		unlink($rr->{shufflestat}) || warn "Could not unlink '$rr->{shufflestat}', $!\n";
+	}
 }
 
 ######################################################################
