@@ -9,6 +9,8 @@ Summary
   Usage: gnupod_addsong.pl --reencode 6 *.mp3
   This would reenocde everything with 'lame -V 6'
   Use this if you don't have much space left (iPod Shuffle?!)
+  Note: The Reencode option also changes the quality of
+        files converted with '--decode=' :-)
 
 - Added support for m4a 'gnre' tags
 

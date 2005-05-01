@@ -355,11 +355,13 @@ sub _parse_iTunNORM {
 #########################################################
 # Start the converter
 sub kick_convert {
- my($prog, $file, $format, $con) = @_;
+ my($prog, $quality, $file, $format, $con) = @_;
 
  $prog = "$con->{bindir}/$prog";
-
- open(KICKOMATIC, "-|") or exec($prog, $file, "GET_$format") or die "FileMagic::kick_convert: Could not exec $prog\n";
+ #Set Quality to a normal level
+ $quality = 0 if $quality < 0;
+ $quality = 9 if $quality > 9;
+ open(KICKOMATIC, "-|") or exec($prog, $file, "GET_$format", int($quality)) or die "FileMagic::kick_convert: Could not exec $prog\n";
   my $newP = <KICKOMATIC>;
   chomp($newP);
  close(KICKOMATIC);
@@ -381,10 +383,10 @@ sub kick_reencode {
 	return undef if $quality < 0; #=Excellent Quality
 	return undef if $quality > 9; #=Bad Quality
 	
-	my $tmpout = "/tmp/gnuPod_ReEncode_".$$.int(rand(0xFFFF));
+	my $tmpout = "/tmp/gnupod_re_".$$.int(rand(0xFFFF));
 	if($format eq 'm4a') {
 		#Faac is not as nice as lame: We have to decode ourself.. and fixup the $quality value
-		$quality = 100 - ($quality*10);
+		$quality = 140 - ($quality*10);
 		my $pcmout = $tmpout.".wav";
 		my $ret = system( ("faad", "-o", $pcmout, $file) );
 		#Ok, we've got a pcm version.. encode it!

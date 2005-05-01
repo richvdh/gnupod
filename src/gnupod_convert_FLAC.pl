@@ -28,6 +28,7 @@ use strict;
 
 my $file  = $ARGV[0] or exit(1);
 my $gimme = $ARGV[1];
+my $quality = $ARGV[2];
 
 if(!(-r $file)) {
 	warn "$file is not readable!\n";
@@ -74,7 +75,7 @@ elsif($gimme eq "GET_MP3") {
 	#On errors, we'll get a BrokenPipe to stout
 	my $tmpout = get_u_path("/tmp/gnupod_mp3", "mp3");
 	open(FLACOUT, "-|") or exec("flac", "-d", "-s", "-c", "$file") or die "Could not exec flac: $!\n";
-	open(LAMEIN , "|-") or exec("lame", "--silent", "--preset","extreme", "-", $tmpout) or die "Could not exec lame: $!\n";
+	open(LAMEIN , "|-") or exec("lame", "-V", $quality, "--silent", "-", $tmpout) or die "Could not exec lame: $!\n";
 	while(<FLACOUT>) {
 		print LAMEIN $_;
 	}
@@ -86,8 +87,9 @@ elsif($gimme eq "GET_AAC" or $gimme eq "GET_AACBM") {
 	#Yeah! FAAC is broken and can't write to stdout..
 	my $tmpout = get_u_path("/tmp/gnupod_faac", "m4a");
 	   $tmpout = get_u_path("/tmp/gnupod_faac", "m4b") if $gimme eq "GET_AACBM";
+	$quality = 140 - ($quality*10);
 	open(FLACOUT, "-|") or exec("flac", "-d", "-s", "-c", "$file") or die "Could not exec flac: $!\n";
-	open(FAACIN , "|-") or exec("faac", "-w", "-q", "170", "-o", $tmpout, "-") or die "Could not exec faac: $!\n";
+	open(FAACIN , "|-") or exec("faac", "-w", "-q", $quality, "-o", $tmpout, "-") or die "Could not exec faac: $!\n";
 	while(<FLACOUT>) { #Feed faac
 		print FAACIN $_;
 	}

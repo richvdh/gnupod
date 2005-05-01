@@ -28,6 +28,7 @@ use strict;
 
 my $file  = $ARGV[0] or exit(1);
 my $gimme = $ARGV[1];
+my $quality = $ARGV[2];
 
 
 if(!(-r $file)) {
@@ -55,7 +56,7 @@ elsif($gimme eq "GET_MP3") {
   #On errors, we'll get a BrokenPipe to stout
   my $tmpout = get_u_path("/tmp/gnupod_mp3", "mp3");
   open(MIDIOUT, "-|") or exec("timidity", "-idqq", "-Ow", "-o", "-", $file) or die "Could not exec timidity: $!\n";
-  open(LAMEIN , "|-") or exec("lame", "--silent", "--preset","medium", "-", $tmpout) or die "Could not exec lame: $!\n";
+  open(LAMEIN , "|-") or exec("lame", "-V", $quality, "--silent", "-", $tmpout) or die "Could not exec lame: $!\n";
    while(<MIDIOUT>) {
     print LAMEIN $_;
    }
@@ -66,8 +67,9 @@ elsif($gimme eq "GET_MP3") {
 elsif($gimme eq "GET_AAC" or $gimme eq "GET_AACBM") {
   my $tmpout = get_u_path("/tmp/gnupod_faac", "m4a");
      $tmpout = get_u_path("/tmp/gnupod_faac", "m4b") if $gimme eq "GET_AACBM";
+  $quality = 140 - ($quality*10);
   open(MIDIOUT, "-|") or exec("timidity", "-idqq", "-Ow", "-o", "-", $file) or die "Could not exec timidity: $!\n";
-  open(FAACIN , "|-") or exec("faac", "-w", "-q", "100", "-o", $tmpout, "-") or die "Could not exec faac: $!\n";
+  open(FAACIN , "|-") or exec("faac", "-w", "-q", $quality, "-o", $tmpout, "-") or die "Could not exec faac: $!\n";
    while(<MIDIOUT>) { #Feed faac
     print FAACIN $_;
    }

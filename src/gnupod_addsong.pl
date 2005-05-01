@@ -138,7 +138,7 @@ sub startup {
 
 		if($converter) {
 			print "> Converting '$file' from $wtf_ftyp into $opts{decode}, please wait...\n";
-			my $path_of_converted_file = GNUpod::FileMagic::kick_convert($converter,$file, uc($opts{decode}), $con);
+			my $path_of_converted_file = GNUpod::FileMagic::kick_convert($converter,$opts{reencode},$file, uc($opts{decode}), $con);
 			unless($path_of_converted_file) {
 				print "! [!!!] Could not convert $file\n";
 				next;
