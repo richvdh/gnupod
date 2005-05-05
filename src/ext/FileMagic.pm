@@ -383,18 +383,28 @@ sub kick_reencode {
 	return undef if $quality < 0; #=Excellent Quality
 	return undef if $quality > 9; #=Bad Quality
 	
-	my $tmpout = "/tmp/gnupod_re_".$$.int(rand(0xFFFF));
+	#Try to get an unique name
+	my $tmpout = undef;
+	my $looppanic = 0;
+	while($tmpout = "/tmp/gnupod_re_".$$.int(rand(0xFFFF))) {
+		last unless -e $tmpout;
+		if($looppanic++ > 0xFFFF) {
+			warn "FileMagic.pm: Ouch: could not get an unique filename in /tmp .. \n";
+			return undef;
+		}
+	}
+	
 	if($format eq 'm4a') {
 		#Faac is not as nice as lame: We have to decode ourself.. and fixup the $quality value
 		$quality = 140 - ($quality*10);
 		my $pcmout = $tmpout.".wav";
 		my $ret = system( ("faad", "-o", $pcmout, $file) );
 		#Ok, we've got a pcm version.. encode it!
-		$tmpout .= ".m4a";
+		$tmpout .= ".m4a"; #Fixme: This breaks m4b.. well.. next time i'll fix it..
 		my $ret = system( ("faac", "-w", "-q", $quality, "-o", $tmpout, $pcmout) );
-		unlink($pcmout);
+		unlink($pcmout) or warn "FileMagic.pm: Could not unlink '$pcmout' , $!\n";
 		if($ret) {
-			unlink($tmpout);
+			unlink($tmpout) or warn "FileMagic.pm: Could not unlink '$tmpout', $!\n";
 			return undef;
 		}
 		else {
@@ -406,7 +416,7 @@ sub kick_reencode {
 		my $ret = system( ("lame", "--silent", "-V", $quality, $file, $tmpout) );
 		if($ret) {
 			#We failed for some reason..
-			unlink($tmpout);
+			unlink($tmpout) or warn "FileMagic.pm: Could not unlink '$tmpout', $!\n";
 		}
 		else {
 			return $tmpout;
