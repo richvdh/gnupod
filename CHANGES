@@ -1,4 +1,4 @@
-GNUpod 0.98.1 - codename
+GNUpod 0.98.1 - codename 'Lupin the 3rd'
 
 Summary
 -------
@@ -16,6 +16,10 @@ Summary
 
 - Fixed some iPod-Shuffle issues
    * mktunes.pl removes the iTunesShuffle leftover
+
+- Remove TARGET-File if File::Copy() failed for any reason
+   => Better handling of 'disk full' but still not perfect
+      [GNUpod should write a 'sparefile' or something like that]
 
 *** OLD STUFF ***
 

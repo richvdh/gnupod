@@ -112,19 +112,25 @@ EOF
  
  GNUpod::XMLhelper::writexml($con);
 
- 
+ my $t2pfail = 0;
  if(-e $con->{itunesdb} && !$opts{'disable-convert'}) {
  #We have an iTunesDB, call tunes2pod.pl
   print "Found *existing* iTunesDB, running tunes2pod.pl\n";
-  system("$con->{bindir}/tunes2pod.pl --force -m $opts{mount}");
+  $t2pfail = system("$con->{bindir}/tunes2pod.pl --force -m $opts{mount}");
  }
  else {
  #No iTunesDB, run mktunes.pl
   print "No iTunesDB found, running mktunes.pl\n";
-  system("$con->{bindir}/mktunes.pl -m $opts{mount}");
+  $t2pfail = system("$con->{bindir}/mktunes.pl -m $opts{mount}");
  }
  
- print "\n Done\n   Your iPod is now ready for GNUpod :)\n";
+ if($t2pfail) {
+  print "\n Done\n ..Looks like something went wrong :-/\n";
+ }
+ else {
+  print "\n Done\n   Your iPod is now ready for GNUpod :)\n";
+ }
+ 
 }
 
 

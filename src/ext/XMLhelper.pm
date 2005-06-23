@@ -353,7 +353,7 @@ sub writexml {
 		if(-e $out) { #Backup old out file
 			rename($out, $out.".old") or warn "Could not move $out to $out.old\n";
 		}
-	rename($tmp_out, $out) or warn "Could not move $tmp_out to $out\n";
+		rename($tmp_out, $out) or warn "Could not move $tmp_out to $out\n";
 	}
 	GNUpod::FooBar::setINvalid_otgdata($rr);
 }

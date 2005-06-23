@@ -203,8 +203,8 @@ sda: test WP failed, assume Write Enabled
 In this case, @code{@w{/dev/sda}} would be your iPod.
 
 Linux 2.4.21 (and newer) doesn't show such verbose output and your iPod 
-won't get detectet when loading sbp2. Simply run @code{@w{rescan-scsi-bus.sh}} 
-which should find your iPod (See /proc/scsi/scsi). 
+will not be detectet while loading sbp2. Simply run @code{@w{rescan-scsi-bus.sh}}.
+It should find your iPod (See /proc/scsi/scsi). 
 (You can download 'rescan-scsi-bus.sh' at http://www.garloff.de/kurt/linux/rescan-scsi-bus.sh)
 
 You can now mount the iPod:
@@ -271,7 +271,7 @@ First, we 'backup' the current Firmware
 dd if=/dev/sda2 of=backup_firmware
 @end example
 
-This should result in a ~32Mb big file,now we have to kill the old partition map and force the kernel 
+This should result in a ~32Mb big file, now we have to kill the old partition map and force the kernel 
 to re-read the new (empty) map
 @example
 dd if=/dev/zero of=/dev/sda bs=1M count=10
@@ -366,7 +366,7 @@ It's a good idea to edit @code{@w{/etc/fstab}} and add a line for the iPod:
 new Firmware or/and the documentation told you to do this **
 
 
-Setup Firewire as described in 'Using FireWire with GNU/Linux', load the modules and make sure sbp2 detected your iPod.
+Setup Firewire (or USB) as described in 'Using FireWire with GNU/Linux', load the modules and make sure sbp2 detected your iPod.
 Do not try to mount the iPod. We assume your iPod at @code{@w{/dev/sda}}.
 
 First you need to get a new Firmware. If you own OSX, download and install the iPod updater. 
@@ -403,9 +403,7 @@ rmmod sbp2
 
 You can now unplug the iPod and pray ;)
 
-It could be possible to damage the iPod with this action, but the iPod is very clever looking for new Firmware.
-Even if you uploaded 121.zip to the iPod it shouldn't reflash itself with the bad
-Firmware... (because the zip file wouldn't have a correct checksum) 
+Please note: Your Warranty Is Now Void ;-)
 
 But please don't blame me if your iPod dies...
 @c ===========================================================================================

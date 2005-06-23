@@ -24,8 +24,8 @@ File: gnupod.info,  Node: Top,  Next: Requirements,  Up: (dir)
 1 GNUpod
 ********
 
-This edition of the `GNUpod Manual', last updated 5. Feb. 2004,
-documents GNUpod Version 0.98
+This edition of the `GNUpod Manual', last updated 23. Jun. 2005,
+documents GNUpod Version 0.98.1
 
 * Menu:
 
@@ -186,8 +186,8 @@ should look like this (If you are running linux 2.4.20 or older)
    In this case, `/dev/sda' would be your iPod.
 
    Linux 2.4.21 (and newer) doesn't show such verbose output and your
-iPod won't get detectet when loading sbp2. Simply run
-`rescan-scsi-bus.sh' which should find your iPod (See /proc/scsi/scsi).
+iPod will not be detectet while loading sbp2. Simply run
+`rescan-scsi-bus.sh'.  It should find your iPod (See /proc/scsi/scsi).
 (You can download 'rescan-scsi-bus.sh' at
 http://www.garloff.de/kurt/linux/rescan-scsi-bus.sh)
 
@@ -253,7 +253,7 @@ plugin the iPod and make sure it got detected with `dmesg'.
    First, we 'backup' the current Firmware
      dd if=/dev/sda2 of=backup_firmware
 
-   This should result in a ~32Mb big file,now we have to kill the old
+   This should result in a ~32Mb big file, now we have to kill the old
 partition map and force the kernel to re-read the new (empty) map
      dd if=/dev/zero of=/dev/sda bs=1M count=10
      rmmod sbp2 && insmod sbp2
@@ -340,12 +340,13 @@ File: gnupod.info,  Node: Firmware update,  Prev: Convert your Mac iPod,  Up: In
 ** Don't update the Firmware just for fun, only do it if you need a new
 Firmware or/and the documentation told you to do this **
 
-   Setup Firewire as described in 'Using FireWire with GNU/Linux', load
-the modules and make sure sbp2 detected your iPod.  Do not try to mount
-the iPod. We assume your iPod at `/dev/sda'.
+   Setup Firewire (or USB) as described in 'Using FireWire with
+GNU/Linux', load the modules and make sure sbp2 detected your iPod.  Do
+not try to mount the iPod. We assume your iPod at `/dev/sda'.
 
-   First you need to get a new Firmware which you can download from
-http://www.iweenie.com/ipod.shtml
+   First you need to get a new Firmware. If you own OSX, download and
+install the iPod updater.  Open the Shell and change into the .app
+Folder. The Firmware is there somewhere ;-)
 
    If you got a FAT32 formatted iPod (..or you plan to 'convert' the
 iPod after upgrading the Firmware), you'll need Version 1.1.0 or newer.
@@ -374,10 +375,7 @@ supports 'dos-style' partitions??) iPod, use
 
    You can now unplug the iPod and pray ;)
 
-   It could be possible to damage the iPod with this action, but the
-iPod is very clever looking for new Firmware.  Even if you uploaded
-121.zip to the iPod it shouldn't reflash itself with the bad
-Firmware... (because the zip file wouldn't have a correct checksum)
+   Please note: Your Warranty Is Now Void ;-)
 
    But please don't blame me if your iPod dies...
 
@@ -1233,28 +1231,28 @@ permit their use in free software.
 
 Tag Table:
 Node: Top855
-Node: Requirements1443
-Node: Installing GNUpod1966
-Node: Installation of GNUpod2393
-Node: Using FireWire with GNU/Linux3511
-Node: Convert your Mac iPod6925
-Node: Firmware update12154
-Node: Using GNUpod13932
-Node: Preparation14821
-Node: Configuration15553
-Node: Add files16010
-Node: Search files17492
-Node: Remove files17978
-Node: Edit tags18279
-Node: Creating playlists18824
-Node: Unplug the iPod21299
-Node: Recovering files22208
-Node: Coexistence23103
-Node: Problems24573
-Node: GNUtunesDB24956
-Node: Get rid of '-m'26462
-Node: Known bugs and limitations26747
-Node: Reporting Bugs27038
-Node: GNU Free Documentation License27486
+Node: Requirements1446
+Node: Installing GNUpod1969
+Node: Installation of GNUpod2396
+Node: Using FireWire with GNU/Linux3514
+Node: Convert your Mac iPod6930
+Node: Firmware update12160
+Node: Using GNUpod13806
+Node: Preparation14695
+Node: Configuration15427
+Node: Add files15884
+Node: Search files17366
+Node: Remove files17852
+Node: Edit tags18153
+Node: Creating playlists18698
+Node: Unplug the iPod21173
+Node: Recovering files22082
+Node: Coexistence22977
+Node: Problems24447
+Node: GNUtunesDB24830
+Node: Get rid of '-m'26336
+Node: Known bugs and limitations26621
+Node: Reporting Bugs26912
+Node: GNU Free Documentation License27360
 
 End Tag Table

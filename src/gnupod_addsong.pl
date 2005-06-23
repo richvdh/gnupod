@@ -205,6 +205,7 @@ sub startup {
 		}
 		else { #We failed..
 			warn "*** FATAL *** Could not copy '$file' to '$target': $!\n";
+			unlink($target); #Wipe broken file
 		}
 		unlink($file) if $converter; #File is in $tmp if $converter is set...
 	}
