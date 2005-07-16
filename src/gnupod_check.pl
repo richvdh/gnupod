@@ -26,6 +26,8 @@ use strict;
 use GNUpod::XMLhelper;
 use GNUpod::FooBar;
 use Getopt::Long;
+use File::Glob ':glob';
+
 use vars qw(%opts %TRACKER);
 
 print "gnupod_check.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
@@ -76,7 +78,7 @@ sub go {
 ############################################
 # Glob all files
 sub checkGNUtunes {
-  foreach my $file (glob($opts{mount}."/iPod_Control/Music/*/*")) {
+  foreach my $file (bsd_glob($opts{mount}."/iPod_Control/Music/*/*", GLOB_NOSORT)) {
    next if -d $file;
     $TRACKER{GLOBFILES}++;
     unless($TRACKER{PATH}{lc($file)}) { #Hmpf.. file maybe not in the GNUtunesDB

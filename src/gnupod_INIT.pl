@@ -116,12 +116,12 @@ EOF
  if(-e $con->{itunesdb} && !$opts{'disable-convert'}) {
  #We have an iTunesDB, call tunes2pod.pl
   print "Found *existing* iTunesDB, running tunes2pod.pl\n";
-  $t2pfail = system("$con->{bindir}/tunes2pod.pl --force -m $opts{mount}");
+  $t2pfail = system("$con->{bindir}/tunes2pod.pl", "--force", "-m", $opts{mount});
  }
  else {
  #No iTunesDB, run mktunes.pl
   print "No iTunesDB found, running mktunes.pl\n";
-  $t2pfail = system("$con->{bindir}/mktunes.pl -m $opts{mount}");
+  $t2pfail = system("$con->{bindir}/mktunes.pl", "-m" ,"$opts{mount}");
  }
  
  if($t2pfail) {

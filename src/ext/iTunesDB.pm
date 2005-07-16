@@ -30,6 +30,7 @@ package GNUpod::iTunesDB;
 use strict;
 use Unicode::String;
 use GNUpod::FooBar;
+use File::Glob ':glob';
 
 use vars qw(%mhod_id @mhod_array %SPLDEF %SPLREDEF);
 
@@ -172,7 +173,8 @@ sub mk_itunes_sd_file {
 	$ret .= tnp();					#unk5
 	$ret .= tnp(0x64-($ref->{volume}));			#Volume (64=+-0)
 	
-	my $fixmetype = 1;
+	## This is ugly!
+	my $fixmetype = 1; #MP3
 	if($ref->{path} =~ /\.m4.$/i) {
 		$fixmetype = 2;
 	}
@@ -184,7 +186,21 @@ sub mk_itunes_sd_file {
 	$ret .= tnp(0x000200);	#Static?
 	$ret .= Unicode::String::byteswap2($uc->utf16);
 	$ret .= "\0" x (522-length($uc->utf16));
-	$ret .= tnp(0x010000);
+	$ret .= tnp(0x010000); #shuffle#bookmark#unknown#
+
+=head
+	my $xx = 0;
+	foreach(split(/(...)/,unpack("H*",$ret))) {
+		next unless $_;
+		print "$_ ";
+		$xx++;
+		if($xx == 10) {
+			$xx = 0;
+			print "\n";
+		}
+	}
+	print "\n=======================================\n";
+=cut
 	return $ret;
 }
 
@@ -1229,7 +1245,7 @@ sub readOTG {
 	my $buff = undef;
 	my @content = ();
 
-	foreach my $file (glob($glob)) {
+	foreach my $file (bsd_glob($glob,GLOB_NOSORT)) {
 #		print "OTG: $file\n";
 		my @otgdb = ();
 		open(OTG, "$file") or next;

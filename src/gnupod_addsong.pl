@@ -28,6 +28,7 @@ use GNUpod::FooBar;
 use GNUpod::FileMagic;
 use Getopt::Long;
 use File::Copy;
+use File::Glob ':glob';
 
 use constant MACTIME => 2082931200; #Mac EPOCH offset
 use vars qw(%opts %dupdb_normal %dupdb_lazy $int_count);
@@ -58,7 +59,7 @@ if($opts{restore}) {
 	delete($opts{decode});    #We don't decode anything
 	$opts{duplicate} = 1;     #Don't skip dups on restore
 	$opts{decode}    = undef; #Do not encode, only native files are on an iPod
-	startup(glob("$opts{mount}/iPod_Control/Music/*/*"));
+	startup(bsd_glob("$opts{mount}/iPod_Control/Music/*/*", GLOB_NOSORT));
 }
 elsif($ARGV[0] eq "-" && @ARGV == 1) {
 	print STDERR "Reading from STDIN, hit CTRL+D (EOF) when finished\n";

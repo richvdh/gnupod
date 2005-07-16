@@ -27,6 +27,8 @@ use GNUpod::iTunesDB;
 use GNUpod::XMLhelper;
 use GNUpod::FooBar;
 use Getopt::Long;
+use File::Glob ':glob';
+
 use vars qw(%opts @keeper $plcref);
 
 
@@ -66,7 +68,7 @@ sub go {
  if(GNUpod::FooBar::_otgdata_broken($con)) { #Ok, On-The-Go data is ** BROKEN **
    warn "gnupod_otgsync.pl: Error: You forgot to run mktunes.pl, wiping broken On-The-Go data...\n";
    #Remove broken data.. live is hard..
-   unlink(glob($con->{onthego})) or warn "Could not remove $con->{onthego}, $!\n";
+   unlink(bsd_glob($con->{onthego}, GLOB_NOSORT)) or warn "Could not remove $con->{onthego}, $!\n";
    unlink($con->{playcounts}) or warn "Could not remove $con->{playcounts}, $!\n"; 
 	 warn "Done!\n";
  }

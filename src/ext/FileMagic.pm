@@ -74,11 +74,11 @@ sub wtf_is {
   elsif(my $xqt = __is_qt($file,$flags)) {
    return ($xqt->{ref},  {ftyp=>$xqt->{codec}, format=>"m4a", extension=>"m4a|m4p|m4b"});
   }
-  elsif(my $h = __is_mp3($file,$flags)) {
-   return ($h, {ftyp=>"MP3", format=>"mp3"});
-  }
   elsif(my $h = __is_pcm($file,$flags)) {
    return ($h, {ftyp=>"PCM", format=>"wav"});
+  }
+  elsif(my $h = __is_mp3($file,$flags)) {
+   return ($h, {ftyp=>"MP3", format=>"mp3"});
   }
 
 #Still no luck..
@@ -170,11 +170,14 @@ sub __is_pcm {
    seek(PCM, 8, 0);
    read(PCM, $rty, 4);
    
-   return undef unless($gid eq "RIFF" && $rty eq "WAVE");
-#Ok, maybe a wave file.. try to get BPS and SRATE
-   my $size = -s $file;
-   return undef if ($size < 32); #File to small..
+   my $size = (-s $file);
+
+   if(($gid ne "RIFF") or ($rty ne "WAVE") or ($size < 32)) {
+     close(PCM);
+     return undef 
+   }
    
+#Ok, maybe a wave file.. try to get BPS and SRATE  
    my ($bs) = undef;
    seek(PCM, 24,0);
    read(PCM, $bs, 4);
@@ -182,6 +185,7 @@ sub __is_pcm {
 
    seek(PCM, 28,0); 
    read(PCM, $bs, 4);
+   close(PCM);
    my $bps = GNUpod::FooBar::shx2int($bs);
 
 

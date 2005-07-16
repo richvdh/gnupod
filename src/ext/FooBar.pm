@@ -24,6 +24,7 @@ package GNUpod::FooBar;
 
 use strict;
 use Digest::MD5;
+use File::Glob ':glob';
 
 #####################################################################
 # Get paths / files
@@ -191,7 +192,7 @@ sub _otg_needs_sync {
 	my($rr) = @_;
 	#warn "debug: otgsync need? (request from $$)\n";
 	#OTG Sync needed
-	foreach my $otgf (glob($rr->{onthego})) {
+	foreach my $otgf (bsd_glob($rr->{onthego},GLOB_NOSORT)) {
 		return 1 if ( -e $otgf && -s $otgf > 0 );
 	}
 
@@ -265,7 +266,7 @@ sub setsync_otg {
 my($rr) = @_;
 
 
- if( !(glob($rr->{onthego})) || unlink(glob(($rr->{onthego})) )) {
+ if( !(bsd_glob($rr->{onthego},GLOB_NOSORT)) || unlink(bsd_glob(($rr->{onthego},GLOB_NOSORT)) )) {
   return undef;
  }
 

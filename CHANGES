@@ -1,3 +1,26 @@
+GNUpod 0.98.2 - codename ""
+
+Summary
+-------
+
+- Changed the file-detection-type order
+  of FileMagic.pm from:
+  NonNative > QT > MP3 > PCM
+  ..into..
+  NonNative > QT > PCM > MP*
+
+  ..MP3::Info had some false-positives and detected
+  a few PCM-Files as MP3s :-/. The PCM-Detection
+  is much simpler and shouldn't create any false-
+  positives.
+  Thanks to Stefano Vesa for reporting the Problem.
+
+- GNUpod had some problems if the $IPOD_MOUNTPOINT
+  contained whitespaces.
+  Switched to File::Glob::bsd_glob() to fix this issue.
+
+*** OLD STUFF ***
+
 GNUpod 0.98.1 - codename 'Lupin the 3rd'
 
 Summary
@@ -21,7 +44,6 @@ Summary
    => Better handling of 'disk full' but still not perfect
       [GNUpod should write a 'sparefile' or something like that]
 
-*** OLD STUFF ***
 
 GNUpod 0.98 - codename 'Luna 9'
 

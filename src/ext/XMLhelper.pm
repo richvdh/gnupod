@@ -26,6 +26,7 @@ use strict;
 use XML::Parser;
 use Unicode::String;
 use GNUpod::FooBar;
+use File::Glob ':glob';
 
 #Maximal length of a path
 use constant MAX_PATHLENGTH => 64;
@@ -75,8 +76,7 @@ sub getpath {
 		# 1. Glob to find all dirs
 		## We don't cache this, we do a glob for each new file..
 		## Shouldn't be a waste if time.. We belive in the Cacheing of the OS ;)
-		my @aviable_targets = glob("$mountp/iPod_Control/Music/*");
-
+		my @aviable_targets = bsd_glob("$mountp/iPod_Control/Music/*", GLOB_NOSORT);
 		# 2. Paranoia check..
 		unless(@aviable_targets) {
 			warn "No folders found, did you run gnupod_INIT.pl ?\n";
@@ -102,6 +102,7 @@ sub getpath {
 			next if $chars_left < 6; #We would like to get more than 6 chars for the filename (XXX.mp3)
 			#Note: Chars needs to be positive for this substr call!
 			$path = $tmp_ipodpath.substr($name,$chars_left*-1);
+			
 			if( !(-e $path) && open(TESTFILE,">",$path) ) { #This is false if we would write to a globed file :)
 				close(TESTFILE);
 				unlink($path); #Maybe it's a dup.. we don't create empty files
