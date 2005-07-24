@@ -1,4 +1,4 @@
-GNUpod 0.98.2 - codename ""
+GNUpod 0.98.2 - codename "Jigen"
 
 Summary
 -------
@@ -18,6 +18,21 @@ Summary
 - GNUpod had some problems if the $IPOD_MOUNTPOINT
   contained whitespaces.
   Switched to File::Glob::bsd_glob() to fix this issue.
+
+- Apple did it again! The iPodMini-FW1.4 doesn't like
+  if length(path) > 55 .. rgs! 
+  This version of GNUpod crops after 49 chars (to be on
+  the safe side. Maybe Apple ...)
+  Run 'gnupod_check.pl --fixit' to fix this issue (Maybe)
+
+- gnupod_check.pl has now a --fixit switch. It will try to
+  fix the found errors itself
+
+- Updated documentation: Tell how to extract a
+  Firmware-Image on Linux. (And others? Well, you need
+  HFS+ Support)
+
+  
 
 *** OLD STUFF ***
 

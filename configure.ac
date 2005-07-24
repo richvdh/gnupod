@@ -1,4 +1,4 @@
-AC_INIT(GNUpod, 0.98.1, bug-gnupod@nongnu.org)
+AC_INIT(GNUpod, 0.98.2, bug-gnupod@nongnu.org)
 
 echo $ECHO_N $PACKAGE_VERSION > .gnupod_version
 
@@ -104,4 +104,5 @@ echo
 
 echo
 echo "-> use 'make install' to install $PACKAGE_NAME"
+echo "-> use 'info $PACKAGE_NAME' to read the documentation after you installed $PACKAGE_NAME"
 echo "-> use 'make uninstall' to remove $PACKAGE_NAME from $prefix"

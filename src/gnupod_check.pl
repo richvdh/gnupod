@@ -30,11 +30,14 @@ use File::Glob ':glob';
 
 use vars qw(%opts %TRACKER);
 
+#Get maximal Pathlength from XMLHelper constant
+my $xmlhelper_maxpathlen = GNUpod::XMLhelper::MAX_PATHLENGTH;
+
 print "gnupod_check.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
-GetOptions(\%opts, "version", "help|h", "mount|m=s");
+GetOptions(\%opts, "version", "help|h", "mount|m=s", "fixit");
 GNUpod::FooBar::GetConfig(\%opts, {mount=>'s'}, "gnupod_check");
 
 usage() if $opts{help};
@@ -45,95 +48,168 @@ go();
 ####################################################
 # Worker
 sub go {
- my $con = GNUpod::FooBar::connect(\%opts);
- usage($con->{status}."\n") if $con->{status};
+	my $con = GNUpod::FooBar::connect(\%opts);
+	usage($con->{status}."\n") if $con->{status};
+	
+	print "Pass 1: Checking Files in the GNUtunesDB.xml...\n";
+	GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
 
- print "Pass 1: Checking Files in the GNUtunesDB.xml...\n";
- GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
+	print "Pass 2: Checking Files on the iPod...\n";
+	checkGNUtunes();
 
- print "Pass 2: Checking Files on the iPod...\n";
- checkGNUtunes();
- 
- print   "..finished\n\n";
- print   "  Total Playtime : ".int($TRACKER{TIME}/1000/60/60)." h\n";
- printf ("  Space used     : %.2f GB\n",( $TRACKER{SIZE}/1024/1024/1024 ) );
- print   "  iPod files     : $TRACKER{GLOBFILES}\n";
- print   "  GNUpod files   : $TRACKER{ITFILES}\n";
- 
- if($TRACKER{GLOBFILES} == $TRACKER{ITFILES} && $TRACKER{ERR} == 0) {
-  print " -> Everything is fine :)\n";
- }
- elsif($TRACKER{GLOBFILES} != $TRACKER{ITFILES}) {
-  print " -> The GNUtunesDB.xml is inconsistent. Please try to fix the errors.\n";
- }
- 
- if($TRACKER{ERR} > 25) {
-  print " -> I found MANY ($TRACKER{ERR}) errors. Maybe you should run\n";
-  print "    'gnupod_addsong.pl --restore'. This would wipe all your Playlists\n";
-  print "    but you would get rid of the inconsistenty very fast...\n";
- }
- 
+	print   "..finished\n\n";
+	print   "  Total Playtime : ".int($TRACKER{TIME}/1000/60/60)." h\n";
+	printf ("  Space used     : %.2f GB\n",( $TRACKER{SIZE}/1024/1024/1024 ) );
+	print   "  iPod files     : $TRACKER{GLOBFILES}\n";
+	print   "  GNUpod files   : $TRACKER{ITFILES}\n";
+
+	if($opts{fixit}) {
+		if($TRACKER{FIXED}) {
+			print " -> Writing new GNUtunesDB.xml, i fixed $TRACKER{FIXED} Errors.\n";
+			print "    You may have to re-run $0\n";
+			GNUpod::XMLhelper::writexml($con);
+		}
+		else {
+			print " -> Nothing fixed, no need to rewrite the GNUtunesDB.xml\n";
+		}
+	}
+	else {
+		if($TRACKER{GLOBFILES} == $TRACKER{ITFILES} && $TRACKER{ERR} == 0) {
+			print " -> Everything is fine :)\n";
+		}
+		elsif($TRACKER{GLOBFILES} != $TRACKER{ITFILES}) {
+			print " -> The GNUtunesDB.xml is inconsistent. Please try to fix the errors or run $0 --fixit\n";
+		}
+		
+		if($TRACKER{ERR} > 25) {
+			print " -> I found MANY ($TRACKER{ERR}) errors. Maybe you should run\n";
+			print "    '$0 --fixit' to let me fix this errors. If it still doesn't help, run\n";
+			print "    'gnupod_addsong.pl --restore'. This would wipe all your Playlists\n";
+			print "    but would cure your iPod for sure.\n";
+		}
+  }
 }
 
 ############################################
 # Glob all files
 sub checkGNUtunes {
-  foreach my $file (bsd_glob($opts{mount}."/iPod_Control/Music/*/*", GLOB_NOSORT)) {
-   next if -d $file;
-    $TRACKER{GLOBFILES}++;
-    unless($TRACKER{PATH}{lc($file)}) { #Hmpf.. file maybe not in the GNUtunesDB
-      print "  Stale file '$file' found. Remove the file, it wastes space...\n"; 
-     $TRACKER{ERR}++;
-    }
-  }
+	foreach my $file (bsd_glob($opts{mount}."/iPod_Control/Music/*/*", GLOB_NOSORT)) {
+	next if -d $file;
+	$TRACKER{GLOBFILES}++;
+		unless($TRACKER{PATH}{lc($file)}) { #Hmpf.. file maybe not in the GNUtunesDB
+			print "  Stale file '$file' found. Remove the file, it wastes space...\n"; 
+			$TRACKER{ERR}++;
+			if($opts{fixit}) {
+				print " fixit: Removing $file\n";
+				unlink($file) or warn "Could not unlink $file, $!\n";
+				$TRACKER{FIXED}++;
+			}
+		}
+	}
 }
 
 #############################################
 # Eventhandler for FILE items
 sub newfile {
- my($el) =  @_;
- 
- my $rp = GNUpod::XMLhelper::realpath($opts{mount},$el->{file}->{path});
- my $id = $el->{file}->{id};
- 
- my $HINT = "Remove this zombie using 'gnupod_search.pl --delete -i \"^$id\$\"'";
+	my($el) =  @_;
 
- $TRACKER{SIZE}+=int($el->{file}->{filesize});
- $TRACKER{TIME}+=int($el->{file}->{time});
- 
- $TRACKER{ID}{int($id)}++;
- $TRACKER{PATH}{lc($rp)}++; #FAT32 is caseInsensitive.. HFS+ should also be caseInsensitive (ON THE IPOD)
- $TRACKER{ITFILES}++;
- 
- if($TRACKER{ID}{int($id)} != 1) {
-  print "  ID $id is used ".int($TRACKER{ID}{int($id)})." times!\n";
-  $TRACKER{ERR}++;
- }
- 
- if(int($id) < 1) {
-  print "  ID $id is < 1 .. You shouldn't do this!\n";
-  $TRACKER{ERR}++;
- }
- 
- if(!-e $rp) {
-  print "  ID $id vanished! ($rp) -> $HINT\n";
-  $TRACKER{ERR}++;
- }
- elsif(-d $rp) {
-  print "  ID $id is a DIRECTORY?! ($rp)\n";
- }
- elsif(-s $rp < 1) {
-  print "  ID $id has zero size! ($rp) -> $HINT\n";
-  $TRACKER{ERR}++;
- }
- 
- 
+	#Add song to xml?
+	my $call_mkfile = $opts{fixit};
+	
+	my $rp = GNUpod::XMLhelper::realpath($opts{mount},$el->{file}->{path});
+	my $id = $el->{file}->{id};
+	
+	my $HINT = "Run 'gnupod_check.pl --fixit' to wipe this zombie";
+	
+	$TRACKER{SIZE}+=int($el->{file}->{filesize});
+	$TRACKER{TIME}+=int($el->{file}->{time});
 
+	$TRACKER{ID}{int($id)}++;
+	$TRACKER{PATH}{lc($rp)}++; #FAT32 is caseInsensitive.. HFS+ should also be caseInsensitive (ON THE IPOD)
+	$TRACKER{ITFILES}++;
+
+	if($TRACKER{ID}{int($id)} != 1) {
+		print "  ID $id is used ".int($TRACKER{ID}{int($id)})." times!\n";
+		$TRACKER{ERR}++;
+		if($opts{fixit}) {
+			print " fixit: Removing this file from XML, re-run $0 to get rid of the stale file!\n";
+			$call_mkfile = undef;
+			$TRACKER{FIXED}++;
+		}
+	}
+
+	if(int($id) < 1) {
+		print "  ID $id is < 1 .. You shouldn't do this!\n";
+		$TRACKER{ERR}++;
+		if($opts{fixit}) {
+			print " fixit: Removing this file from XML, re-run $0 to get rid of the stale file!\n";
+			$call_mkfile = undef;
+			$TRACKER{FIXED}++;
+		}
+	}
+
+	if(length($el->{file}->{path}) > $xmlhelper_maxpathlen) {
+		print "  ID $id has a long filename. Some iPods may refuse to play this file with recent firmware! Run $0 --fixit\n";
+		$TRACKER{ERR}++;
+		if($opts{fixit}) {
+			my($ipod_path, $real_path) = GNUpod::XMLhelper::getpath($opts{mount},$rp);
+			if($ipod_path) {
+				print " fixit: Renaming $rp into $real_path\n";
+				my $rename_result = rename($rp,$real_path);
+				if($rename_result) {
+					$el->{file}->{path} = $ipod_path;
+					$TRACKER{PATH}{lc($rp)}--;
+					$TRACKER{PATH}{lc($real_path)}++;
+					$rp = $real_path;
+				}
+				else {
+					print " fixit: Ouch, rename failed: $!\n";
+				}
+			}
+			else {
+				print " fixit: Ouch, no new path found for $rp, removing from xml\n";
+				$call_mkfile = undef;
+			}
+			$TRACKER{FIXED}++;
+		}
+	}
+ 
+	if(!-e $rp) {
+		print "  ID $id vanished! ($rp) -> $HINT\n";
+		$TRACKER{ERR}++;
+		if($opts{fixit}) {
+			print " fixit: Removing $id from XML Database\n";
+			$call_mkfile = undef;
+			$TRACKER{FIXED}++;
+		}
+	}
+	elsif(-d $rp) {
+		print "  ID $id is a DIRECTORY?! ($rp)\n";
+		if($opts{fixit}) {
+			print " fixit: Removing $id from XML Database\n";
+			$call_mkfile = undef;
+			$TRACKER{FIXED}++;
+		}
+	}
+	elsif(-s $rp < 1) {
+		print "  ID $id has zero size! ($rp) -> $HINT\n";
+		$TRACKER{ERR}++;
+		if($opts{fixit}) {
+			print " fixit: Removing $id from XML Database, please re-run $0 to get rid of the stale file!\n";
+			$call_mkfile = undef;
+			$TRACKER{FIXED}++;
+		}
+	}
+
+	GNUpod::XMLhelper::mkfile($el) if $call_mkfile;
 }
 
 ############################################
 # Eventhandler for PLAYLIST items
 sub newpl {
+my($el, $name, $plt) = @_;
+#Do something with $el - holds playlist stuff :)
+GNUpod::XMLhelper::mkfile($el,{$plt."name"=>$name}); 
 }
 
 
@@ -150,7 +226,7 @@ gnupod_check.pl checks for 'lost' files
    -h, --help              display this help and exit
        --version           output version information and exit
    -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
-
+       --fixit             Try to fixup some errors
 Report bugs to <bug-gnupod\@nongnu.org>
 EOF
 }

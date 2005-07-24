@@ -29,7 +29,10 @@ use GNUpod::FooBar;
 use File::Glob ':glob';
 
 #Maximal length of a path
-use constant MAX_PATHLENGTH => 64;
+#64 for ipod photo
+#55 for ipod mini
+#who cares, but don't go below 31! it would break getpath
+use constant MAX_PATHLENGTH => 49;
 #Try X times to find a path
 use constant MAX_PATHLOOP => 1024;
 

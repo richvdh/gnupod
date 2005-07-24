@@ -369,19 +369,40 @@ new Firmware or/and the documentation told you to do this **
 Setup Firewire (or USB) as described in 'Using FireWire with GNU/Linux', load the modules and make sure sbp2 detected your iPod.
 Do not try to mount the iPod. We assume your iPod at @code{@w{/dev/sda}}.
 
-First you need to get a new Firmware. If you own OSX, download and install the iPod updater. 
-Open the Shell and change into the .app Folder. The Firmware is there somewhere ;-)
+First you need to get a new Firmware. 
+You can download the Update from http://www.apple.com/ipod/download/ , take care to choose the Mac OSX Version!
 
-If you got a FAT32 formatted iPod (..or you plan to 'convert' the iPod after upgrading the Firmware), you'll need 
-Version 1.1.0 or newer.
+While the huge image is about to download, grab 'dmg2iso.pl' from @code{@w{http://blinkenlights.ch/gnupod/dmg2iso.pl}} 
+and make sure that your kernel supports HFS+. (Or/And use the script from http://www.ubuntu-de.org/wiki/multimedia:ipod_mit_linux_verwenden:firmwareupdate_unter_linux)
+(Note: This version of dmg2iso was found at http://www.ubuntu-de.org/wiki/multimedia:ipod_mit_linux_verwenden:firmwareupdate_unter_linux 
+ The current script provided by the author himself at http://vu1tur.eu.org/tools/ does not work with the latest updater. ?!)
 
-Let's say, you downloaded the File 121.zip (Firmware version 1.2.1), you'll have now to unzip this file.
-Unzip should be preinstalled on most Systems (if not, you can get it from http://www.info-zip.org/pub/infozip/UnZip.html).
-
+An Example:
 @example
-unzip 121.zip 
-Archive:  121.zip
-  inflating: 121.bin  
+# Grab a working copy of dmg2iso.pl
+wget http://blinkenlights.ch/gnupod/dmg2iso.pl
+# Convert the dmg into iso
+perl dmg2iso.pl iPodUpdater2005-06-26.dmg out.iso
+# ..and mount it. You need hfs+ support!
+mount -o loop -t hfsplus out /mnt/cdrom
+# Target directory for output:
+mkdir /tmp/foo
+cd /tmp/foo
+# Extract the firmware archive
+gunzip -dc /mnt/cdrom/iPod.mpkg/Contents/Resources/iPod*.pkg/Contents/Archive.pax.gz | cpio -idv
+# ..and umount
+umount /mnt/cdrom
+# voila! 'cd' into the firmware dir
+cd Applications/Utilities/iPod\ Software\ Updater.localized/iPod\ Updater\ *.app/Contents/Resources/Updates
+# .. and pick a Firmware-* image
+#
+# 1.*         : 1.x Firmware (1st, 2nd Generation)
+# 2.*         : 2.x Firmware (3rd Generation)
+# 3.* & 6.*   : iPod Mini
+# 4.* & 10.*  : ????
+# 5.* & 11.*  : iPod Photo
+# 7.*         : ????
+# 128.*       : Shuffle
 @end example
 
 Ok, we are now ready to write the new firmware to the iPod.
@@ -389,11 +410,13 @@ Ok, we are now ready to write the new firmware to the iPod.
 If your iPod is HFS+ Formatted (your kernel supports 'mac-style' partitions??), use
 @example
 dd if=121.bin of=/dev/sda2
+sync
 @end example
 
 to upgrade the Firmware. If you own a FAT32 Formatted (your kernel supports 'dos-style' partitions??) iPod, use
 @example
 dd if=121.bin of=/dev/sda1
+sync
 @end example
 
 After @code{@w{dd}} finished (it can take some time), remove sbp2

@@ -296,11 +296,16 @@ sub mk_mhit {
     $ret .= pack("V", _icl(int($hr->{size})+0xF4));         #len of this entry
     $ret .= pack("V", _icl($hr->{count}));                  #num of mhods in this mhit
     $ret .= pack("V", _icl($c_id));                         #Song index number
-    $ret .= pack("V", _icl(1));                             #debug flag? - the ipod stops parsing if this isnt == 1
-    $ret .= pack("V");                                       #dummyspace
-		 #Fixme: Should be: 4(CBR/VBR/AAC) 2 compilation 2 rating (?)
-    $ret .= pack("V", _icl(256+(oct('0x14000000')
-                            *($file_hash{rating}/20))));     #type+rating .. this is very STUPID..
+    $ret .= pack("V", _icl(1));                             #Visible?
+    $ret .= pack("V");                                      #FileType. Should be 'MP3 '. (FIXME: Extension or type?)
+#    $ret .= pack("V", _icl(256+(oct('0x14000000')
+#                            *($file_hash{rating}/20))));     #type+rating .. this is very STUPID..
+#print unpack("H*", pack("V", _icl(256+(oct('0x14000000')*($file_hash{rating}/20)))))."\n";
+#print unpack("H*", pack("v", 0x100).pack("c", 0x00).pack("c",$file_hash{rating}))."\n----x-\n";
+    $ret .= pack("v", 0x100);                               #cbr = 100, vbr = 101, aac = 0x00 ##FIXME: COrrect?
+    $ret .= pack("c", (($file_hash{compilation})==0));      #compilation ?
+    $ret .= pack("c",$file_hash{rating});                   #rating
+######FIXME: Test them!
     $ret .= pack("V", _icl($file_hash{changetime}));        #Time changed
     $ret .= pack("V", _icl($file_hash{filesize}));          #filesize
     $ret .= pack("V", _icl($file_hash{time}));              #seconds of song
@@ -1080,7 +1085,10 @@ if(get_string($sum, 4) eq "mhit") { #Ok, its a mhit
 my %ret     = ();
 #Infos stored in mhit
 $ret{id}         = get_int($sum+16,4);
-$ret{rating}     = int((get_int($sum+28,4)-256)/oct('0x14000000')) * 20;
+#$ret{rating}     = int((get_int($sum+28,4)-256)/oct('0x14000000')) * 20;
+##XXX 26-30 are useless for us..
+$ret{compilation}= (get_int($sum+30,1)==0);
+$ret{rating}     = get_int($sum+31,1);
 $ret{changetime} = get_int($sum+32,4);
 $ret{filesize}   = get_int($sum+36,4);
 $ret{time}       = get_int($sum+40,4);
