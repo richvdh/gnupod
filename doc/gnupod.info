@@ -24,8 +24,8 @@ File: gnupod.info,  Node: Top,  Next: Requirements,  Up: (dir)
 1 GNUpod
 ********
 
-This edition of the `GNUpod Manual', last updated 23. Jun. 2005,
-documents GNUpod Version 0.98.1
+This edition of the `GNUpod Manual', last updated 24. Jul. 2005,
+documents GNUpod Version 0.98.2
 
 * Menu:
 
@@ -378,10 +378,10 @@ http://vu1tur.eu.org/tools/ does not work with the latest updater. ?!)
      # 1.*         : 1.x Firmware (1st, 2nd Generation)
      # 2.*         : 2.x Firmware (3rd Generation)
      # 3.* & 6.*   : iPod Mini
-     # 4.* & 10.*  : ????
+     # 4.* & 10.*  : Clickwheel (?)
      # 5.* & 11.*  : iPod Photo
      # 7.*         : ????
-     # 128.*       : Shuffle
+     # 128.*       : Shuffle (??)
 
    Ok, we are now ready to write the new firmware to the iPod.
 
@@ -1262,22 +1262,22 @@ Node: Installation of GNUpod2396
 Node: Using FireWire with GNU/Linux3514
 Node: Convert your Mac iPod6930
 Node: Firmware update12160
-Node: Using GNUpod14889
-Node: Preparation15778
-Node: Configuration16510
-Node: Add files16967
-Node: Search files18449
-Node: Remove files18935
-Node: Edit tags19236
-Node: Creating playlists19781
-Node: Unplug the iPod22256
-Node: Recovering files23165
-Node: Coexistence24060
-Node: Problems25530
-Node: GNUtunesDB25913
-Node: Get rid of '-m'27419
-Node: Known bugs and limitations27704
-Node: Reporting Bugs27995
-Node: GNU Free Documentation License28443
+Node: Using GNUpod14904
+Node: Preparation15793
+Node: Configuration16525
+Node: Add files16982
+Node: Search files18464
+Node: Remove files18950
+Node: Edit tags19251
+Node: Creating playlists19796
+Node: Unplug the iPod22271
+Node: Recovering files23180
+Node: Coexistence24075
+Node: Problems25545
+Node: GNUtunesDB25928
+Node: Get rid of '-m'27434
+Node: Known bugs and limitations27719
+Node: Reporting Bugs28010
+Node: GNU Free Documentation License28458
 
 End Tag Table

@@ -399,10 +399,10 @@ cd Applications/Utilities/iPod\ Software\ Updater.localized/iPod\ Updater\ *.app
 # 1.*         : 1.x Firmware (1st, 2nd Generation)
 # 2.*         : 2.x Firmware (3rd Generation)
 # 3.* & 6.*   : iPod Mini
-# 4.* & 10.*  : ????
+# 4.* & 10.*  : Clickwheel (?)
 # 5.* & 11.*  : iPod Photo
 # 7.*         : ????
-# 128.*       : Shuffle
+# 128.*       : Shuffle (??)
 @end example
 
 Ok, we are now ready to write the new firmware to the iPod.

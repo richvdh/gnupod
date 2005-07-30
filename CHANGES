@@ -19,11 +19,16 @@ Summary
   contained whitespaces.
   Switched to File::Glob::bsd_glob() to fix this issue.
 
-- Apple did it again! The iPodMini-FW1.4 doesn't like
-  if length(path) > 55 .. rgs! 
-  This version of GNUpod crops after 49 chars (to be on
-  the safe side. Maybe Apple ...)
-  Run 'gnupod_check.pl --fixit' to fix this issue (Maybe)
+- iPod-Mini 1.4 Software is broken, avoid using it!
+  -> Apple lowered the Max. Pathlength from 64 to
+     55. GNUpod will now crop after 49 chars (who knows what
+     Apple will do next time?)
+     ..you can run 'gnupod_check.pl --fixit' to crop
+     songs you added with an older version.
+  -> Looks like Apple also broke the SmartPlaylists Liveupdate
+     Feature. I couldn't get it to work with iTunes and GNUpod. Good job guys!
+     Since GNUpod only supports 'liveupdate-smartplaylists', you can't
+     use any SPL's with GNUpod and iPod-Mini 1.4 . Downgrading to 1.3 helps.
 
 - gnupod_check.pl has now a --fixit switch. It will try to
   fix the found errors itself

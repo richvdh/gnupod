@@ -302,7 +302,7 @@ sub mk_mhit {
 #                            *($file_hash{rating}/20))));     #type+rating .. this is very STUPID..
 #print unpack("H*", pack("V", _icl(256+(oct('0x14000000')*($file_hash{rating}/20)))))."\n";
 #print unpack("H*", pack("v", 0x100).pack("c", 0x00).pack("c",$file_hash{rating}))."\n----x-\n";
-    $ret .= pack("v", 0x100);                               #cbr = 100, vbr = 101, aac = 0x00 ##FIXME: COrrect?
+    $ret .= pack("v", 0x100);                               #cbr = 100, vbr = 101, aac = 0x010 ##FIXME: COrrect?
     $ret .= pack("c", (($file_hash{compilation})==0));      #compilation ?
     $ret .= pack("c",$file_hash{rating});                   #rating
 ######FIXME: Test them!
@@ -1238,6 +1238,7 @@ sub readPLC {
   $pcrh{rating}{$chunknum}    = $rating   if $rating;
   $pcrh{lastplay}{$chunknum}  = $lastply  if $lastply;
   $pcrh{bookmark}{$chunknum}  = $bookmark if $bookmark;
+	warn "DEBUG: $rating // $chunknum\n" if $rating;
   $offset += $chunksize; #Nex to go!
  }
 
