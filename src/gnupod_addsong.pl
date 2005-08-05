@@ -41,6 +41,7 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode=s", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
                    "set-artist=s", "set-album=s", "set-genre=s", "set-rating=i", "set-playcount=i",
+                   "set-podcastguid=s", "set-podcastrss=s",
                    "set-songnum", "playlist|p=s", "reencode|e=i");
 GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b',
                                    'disable-v1'=>'b', 'disable-v2'=>'b', 'set-songnum'=>'b'},
@@ -118,17 +119,26 @@ sub startup {
 		my $wtf_ext  = $media_h->{extension}; #Possible extensions (regexp!)
 		
 		#wtf_is found a filetype, override data if needed
-		$fh->{artist}    = $opts{'set-artist'}    if $opts{'set-artist'};
-		$fh->{album}     = $opts{'set-album'}     if $opts{'set-album'};
-		$fh->{genre}     = $opts{'set-genre'}     if $opts{'set-genre'};
-		$fh->{rating}    = $opts{'set-rating'}    if $opts{'set-rating'};
-		$fh->{playcount} = $opts{'set-playcount'} if $opts{'set-playcount'};
-		$fh->{songnum}   = 1+$addcount            if $opts{'set-songnum'};
+		$fh->{artist}      = $opts{'set-artist'}      if $opts{'set-artist'};
+		$fh->{album}       = $opts{'set-album'}       if $opts{'set-album'};
+		$fh->{genre}       = $opts{'set-genre'}       if $opts{'set-genre'};
+		$fh->{rating}      = $opts{'set-rating'}      if $opts{'set-rating'};
+		$fh->{playcount}   = $opts{'set-playcount'}   if $opts{'set-playcount'};
+		$fh->{songnum}     = 1+$addcount              if $opts{'set-songnum'};
+		$fh->{podcastguid} = $opts{'set-podcastguid'} if $opts{'set-podcastguid'};
+		$fh->{podcastrss}  = $opts{'set-podcastrss'}  if $opts{'set-podcastrss'};
 		
 		#Set the addtime to unixtime(now)+MACTIME (the iPod uses mactime)
 		#This breaks perl < 5.8 if we don't use int(time()) !
 		$fh->{addtime} = int(time())+MACTIME;
-
+		
+		#Ugly workaround to avoid a warning while running mktunes.pl:
+		#All (?) int-values returned by wtf_is won't go above 0xffffffff
+		#Thats fine because almost everything inside an mhit can handle this.
+		#But bpm and srate are limited to 0xffff
+		# -> We fix this silently to avoid ugly warnings while running mktunes.pl
+		$fh->{bpm}   = 0xFFFF if $fh->{bpm}   > 0xFFFF;
+		$fh->{srate} = 0xFFFF if $fh->{srate} > 0xFFFF;
 
 		#Check for duplicates
 		if(!$opts{duplicate} && (my $dup = checkdup($fh,$converter))) {
@@ -311,6 +321,8 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
        --set-rating=int            Set Rating
        --set-playcount=int         Set Playcount
        --set-songnum               Override 'Songnum/Tracknum' field
+       --set-podcastguid           Set podcast guid flag (used by gnupod_podcast.pl)
+       --set-podcastrss            Set podcast rss flag  (used by gnupod_podcast.pl)
 
 Report bugs to <bug-gnupod\@nongnu.org>
 EOF

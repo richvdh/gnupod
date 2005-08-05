@@ -23,8 +23,7 @@
 # This product is not supported/written/published by Apple!
 
 use strict;
-
-
+use GNUpod::FooBar;
 
 my $file  = $ARGV[0] or exit(1);
 my $gimme = $ARGV[1];
@@ -66,7 +65,7 @@ print "_COMMENT:".($ftag->comment('comment'))[0]."\n";
 print "FORMAT: OGG\n";
 }
 elsif($gimme eq "GET_PCM") {
-  my $tmpout = get_u_path("/tmp/gnupod_pcm", "wav");
+  my $tmpout = GNUpod::FooBar::get_u_path("/tmp/gnupod_pcm", "wav");
 
   my $status = system("oggdec", "--quiet", "-o", $tmpout, $file);
   
@@ -81,7 +80,7 @@ elsif($gimme eq "GET_PCM") {
 elsif($gimme eq "GET_MP3") {
   #Open a secure flac pipe and open anotherone for lame
   #On errors, we'll get a BrokenPipe to stout
-  my $tmpout = get_u_path("/tmp/gnupod_mp3", "mp3");
+  my $tmpout = GNUpod::FooBar::get_u_path("/tmp/gnupod_mp3", "mp3");
   open(OGGOUT, "-|") or exec("oggdec", "--quiet", "-o", "-", $file) or die "Could not exec oggdec: $!\n";
   open(LAMEIN , "|-") or exec("lame", "-V", $quality, "--silent", "-", $tmpout) or die "Could not exec lame: $!\n";
    while(<OGGOUT>) {
@@ -93,8 +92,8 @@ elsif($gimme eq "GET_MP3") {
 }
 elsif($gimme eq "GET_AAC" or $gimme eq "GET_AACBM") {
  #Yeah! FAAC is broken and can't write to stdout..
-  my $tmpout = get_u_path("/tmp/gnupod_faac", "m4a");
-     $tmpout = get_u_path("/tmp/gnupod_faac", "m4b") if $gimme eq "GET_AACBM";
+  my $tmpout = GNUpod::FooBar::get_u_path("/tmp/gnupod_faac", "m4a");
+     $tmpout = GNUpod::FooBar::get_u_path("/tmp/gnupod_faac", "m4b") if $gimme eq "GET_AACBM";
   $quality = 140 - ($quality*10);
   open(OGGOUT, "-|") or exec("oggdec", "--quiet", "-o", "-", $file) or die "Could not exec oggdec: $!\n";
   open(FAACIN , "|-") or exec("faac", "-w", "-q", $quality, "-o", $tmpout, "-") or die "Could not exec faac: $!\n";
@@ -113,14 +112,3 @@ else {
 }
 
 exit(0);
-
-#############################################
-# Get Unique path
-sub get_u_path {
- my($prefix, $ext) = @_;
- my $dst = undef;
- while($dst = sprintf("%s_%d_%d.$ext",$prefix, int(time()), int(rand(99999)))) {
-  last unless -e $dst;
- }
- return $dst;
-}

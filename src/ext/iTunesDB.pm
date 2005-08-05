@@ -37,7 +37,9 @@ use vars qw(%mhod_id @mhod_array %SPLDEF %SPLREDEF);
 use constant ITUNESDB_MAGIC => 'mhbd';
 
 #mk_mhod() will take care of lc() entries
-%mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, "comment", 8, "composer", 12, "group", 13);# "SPLPREF",50, "SPLDATA",51, "PLTHING", 100) ;
+%mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, 
+            "comment", 8, "category",9, "composer", 12, "group", 13, "desc",14,
+             "podcastguid",15, "podcastrss",16, "subtitle", 18);# "SPLPREF",50, "SPLDATA",51, "PLTHING", 100) ;
  foreach(keys(%mhod_id)) {
   $mhod_array[$mhod_id{$_}] = $_;
  }
@@ -357,55 +359,64 @@ sub mk_mhod {
 #12  - composer
 #100 - Playlist item or/and PlaylistLayout (used for trash? ;))
 
- my ($hr) = @_;
- my $type_string = $hr->{stype};
- my $string = $hr->{string};
- my $fqid = $hr->{fqid};
- my $type = $mhod_id{lc($type_string)};
+	my ($hr) = @_;
+	my $type_string = $hr->{stype};
+	my $string = $hr->{string};
+	my $fqid = $hr->{fqid};
+	my $type = $mhod_id{lc($type_string)};
+	
+	#Append
+	my $apx = undef;
 
- #Appnd size for normal mhod's
- my $mod = 40;
-
- #Called with fqid, this has to be an PLTHING (100)
- if($fqid) { 
-  #fqid set, that's a pl item!
-  $type = 100;
-  #Playlist mhods are longer
-  $mod += 4;
- }
- elsif(!$type) { #No type and no fqid, skip it
-  return undef;
- }
- else { #has a type, default fqid
-  $fqid=1;
- }
-
- if($type == 7 && $string !~ /#!#\d+#!#/) {
-  warn "iTunesDB.pm: warning: wrong format: '$type_string=\"$string\"'\n";
-  warn "             value should be like '#!#NUMBER#!#', ignoring value\n";
-  $string = undef;
- }
-
- $string = _ipod_string($string); #cache data
- my $ret = "mhod";                 		           #header
- $ret .= pack("V", _icl(24));                     #size of header
- $ret .= pack("V", _icl(length($string)+$mod));   # size of header+body
- $ret .= pack("V", _icl($type));                #type of the entry
- $ret .= pack("V2");                               #dummy space
- $ret .= pack("V", _icl($fqid));                  #Refers to this id if a PL item
-                                                   #else ->  1
- $ret .= pack("V", _icl(length($string)));        #size of string
+	#Called with fqid, this has to be an PLTHING (100)
+	if($fqid) { 
+		#fqid set, that's a pl item!
+		$type = 100;
+	}
+	elsif(!$type) { #No type and no fqid, skip it
+		return undef;
+	}
+	else { #has a type, default fqid
+		$fqid=1;
+	}
 
 
- if($type != 100){ #no PL mhod
-  $ret .= pack("h16");           #trash
-  $ret .= $string;               #the string
- }
- else { #PL mhod
-  $ret .= pack("h24"); #playlist mhods are a different
- }
- 
- return $ret;
+	
+	if($type == 7 && $string !~ /#!#\d+#!#/) {
+		warn "iTunesDB.pm: warning: wrong format: '$type_string=\"$string\"'\n";
+		warn "             value should be like '#!#NUMBER#!#', ignoring value\n";
+		$string = undef;
+	}
+	
+	if($type == 16 or $type == 15) {
+		#Dummy: Podcast UTF8 stuff.
+		#Dunno convert utf8-string into byteswap2-utf16
+		$apx .= $string;
+	}
+	elsif($type == 100) {
+		#Playlist mhod
+		$apx .= pack("V", _icl($fqid));  #Refers to this id
+		$apx .= pack("V", 0x00);         #Mhod 0 has no string
+		$apx .= pack("V3"); #Playlist append
+	}
+	else {
+		#Normal mhods:
+		warn "ASSERT: Bug? -> fqid defined for non-playlist id!\n" if $fqid != 1;
+		$string = _ipod_string($string); #cache data
+		$apx .= pack("V", _icl($fqid));                  #Refers to this id if a PL item, else -> 1
+		$apx .= pack("V", _icl(length($string)));        #size of string
+		$apx .= pack("V2");           #trash
+		$apx .= $string;               #the string
+	}
+
+	my $ret = "mhod";                 		           #header
+	$ret .= pack("V", _icl(24));                     #size of header
+	$ret .= pack("V", _icl(24+length($apx)));   # size of header+body
+	$ret .= pack("V", _icl($type));                #type of the entry
+	$ret .= pack("V2");                               #dummy space
+	###
+
+	return $ret.$apx;
 }
 
 
@@ -721,7 +732,9 @@ sub _icl {
 	$checkmax ||= 0xffffffff;
 	
 	if($int > $checkmax or $int < 0) {
-		_itBUG("_icl: FATAL: $int > $checkmax (<- Value out of range)",1);
+		_itBUG("_icl: Value '$int' is out of range! (Maximum: $checkmax)\n => Forcing value to $checkmax\
+ => Check if your GNUtunesDB.xml contains the string \"$int\" and fix it ;-)");
+		$int = $checkmax; #Force it!
 	}
 	return $int;
 }
@@ -931,41 +944,52 @@ sub __hd {
 #get a SINGLE mhod entry:
 # return+seek = new_mhod should be there
 sub get_mhod {
-my ($seek) = @_;
+	my ($seek) = @_;
 
-my $id  = get_string($seek, 4);          #are we lost?
-my $ml  = get_int($seek+8, 4);           #Length of this mhod
-my $mty = get_int($seek+12, 4);          #type number
-my $xl  = get_int($seek+28,4);           #String length
+	my $id  = get_string($seek, 4);          #are we lost?
+	my $mhl = get_int($seek+4, 4);           #Mhod Header Length
+	my $ml  = get_int($seek+8, 4);           #Length of this mhod
+	my $mty = get_int($seek+12, 4);          #type number
+	my $xl  = get_int($seek+28,4);           #String length
+	
+	## That's spl stuff, only to be used with 51 mhod's
+	my $htm = get_int($seek+35,1); #Only set for 51
+	my $anym= get_int($seek+39,1); #Only set for 51
+	my $spldata = undef; #dummy
+	my $splpref = undef; #dummy
 
-## That's spl stuff, only to be used with 51 mhod's
-my $htm = get_int($seek+35,1); #Only set for 51
-my $anym= get_int($seek+39,1); #Only set for 51
-my $spldata = undef; #dummy
-my $splpref = undef; #dummy
-
-if($id eq "mhod") { #Seek was okay
-    my $foo = get_string($seek+($ml-$xl), $xl); #string of the entry 
-    #$foo is now UTF16 (Swapped), but we need an utf8
-    $foo = Unicode::String::byteswap2($foo);
-    $foo = Unicode::String::utf16($foo)->utf8;
-
- ##Special handling for SPLs
- if($mty == 51) { #Get data from spldata mhod
-   $foo = undef;
-   $spldata = read_spldata({start=>$seek, htm=>$htm});
- }
- elsif($mty == 50) { #Get prefs from splpref mhod
-  $foo = undef;
-#__hd(get_string($seek,$ml));
-  $splpref = read_splpref({start=>$seek, end=>$ml});
- }
- return({size=>$ml,string=>$foo,type=>$mty,spldata=>$spldata,splpref=>$splpref,matchrule=>$anym});
-
-}
-else {
- return({size=>-1});
-}
+	my $foo = undef; #Mhod value
+	
+	if($id eq "mhod") { #Seek was okay
+		warn "=> [$mty] $mhl / $ml / $xl\n";
+		if($mty == 16 or $mty == 15) {
+			#Here we go again: Apple did strange things!
+			#They could have used a normal mhod, but no!
+			#Apple is cool and needs to f*ckup mhod-type 16 and 15!
+			#aargs!
+			$foo = get_string($seek+$mhl,$ml-$mhl);
+			$foo = Unicode::String::utf8($foo)->utf8; #Paranoia
+		}
+		##Special handling for SPLs
+		elsif($mty == 51) { #Get data from spldata mhod
+			$foo = undef;
+			$spldata = read_spldata({start=>$seek, htm=>$htm});
+		}
+		elsif($mty == 50) { #Get prefs from splpref mhod
+			$foo = undef;
+			$splpref = read_splpref({start=>$seek, end=>$ml});
+		}
+		else { #A normal Mhod, puh!
+			_itBUG("Assert \$xl < \$ml failed! ($xl => $ml)",undef) if $xl >= $ml;
+			$foo = get_string($seek+($ml-$xl), $xl); #String of entry
+			$foo = Unicode::String::byteswap2($foo);
+			$foo = Unicode::String::utf16($foo)->utf8;			
+		}
+		return({size=>$ml,string=>$foo,type=>$mty,spldata=>$spldata,splpref=>$splpref,matchrule=>$anym});
+	}
+	else {
+		return({size=>-1});
+	}
 }
 
 
@@ -1134,6 +1158,7 @@ my $mhods = get_int($sum+12,4);
 $sum += get_int($sum+4,4);
 
  for(my $i=0;$i<$mhods;$i++) {
+  print "GET mhod $sum\n";
     my $mhh = get_mhod($sum);
     if($mhh->{size} == -1) {
      _itBUG("Failed to parse mhod $i of $mhods",1);
@@ -1238,7 +1263,7 @@ sub readPLC {
   $pcrh{rating}{$chunknum}    = $rating   if $rating;
   $pcrh{lastplay}{$chunknum}  = $lastply  if $lastply;
   $pcrh{bookmark}{$chunknum}  = $bookmark if $bookmark;
-	warn "DEBUG: $rating // $chunknum\n" if $rating;
+#	warn "DEBUG: $rating // $chunknum\n" if $rating;
   $offset += $chunksize; #Nex to go!
  }
 

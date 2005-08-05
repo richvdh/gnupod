@@ -183,6 +183,7 @@ sub __is_pcm {
    read(PCM, $bs, 4);
    my $srate = GNUpod::FooBar::shx2int($bs);
 
+
    seek(PCM, 28,0); 
    read(PCM, $bs, 4);
    close(PCM);
@@ -310,7 +311,7 @@ sub getutf8 {
  if(ord($encoding) == 1 || ord($encoding) == 2) {
   my $bfx = Unicode::String::utf16($in); #Object is utf16
   $bfx->byteswap if $bfx->ord == 0xFFFE;
-  $in = $bfx->utf16; #Return utf16 version
+  $in = $bfx->utf8; #Return utf8 version
  }
  # -> UTF8
  elsif(ord($encoding) == 3) {

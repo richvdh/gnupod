@@ -366,4 +366,17 @@ sub GetConfig {
   
   return 1;
 }
+
+#############################################
+# Get Unique path
+sub get_u_path {
+ my($prefix, $ext) = @_;
+ my $dst = undef;
+ while($dst = sprintf("%s_%d_%d.$ext",$prefix, int(time()), int(rand(99999)))) {
+  last unless -e $dst;
+ }
+ return $dst;
+}
+
+
 1;
