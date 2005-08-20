@@ -387,18 +387,24 @@ sub mk_mhod {
 		warn "             value should be like '#!#NUMBER#!#', ignoring value\n";
 		$string = undef;
 	}
+	###
 	
+	#Create AppendX for Special types
+	
+	#Podcast
 	if($type == 16 or $type == 15) {
 		#Dummy: Podcast UTF8 stuff.
 		#Dunno convert utf8-string into byteswap2-utf16
 		$apx .= $string;
 	}
+	#Playlist
 	elsif($type == 100) {
 		#Playlist mhod
 		$apx .= pack("V", _icl($fqid));  #Refers to this id
 		$apx .= pack("V", 0x00);         #Mhod 0 has no string
 		$apx .= pack("V3"); #Playlist append
 	}
+	#Normal
 	else {
 		#Normal mhods:
 		warn "ASSERT: Bug? -> fqid defined for non-playlist id!\n" if $fqid != 1;
@@ -733,7 +739,8 @@ sub _icl {
 	
 	if($int > $checkmax or $int < 0) {
 		_itBUG("_icl: Value '$int' is out of range! (Maximum: $checkmax)\n => Forcing value to $checkmax\
- => Check if your GNUtunesDB.xml contains the string \"$int\" and fix it ;-)");
+ => Check if your GNUtunesDB.xml contains the string \"$int\" and fix it ;-)\
+ => The written iTunesDB may be unuseable!");
 		$int = $checkmax; #Force it!
 	}
 	return $int;
@@ -961,7 +968,7 @@ sub get_mhod {
 	my $foo = undef; #Mhod value
 	
 	if($id eq "mhod") { #Seek was okay
-		warn "=> [$mty] $mhl / $ml / $xl\n";
+#		warn "=> [$mty] $mhl / $ml / $xl\n";
 		if($mty == 16 or $mty == 15) {
 			#Here we go again: Apple did strange things!
 			#They could have used a normal mhod, but no!
@@ -1158,7 +1165,7 @@ my $mhods = get_int($sum+12,4);
 $sum += get_int($sum+4,4);
 
  for(my $i=0;$i<$mhods;$i++) {
-  print "GET mhod $sum\n";
+#  print "GET mhod $sum\n";
     my $mhh = get_mhod($sum);
     if($mhh->{size} == -1) {
      _itBUG("Failed to parse mhod $i of $mhods",1);
@@ -1182,27 +1189,36 @@ return ($sum,\%ret);          #black magic, returns next (possible?) start of th
 
 
 #########################################################
-# Returns start of part1 (files) and part2 (playlists)
+# Search all mhbd's and return information about them
 sub get_starts {
 #Get magic
 my $magic      = get_string(0,4);
 return undef if $magic ne ITUNESDB_MAGIC;
 
-my $mhbd_s     = get_int(4,4);
-my $pdi        = get_int($mhbd_s+8,4); #Used to calculate start of playlist
-my $mhsd_s     = get_int($mhbd_s+4,4);
-my $mhlt_s     = get_int($mhbd_s+$mhsd_s+4,4);
-my $pos = $mhbd_s+$mhsd_s+$mhlt_s; #pos is now the start of the first mhit (always 292?);
+my $mhbd_s     = get_int(4,4);  #Size of the Header
+my $total_len  = get_int(8,4);  #Total Length (of whole iTunesDB)
+my $dbversion  = get_int(16,4); #Database Version
+my $childs     = get_int(20,4); #How many childs do we have?
 
-#How many songs are on the iPod ?
-my $sseek = $mhbd_s + $mhsd_s;
-my $songs = get_int($sseek+8,4);
 
-#How many playlists should we find ?
-$sseek = $mhbd_s + $pdi;
-$sseek += get_int($sseek+4,4);
-my $pls = get_int($sseek+8,4);
-return({position=>$pos,pdi=>($pos+$pdi),songs=>$songs,playlists=>$pls});
+my $cpos = $mhbd_s;
+my @childs = ();
+foreach my $current_child (1..$childs) {
+	my $c_mhsd_hlen = get_int($cpos+4,4);
+	my $c_mhsd_size = get_int($cpos+8,4);
+	my $mhsd_type   = get_int($cpos+12,4);
+	
+	my $sub_hlen = get_int($cpos+$c_mhsd_hlen+4,4);
+	my $sub_cnt  = get_int($cpos+$c_mhsd_hlen+8,4);
+	
+	my $xstart = $cpos+$sub_hlen+$c_mhsd_hlen;
+	$childs[$mhsd_type]->{start} = $xstart;
+	$childs[$mhsd_type]->{type}  = $mhsd_type;
+	$childs[$mhsd_type]->{childs}= $sub_cnt;
+	$cpos += ($c_mhsd_size);
+}
+
+return(@childs);
 
 }
 

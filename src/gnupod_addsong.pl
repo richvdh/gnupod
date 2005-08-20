@@ -29,9 +29,10 @@ use GNUpod::FileMagic;
 use Getopt::Long;
 use File::Copy;
 use File::Glob ':glob';
+use XML::Parser; #Loaded by XMLhelper, but hey..
 
 use constant MACTIME => 2082931200; #Mac EPOCH offset
-use vars qw(%opts %dupdb_normal %dupdb_lazy $int_count);
+use vars qw(%opts %dupdb_normal %dupdb_lazy %dupdb_podcast $int_count %podcast_infos %per_file_info);
 
 print "gnupod_addsong.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
 
@@ -41,7 +42,6 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode=s", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
                    "set-artist=s", "set-album=s", "set-genre=s", "set-rating=i", "set-playcount=i",
-                   "set-podcastguid=s", "set-podcastrss=s",
                    "set-songnum", "playlist|p=s", "reencode|e=i");
 GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b',
                                    'disable-v1'=>'b', 'disable-v2'=>'b', 'set-songnum'=>'b'},
@@ -80,26 +80,32 @@ else {
 ####################################################
 # Worker
 sub startup {
-	my(@files) = @_;
+	my(@argv_files) = @_;
 	
 	#Don't sync if restore is true
 	$opts{_no_sync} = $opts{restore};
 
 	my $con = GNUpod::FooBar::connect(\%opts);
-	usage($con->{status}."\n") if $con->{status} || !@files;
+	usage($con->{status}."\n") if $con->{status} || !@argv_files;
 
 	unless($opts{restore}) { #We parse the old file, if we are NOT restoring the iPod
 		GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
 	}
 
-	if ($opts{playlist}) { #Create this playlist
+	if($opts{playlist}) { #Create this playlist
 		print "> Adding songs to Playlist '$opts{playlist}'\n";
 		GNUpod::XMLhelper::addpl($opts{playlist}); #Fixme: this may printout a warning..
 	} 
 
+	#We parsed the XML-Document
+	#resolve_podcasts fetches new podcasts from http:// stuff and adds them to real_files
+	warn "DEBUG: START RESOLVE\n";
+	my @real_files = resolve_podcasts(@argv_files);
+	warn "DEBUG: END RESOLVE\n";
+	
 	my $addcount = 0;
 	#We are ready to copy each file..
-	foreach my $file (@files) {
+	foreach my $file (@real_files) {
 		#Skip all songs if user sent INT
 		next if !$int_count;
 		#Skip all dirs
@@ -117,7 +123,15 @@ sub startup {
 		my $wtf_ftyp = $media_h->{ftyp};      #'codec' .. maybe ALAC
 		my $wtf_frmt = $media_h->{format};    #container ..maybe M4A
 		my $wtf_ext  = $media_h->{extension}; #Possible extensions (regexp!)
-		
+
+		#Force tags for current file
+		#This is only used for RSS ATM.
+		my $c_per_file_info = $per_file_info{$file};
+		foreach(keys(%$c_per_file_info)) {
+			next unless lc($_) eq $_; #lc keys are there to overwrite $fh keys
+			$fh->{$_} = $c_per_file_info->{$_};
+		}
+				
 		#wtf_is found a filetype, override data if needed
 		$fh->{artist}      = $opts{'set-artist'}      if $opts{'set-artist'};
 		$fh->{album}       = $opts{'set-album'}       if $opts{'set-album'};
@@ -125,8 +139,6 @@ sub startup {
 		$fh->{rating}      = $opts{'set-rating'}      if $opts{'set-rating'};
 		$fh->{playcount}   = $opts{'set-playcount'}   if $opts{'set-playcount'};
 		$fh->{songnum}     = 1+$addcount              if $opts{'set-songnum'};
-		$fh->{podcastguid} = $opts{'set-podcastguid'} if $opts{'set-podcastguid'};
-		$fh->{podcastrss}  = $opts{'set-podcastrss'}  if $opts{'set-podcastrss'};
 		
 		#Set the addtime to unixtime(now)+MACTIME (the iPod uses mactime)
 		#This breaks perl < 5.8 if we don't use int(time()) !
@@ -139,6 +151,7 @@ sub startup {
 		# -> We fix this silently to avoid ugly warnings while running mktunes.pl
 		$fh->{bpm}   = 0xFFFF if $fh->{bpm}   > 0xFFFF;
 		$fh->{srate} = 0xFFFF if $fh->{srate} > 0xFFFF;
+
 
 		#Check for duplicates
 		if(!$opts{duplicate} && (my $dup = checkdup($fh,$converter))) {
@@ -172,6 +185,7 @@ sub startup {
 			$wtf_ext  = $conv_media_h->{extension}; #Set the new possible extension
 			#BUT KEEP ftyp! (= codec)
 			$file = $path_of_converted_file; #Point $file to new file
+			$per_file_info{$file}->{UNLINK} = 1; #Request unlink of this file after adding
 		}
 		elsif(defined($opts{reencode})) {
 			print "> ReEncoding '$file' with quality ".int($opts{reencode}).", please wait...\n";
@@ -218,7 +232,10 @@ sub startup {
 			warn "*** FATAL *** Could not copy '$file' to '$target': $!\n";
 			unlink($target); #Wipe broken file
 		}
-		unlink($file) if $converter; #File is in $tmp if $converter is set...
+		#Is it a tempfile? Remove it.
+		#This is the case for 'converter' files and 'rss'
+		unlink($file) if $per_file_info{$file}->{UNLINK} == 1;
+		warn "XXX REMOVE XXX $file\n" if $per_file_info{$file}->{UNLINK} == 1;
 	}
 
  
@@ -255,18 +272,142 @@ sub create_playlist_now {
 
 ## XML Handlers ##
 sub newfile {
- $dupdb_normal{lc($_[0]->{file}->{title})."/$_[0]->{file}->{bitrate}/$_[0]->{file}->{time}/$_[0]->{file}->{filesize}"}= $_[0]->{file}->{id}||-1;
+	$dupdb_normal{lc($_[0]->{file}->{title})."/$_[0]->{file}->{bitrate}/$_[0]->{file}->{time}/$_[0]->{file}->{filesize}"}= $_[0]->{file}->{id}||-1;
 
-#This is worse than _normal, but the only way to detect dups *before* re-encoding...
- $dupdb_lazy{lc($_[0]->{file}->{title})."/".lc($_[0]->{file}->{album})."/".lc($_[0]->{file}->{artist})}= $_[0]->{file}->{id}||-1;
-
- GNUpod::XMLhelper::mkfile($_[0],{addid=>1});
+	#This is worse than _normal, but the only way to detect dups *before* re-encoding...
+	$dupdb_lazy{lc($_[0]->{file}->{title})."/".lc($_[0]->{file}->{album})."/".lc($_[0]->{file}->{artist})}= $_[0]->{file}->{id}||-1;
+	
+	#Add podcast infos if it is an podcast
+	if($_[0]->{file}->{podcastguid}) {
+		$dupdb_podcast{$_[0]->{file}->{podcastguid}."\0".$_[0]->{file}->{podcastrss}}++;
+	}
+	
+	GNUpod::XMLhelper::mkfile($_[0],{addid=>1});
 }
 
 sub newpl {
  GNUpod::XMLhelper::mkfile($_[0],{$_[2]."name"=>$_[1]});
 }
 ##################
+
+
+#### PODCAST START ####
+
+#############################################################
+# Calls wget to get files
+sub PODCAST_fetch {
+	my($url,$prefix) = @_;
+	my $tmpout = GNUpod::FooBar::get_u_path($prefix,"");
+	my $return = system("wget", "-q", "-O", $tmpout, $url);
+	return{file=>$tmpout, status=>$return};
+}
+
+#############################################################
+#Eventer for START:
+# -> Push array if we found a new item beginning
+# -> Add '<foo bar=barz oink=yak />' stuff to the hash
+# => Fillsup %podcast_infos
+sub podcastStart {
+	my($hr,$el,@it) = @_;
+	my $hashref_key = $hr->{Base};
+	if($hr->{Context}[-2] eq "rss" &&
+	   $hr->{Context}[-1] eq "channel" &&
+		 $el eq "item") {
+		push(@{$podcast_infos{$hashref_key}}, {});
+	}
+	elsif($hr->{Context}[-3] eq "rss" &&
+	   $hr->{Context}[-2] eq "channel" &&
+	   $hr->{Context}[-1] eq "item" &&
+	   @it) {
+		my $xref = GNUpod::XMLhelper::mkh($el,@it);
+		${$podcast_infos{$hashref_key}}[-1]->{$el} ||= $xref->{$el};
+	}
+}
+
+#############################################################
+#Eventer for <foo>CONTENT</foo>
+# => Fillsup %podcast_infos
+sub podcastChar {
+	my($hr,$el) = @_;
+	my $hashref_key = $hr->{Base};
+	if($hr->{Context}[-4] eq "rss" &&
+	   $hr->{Context}[-3] eq "channel" &&
+	   $hr->{Context}[-2] eq "item") {
+		my $ccontext = $hr->{Context}[-1];
+		${$podcast_infos{$hashref_key}}[-1]->{$ccontext}->{"\0"} ||= $el;
+	}
+}
+
+#############################################################
+# This is the heart of our podcast support
+#
+sub resolve_podcasts {
+	my(@xfiles) = @_;
+	my @files = ();
+	my $i = 0;
+	foreach my $cf (@xfiles) {
+		if($cf =~ /^http:\/\//i) {
+			$i++;
+			print "* [HTTP] Fetching Podcast #$i: $cf\n";
+			my $pcrss = PODCAST_fetch($cf, "/tmp/gnupodcast$i");
+			if($pcrss->{status} or (!(-f $pcrss->{file}))) {
+				warn "! [HTTP] Unable to download the file '$cf', wget exitcode: $pcrss->{status}\n";
+				next;
+			}
+			#Add the stuff to %podcast_infos and unlink the file after this.
+			eval {
+				my $px = new XML::Parser(Handlers=>{Start=>\&podcastStart, Char=>\&podcastChar});
+				$px->parsefile($pcrss->{file});
+			};
+			warn "! [HTTP] Error while parsing XML: $@\n" if $@;
+			unlink($pcrss->{file}) or warn "Could not unlink $pcrss->{file}, $!\n";
+			$per_file_info{$pcrss->{file}}->{REAL_RSS} = $cf;
+		}
+		else {
+			push(@files, $cf);
+		}
+	}
+
+#print "* [HTTP] ===> Checking parsed Podcast information <===\n";
+foreach my $key (keys(%podcast_infos)) {
+	my $cref = $podcast_infos{$key};
+	foreach my $podcast_item (@$cref) {
+		my $c_title = $podcast_item->{title}->{"\0"};
+		my $c_author = $podcast_item->{author}->{"\0"};
+		my $c_url   = $podcast_item->{enclosure}->{url};
+		#We use the URL as GUID if there isn't one...			
+		my $c_guid  = $podcast_item->{guid}->{"\0"} || $c_url;
+		my $c_podcastrss = $per_file_info{$key}->{REAL_RSS};
+		my $possible_dupdb_entry = $c_guid."\0".$c_podcastrss;
+
+		if(length($c_guid) == 0 or length($c_podcastrss) == 0 or length($c_url) == 0) {
+			warn "! [HTTP] '$c_podcastrss' is an invalid podcast item (No URL/RSS?)\n";
+			next;
+		}
+		elsif($dupdb_podcast{$possible_dupdb_entry}) {
+			warn "! [HTTP] Podcast $c_url ($c_title) exists, no need to download this file\n";
+			next;
+		}		
+		print "* [HTTP] Downloading $c_url ...\n";
+		my $rssmedia = PODCAST_fetch($c_url, "/tmp/gnupodcast_media");
+		if($rssmedia->{status} or (!(-f $rssmedia->{file}))) {
+			warn "! [HTTP] Unable to download $rssmedia->{file}\n";
+			next;
+		}
+
+		$per_file_info{$rssmedia->{file}}->{UNLINK} = 1;
+		$per_file_info{$rssmedia->{file}}->{podcastguid} = $c_guid;
+		$per_file_info{$rssmedia->{file}}->{podcastrss}  = $c_podcastrss;
+		$per_file_info{$rssmedia->{file}}->{title}  = $c_title  if $c_title;
+		$per_file_info{$rssmedia->{file}}->{artist} = $c_author if $c_author;
+		push(@files,$rssmedia->{file});
+	}
+}
+	
+	return @files;
+}
+
+#### PODCAST END ####
 
 
 ###############################################################
@@ -321,8 +462,6 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
        --set-rating=int            Set Rating
        --set-playcount=int         Set Playcount
        --set-songnum               Override 'Songnum/Tracknum' field
-       --set-podcastguid           Set podcast guid flag (used by gnupod_podcast.pl)
-       --set-podcastrss            Set podcast rss flag  (used by gnupod_podcast.pl)
 
 Report bugs to <bug-gnupod\@nongnu.org>
 EOF

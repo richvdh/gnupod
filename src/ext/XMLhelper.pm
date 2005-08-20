@@ -71,7 +71,8 @@ sub getpath {
 		#Hups, current filename has a wrong extension...
 		if($opts->{format} && $test_extension && ($name !~ /\.($test_extension)$/i)) {
 			my($ext) = $name =~ /\.([^.]*)$/;          #Get the current extension (maybe null)
-			warn "Warning: File '$name' has a wrong extension [$ext], changed extension to $opts->{format}\n";
+			#Warn IF the old file HAD an extension. We are silent if it didn't have one.. (It's unix :) )
+			warn "Warning: File '$name' has a wrong extension [$ext], changed extension to $opts->{format}\n" if $ext;
 			$name =~ s/\.?$ext$/.$opts->{format}/;  #Replace current extension with newone
 		}
  

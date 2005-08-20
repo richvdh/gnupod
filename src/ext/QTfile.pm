@@ -74,7 +74,7 @@ sub parsefile {
 
 	open(QTFILE, $qtfile) or return undef;
 
-	my $fsize = -s "$qtfile" or return undef; #Hey.. VFS borken?
+	my $fsize = -s "$qtfile" or return undef; #Dunno parse emtpy files
 	my $pos = 0;
 	my $level = 1;
 	my %lx = ();
@@ -179,26 +179,6 @@ my @METADEF = ("album",   "\xA9alb",
  #Fixme: This is ugly.. bitrate is somewhere found in esds / stsd
  $reth{bitrate} = int( ($reth{filesize}*8/1024)/(1+$reth{time})*1000 );
 
-=head
-print "* ************ FINISHED PARSER ***********************\n";
-foreach(keys(%{$lx{metadat}})) {
- print "-> $_\n";
-}
-use GNUpod::iTunesDB;
-while(<STDIN>) {
- chomp;
- my $x = 0;
- foreach(@{$lx{metadat}{$_}}) {
- 
- print "==============> $x <==================\n";
- GNUpod::iTunesDB::__hd($_);
-  $x++;
-  
- }
-}
-=cut
-
-
  return \%reth;
 }
 
@@ -267,7 +247,7 @@ sub get_string_oct {
 	my($offset, $len, $string) = @_;
 
 	if($offset+$len > length($string)) {
-		warn "Bug: invalid substr() call! Returning 0\n";
+		warn "QTfile.pm: Bug: invalid substr() call! Returning 0\n";
 		return 0;
 	}
  

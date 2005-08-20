@@ -1,5 +1,5 @@
 ###__PERLBIN__###
-#  Copyright (C) 2002-2004 Adrian Ulrich <pab at blinkenlights.ch>
+#  Copyright (C) 2002-2005 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
 #  URL: http://www.gnu.org/software/gnupod/
@@ -39,6 +39,7 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "artist|a=s",
                    "album|l=s", "title|t=s", "id|i=s", "rename=s@",
+                   "playcount|c=s", "podcastrss|R=s", "podcastguid|U=s",
                    "view=s","genre|g=s", "match-once|o", "delete", "RMME|d");
 GNUpod::FooBar::GetConfig(\%opts, {view=>'s', mount=>'s', 'match-once'=>'b'}, "gnupod_search");
 
@@ -85,12 +86,25 @@ my $matched;
 my $ntm = keys(%opts)-2-$opts{'match-once'}-$opts{delete}-(defined $opts{rename});
 
 
-  foreach my $opx (keys(%opts)) {
-   next if $opx =~ /mount|match-once|delete|view|rename/; #Skip this
-   if($el->{file}->{$opx} =~ /$opts{$opx}/i) {
-    $matched++;
-   }
-  }
+foreach my $opx (keys(%opts)) {
+	next if $opx =~ /mount|match-once|delete|view|rename/; #Skip this
+		
+		if(substr($opts{$opx},0,1) eq ">") {
+			$matched++ if  int($el->{file}->{$opx}) > int(substr($opts{$opx},1));
+		}
+		elsif(substr($opts{$opx},0,1) eq "<") {
+			$matched++ if  int($el->{file}->{$opx}) < int(substr($opts{$opx},1));
+		}
+		elsif(substr($opts{$opx},0,1) eq "-") {
+			my($s_from, $s_to) = substr($opts{$opx},1) =~ /^(\d+)-(\d+)$/;
+			if( (int($el->{file}->{$opx}) >= $s_from) && (int($el->{file}->{$opx}) <= $s_to) ) {
+				$matched++;
+			}
+		}		
+		elsif($el->{file}->{$opx} =~ /$opts{$opx}/i) {
+			$matched++;
+		}
+}
 
 
   if(($opts{'match-once'} && $matched) || $ntm == $matched) {
@@ -153,6 +167,8 @@ sub pview {
  $qh{p}{k} = $orf->{path};      $qh{p}{w} = 96; $qh{p}{s} = "PATH";
  $qh{l}{k} = $orf->{album};                     $qh{l}{s} = "ALBUM";
  $qh{g}{k} = $orf->{genre};                     $qh{g}{s} = "GENRE";
+ $qh{R}{k} = $orf->{podcastrss};                $qh{R}{s} = "RSS";
+ $qh{G}{k} = $orf->{podcastguid};               $qh{G}{s} = "GUID";
  $qh{c}{k} = $orf->{playcount}; $qh{c}{w} = 4;  $qh{c}{s} = "CNT";
  $qh{i}{k} = $orf->{id};        $qh{i}{w} = 4;  $qh{i}{s} = "ID";
  $qh{u}{k} = GNUpod::XMLhelper::realpath($opts{mount},$orf->{path}); $qh{u}{w} = 96; $qh{u}{s} = "UNIXPATH";
@@ -201,16 +217,21 @@ Usage: gnupod_search.pl [-h] [-m directory] File1 File2 ...
    -l, --album=ALBUM       search songs by Album
    -i, --id=ID             search songs by ID
    -g, --genre=GENRE       search songs by Genre
+   -c, --playcount=COUNT   search songs by Playcount
+   -R, --podcastrss=RSS    search songs by RSS
+   -G, --podcastguid=GUID  search songs by GUID
    -o, --match-once        Search doesn't need to match multiple times (eg. -a & -l)
        --delete            REMOVE (!) matched songs
        --view=ialt         Modify output, default=ialt
                             t = title    a = artist   r = rating      p = iPod Path
                             l = album    g = genre    c = playcount   i = id
-                            u = UnixPath n = Songnum
+                            u = UnixPath n = Songnum  G = podcastguid R = podcastrss
        --rename=KEY=VAL    Change tags on found songs. Example: --rename="ARTIST=Foo Bar"
 
 Note: * Argument for title/artist/album/etc has to be UTF8 encoded, *not* latin1!
-      * All arguments are handled as regular expressions! If you want to search for
+      * Use '>3' to search all values above 3, use '<3' to search for values below 3
+      * Use '-10-30' to search all values between (and including) 10 to 30.
+      * Everything else is handled as regular expressions! If you want to search for
         eg. ID '3' (excluding 13,63,32..), you would have to write: --id="^3\$"
 
 Report bugs to <bug-gnupod\@nongnu.org>

@@ -70,49 +70,53 @@ GNUpod::iTunesDB::open_itunesdb($con->{itunesdb}) or usage("Could not open $con-
 
 #Check where the FILES and PLAYLIST part starts..
 #..and how many files are in this iTunesDB
-my $itinfo = GNUpod::iTunesDB::get_starts();
+my @itinfo = GNUpod::iTunesDB::get_starts();
 
-if(!defined($itinfo)) {
+if(!defined(@itinfo)) {
   warn "File '$con->{itunesdb}' is not an iTunesDB, wrong magic in header!\n";
   exit(1);
 }
 
-#This 2 will change while running..
-my $pos = $itinfo->{position};
-my $pdi = $itinfo->{pdi};
+#Start of Tracklist
+my $tracklist_pos   = $itinfo[1]->{start};
+my $tracklist_childs = $itinfo[1]->{childs};
 
-print "> Has $itinfo->{songs} songs";
+#Start of Playlist
+my $pl_pos   =  $itinfo[2]->{start};
+my $pl_childs = $itinfo[2]->{childs};
+
+
+print "> Has $tracklist_childs songs";
 
 #Get all files
 my $href= undef;
 my $ff = 0;
 my %hout = ();
- for(my $i=0;$i<$itinfo->{songs};$i++) {
-  ($pos,$href) = GNUpod::iTunesDB::get_mhits($pos); #get the mhit + all child mhods
-  #Seek failed.. this shouldn't happen..  
-  if($pos == -1) {
-   print STDERR "\n*** FATAL: Expected to find $itinfo->{songs} files,\n";
-   print STDERR "*** but i failed to get nr. $i\n";
-   print STDERR "*** Your iTunesDB maybe corrupt or you found\n";
-   print STDERR "*** a bug in GNUpod. Please send this\n";
-   print STDERR "*** iTunesDB to pab\@blinkenlights.ch\n\n";
-   exit(1);
-  }
-  GNUpod::XMLhelper::mkfile({file=>$href});  
-  $ff++;
- }
-
-
+for(my $i=0;$i<$tracklist_childs;$i++) {
+	#get the mhit + all child mhods
+	($tracklist_pos,$href) = GNUpod::iTunesDB::get_mhits($tracklist_pos);
+	#Seek failed.. this shouldn't happen..  
+	if($tracklist_pos == -1) {
+		print STDERR "\n*** FATAL: Expected to find $tracklist_childs files,\n";
+		print STDERR "*** but i failed to get nr. $i\n";
+		print STDERR "*** Your iTunesDB maybe corrupt or you found\n";
+		print STDERR "*** a bug in GNUpod. Please send this\n";
+		print STDERR "*** iTunesDB to pab\@blinkenlights.ch\n\n";
+		exit(1);
+	}
+	GNUpod::XMLhelper::mkfile({file=>$href});  
+	$ff++;
+}
 #<files> part built
 print STDOUT "\r> Found $ff files, ok\n";
 
 
 #Now get each playlist
-print STDOUT "> Found ".($itinfo->{playlists}-1)." playlists:\n";
-for(my $i=0;$i<$itinfo->{playlists};$i++) {
-  ($pdi, $href) = GNUpod::iTunesDB::get_pl($pdi); #Get an mhyp + all child mhods
-  if($pdi == -1) {
-   print STDERR "*** FATAL: Expected to find $itinfo->{playlists} playlists,\n";
+print STDOUT "> Found ".($pl_childs-1)." playlists:\n";
+for(my $i=0;$i<$pl_childs;$i++) {
+  ($pl_pos, $href) = GNUpod::iTunesDB::get_pl($pl_pos); #Get an mhyp + all child mhods
+  if($pl_pos == -1) {
+   print STDERR "*** FATAL: Expected to find $pl_childs playlists,\n";
    print STDERR "*** but i failed to get nr. $i\n";
    print STDERR "*** Your iTunesDB maybe corrupt or you found\n";
    print STDERR "*** a bug in GNUpod. Please send this\n";
