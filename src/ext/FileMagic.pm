@@ -264,7 +264,7 @@ sub __is_mp3 {
      $rh{year} =     getutf8($hs->{TYER} || $hs->{TYE} || $h->{YEAR}    || 0);
      $rh{title} =    getutf8($hs->{TIT2} || $hs->{TT2} || $h->{TITLE}   || $cf || "Untitled");
      $rh{album} =    getutf8($hs->{TALB} || $hs->{TAL} || $h->{ALBUM}   || "Unknown Album");
-     $rh{artist} =   getutf8($hs->{TPE1} || $hs->{TP1} || $h->{ARTIST}  || "Unknown Artist");
+     $rh{artist} =   getutf8($hs->{TPE1} || $hs->{TP1} || $hs->{TPE2} || $hs->{TP2} || $h->{ARTIST}  || "Unknown Artist");
      $rh{genre} =    _get_genre( getutf8($hs->{TCON} || $hs->{TCO} || $h->{GENRE}   || "") );
      $rh{comment} =  getutf8($hs->{COMM} || $hs->{COM} || $h->{COMMENT} || "");
      $rh{composer} = getutf8($hs->{TCOM} || $hs->{TCM} || "");

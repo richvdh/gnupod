@@ -11,6 +11,7 @@ Summary
 - Fixed small bug in FileMagic.pm: UTF16-Tags didn't work.
   Thanks to Chris Abajian for reporting this issue.
 
+- Read TPE2 / TP2 for MP3-Files
 
 
 *** OLD STUFF ***
