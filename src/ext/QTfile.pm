@@ -91,8 +91,9 @@ sub parsefile {
 		my($clevel, $len) = get_atom($level, $pos, \%lx);
 		unless($len) {
 			warn "QTfile.pm: ** Unexpected data found at $pos!\n";
-			warn "QTfile.pm: ** You found a bug! Please send a bugreport\n";
-			warn "QTfile.pm: ** to pab\@blinkenlights.ch\n";
+			warn "QTfile.pm: ** => File broken?\n";
+			warn "QTfile.pm: ** => ..or maybe you found a bug: send a\n";
+			warn "QTfile.pm: **    bugreport to <pab\@blinkenlights.ch>\n";
 			warn "QTfile.pm: ** GIVING UP PARSING **\n";
 			last;
 		}
