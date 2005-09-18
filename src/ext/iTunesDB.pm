@@ -188,21 +188,10 @@ sub mk_itunes_sd_file {
 	$ret .= tnp(0x000200);	#Static?
 	$ret .= Unicode::String::byteswap2($uc->utf16);
 	$ret .= "\0" x (522-length($uc->utf16));
-	$ret .= tnp(0x010000); #shuffle#bookmark#unknown#
-
-=head
-	my $xx = 0;
-	foreach(split(/(...)/,unpack("H*",$ret))) {
-		next unless $_;
-		print "$_ ";
-		$xx++;
-		if($xx == 10) {
-			$xx = 0;
-			print "\n";
-		}
-	}
-	print "\n=======================================\n";
-=cut
+	my $bmflag = undef;
+	$bmflag += 0x010000 if $ref->{shuffleskip}  == 0;
+	$bmflag += 0x000100 if $ref->{bookmarkable} != 0; #Well.. this is somehow broken.. hmm FIXME
+	$ret .= tnp($bmflag); #shuffle#bookmark#unknown#
 	return $ret;
 }
 
@@ -300,14 +289,9 @@ sub mk_mhit {
     $ret .= pack("V", _icl($c_id));                         #Song index number
     $ret .= pack("V", _icl(1));                             #Visible?
     $ret .= pack("V");                                      #FileType. Should be 'MP3 '. (FIXME: Extension or type?)
-#    $ret .= pack("V", _icl(256+(oct('0x14000000')
-#                            *($file_hash{rating}/20))));     #type+rating .. this is very STUPID..
-#print unpack("H*", pack("V", _icl(256+(oct('0x14000000')*($file_hash{rating}/20)))))."\n";
-#print unpack("H*", pack("v", 0x100).pack("c", 0x00).pack("c",$file_hash{rating}))."\n----x-\n";
     $ret .= pack("v", 0x100);                               #cbr = 100, vbr = 101, aac = 0x010 ##FIXME: COrrect?
     $ret .= pack("c", (($file_hash{compilation})==0));      #compilation ?
     $ret .= pack("c",$file_hash{rating});                   #rating
-######FIXME: Test them!
     $ret .= pack("V", _icl($file_hash{changetime}));        #Time changed
     $ret .= pack("V", _icl($file_hash{filesize}));          #filesize
     $ret .= pack("V", _icl($file_hash{time}));              #seconds of song
@@ -333,8 +317,16 @@ sub mk_mhit {
     $ret .= pack("V",  _icl($c_id));                        #DBID Postfix
     $ret .= pack("v");                                      #??
     $ret .= pack("v", _icl($file_hash{bpm},0xffff));        #BPM
-    $ret .= pack("V");                                      # ???
-    $ret .= pack("V10");
+    $ret .= pack("v");                                      #Artwork Count ??
+    $ret .= pack("v");                                      #ipodlinux-wiki => unk9
+    $ret .= pack("V9");
+    #Assemble the BookMarkSFX flag
+    my $bmflag = undef;
+    $bmflag += 0x00010000 if $file_hash{bookmarkable};
+    $bmflag += 0x00000100 if $file_hash{shuffleskip};
+    $bmflag += 0x00000002 if $bmflag;
+#print unpack("H*",pack("V",$bmflag))."\n";
+    $ret .= pack("V", _icl($bmflag));                    #unk19 ??<bookmark><skip><activate>
     $ret .= pack("V", 0xDEADBABE);
     $ret .= pack("V", _icl($c_id));
     $ret .= pack("H135");  
@@ -1139,6 +1131,20 @@ $ret{cds}        = get_int($sum+96,4);
 $ret{addtime}    = get_int($sum+104,4);
 $ret{bookmark}   = get_int($sum+108,4);
 $ret{bpm} = get_int($sum+122,2);
+
+##This parses the ShuffleSkipt and Bookmarkable flag
+$ret{shuffleskip} = $ret{bookmarkable} = 0;
+my $has_bookmark_flag = get_int($sum+164,1);
+if($has_bookmark_flag == 2) { #Ok, we know what to expect
+	$ret{shuffleskip} = 1 if get_int($sum+165,1);
+	$ret{bookmarkable} =1 if get_int($sum+166,1);
+	#167 is unknown
+}
+elsif($has_bookmark_flag != 0x00) {
+	_itBUG("Whoops! Funny data found, please report this stuff:",undef);
+	print "===>DEBUG OUTPUT FOR UNKNOWN BMFLAG STUFF: ".unpack("H*",pack("V",get_int($sum+164,4)))."\n";
+
+}
 
 #Fixme: prerating is invalid.. rerere..
 #$ret{prerating}  = int(get_int($sum+120,4) / oct('0x140000')) * 20;

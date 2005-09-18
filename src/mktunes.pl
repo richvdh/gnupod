@@ -277,7 +277,9 @@ sub newfile {
 
 	#Append to iTunesSD
 	syswrite(ITS,GNUpod::iTunesDB::mk_itunes_sd_file({path=>$el->{file}->{path},
-	                                                  volume=>$el->{file}->{volume}}));
+	                                                  volume=>$el->{file}->{volume},
+	                                                  bookmarkable=>$el->{file}->{bookmarkable},
+	                                                  shuffleskip=>$el->{file}->{shuffleskip}}));
 }
 
 
