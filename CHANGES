@@ -1,10 +1,20 @@
-GNUpod 0.99 - codename 'Socke'
+GNUpod 0.98.4 - codename
+
+Summary
+-------
+
+- Fixes a playlist problem with iTunes5 (new 100er Mhods)
+
+- '--encode' didn't remove tempfiles from /tmp .. works again
+
+
+GNUpod 0.98.3 - codename 'Socke'
 
 Summary
 -------
 
 - gnupod_addsong.pl can now fetch podcast-rss feeds!
-  Example: gnupod_addsong.pl http://www.tagesschau.de/export/podcast
+  Example: 'gnupod_addsong.pl http://www.tagesschau.de/export/podcast'
 
 - Added basic support for podcast-rss and podcast-guid in tunes2pod.pl and mktunes.pl
 
@@ -12,6 +22,8 @@ Summary
   Thanks to Chris Abajian for reporting this issue.
 
 - Read TPE2 / TP2 for MP3-Files
+
+=> Please note: Podcast support is still in BETA and 'real podcasts' are currently not supported
 
 
 *** OLD STUFF ***

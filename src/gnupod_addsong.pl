@@ -99,9 +99,9 @@ sub startup {
 
 	#We parsed the XML-Document
 	#resolve_podcasts fetches new podcasts from http:// stuff and adds them to real_files
-	warn "DEBUG: START RESOLVE\n";
+#	warn "DEBUG: START RESOLVE\n";
 	my @real_files = resolve_podcasts(@argv_files);
-	warn "DEBUG: END RESOLVE\n";
+#	warn "DEBUG: END RESOLVE\n";
 	
 	my $addcount = 0;
 	#We are ready to copy each file..
@@ -197,8 +197,8 @@ sub startup {
 					#Ok, output is smaller, we are going to use thisone
 					#1. Replace path to file
 					$file = $path_of_converted_file;
-					#2. Set converted-state : This will unlink the file after copy finished!
-					$converter = 1;
+					#2. Set UNLINK-state : This will unlink the file after copy finished!
+					$per_file_info{$file}->{UNLINK} = 1;
 				}
 				else {
 					#Nope.. input was smaller, converting was silly..

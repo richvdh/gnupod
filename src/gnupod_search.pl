@@ -39,9 +39,10 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "artist|a=s",
                    "album|l=s", "title|t=s", "id|i=s", "rename=s@",
-                   "playcount|c=s", "podcastrss|R=s", "podcastguid|U=s",
+                   "playcount|c=s", "rating|s=s", "podcastrss|R=s", "podcastguid|U=s",
                    "view=s","genre|g=s", "match-once|o", "delete", "RMME|d");
 GNUpod::FooBar::GetConfig(\%opts, {view=>'s', mount=>'s', 'match-once'=>'b'}, "gnupod_search");
+
 
 usage() if $opts{help};
 version() if $opts{version};
@@ -218,6 +219,7 @@ Usage: gnupod_search.pl [-h] [-m directory] File1 File2 ...
    -i, --id=ID             search songs by ID
    -g, --genre=GENRE       search songs by Genre
    -c, --playcount=COUNT   search songs by Playcount
+   -s, --rating=COUNT      search songs by Rating (10 is one star, 20 two, etc.)
    -R, --podcastrss=RSS    search songs by RSS
    -G, --podcastguid=GUID  search songs by GUID
    -o, --match-once        Search doesn't need to match multiple times (eg. -a & -l)
@@ -242,7 +244,7 @@ EOF
 sub version {
 die << "EOF";
 gnupod_search.pl (gnupod) ###__VERSION__###
-Copyright (C) Adrian Ulrich 2002-2004
+Copyright (C) Adrian Ulrich 2002-2005
 
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

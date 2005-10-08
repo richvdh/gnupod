@@ -945,11 +945,12 @@ sub __hd {
 sub get_mhod {
 	my ($seek) = @_;
 
-	my $id  = get_string($seek, 4);          #are we lost?
-	my $mhl = get_int($seek+4, 4);           #Mhod Header Length
-	my $ml  = get_int($seek+8, 4);           #Length of this mhod
-	my $mty = get_int($seek+12, 4);          #type number
-	my $xl  = get_int($seek+28,4);           #String length
+	my $id    = get_string($seek, 4);          #are we lost?
+	my $mhl   = get_int($seek+4, 4);           #Mhod Header Length
+	my $ml    = get_int($seek+8, 4);           #Length of this mhod
+	my $mty   = get_int($seek+12, 4);          #type number
+	my $plpos = get_int($seek+24, 4);          #Used for 100 MHODs => Position
+	my $xl    = get_int($seek+28,4);           #String length
 	
 	## That's spl stuff, only to be used with 51 mhod's
 	my $htm = get_int($seek+35,1); #Only set for 51
@@ -978,13 +979,17 @@ sub get_mhod {
 			$foo = undef;
 			$splpref = read_splpref({start=>$seek, end=>$ml});
 		}
+		elsif($mty == 100) { #This is a PLTHING mhod
+			#No more information and the stringlength is garbage...
+			$foo = undef;
+		}
 		else { #A normal Mhod, puh!
-			_itBUG("Assert \$xl < \$ml failed! ($xl => $ml)",undef) if $xl >= $ml;
+			_itBUG("Assert \$xl < \$ml failed! ($xl => $ml)",1) if $xl >= $ml;
 			$foo = get_string($seek+($ml-$xl), $xl); #String of entry
 			$foo = Unicode::String::byteswap2($foo);
 			$foo = Unicode::String::utf16($foo)->utf8;			
 		}
-		return({size=>$ml,string=>$foo,type=>$mty,spldata=>$spldata,splpref=>$splpref,matchrule=>$anym});
+		return({size=>$ml,string=>$foo,type=>$mty,spldata=>$spldata,splpref=>$splpref,matchrule=>$anym,plpos=>$plpos});
 	}
 	else {
 		return({size=>-1});
@@ -996,25 +1001,25 @@ sub get_mhod {
 ##############################################
 # get an mhip entry
 sub get_mhip {
- my($pos) = @_;
- my $oid = 0;
- if(get_string($pos, 4) eq "mhip") {
-  my $oof = get_int($pos+4, 4);
-  my $mhods=get_int($pos+12,4);
+	my($pos) = @_;
+	my $oid = 0;
+	if(get_string($pos, 4) eq "mhip") {
+		my $oof = get_int($pos+4, 4);
+		my $mhods=get_int($pos+12,4);
+		
+		
+		for(my $i=0;$i<$mhods;$i++) {
+			my $mhs = get_mhod($pos+$oof)->{size};
+			_itBUG("Fatal seek error in get_mhip, can't continue! (debug: $mhs / $i / $pos / $oof)",1) if $mhs == -1;
+			$oid+=$mhs;
+		}
+		my $plid = get_int($pos+5*4,4);
+		my $sid  = get_int($pos+6*4, 4);
+		return({size=>($oid+$oof),sid=>$sid,plid=>$plid});
+	}
 
-  for(my $i=0;$i<$mhods;$i++) {
-   my $mhs = get_mhod($pos+$oof)->{size};
-   _itBUG("Fatal seek error in get_mhip, can't continue! (debug: $mhs / $i / $pos / $oof)",1) if $mhs == -1;
-   $oid+=$mhs;
-  }
-
-   my $plid = get_int($pos+5*4,4);
-   my $sid  = get_int($pos+6*4, 4);
-  return({size=>($oid+$oof),sid=>$sid,plid=>$plid});
- }
-
-#we are lost
- return ({size=>-1});
+	#we are lost
+	return ({size=>-1});
 }
 
 
