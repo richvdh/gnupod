@@ -235,7 +235,6 @@ sub startup {
 		#Is it a tempfile? Remove it.
 		#This is the case for 'converter' files and 'rss'
 		unlink($file) if $per_file_info{$file}->{UNLINK} == 1;
-		warn "XXX REMOVE XXX $file\n" if $per_file_info{$file}->{UNLINK} == 1;
 	}
 
  

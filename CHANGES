@@ -7,6 +7,8 @@ Summary
 
 - '--encode' didn't remove tempfiles from /tmp .. works again
 
+- Added Support for .ape (MAC - http://sourceforge.net/projects/mac-port/) files (use --decode=foo)
+
 
 GNUpod 0.98.3 - codename 'Socke'
 

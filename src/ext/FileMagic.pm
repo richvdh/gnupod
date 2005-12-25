@@ -36,7 +36,8 @@ use GNUpod::QTfile;
 
 my $NN_HEADERS = {'MThd' => { encoder=>'gnupod_convert_MIDI.pl', ftyp=>'MIDI'},
                   'fLaC' => { encoder=>'gnupod_convert_FLAC.pl', ftyp=>'FLAC'},
-                  'OggS' => { encoder=>'gnupod_convert_OGG.pl',  ftyp=>'OGG'}};
+                  'OggS' => { encoder=>'gnupod_convert_OGG.pl',  ftyp=>'OGG' },
+                  'MAC ' => { encoder=>'gnupod_convert_APE.pl',  ftyp=>'APE' }};
                
 
 

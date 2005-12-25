@@ -1,4 +1,4 @@
-AC_INIT(GNUpod, 0.98.3, bug-gnupod@nongnu.org)
+AC_INIT(GNUpod, 0.98.4, bug-gnupod@nongnu.org)
 
 echo $ECHO_N $PACKAGE_VERSION > .gnupod_version
 
@@ -8,7 +8,6 @@ if test -d CVS; then
 fi
 
 AC_PATH_PROGS(PERL, perl-5.8 perl-5.6 perl)
-
 
 if test $PERL; then
 echo "GNUpod will use $PERL"
@@ -78,12 +77,51 @@ echo "installed version of MP3::Info looks good"
   echo " ** UTF8 SUPPORT FOR MP3 FILES WILL BE BROKEN !       **"
  fi
 
+
+#Check De/Encoders on system
+#Do NOT add a check for 'mac', because Solaris ships
+#with something different in /usr/bin/mac
+
+ENCS="wav" #aka pcm
+echo $ECHO_N "checking installed encoders..."
+ALLENCODERS="lame faac"
+for i in $ALLENCODERS
+do
+ $i > /dev/null 2>&1
+ if test $? = 1; then
+  ENCS="$i $ENCS"
+ else
+  ENCS="($i/Binary not found) $ENCS"
+ fi
+done
+echo " done"
+
+DECS=""
+echo $ECHO_N "checking installed decoders..."
+ALLDECODERS="oggdec flac timidity"
+for i in $ALLDECODERS
+do
+ $i > /dev/null 2>&1
+ if test $? -lt 2; then
+  DECS="$i $DECS"
+ else
+  DECS="($i/Binary not found) $DECS"
+ fi
+done
+echo " done"
+
+
+
+## Whoops: We dont check for 'mac' because solaris has an /usr/bin/mac .. and that's not what we are searching
+
+
 AC_SUBST(PERL)
 AC_OUTPUT(Makefile)
 
 echo
 echo
 echo "Settings:"
+echo "---------"
 echo
 echo $ECHO_N "Release:        "
  cat .gnupod_version
@@ -100,6 +138,10 @@ echo $ECHO_N "Perl INC:       "
  $PERL tools/getINC.pl
  XPINC=`$PERL tools/getINC.pl`;
 echo
+
+echo "Encoders:       $ENCS"
+echo "Decoders:       $DECS"
+
 
 
 echo
