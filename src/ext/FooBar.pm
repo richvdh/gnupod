@@ -75,6 +75,7 @@ sub _check_casesensitive {
  if(open(CSTEST,">$target/csTeSt")) {
    my $inode_a = (stat("$target/csTeSt"))[1]; #Get inode of just-creaded file
    my $inode_b = (stat("$target/CStEsT"))[1]; #Get inode of another file..
+   close(CSTEST) or die "FATAL: Could not close CSTEST FD ($target/csTeST) : $!\n";
    unlink("$target/csTeSt"); #Boom!
   
    if($inode_a != $inode_b) { #Whops, different inodes? -> case sensitive fs
