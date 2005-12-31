@@ -35,7 +35,8 @@ use File::Glob ':glob';
 use vars qw(%mhod_id @mhod_array %SPLDEF %SPLREDEF);
 
 use constant ITUNESDB_MAGIC => 'mhbd';
-
+use constant OLD_ITUNESDB_MHIT_HEADERSIZE => 156;
+use constant NEW_ITUNESDB_MHIT_HEADERSIZE => 244;
 #mk_mhod() will take care of lc() entries
 %mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, 
             "comment", 8, "category",9, "composer", 12, "group", 13, "desc",14,
@@ -324,13 +325,18 @@ sub mk_mhit {
     my $bmflag = undef;
     $bmflag += 0x00010000 if $file_hash{bookmarkable};
     $bmflag += 0x00000100 if $file_hash{shuffleskip};
+    $bmflag += 0x01000000 if $file_hash{mhitpodcastinfo};
     $bmflag += 0x00000002 if $bmflag;
 #print unpack("H*",pack("V",$bmflag))."\n";
     $ret .= pack("V", _icl($bmflag));                    #unk19 ??<bookmark><skip><activate>
     $ret .= pack("V", 0xDEADBABE);
     $ret .= pack("V", _icl($c_id));
-    $ret .= pack("H135");  
-                         
+    
+		$ret .= pack("H64");
+		$ret .= pack("V", _icl($file_hash{mediatype}));#_icl($file_hash{mediatype}));
+		$ret .= pack("H63");  
+    
+     warn ":: $file_hash{mediatype} : ".length($ret)."\n";         
 return $ret;
 }
 
@@ -1110,6 +1116,12 @@ sub get_mhits {
 my ($sum) = @_;
 if(get_string($sum, 4) eq "mhit") { #Ok, its a mhit
 
+my $header_size = get_int($sum+4,4);
+
+if($header_size < OLD_ITUNESDB_MHIT_HEADERSIZE) { # => Last get_int.. this is ugly
+ _itBUG("Assert $header_size >= OLD_ITUNESDB_MHIT_HEADERSIZE failed. get_mhits($sum) will read BEHIND the end of this header!");
+}
+
 my %ret     = ();
 #Infos stored in mhit
 $ret{id}         = get_int($sum+16,4);
@@ -1135,26 +1147,25 @@ $ret{cdnum}      = get_int($sum+92,4);
 $ret{cds}        = get_int($sum+96,4);
 $ret{addtime}    = get_int($sum+104,4);
 $ret{bookmark}   = get_int($sum+108,4);
-$ret{bpm} = get_int($sum+122,2);
 
-##This parses the ShuffleSkipt and Bookmarkable flag
-$ret{shuffleskip} = $ret{bookmarkable} = 0;
-my $has_bookmark_flag = get_int($sum+164,1);
-if($has_bookmark_flag == 2) { #Ok, we know what to expect
-	$ret{shuffleskip} = 1 if get_int($sum+165,1);
-	$ret{bookmarkable} =1 if get_int($sum+166,1);
-	#167 is unknown
+## New iTunesDB data, appeared ~ iTunes 4.5
+if($header_size >= NEW_ITUNESDB_MHIT_HEADERSIZE) {
+	$ret{bpm} = get_int($sum+122,2);
+	$ret{mediatype} = get_int($sum+208,4);
+	##This parses the ShuffleSkipt and Bookmarkable flag
+	$ret{shuffleskip} = $ret{bookmarkable} = 0;
+	my $has_bookmark_flag = get_int($sum+164,1);
+	if($has_bookmark_flag == 2) { #Ok, we know what to expect
+		$ret{shuffleskip}    = 1 if get_int($sum+165,1);
+		$ret{bookmarkable}   =1 if get_int($sum+166,1);
+		$ret{mhitpodcastinfo}=1 if get_int($sum+167,1);
+	}
+	elsif($has_bookmark_flag != 0x00) {
+		_itBUG("Whoops! Funny data found, please report this stuff:",undef);
+		print "===>DEBUG OUTPUT FOR UNKNOWN BMFLAG STUFF: ".unpack("H*",pack("V",get_int($sum+164,4)))."\n";
+		print "===>Don't know how to parse this stuff, ignoring it...\n";
+	}
 }
-elsif($has_bookmark_flag != 0x00) {
-	_itBUG("Whoops! Funny data found, please report this stuff:",undef);
-	print "===>DEBUG OUTPUT FOR UNKNOWN BMFLAG STUFF: ".unpack("H*",pack("V",get_int($sum+164,4)))."\n";
-
-}
-
-#Fixme: prerating is invalid.. rerere..
-#$ret{prerating}  = int(get_int($sum+120,4) / oct('0x140000')) * 20;
-#__hd(get_string($sum+120,4));
-
 
 ####### We have to convert the 'volume' to percent...
 ####### The iPod doesn't store the volume-value in percent..

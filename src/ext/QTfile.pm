@@ -1,6 +1,6 @@
 package GNUpod::QTfile;
 
-#  Copyright (C) 2003-2004 Adrian Ulrich <pab at blinkenlights.ch>
+#  Copyright (C) 2003-2006 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
 #  URL: http://www.gnu.org/software/gnupod/
@@ -34,7 +34,14 @@ use strict;
 use GNUpod::FooBar;
 use vars qw(%hchild %reth @LEVELA);
 
+#Define handler items
 use constant SOUND_ITEM => 'soun';
+use constant VIDEO_ITEM => 'vide';
+
+
+#Mediatypes for the iPod
+use constant MEDIATYPE_VIDEO => 0x02;
+use constant MEDIATYPE_AUDIO => 0x01;
 
 #Some static def
 $hchild{'moov'} = 8;
@@ -79,7 +86,6 @@ sub parsefile {
 	my $level = 1;
 	my %lx = ();
 	   %reth = (); #Cleanup
-
 	if($fsize < 16 || rseek(4,4) ne "ftyp") { #Can't be a QTfile
 		close(QTFILE);
 		return undef;
@@ -105,15 +111,25 @@ sub parsefile {
  
 ########### Now we build the chain #######################################
 
-#Search the Sound-Stream
-my $sound_index = get_sound_index($lx{metadat}{'::moov::trak::mdia::hdlr'});
+my $video_index = get_media_index($lx{metadat}{'::moov::trak::mdia::hdlr'}, VIDEO_ITEM);
+my $sound_index = get_media_index($lx{metadat}{'::moov::trak::mdia::hdlr'}, SOUND_ITEM);
 
-if($sound_index < 0) {
- warn "QTfile.pm: No 'sound' data found in file!\n";
- return undef;
+
+if($video_index >= 0 && $sound_index >= 0) {
+	#This looks like a video
+	$reth{mediatype} = MEDIATYPE_VIDEO;
+}
+elsif($sound_index >= 0) {
+	#..only sound
+	$reth{mediatype} = MEDIATYPE_AUDIO;
+}
+else {
+	warn "QTfile.pm: No sound/video stream found in file!\n";
+	return undef;
 }
 
-#print "::moov::trak::mdia::hdlr  -> $sound_index\n";
+
+
 
 my @METADEF = ("album",   "\xA9alb",
                "comment", "\xA9cmt",
@@ -151,12 +167,17 @@ my @METADEF = ("album",   "\xA9alb",
  }
  
 
- if( my $cDat = $lx{metadat}{'::moov::mvhd'}[$sound_index] ) {
- #Calculate the time... 
- $reth{time} = int( get_string_oct(8,4,$cDat)/
-                    get_string_oct(4,4,$cDat)*1000 );
+#Search for a TIME index: first sound, then video
+ foreach my $cidentify ( ($sound_index, $video_index) ) {
+  next if $cidentify < 0; #Invalid identifyer
+  if( my $cDat = $lx{metadat}{'::moov::mvhd'}[$cidentify] ) {
+   #Calculate the time... 
+   $reth{time} = int( get_string_oct(8,4,$cDat)/
+                      get_string_oct(4,4,$cDat)*1000 );
+   last if $reth{time};
+  }
  }
- 
+
 
  if($lx{metadat}{'::moov::udta::meta::ilst::----::mean'}[$sound_index] eq "apple.iTunes" &&
     $lx{metadat}{'::moov::udta::meta::ilst::----::name'}[$sound_index] eq "NORM") {
@@ -220,12 +241,13 @@ sub get_atom {
 
 ############################################
 # Search the 'soun' item
-sub get_sound_index {
-	my($ref) = @_;
+sub get_media_index {
+	my($ref,$rq) = @_;
+	die "get_media_index($ref,$rq): Assert length(\$rq)==4 failed\n" unless length($rq) == 4;
 	my $sid = 0;
 	my $sound_index = -1;
 	foreach(@$ref) {
-		if( substr($_,0,4) eq SOUND_ITEM ) {
+		if( substr($_,0,4) eq $rq) {
 			$sound_index = $sid;
 			last;
 		}

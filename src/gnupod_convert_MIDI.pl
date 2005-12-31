@@ -24,7 +24,7 @@
 
 use strict;
 use GNUpod::FooBar;
-
+use GNUpod::FileMagic;
 
 
 my $file  = $ARGV[0] or exit(1);
@@ -37,6 +37,7 @@ if(!(-r $file)) {
  exit(1);
 }
 elsif($gimme eq "GET_META") {
+  print "_MEDIATYPE:".(GNUpod::FileMagic::MEDIATYPE_AUDIO)."\n";
   print "FORMAT: MIDI\n";
 }
 elsif($gimme eq "GET_PCM") {

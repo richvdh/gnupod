@@ -27,6 +27,9 @@ use MP3::Info qw(:all);
 use GNUpod::FooBar;
 use GNUpod::QTfile;
 
+use constant MEDIATYPE_AUDIO => 0x01;
+use constant MEDIATYPE_VIDEO => 0x02;
+
 #
 # How to add a converter:
 # 1. Define the first 4 bytes in NN_HEADERS
@@ -37,7 +40,8 @@ use GNUpod::QTfile;
 my $NN_HEADERS = {'MThd' => { encoder=>'gnupod_convert_MIDI.pl', ftyp=>'MIDI'},
                   'fLaC' => { encoder=>'gnupod_convert_FLAC.pl', ftyp=>'FLAC'},
                   'OggS' => { encoder=>'gnupod_convert_OGG.pl',  ftyp=>'OGG' },
-                  'MAC ' => { encoder=>'gnupod_convert_APE.pl',  ftyp=>'APE' }};
+                  'MAC ' => { encoder=>'gnupod_convert_APE.pl',  ftyp=>'APE' },
+                  'RIFF' => { encoder=>'gnupod_convert_RIFF.pl', ftyp=>'RIFF'}};
                
 
 
@@ -73,7 +77,7 @@ sub wtf_is {
    return($nnat->{ref}, {ftyp=>$nnat->{codec}}, $nnat->{encoder});
   }
   elsif(my $xqt = __is_qt($file,$flags)) {
-   return ($xqt->{ref},  {ftyp=>$xqt->{codec}, format=>"m4a", extension=>"m4a|m4p|m4b"});
+   return ($xqt->{ref},  {ftyp=>$xqt->{codec}, format=>"m4a", extension=>"m4a|m4p|m4b|mp4"});
   }
   elsif(my $h = __is_pcm($file,$flags)) {
    return ($h, {ftyp=>"PCM", format=>"wav"});
@@ -117,7 +121,7 @@ sub __is_NonNative {
  $rh{songnum}  = int($songa[0]); 
  $rh{comment}  = getutf8($metastuff->{_COMMENT} || $metastuff->{FORMAT}." file");
  $rh{fdesc}    = getutf8($metastuff->{_VENDOR} || "Converted using $encoder"); 
-
+ $rh{mediatype}= int($metastuff->{_MEDIATYPE} || 0);
 
  return {ref=>\%rh, encoder=>$encoder, codec=>$NN_HEADERS->{$buff}->{ftyp} };
 }
@@ -135,6 +139,7 @@ sub __is_qt {
  my %rh = ();
  if($ret->{time} < 1) {
   warn "QTfile parsing failed, (expected $ret->{time} >= 0)!\n";
+  warn "Looks like we got no sound stream.. hmm..\n";
   warn "You found a bug - send an email to: pab\@blinkenlights.ch\n";
   return undef;
  }
@@ -155,6 +160,7 @@ sub __is_qt {
  $rh{genre}     = _get_genre( getutf8($ret->{genre} || $ret->{gnre} || "") );
  $rh{composer}  = getutf8($ret->{composer} || ""); 
  $rh{soundcheck}= _parse_iTunNORM($ret->{iTunNORM});
+ $rh{mediatype}  = int($ret->{mediatype} || 1);
  return  ({codec=>$ret->{_CODEC}, ref=>\%rh});
 }
 
@@ -211,7 +217,7 @@ sub __is_pcm {
   $rh{title}    = getutf8(((split(/\//, $file))[-1]) || "Unknown Title");
   $rh{album} =    getutf8(((split(/\//, $file))[-2]) || "Unknown Album");
   $rh{artist} =   getutf8(((split(/\//, $file))[-3]) || "Unknown Artist");
-
+  $rh{mediatype}  = MEDIATYPE_AUDIO;
 
 return \%rh;
 }
@@ -271,6 +277,7 @@ sub __is_mp3 {
      $rh{composer} = getutf8($hs->{TCOM} || $hs->{TCM} || "");
      $rh{playcount}= int(getutf8($hs->{PCNT} || $hs->{CNT})) || 0;
      $rh{soundcheck} = _parse_iTunNORM(getutf8($hs->{COMM} || $hs->{COM} || $h->{COMMENT}));
+     $rh{mediatype}  = MEDIATYPE_AUDIO;
  return \%rh;
 }
 

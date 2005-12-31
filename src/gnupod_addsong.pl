@@ -48,7 +48,7 @@ GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b',
                           "gnupod_addsong");
 
 
-usage("\n--decode needs 'pcm' 'mp3' 'aac' or 'aacbm' -> '--decode=mp3'\n") if $opts{decode} && $opts{decode} !~ /^(mp3|aac|aacbm|pcm|crashme)$/;
+usage("\n--decode needs 'pcm' 'mp3' 'aac' 'video' or 'aacbm' -> '--decode=mp3'\n") if $opts{decode} && $opts{decode} !~ /^(mp3|video|aac|aacbm|pcm|crashme)$/;
 usage() if $opts{help};
 version() if $opts{version};
 
@@ -164,7 +164,7 @@ sub startup {
 			print "> Converting '$file' from $wtf_ftyp into $opts{decode}, please wait...\n";
 			my $path_of_converted_file = GNUpod::FileMagic::kick_convert($converter,$opts{reencode},$file, uc($opts{decode}), $con);
 			unless($path_of_converted_file) {
-				print "! [!!!] Could not convert $file\n";
+				print "! [!!!] Could not convert $file into $opts{decode}\n";
 				next;
 			}
 			#Ok, we got a converted file, fillout the gaps
@@ -451,6 +451,7 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
        --disable-v1                Do not read ID3v1 Tags (MP3 Only)
        --disable-v2                Do not read ID3v2 Tags (MP3 Only)
        --decode=pcm|mp3|aac|aacbm  Convert FLAC Files to WAVE/MP3 or AAC 'on-the-fly'
+       --decode=video              Convert .avi Files into iPod video 'on-the-fly' (needs ffmpeg with AAC support!)
    -e  --reencode=int              Reencode MP3/AAC files with new quality 'on-the-fly'
                                    (0 = Good .. 9 = Bad)
                                    You may be able to save some space if you do not need

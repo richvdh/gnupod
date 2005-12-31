@@ -24,7 +24,7 @@
 
 use strict;
 use GNUpod::FooBar;
-
+use GNUpod::FileMagic;
 
 
 my $file  = $ARGV[0] or exit(1);
@@ -59,6 +59,7 @@ elsif($gimme eq "GET_META") {
 	print "_TRACKNUM:$ftag->{TRACKNUMBER}\n";
 	print "_COMMENT:$ftag->{COMMENT}\n";
 	print "_VENDOR:$ftag->{VENDOR}\n";
+	print "_MEDIATYPE:".(GNUpod::FileMagic::MEDIATYPE_AUDIO)."\n";
 	print "FORMAT: FLAC\n";
 }
 elsif($gimme eq "GET_PCM") {

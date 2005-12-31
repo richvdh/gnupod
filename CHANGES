@@ -3,11 +3,20 @@ GNUpod 0.98.4 - codename
 Summary
 -------
 
+- Support for iPod-Video function
+  gnupod_addsong.pl can now read/add .mp4 files
+  It may also be able to convert .avi files into .mp4 IF your
+  ffmpeg installation has working AAC Support.
+
+  Try: gnupod_addsong.pl --decode=video *.avi
+
 - Fixes a playlist problem with iTunes5 (new 100er Mhods)
 
 - '--encode' didn't remove tempfiles from /tmp .. works again
 
 - Added Support for .ape (MAC - http://sourceforge.net/projects/mac-port/) files (use --decode=foo)
+
+- Added 'mediatype' support (for video) and stricter mhit parsing (for very old databases)
 
 
 GNUpod 0.98.3 - codename 'Socke'
