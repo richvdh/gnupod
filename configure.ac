@@ -111,6 +111,18 @@ done
 echo " done"
 
 
+echo $ECHO_N "checking for ffmpeg with AAC support... "
+ffmpeg -formats 2>&1|egrep " aac" > /dev/null
+ if test $? = 0; then
+  echo "found!"
+  ENCS="mpeg4 $ENCS"
+ else
+  echo "not found, --decode=video won't work"
+  ENCS="(mpeg4/no ffmpeg with aac support found) $ENCS"
+ fi
+
+
+
 
 ## Whoops: We dont check for 'mac' because solaris has an /usr/bin/mac .. and that's not what we are searching
 
