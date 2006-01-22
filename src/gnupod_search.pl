@@ -1,5 +1,5 @@
 ###__PERLBIN__###
-#  Copyright (C) 2002-2005 Adrian Ulrich <pab at blinkenlights.ch>
+#  Copyright (C) 2002-2006 Adrian Ulrich <pab at blinkenlights.ch>
 #  Part of the gnupod-tools collection
 #
 #  URL: http://www.gnu.org/software/gnupod/
@@ -219,7 +219,7 @@ Usage: gnupod_search.pl [-h] [-m directory] File1 File2 ...
    -i, --id=ID             search songs by ID
    -g, --genre=GENRE       search songs by Genre
    -c, --playcount=COUNT   search songs by Playcount
-   -s, --rating=COUNT      search songs by Rating (10 is one star, 20 two, etc.)
+   -s, --rating=COUNT      search songs by Rating (20 is one star, 40 two, etc.)
    -R, --podcastrss=RSS    search songs by RSS
    -G, --podcastguid=GUID  search songs by GUID
    -o, --match-once        Search doesn't need to match multiple times (eg. -a & -l)
