@@ -145,14 +145,14 @@ sub xescaped {
 ###############################################################
 # Create a new child (for playlists or file)
 # This is XML-Safe -> XDAT->{foo}->{data} or XDAT->{files}
-# is XML ENCODED UTF8 DATA !!!!!!!!!!!!
+# is XML ENCODED UTF8 DATA
 sub mkfile {
 	my($hr, $magic) = @_;
 	my $r = undef;
 
 	foreach my $base (keys %$hr) {
 		$r .= "<".xescaped($base)." ";
-		#Copy the has, because we do something to it
+		#Copy the hash, because we do something to it
 		my %hcopy = %{$hr->{$base}};
 
 		#Create the id item if requested

@@ -1048,8 +1048,9 @@ read($fh, $buffer, $anz);
 
 #############################################
 # Get a playlist (Should be called get_mhyp, but it does the whole playlist)
+# $opts->{nomplskip} == 1 => Skip FastSkip of MPL. Workaround for broken files written by Anapod..
 sub get_pl {
- my($pos) = @_;
+ my($pos,$opts) = @_;
 
  my %ret_hash = ();
  my @pldata = ();
@@ -1063,7 +1064,7 @@ sub get_pl {
       $ret_hash{plid}  = get_int($pos+28,4);  #UID if the playlist..
  
 #Its a MPL, do a fast skip  --> We don't parse the mpl, because we know the content anyway
-if($ret_hash{type}) {
+if($ret_hash{type} && ($opts->{nomplskip} != 1) ) {
  return ($pos+$mhyp_len, {type=>1}) 
 }
    $pos += $header_len; #set pos to start of first mhod

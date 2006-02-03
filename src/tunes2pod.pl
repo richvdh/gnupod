@@ -37,7 +37,7 @@ print "tunes2pod.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
 GetOptions(\%opts, "version", "force", "help|h", "mount|m=s");
-GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', force=>'b'}, "tunes2pod");
+GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', force=>'b', anapodworkaround=>'b'}, "tunes2pod");
 
 
 usage() if $opts{help};
@@ -114,13 +114,16 @@ print STDOUT "\r> Found $ff files, ok\n";
 #Now get each playlist
 print STDOUT "> Found ".($pl_childs-1)." playlists:\n";
 for(my $i=0;$i<$pl_childs;$i++) {
-  ($pl_pos, $href) = GNUpod::iTunesDB::get_pl($pl_pos); #Get an mhyp + all child mhods
+  ($pl_pos, $href) = GNUpod::iTunesDB::get_pl($pl_pos, {nomplskip=> $opts{anapodworkaround} }); #Get an mhyp + all child mhods
   if($pl_pos == -1) {
    print STDERR "*** FATAL: Expected to find $pl_childs playlists,\n";
    print STDERR "*** but i failed to get nr. $i\n";
    print STDERR "*** Your iTunesDB maybe corrupt or you found\n";
    print STDERR "*** a bug in GNUpod. Please send this\n";
    print STDERR "*** iTunesDB to pab\@blinkenlights.ch\n\n";
+   print STDERR "!!! If you are an 'Anapod' user, try to set\n";
+   print STDERR "!!!   tunes2pod.anapodworkaround=1\n";
+   print STDERR "!!! inside ~/.gnupodrc and re-run the command.\n";
    exit(1);
   }
   next if $href->{type}; #Don't list the MPL
