@@ -336,7 +336,6 @@ sub mk_mhit {
 		$ret .= pack("V", _icl($file_hash{mediatype}));#_icl($file_hash{mediatype}));
 		$ret .= pack("H63");  
     
-     warn ":: $file_hash{mediatype} : ".length($ret)."\n";         
 return $ret;
 }
 

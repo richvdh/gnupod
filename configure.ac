@@ -1,4 +1,4 @@
-AC_INIT(GNUpod, 0.98.4, bug-gnupod@nongnu.org)
+AC_INIT(GNUpod, 0.99, bug-gnupod@nongnu.org)
 
 echo $ECHO_N $PACKAGE_VERSION > .gnupod_version
 
@@ -18,7 +18,7 @@ exit 1
 fi
 
 dnl Basic modules
-ALL_MODULES="Digest::MD5 XML::Parser Unicode::String MP3::Info File::Copy"
+ALL_MODULES="Digest::MD5 XML::Parser Unicode::String MP3::Info File::Copy LWP::UserAgent HTTP::Request"
 OPT_MODULES="Audio::FLAC::Header Ogg::Vorbis::Header::PurePerl"
 
 dnl Ugly check for modules

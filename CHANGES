@@ -1,4 +1,4 @@
-GNUpod 0.98.4 - codename
+GNUpod 0.99 - codename ''
 
 Summary
 -------
@@ -12,6 +12,9 @@ Summary
 
   Try: gnupod_addsong.pl --decode=video *.avi
 
+- Last.fm support:
+   GNUpod can now feed your playcounts into your last.fm account (http://last.fm)
+   See README.lastfm for details
 
 - Fixes a playlist problem with iTunes5 (new 100er Mhods)
 
@@ -20,6 +23,15 @@ Summary
 - Added Support for .ape (MAC - http://sourceforge.net/projects/mac-port/) files (use --decode=foo)
 
 - Added 'mediatype' support (for video) and stricter mhit parsing (for very old databases)
+
+- Workaround for broken files written by 'Anapod'
+  Set 'tunes2pod.anapodworkaround=1' inside ~/.gnupodrc
+  to enable it. Enabling it slows down tunes2pod.pl
+  (because it deactivates the fast-skip of the (useless)
+   MasterPlaylist)
+
+- QTFile.pm: rseek() now refuses to return more than 1024 kb. Fixes possible out-of-memory problems
+             with broken files.
 
 
 GNUpod 0.98.3 - codename 'Socke'

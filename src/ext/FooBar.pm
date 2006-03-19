@@ -26,6 +26,9 @@ use strict;
 use Digest::MD5;
 use File::Glob ':glob';
 
+use constant MACTIME => 2082844800; #Mac EPOCH offset
+
+
 #####################################################################
 # Get paths / files
 sub connect {
@@ -49,6 +52,7 @@ if(-d $opth->{mount}) {
   $rr->{playcounts}     = "$rr->{mountpoint}/iPod_Control/iTunes/Play Counts";
   $rr->{itunesdb_md5}   = "$rr->{etc}/.itunesdb_md5";
   $rr->{onthego_invalid}  = "$rr->{etc}/.onthego_invalid";
+  $rr->{lastfm_queue}   = "$rr->{etc}/lastfmqueue.txt";
   $rr->{onthego}        = "$rr->{mountpoint}/iPod_Control/iTunes/OTGPlaylist*";
   $rr->{status}         = undef;
 
@@ -58,7 +62,7 @@ if(-d $opth->{mount}) {
   do_itbsync($rr) if(!$opth->{_no_it_sync} && !$opth->{_no_sync} && _itb_needs_sync($rr));
  
  #Do an OTG Sync if not disabled and needed
-  do_otgsync($rr) if(!$opth->{_no_otg_sync} && !$opth->{_no_sync} && _otg_needs_sync($rr));
+  do_otgsync($rr) if(!$opth->{_no_otg_sync} && !$opth->{_no_sync} && (_otg_needs_sync($rr) || -e $rr->{lastfm_queue}))
 }
 elsif($opth->{mount}) {
  $rr->{status} = "$opth->{mount} is not a directory";

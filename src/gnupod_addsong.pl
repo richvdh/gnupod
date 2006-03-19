@@ -31,7 +31,7 @@ use File::Copy;
 use File::Glob ':glob';
 use XML::Parser; #Loaded by XMLhelper, but hey..
 
-use constant MACTIME => 2082931200; #Mac EPOCH offset
+use constant MACTIME => GNUpod::FooBar::MACTIME;
 use vars qw(%opts %dupdb_normal %dupdb_lazy %dupdb_podcast $int_count %podcast_infos %per_file_info);
 
 print "gnupod_addsong.pl Version ###__VERSION__### (C) Adrian Ulrich\n";

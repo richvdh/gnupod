@@ -43,6 +43,9 @@ use constant VIDEO_ITEM => 'vide';
 use constant MEDIATYPE_VIDEO => 0x02;
 use constant MEDIATYPE_AUDIO => 0x01;
 
+#Do not kill the host by allocating toomuch memory
+use constant MAX_RSEEK_DATA => 1024*1024;
+
 #Some static def
 $hchild{'moov'} = 8;
 $hchild{'trak'} = 8;
@@ -282,6 +285,15 @@ sub get_string_oct {
 sub rseek {
 	my($offset, $len) = @_;
 	return undef if $len < 0;
+	
+	if($len < 0) {
+		warn "QTFile.pm: rseek($offset,$len) : POSSIBLE BUG OR BROKEN FILE: Calling rseek with \$len == 0 isn't such a good idea?!\n";
+	}
+	elsif($len > MAX_RSEEK_DATA) {
+		warn "QTFile.pm: rseek($offset,$len) : POSSIBLE BUG OR BROKEN FILE: Ouch! rseek refuses to return $len bytes; Request cropped to ".MAX_RSEEK_DATA."\n";
+		$len = MAX_RSEEK_DATA;
+	}
+	
 	my $buff;
 	seek(QTFILE, $offset, 0);
 	read(QTFILE, $buff, $len);
