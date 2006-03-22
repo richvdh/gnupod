@@ -367,7 +367,6 @@ sub resolve_podcasts {
 		}
 	}
 
-#print "* [HTTP] ===> Checking parsed Podcast information <===\n";
 foreach my $key (keys(%podcast_infos)) {
 	my $cref = $podcast_infos{$key};
 	foreach my $podcast_item (@$cref) {

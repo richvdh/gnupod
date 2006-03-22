@@ -1341,6 +1341,20 @@ sub readOTG {
 	return @content;
 }
 
+########################################################
+# Read timezone from Preferences file
+sub getTimezone {
+	my($prefs) = @_;
+	my $buff = 0x00;
+	open(PREFS, $prefs) or return undef;
+	seek(PREFS, (0xb10),0);
+	read(PREFS, $buff, 1);
+	close(PREFS);
+	
+	my $tzx = (GNUpod::FooBar::shx2int($buff));
+	my $time_offset = ($tzx - 0x19)*30*60; #Seconds
+	return int($time_offset);
+}
 
 ########################################################
 # Open the iTunesDB file..

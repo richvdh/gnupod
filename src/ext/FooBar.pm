@@ -25,6 +25,7 @@ package GNUpod::FooBar;
 use strict;
 use Digest::MD5;
 use File::Glob ':glob';
+use GNUpod::iTunesDB;
 
 use constant MACTIME => 2082844800; #Mac EPOCH offset
 
@@ -56,6 +57,7 @@ if(-d $opth->{mount}) {
   $rr->{onthego}        = "$rr->{mountpoint}/iPod_Control/iTunes/OTGPlaylist*";
   $rr->{status}         = undef;
 
+	$rr->{tzdiff} =         GNUpod::iTunesDB::getTimezone($opth->{mount}."/iPod_Control/Device/Preferences");
   _check_casesensitive($rr->{mountpoint}); #Check if somebody mounted the iPod caseSensitive
       
  #Do an iTunesDB Sync if not disabled and needed

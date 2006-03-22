@@ -31,7 +31,7 @@ use Getopt::Long;
 
 use File::Glob ':glob';
 
-use vars qw(%opts @keeper $plcref %lastfm_data);
+use vars qw(%opts @keeper $plcref %lastfm_data $lastfm_timezone_hack);
 
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
@@ -75,6 +75,7 @@ sub go {
 		warn "Done!\n";
 	}
 	else {
+		$lastfm_timezone_hack = -1* $con->{tzdiff};
 		#Read on The Go list written by the iPod
 		my @xotg    = GNUpod::iTunesDB::readOTG($con->{onthego});
 		
@@ -197,11 +198,21 @@ sub newfile {
 			my $seconds = int($el->{file}->{time}/1000);
 			for(1..$playcount) {
 				#Fixme: We (currently) do not care about the Timezone on the iPod
-				my $gmtime = $el->{file}->{lastplay} - $seconds*($_-1) - GNUpod::FooBar::MACTIME; #fixme: this may cause collisions
+				my $gmtime = $el->{file}->{lastplay} - GNUpod::FooBar::MACTIME + $lastfm_timezone_hack; #fixme: this may cause collisions
 				my @gmt    = gmtime($gmtime);
 				my $lfmtime = sprintf("%04d-%02d-%02d %02d:%02d:%02d", $gmt[5]+1900, $gmt[4]+1, $gmt[3], $gmt[2], $gmt[1], $gmt[0]);
-				$lastfm_data{$gmtime} =   {artist => $el->{file}->{artist}, album => $el->{file}->{album}, 
-				                                  title => $el->{file}->{title}, length => $el->{file}->{time}, xplaydate=>$lfmtime};
+				my $steptime = int($gmtime/10); #10-seconds 'resulution'
+				
+				#Search a free place for this song somewhere in our queue.
+				#This is needed because the song may be played multiple times but we got only
+				#the latest playtime from the iPod's database.
+				while($lastfm_data{$steptime}) {
+					$steptime--; #= 10 seconds
+					print "=> Ouch! Adjusting Steptime to $steptime for ".$el->{file}->{title}."\n";
+				}
+				
+				$lastfm_data{$steptime} =   {artist => $el->{file}->{artist}, album => $el->{file}->{album}, 
+				                             title => $el->{file}->{title}, length => $el->{file}->{time}, xplaydate=>$lfmtime};
 				print "LASTFM:    => $lfmtime   $el->{file}->{title} $el->{file}->{lastplay} $el->{file}->{time}\n";
 			}
 		}
