@@ -82,10 +82,9 @@ sub go {
 # Eventhandler for FILE items
 sub newfile {
  my($el) =  @_;
-my $matched;
+my $matched = undef;
                     # 2 = mount + view (both are ALWAYS set)
 my $ntm = keys(%opts)-2-$opts{'match-once'}-$opts{delete}-(defined $opts{rename});
-
 
 foreach my $opx (keys(%opts)) {
 	next if $opx =~ /mount|match-once|delete|view|rename/; #Skip this
@@ -161,7 +160,7 @@ sub pview {
  
  #Build refs
  my %qh = ();
- $qh{n}{k} = $orf->{songnum};   $qh{n}{w} = 4;  $qh{t}{n} = "SNUM";
+ $qh{n}{k} = $orf->{songnum};   $qh{n}{w} = 4;  $qh{n}{n} = "SNUM";
  $qh{t}{k} = $orf->{title};                     $qh{t}{s} = "TITLE";
  $qh{a}{k} = $orf->{artist};                    $qh{a}{s} = "ARTIST";
  $qh{r}{k} = $orf->{rating};    $qh{r}{w} = 4;  $qh{r}{s} = "RTNG";

@@ -1,4 +1,4 @@
-GNUpod 0.99 - codename ''
+GNUpod 0.99 - codename 'Pentaru'
 
 Summary
 -------
@@ -16,7 +16,7 @@ Summary
    GNUpod can now feed your playcounts into your last.fm account (http://last.fm)
    See README.lastfm for details
 
-- Fixes a playlist problem with iTunes5 (new 100er Mhods)
+- Fixes a playlist problem with iTunes5 (new 100 Mhods)
 
 - '--encode' didn't remove tempfiles from /tmp .. works again
 
@@ -33,6 +33,9 @@ Summary
 - QTFile.pm: rseek() now refuses to return more than 1024 kb. Fixes possible out-of-memory problems
              with broken files.
 
+- Fixed an obscure gnupod_search.pl bug causing some weird search results.
+
+- Added DESTDIR support (make DESTDIR=/tmp/bla install) and removed slackpkg target (obsoleted)
 
 GNUpod 0.98.3 - codename 'Socke'
 

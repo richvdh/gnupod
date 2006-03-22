@@ -8,32 +8,31 @@
 use strict; #of course :)
 
 my %opts = ();
+
+my $DST             = $ARGV[5] || "/";  #DESTDIR
 $opts{MODE}         = $ARGV[0];  #INSTALL MKPGK or REMOVE
 $opts{perlbin}      = $ARGV[1];  #Path to perl
 $opts{bindir}       = $ARGV[2];  #Bindir
 $opts{infodir}      = $ARGV[3];  #Infodir
 $opts{mandir}       = $ARGV[4];  #Mandir
 
+
 my $VINSTALL = `cat .gnupod_version`; #Version of this release
 
 #Check if everything looks okay..
 die "File .gnupod_version does not exist, did you run configure?\n" unless $VINSTALL;
-die "Expected 5 arguments, got ".int(@ARGV)."\n make will run me, not you! stupid human!" if !$opts{mandir} || $ARGV[5];
+die "Expected 5 arguments, got ".int(@ARGV)."\n make will run me, not you! stupid human!" if !$opts{mandir} || $ARGV[6];
 die "Strange Perl installation, no \@INC! Can't install Perl-Module(s), killing myself..\n" if !$INC[0];
 
 if($opts{MODE} eq "INSTALL") {
  #ok, we are still alive, let's blow up the system ;)
- print "Installing GNUpod $VINSTALL using gnupod_install 0.24\n";
- install_scripts("src/*.pl", $opts{bindir});
- install_pm("src/ext", "GNUpod", $opts{perlbin}, "/");
- install_info("doc/gnupod.info", $opts{infodir});
- install_man("man/*.gz", $opts{mandir}."/man1");
- killold("$opts{bindir}/gnupod_delete.pl") if -e "$opts{bindir}/gnupod_delete.pl"; #Kill legacy apps.. ;)
+ print "Installing GNUpod $VINSTALL using gnupod_install 0.25\n";
+ install_scripts("src/*.pl", $DST.$opts{bindir});
+ install_pm("src/ext", "GNUpod", $opts{perlbin}, $DST);
+ install_info("doc/gnupod.info", $DST.$opts{infodir});
+ install_man("man/*.gz", $DST.$opts{mandir}."/man1");
+ killold("$DST$opts{bindir}/gnupod_delete.pl") if -e "$DST$opts{bindir}/gnupod_delete.pl"; #Kill legacy apps.. ;)
  print "done!\n";
-}
-elsif($opts{MODE} eq "MKPKG") { #Creates a slackpkg.. this just installs the scripts (we need ncp()) and the modules
- install_scripts("src/*.pl", $opts{bindir});
- install_pm("src/ext", "GNUpod", $opts{perlbin}, "Z0NK");
 }
 elsif($opts{MODE} eq "REMOVE") {
  print "Removing GNUpod $VINSTALL...\n";
@@ -70,7 +69,9 @@ sub killold {
 #Install Docs
 sub install_info {
 my($file, $infodir) = @_;
-print "Installing info-documentation\n";
+
+$infodir = _recmkdir($infodir);#create info directory
+print "Installing info-documentation ($infodir)\n";
 if(system("install-info" ,"--info-dir=$infodir", $file)) {
  print "** install-info failed, documentation *NOT* installed\n";
  print "** See 'doc/gnupod.html' for an HTML version...\n";
@@ -174,11 +175,13 @@ return undef;
 sub install_pm {
 my($basedir, $modi, $perlbin, $pfix) = @_;
 
-mkdir("$pfix"."$INC[0]/$modi", 0755); #Create $INC[0]/GNUpod
-print "Installing Modules at $pfix$INC[0]/$modi\n";
+my $fullINCdir = "$pfix"."$INC[0]/$modi";
+my $stepINC    = _recmkdir($fullINCdir);
+
+print "Installing Modules at $stepINC\n";
 
  foreach my $file (glob("$basedir/*.pm")) {
-  my $dest = "$pfix"."$INC[0]/$modi/".fof($file);
+  my $dest = $stepINC.fof($file);
   print " > $file --> $dest\n";
   ncp($file, $dest);
   chmod 0444, $dest; #Try to chown and chmod .. root should be owner of this modules..
@@ -214,3 +217,13 @@ sub fof
  return $dull[int(@dull)-1];
 }
 
+sub _recmkdir {
+	my($dir) = @_;
+	my $step = undef;
+	foreach(split(/\//,$dir)) {
+		$step .= $_."/";
+		next if -e $step;
+		mkdir($step, 0755) or die "_recmkdir($dir): Failed to create $step: $!\n";
+	}
+	return $step;
+}
