@@ -192,8 +192,7 @@ sub newfile {
 		if($plcref->{lastplay}{int(@keeper)-1}) {
 			$el->{file}->{lastplay}  = $plcref->{lastplay}{int(@keeper)-1};
 		}
-		
-		
+
 		if($playcount > 0 && $opts{lastfm_enabled}) {
 			my $seconds = int($el->{file}->{time}/1000);
 			for(1..$playcount) {

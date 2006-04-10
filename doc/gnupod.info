@@ -1,6 +1,6 @@
-This is gnupod.info, produced by makeinfo version 4.7 from gnupod.texi.
+This is gnupod.info, produced by makeinfo version 4.8 from gnupod.texi.
 
-   Copyright (C) 2002, 2003, 2004 Adrian Ulrich
+   Copyright (C) 2002, 2003, 2004, 2005 and 2006 Adrian Ulrich
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -341,15 +341,18 @@ File: gnupod.info,  Node: Firmware update,  Prev: Convert your Mac iPod,  Up: In
 Firmware or/and the documentation told you to do this **
 
    Setup Firewire (or USB) as described in 'Using FireWire with
-GNU/Linux', load the modules and make sure sbp2 detected your iPod.  Do
-not try to mount the iPod. We assume your iPod at `/dev/sda'.
+GNU/Linux', load the modules and make sure sbp2 detected your iPod.
+Mount the iPod and run `mktunes.pl' to bring the device into a 'clean'
+state. Unmount the iPod after mktunes.pl finished but do *not* unplug
+the iPod. Ready? Ok, we assume your iPod is `/dev/sda':
 
    First you need to get a new Firmware.  You can download the Update
 from http://www.apple.com/ipod/download/ , take care to choose the Mac
 OSX Version!
 
    While the huge image is about to download, grab 'dmg2iso.pl' from
-`http://blinkenlights.ch/gnupod/dmg2iso.pl' and make sure that your
+`http://blinkenlights.ch/gnupod/dmg2iso.pl' (or try the C++ version
+from `http://www.binaryriot.org/cisc/dmg2iso') and make sure that your
 kernel supports HFS+. (Or/And use the script from
 http://www.ubuntu-de.org/wiki/multimedia:ipod_mit_linux_verwenden:firmwareupdate_unter_linux)
 (Note: This version of dmg2iso was found at
@@ -1255,29 +1258,29 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top855
-Node: Requirements1446
-Node: Installing GNUpod1969
-Node: Installation of GNUpod2396
-Node: Using FireWire with GNU/Linux3514
-Node: Convert your Mac iPod6930
-Node: Firmware update12160
-Node: Using GNUpod14904
-Node: Preparation15793
-Node: Configuration16525
-Node: Add files16982
-Node: Search files18464
-Node: Remove files18950
-Node: Edit tags19251
-Node: Creating playlists19796
-Node: Unplug the iPod22271
-Node: Recovering files23180
-Node: Coexistence24075
-Node: Problems25545
-Node: GNUtunesDB25928
-Node: Get rid of '-m'27434
-Node: Known bugs and limitations27719
-Node: Reporting Bugs28010
-Node: GNU Free Documentation License28458
+Node: Top870
+Node: Requirements1461
+Node: Installing GNUpod1984
+Node: Installation of GNUpod2411
+Node: Using FireWire with GNU/Linux3529
+Node: Convert your Mac iPod6945
+Node: Firmware update12175
+Node: Using GNUpod15121
+Node: Preparation16010
+Node: Configuration16742
+Node: Add files17199
+Node: Search files18681
+Node: Remove files19167
+Node: Edit tags19468
+Node: Creating playlists20013
+Node: Unplug the iPod22488
+Node: Recovering files23397
+Node: Coexistence24292
+Node: Problems25762
+Node: GNUtunesDB26145
+Node: Get rid of '-m'27651
+Node: Known bugs and limitations27936
+Node: Reporting Bugs28227
+Node: GNU Free Documentation License28675
 
 End Tag Table

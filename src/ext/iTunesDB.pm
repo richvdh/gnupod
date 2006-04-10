@@ -989,7 +989,7 @@ sub get_mhod {
 			$foo = undef;
 		}
 		else { #A normal Mhod, puh!
-			_itBUG("Assert \$xl < \$ml failed! ($xl => $ml)",1) if $xl >= $ml;
+			_itBUG("Assert \$xl < \$ml failed! ($xl => $ml) [type: $mty]",1) if $xl >= $ml;
 			$foo = get_string($seek+($ml-$xl), $xl); #String of entry
 			$foo = Unicode::String::byteswap2($foo);
 			$foo = Unicode::String::utf16($foo)->utf8;			
@@ -1257,7 +1257,7 @@ sub readPLC {
  
  
  my $offset    = get_int(4 ,4,*RATING); #How long is the header?
- my $chunksize = get_int(8, 4,*RATING); #How long is one entry? (16 for V2 Firmware, 12 for v1)
+ my $chunksize = get_int(8, 4,*RATING); #How long is one entry? (20 for iTunes 0xD / 16 for V2 Firmware, 12 for v1)
  my $chunks    = get_int(12,4,*RATING); #How many chunks do we have?
  
  my $buff;
@@ -1267,9 +1267,7 @@ sub readPLC {
  my $bookmark = 0;
  my $lastply  = 0;
  my $chunknum = 0;
-
- 
- 
+ my $itx = 0; #Unknown
 
 
  
@@ -1295,7 +1293,14 @@ sub readPLC {
    $rating = GNUpod::FooBar::shx2int($buff);
   }
   
-#print " aka $chunknum] \n";
+	if($chunksize >= 20) {
+		seek(RATING, $offset+16,0);
+		if (read(RATING,$buff,4) != 4) { _itBUG("Read failed at $offset while reading ITX ($chunks/$chunksize)"); last; }
+		$itx = GNUpod::FooBar::shx2int($buff);
+	}
+	
+#	printf("\@ 0x%X ||| PC: $playc / LP: $lastply / BM: $bookmark / RTNG: $rating / ITX: $itx\n",$offset);
+	
 
   $pcrh{playcount}{$chunknum} = $playc    if $playc;
   $pcrh{rating}{$chunknum}    = $rating   if $rating;
@@ -1304,7 +1309,6 @@ sub readPLC {
 #	warn "DEBUG: $rating // $chunknum\n" if $rating;
   $offset += $chunksize; #Nex to go!
  }
-
 close(RATING);
  return \%pcrh;
 }
