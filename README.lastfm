@@ -1,0 +1,30 @@
+GNUpod 0.99 (and later) includes last.fm support.
+
+
+What you'll need:
+=================
+
+ * An iPod with 'PlayCounts/On-The-Go' support
+ * last.fm account (Free registration at http://last.fm)
+
+
+Configuration
+=================
+
+Create/Edit your gnupodrc file (~/.gnupodrc) and
+set lastfm_enabled, lastfm_user and lastfm_password.
+
+An Example:
+
+$ grep lastfm_ ~/.gnupodrc
+lastfm_enabled  = 1
+lastfm_user     = myusername
+lastfm_password = lastfmpassword
+
+
+Usage
+=================
+
+GNUpod will now upload data to last.fm
+after parsing (finding) an 'Play Counts' file
+on your ipod.
