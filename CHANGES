@@ -37,6 +37,10 @@ Summary
 
 - Added DESTDIR support (make DESTDIR=/tmp/bla install) and removed slackpkg target (obsoleted)
 
+
+
+*** OLD STUFF ***
+
 GNUpod 0.98.3 - codename 'Socke'
 
 Summary
@@ -55,7 +59,6 @@ Summary
 => Please note: Podcast support is still in BETA and 'real podcasts' are currently not supported
 
 
-*** OLD STUFF ***
 
 GNUpod 0.98.2 - codename "Jigen"
 
