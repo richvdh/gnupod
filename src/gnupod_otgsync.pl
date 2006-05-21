@@ -44,6 +44,7 @@ GNUpod::FooBar::GetConfig(\%opts, {nosync=>'b', lastfm_enabled=>'b', lastfm_user
 
 if($opts{top4secret} && !$opts{nosync}) {
  go();
+ exit(0);
 }
 elsif($opts{top4secret}) { #&& $opts{nosync}
  print "> On-The-Go sync disabled by configuration, skipping work...\n";
@@ -51,6 +52,7 @@ elsif($opts{top4secret}) { #&& $opts{nosync}
 }
 else {
  usage("$0 isn't for humans :-)\nGNUpod::FooBar.pm has to execute me\n");
+# exit(1);
 }
 
 ####################################################
@@ -95,6 +97,7 @@ sub go {
 		#SetSync for *ALL*
 		GNUpod::FooBar::setsync($con);
 		#..and submit lastfm data if enabled in config file
+
 		lfmworker($con->{lastfm_queue}) if $opts{lastfm_enabled}
 	}
 }

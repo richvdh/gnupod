@@ -1161,9 +1161,10 @@ if($header_size >= NEW_ITUNESDB_MHIT_HEADERSIZE) {
 		$ret{mhitpodcastinfo}=1 if get_int($sum+167,1);
 	}
 	elsif($has_bookmark_flag != 0x00) {
-		_itBUG("Whoops! Funny data found, please report this stuff:",undef);
-		print "===>DEBUG OUTPUT FOR UNKNOWN BMFLAG STUFF: ".unpack("H*",pack("V",get_int($sum+164,4)))."\n";
-		print "===>Don't know how to parse this stuff, ignoring it...\n";
+	## Fixme: write code to parse this
+	#	_itBUG("Whoops! Funny data found, please report this stuff:",undef);
+	#	print "===>DEBUG OUTPUT FOR UNKNOWN BMFLAG STUFF: ".unpack("H*",pack("V",get_int($sum+164,4)))."\n";
+	#	print "===>Don't know how to parse this stuff, ignoring it...\n";
 	}
 }
 

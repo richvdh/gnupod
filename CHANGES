@@ -12,10 +12,6 @@ Summary
 
   Try: gnupod_addsong.pl --decode=video *.avi
 
-- Last.fm support:
-   GNUpod can now feed your playcounts into your last.fm account (http://last.fm)
-   See README.lastfm for details
-
 - Fixes a playlist problem with iTunes5 (new 100 Mhods)
 
 - '--encode' didn't remove tempfiles from /tmp .. works again
