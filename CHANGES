@@ -1,4 +1,13 @@
+GNUpod 0.99.1 - codename ''
+
+Summary
+-------
+
+- QTFile.pm: Search tracklength inside 'mdhd' as a fallback
 GNUpod 0.99 - codename 'Pentarou'
+
+
+*** OLD STUFF ***
 
 Summary
 -------
@@ -33,9 +42,6 @@ Summary
 
 - Added DESTDIR support (make DESTDIR=/tmp/bla install) and removed slackpkg target (obsoleted)
 
-
-
-*** OLD STUFF ***
 
 GNUpod 0.98.3 - codename 'Socke'
 

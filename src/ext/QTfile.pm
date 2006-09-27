@@ -173,7 +173,7 @@ my @METADEF = ("album",   "\xA9alb",
 #Search for a TIME index: first sound, then video
  foreach my $cidentify ( ($sound_index, $video_index) ) {
   next if $cidentify < 0; #Invalid identifyer
-  if( my $cDat = $lx{metadat}{'::moov::mvhd'}[$cidentify] ) {
+  if( my $cDat = ( $lx{metadat}{'::moov::mvhd'}[$cidentify] or $lx{metadat}{'::moov::trak::mdia::mdhd'}[$cidentify]) ) {
    #Calculate the time... 
    $reth{time} = int( get_string_oct(8,4,$cDat)/
                       get_string_oct(4,4,$cDat)*1000 );

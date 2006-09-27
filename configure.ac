@@ -1,4 +1,4 @@
-AC_INIT(GNUpod, 0.99, bug-gnupod@nongnu.org)
+AC_INIT(GNUpod, 0.99.1-rc1, bug-gnupod@nongnu.org)
 
 echo $ECHO_N $PACKAGE_VERSION > .gnupod_version
 
@@ -22,7 +22,7 @@ ALL_MODULES="Digest::MD5 XML::Parser Unicode::String MP3::Info File::Copy LWP::U
 OPT_MODULES="Audio::FLAC::Header Ogg::Vorbis::Header::PurePerl"
 
 dnl Ugly check for modules
-IFS=" "
+###IFS=" " Not needed with new autoconf?!
 for i in $ALL_MODULES
 do
 

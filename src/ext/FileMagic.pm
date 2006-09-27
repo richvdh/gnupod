@@ -138,7 +138,7 @@ sub __is_qt {
  
  my %rh = ();
  if($ret->{time} < 1) {
-  warn "QTfile parsing failed, (expected $ret->{time} >= 0)!\n";
+  warn "QTfile parsing failed, (expected \$ret->{time} >= 0)!\n";
   warn "Looks like we got no sound stream.. hmm..\n";
   warn "You found a bug - send an email to: pab\@blinkenlights.ch\n";
   return undef;
