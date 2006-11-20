@@ -192,12 +192,16 @@ iPod will not be detectet while loading sbp2. Simply run
 http://www.garloff.de/kurt/linux/rescan-scsi-bus.sh)
 
    You can now mount the iPod:
-     mount -t vfat /dev/sda2 /mnt/ipod -o sync
+     mount -t vfat /dev/sda2 /mnt/ipod
 
    It's a good idea to add a line like this to the fstab
-     /dev/sda2   /mnt/ipod   vfat   defaults,user,noauto,sync,umask=000
+     /dev/sda2   /mnt/ipod   vfat   defaults,user,noauto,umask=000
 
-   Note: As you can see, we assume an FAT32/VFAT formatted iPod
+   Note: Avoid adding the 'sync' mount-option for flash based iPods
+(Shuffle, Nano) because flash drives have a limited number of write
+cycles.
+
+   Note2: As you can see, we assume an FAT32/VFAT formatted iPod
 (`-t vfat'), if you own a HFS+ formatted iPod (aka. Mac-iPod) please
 have a look at the next section 'Convert your Mac iPod' before using
 `mount'.
@@ -329,7 +333,7 @@ seconds. While the iPod is booting, press (and hold) |<<+>>| (=Forced
 Diskmode))
 
    It's a good idea to edit `/etc/fstab' and add a line for the iPod:
-     /dev/sda2    /mnt/ipod    vfat    noauto,user  0 0
+     /dev/sda2   /mnt/ipod   vfat   defaults,user,noauto,umask=000
 
 
 File: gnupod.info,  Node: Firmware update,  Prev: Convert your Mac iPod,  Up: Installing GNUpod
@@ -1263,24 +1267,24 @@ Node: Requirements1461
 Node: Installing GNUpod1984
 Node: Installation of GNUpod2411
 Node: Using FireWire with GNU/Linux3529
-Node: Convert your Mac iPod6945
-Node: Firmware update12175
-Node: Using GNUpod15121
-Node: Preparation16010
-Node: Configuration16742
-Node: Add files17199
-Node: Search files18681
-Node: Remove files19167
-Node: Edit tags19468
-Node: Creating playlists20013
-Node: Unplug the iPod22488
-Node: Recovering files23397
-Node: Coexistence24292
-Node: Problems25762
-Node: GNUtunesDB26145
-Node: Get rid of '-m'27651
-Node: Known bugs and limitations27936
-Node: Reporting Bugs28227
-Node: GNU Free Documentation License28675
+Node: Convert your Mac iPod7078
+Node: Firmware update12319
+Node: Using GNUpod15265
+Node: Preparation16154
+Node: Configuration16886
+Node: Add files17343
+Node: Search files18825
+Node: Remove files19311
+Node: Edit tags19612
+Node: Creating playlists20157
+Node: Unplug the iPod22632
+Node: Recovering files23541
+Node: Coexistence24436
+Node: Problems25906
+Node: GNUtunesDB26289
+Node: Get rid of '-m'27795
+Node: Known bugs and limitations28080
+Node: Reporting Bugs28371
+Node: GNU Free Documentation License28819
 
 End Tag Table

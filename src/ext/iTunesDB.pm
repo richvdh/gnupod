@@ -40,7 +40,8 @@ use constant NEW_ITUNESDB_MHIT_HEADERSIZE => 244;
 #mk_mhod() will take care of lc() entries
 %mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, 
             "comment", 8, "category",9, "composer", 12, "group", 13, "desc",14,
-             "podcastguid",15, "podcastrss",16, "subtitle", 18);# "SPLPREF",50, "SPLDATA",51, "PLTHING", 100) ;
+             "podcastguid",15, "podcastrss",16, "subtitle", 18, "tvshow", 19, "tvepisode", 20,
+             "tvnetwork", 21, "albumartist", 22, "keywords", 24);# "SPLPREF",50, "SPLDATA",51, "PLTHING", 100) ;
  foreach(keys(%mhod_id)) {
   $mhod_array[$mhod_id{$_}] = $_;
  }
@@ -65,14 +66,17 @@ $SPLDEF{string_action}{4} = 'STARTWITH';
 $SPLDEF{string_action}{8} = 'ENDWITH';
 
 #Num. Actions
-$SPLDEF{num_action}{1}       = "eq";
+$SPLDEF{num_action}{0x01}    = "eq";
 $SPLDEF{num_action}{0x10}    = "gt";
+$SPLDEF{num_action}{0x20}    = "gtoreq"; #GreaterThanOrEQ
 $SPLDEF{num_action}{0x40}    = "lt";
+$SPLDEF{num_action}{0x80}    = "ltoreq"; #LessThanOrEQ
 $SPLDEF{num_action}{0x0100}  = "range";
 $SPLDEF{num_action}{0x0200}  = "within";
+$SPLDEF{num_action}{0x0400}  = "bbbfixme";
 
 #Within is completly different, thx to apple :p
-$SPLDEF{within_key}{86400} = "day";
+$SPLDEF{within_key}{86400}   = "day";
 $SPLDEF{within_key}{86400*7} = "week";
 $SPLDEF{within_key}{2628000} = "month";
 
@@ -101,6 +105,10 @@ $SPLDEF{field}{31} = "compilation";
 $SPLDEF{field}{35} = "bpm";
 $SPLDEF{field}{39} = "GROUP";
 $SPLDEF{field}{40} = "playlist";
+$SPLDEF{field}{54} = "DESCRIPTION";
+$SPLDEF{field}{55} = "CATEGORY";
+$SPLDEF{field}{57} = "podcast";
+$SPLDEF{field}{60} = "aaafixme"; #Unknown field! Looks like INT
 
 
 #Checkrule (COMPLETE)
@@ -314,26 +322,26 @@ sub mk_mhit {
     $ret .= pack("V");                                      #hardcoded space ? (Apple DRM id?)
     $ret .= pack("V", _icl($file_hash{addtime}));           #File added @
     $ret .= pack("V", _icl($file_hash{bookmark}));          #QTFile Bookmark
-    $ret .= pack("V",  0xDEADBABE);                         #DBID Prefix
-    $ret .= pack("V",  _icl($c_id));                        #DBID Postfix
+    $ret .= pack("V", (_icl($file_hash{dbid_lsw}) || 0xDEADBABE) );            #DBID Prefix (Cannot be 0x0)
+    $ret .= pack("V", (_icl($file_hash{dbid_msw}) || _icl($c_id) ));           #DBID Postfix (Cannot be 0x0)
     $ret .= pack("v");                                      #??
     $ret .= pack("v", _icl($file_hash{bpm},0xffff));        #BPM
-    $ret .= pack("v");                                      #Artwork Count ??
+    $ret .= pack("v", _icl($file_hash{artworkcnt}));        #Artwork Count
     $ret .= pack("v");                                      #ipodlinux-wiki => unk9
-    $ret .= pack("V9");
+    $ret .= pack("V", _icl($file_hash{artworksize}));       #Artwork Size
+    $ret .= pack("V8");
     #Assemble the BookMarkSFX flag
     my $bmflag = undef;
     $bmflag += 0x00010000 if $file_hash{bookmarkable};
     $bmflag += 0x00000100 if $file_hash{shuffleskip};
     $bmflag += 0x01000000 if $file_hash{mhitpodcastinfo};
     $bmflag += 0x00000002 if $bmflag;
-#print unpack("H*",pack("V",$bmflag))."\n";
     $ret .= pack("V", _icl($bmflag));                    #unk19 ??<bookmark><skip><activate>
-    $ret .= pack("V", 0xDEADBABE);
-    $ret .= pack("V", _icl($c_id));
-    
+    $ret .= pack("V", (_icl($file_hash{dbid2_lsw}) || 0xDEADBABE) );            #DBID2 Prefix (Cannot be 0x0)
+    $ret .= pack("V", (_icl($file_hash{dbid2_msw}) || _icl($c_id) ));           #DBID2 Postfix (Cannot be 0x0)
+
 		$ret .= pack("H64");
-		$ret .= pack("V", _icl($file_hash{mediatype}));#_icl($file_hash{mediatype}));
+		$ret .= pack("V", _icl($file_hash{mediatype}));;
 		$ret .= pack("H63");  
     
 return $ret;
@@ -885,11 +893,11 @@ my @ret = ();
      }
    }
    else { #Is INT (Or range)
-    my $xfint = get_x86_int($diff+56+4,4);
-    my $xtint = get_x86_int($diff+56+28,4);
-    $rs = "$xfint:$xtint";
-	$human_exp .= $SPLDEF{num_action}{$action};
-	$SPLDEF{num_action}{$action} or  _itBUG("Unknown a_action $action for $ftype (= GNUpod doesn't understand this SmartPlaylist)");
+		my $xfint = get_x86_int($diff+56+4,4);
+		my $xtint = get_x86_int($diff+56+28,4);
+		$rs = "$xfint:$xtint";
+		$human_exp .= $SPLDEF{num_action}{$action};
+		$SPLDEF{num_action}{$action} or  _itBUG("Unknown num_action $action for $ftype (= GNUpod doesn't understand this SmartPlaylist)");
    }
    
   $diff += $slen+56;
@@ -1147,11 +1155,19 @@ $ret{cdnum}      = get_int($sum+92,4);
 $ret{cds}        = get_int($sum+96,4);
 $ret{addtime}    = get_int($sum+104,4);
 $ret{bookmark}   = get_int($sum+108,4);
+$ret{dbid_lsw}   = get_int($sum+112,4); #Database ID#1
+$ret{dbid_msw}   = get_int($sum+116,4); #Database ID#2
 
 ## New iTunesDB data, appeared ~ iTunes 4.5
 if($header_size >= NEW_ITUNESDB_MHIT_HEADERSIZE) {
 	$ret{bpm} = get_int($sum+122,2);
+	$ret{artworkcnt} = get_int($sum+124,2);
+	$ret{artworksize} = get_int($sum+128,4);
+	$ret{dbid2_lsw} = get_int($sum+168,4);
+	$ret{dbid2_msw} = get_int($sum+172,4);
 	$ret{mediatype} = get_int($sum+208,4);
+	
+	
 	##This parses the ShuffleSkipt and Bookmarkable flag
 	$ret{shuffleskip} = $ret{bookmarkable} = 0;
 	my $has_bookmark_flag = get_int($sum+164,1);

@@ -3,6 +3,7 @@ GNUpod 0.99.1 - codename ''
 Summary
 -------
 
+- iTunesDB.pm: Added some new fields and SPL-Defs (Removes some warnings while running tunes2pod / gnupod_INIT)
 - QTFile.pm: Search tracklength inside 'mdhd' as a fallback
 GNUpod 0.99 - codename 'Pentarou'
 
