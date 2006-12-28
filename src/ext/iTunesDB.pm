@@ -158,7 +158,7 @@ sub mk_itunes_sd_header {
 	my($ref) = @_;
 	my $ret = undef;
 	$ret .= tnp($ref->{files});
-	$ret .= tnp(0x010600);
+	$ret .= tnp(0x010800);
 	$ret .= tnp(0x12); #Hardcoded header size
 	$ret .= tnp().tnp().tnp();
 	return $ret;
