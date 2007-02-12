@@ -56,6 +56,7 @@ die "You can't use --delete and --rename together\n" if($opts{delete} && $opts{r
 foreach(@{$opts{rename}}) {
   my($key,$val) =  split(/=/,$_,2);
   next unless $key && $val;
+  #$key =~ s/^\s*-+//g; # -- is not valid for xml tags!
   next if $key eq "id";#Dont allow something like THIS
   $rename_tags{lc($key)} = $val;
 }

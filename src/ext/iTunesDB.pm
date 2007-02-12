@@ -41,7 +41,7 @@ use constant NEW_ITUNESDB_MHIT_HEADERSIZE => 244;
 %mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, 
             "comment", 8, "category",9, "composer", 12, "group", 13, "desc",14,
              "podcastguid",15, "podcastrss",16, "subtitle", 18, "tvshow", 19, "tvepisode", 20,
-             "tvnetwork", 21, "albumartist", 22, "keywords", 24);# "SPLPREF",50, "SPLDATA",51, "PLTHING", 100) ;
+             "tvnetwork", 21, "albumartist", 22, "artistthe", 23, "keywords", 24);# "SPLPREF",50, "SPLDATA",51, "PLTHING", 100) ;
  foreach(keys(%mhod_id)) {
   $mhod_array[$mhod_id{$_}] = $_;
  }

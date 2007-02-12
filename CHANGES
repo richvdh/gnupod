@@ -1,3 +1,12 @@
+GNUpod 1.00 - codename
+
+Summary
+-------
+
+- Filter out bad chars from '--rename' command.
+
+
+
 GNUpod 0.99.1 - codename 'Klaus ist eine Wurst'
 
 Summary
@@ -5,14 +14,13 @@ Summary
 
 - iTunesDB.pm: Added some new fields and SPL-Defs (Removes some warnings while running tunes2pod / gnupod_INIT)
 - QTFile.pm: Search tracklength inside 'mdhd' as a fallback
-- Added support for iPod-shuffle 2 (small thingy)
-
-
-
-GNUpod 0.99 - codename 'Pentarou'
+- Added support for iPod-shuffle 2
 
 
 *** OLD STUFF ***
+
+GNUpod 0.99 - codename 'Pentarou'
+
 
 Summary
 -------
