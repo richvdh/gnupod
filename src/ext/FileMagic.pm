@@ -278,6 +278,39 @@ sub __is_mp3 {
      $rh{playcount}= int(getutf8($hs->{PCNT} || $hs->{CNT})) || 0;
      $rh{soundcheck} = _parse_iTunNORM(getutf8($hs->{COMM} || $hs->{COM} || $h->{COMMENT}));
      $rh{mediatype}  = MEDIATYPE_AUDIO;
+
+ # Handle volume adjustment information
+ if ($hs->{RVA2}) {
+   # Very limited RVA2 parsing, only handle master volume changes.
+   # See http://www.id3.org/id3v2.4.0-frames for format spec
+   my ($app, $channel, $adj) = unpack("Z* C n", $hs->{RVA2});
+   if ($channel == 1) {
+     
+     $adj -= 0x10000 if ($adj > 0x8000);
+     
+     my $adjdb = $adj / 512.0;
+
+     # Translate decibel volume adjustment into relative percentage
+     # adjustment.  As far as I understand this, +6dB is perceived
+     # as the double volume, i.e. +100%, while -6dB is
+     # perceived as the half volume, i.e. -50%.
+     
+     # The dB volume adjustment adjdb correlates to the absolute
+     # adjustment adjabs like this:
+     
+     #     adjdb = 20 * log10(1 + adjabs)
+     # =>  adjabs = 10 ** (adjdb / 20) - 1
+     
+     my $vol = int(100 * (10 ** ($adjdb / 20) - 1));
+     
+     $vol = 100 if ($vol > 100);
+     $vol = -100 if ($vol < -100);
+
+     # print "$file: adjusting volume by $vol% ($adjdb dB)\n";
+     $rh{volume} = $vol;
+   }
+ }
+
  return \%rh;
 }
 

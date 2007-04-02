@@ -1,10 +1,11 @@
-GNUpod 1.00 - codename
+GNUpod 0.99.2 - codename
 
 Summary
 -------
 
 - Filter out bad chars from '--rename' command.
-
+- Added RVA2 (Normalize) patch by Peter Liljenberg
+  (*FIXME* Write Documentation)
 
 
 GNUpod 0.99.1 - codename 'Klaus ist eine Wurst'

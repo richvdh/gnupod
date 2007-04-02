@@ -42,10 +42,12 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode=s", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
                    "set-artist=s", "set-album=s", "set-genre=s", "set-rating=i", "set-playcount=i",
-                   "set-songnum", "playlist|p=s", "reencode|e=i");
+                   "set-songnum", "playlist|p=s", "reencode|e=i",
+                   "min-vol-adj=i", "max-vol-adj=i" );
 GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b',
-                                   'disable-v1'=>'b', 'disable-v2'=>'b', 'set-songnum'=>'b'},
-                          "gnupod_addsong");
+                                   'disable-v1'=>'b', 'disable-v2'=>'b', 'set-songnum'=>'b',
+                                   'min-vol-adj'=>'i', 'max-vol-adj'=>'i' },
+                                   "gnupod_addsong");
 
 
 usage("\n--decode needs 'pcm' 'mp3' 'aac' 'video' or 'aacbm' -> '--decode=mp3'\n") if $opts{decode} && $opts{decode} !~ /^(mp3|video|aac|aacbm|pcm|crashme)$/;
@@ -97,6 +99,15 @@ sub startup {
 		GNUpod::XMLhelper::addpl($opts{playlist}); #Fixme: this may printout a warning..
 	} 
 
+	# Check volume adjustment options for sanity
+	my $min_vol_adj = int($opts{'min-vol-adj'});
+	my $max_vol_adj = int($opts{'max-vol-adj'});
+
+	usage("Invalid settings: --min-vol-adj=$min_vol_adj > --max-vol-adj=$max_vol_adj\n") if ($min_vol_adj > $max_vol_adj);
+	usage("Invalid settings: --min-vol-adj=$min_vol_adj < -100\n")                       if ($min_vol_adj < -100);
+	usage("Invalid settings: --max-vol-adj=$max_vol_adj > 100\n")                        if ($max_vol_adj > 100);
+	
+	
 	#We parsed the XML-Document
 	#resolve_podcasts fetches new podcasts from http:// stuff and adds them to real_files
 #	warn "DEBUG: START RESOLVE\n";
@@ -212,6 +223,12 @@ sub startup {
 			}
 		}
 		
+		# Clamp volume, if any
+		my $vol = $fh->{volume} || 0;
+		$vol = $min_vol_adj if ($vol < $min_vol_adj);
+		$vol = $max_vol_adj if ($vol > $max_vol_adj);
+		# print "$file vol $fh->{volume} -> $vol\n";
+		$fh->{volume} = $vol;
 		
 		#Get a path
 		(${$fh}{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file, 
@@ -461,6 +478,10 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
        --set-rating=int            Set Rating
        --set-playcount=int         Set Playcount
        --set-songnum               Override 'Songnum/Tracknum' field
+       --min-vol-adj=int           Minimum volume adjustment allowed by ID3v2.4 RVA2 tag
+       --max-vol-adj=int           Maximum ditto.  The volume can be adjusted in the range
+                                   -100% to +100%.  The default for these two options is 0,
+                                   which effectively ignored the RVA2 tag.
 
 Report bugs to <bug-gnupod\@nongnu.org>
 EOF
