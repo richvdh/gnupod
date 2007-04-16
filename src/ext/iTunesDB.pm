@@ -996,6 +996,7 @@ sub get_mhod {
 			#No more information and the stringlength is garbage...
 			$foo = undef;
 		}
+		elsif($mty == 32) { $foo = undef; } # iTunes bug?
 		else { #A normal Mhod, puh!
 			_itBUG("Assert \$xl < \$ml failed! ($xl => $ml) [type: $mty]",1) if $xl >= $ml;
 			$foo = get_string($seek+($ml-$xl), $xl); #String of entry

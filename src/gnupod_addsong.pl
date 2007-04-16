@@ -42,12 +42,13 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode=s", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
                    "set-artist=s", "set-album=s", "set-genre=s", "set-rating=i", "set-playcount=i",
-                   "set-songnum", "playlist|p=s", "reencode|e=i",
+                   "set-songnum", "playlist|p=s", "playlists=s", "reencode|e=i",
                    "min-vol-adj=i", "max-vol-adj=i" );
 GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b',
                                    'disable-v1'=>'b', 'disable-v2'=>'b', 'set-songnum'=>'b',
                                    'min-vol-adj'=>'i', 'max-vol-adj'=>'i' },
                                    "gnupod_addsong");
+
 
 
 usage("\n--decode needs 'pcm' 'mp3' 'aac' 'video' or 'aacbm' -> '--decode=mp3'\n") if $opts{decode} && $opts{decode} !~ /^(mp3|video|aac|aacbm|pcm|crashme)$/;
@@ -86,7 +87,11 @@ sub startup {
 	
 	#Don't sync if restore is true
 	$opts{_no_sync} = $opts{restore};
-
+	
+	my @plarray     = split(/;/,$opts{playlists});
+	push(@plarray,$opts{playlist}) if defined($opts{playlist});
+	
+	
 	my $con = GNUpod::FooBar::connect(\%opts);
 	usage($con->{status}."\n") if $con->{status} || !@argv_files;
 
@@ -94,15 +99,17 @@ sub startup {
 		GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
 	}
 
-	if($opts{playlist}) { #Create this playlist
-		print "> Adding songs to Playlist '$opts{playlist}'\n";
-		GNUpod::XMLhelper::addpl($opts{playlist}); #Fixme: this may printout a warning..
+	if(int(@plarray)) { #Create this playlist
+		foreach my $xcpl (@plarray) {
+			print "> Adding songs to Playlist '$xcpl'\n";
+			GNUpod::XMLhelper::addpl($xcpl); #Fixme: this may printout a warning..
+		}
 	} 
 
 	# Check volume adjustment options for sanity
 	my $min_vol_adj = int($opts{'min-vol-adj'});
 	my $max_vol_adj = int($opts{'max-vol-adj'});
-
+	
 	usage("Invalid settings: --min-vol-adj=$min_vol_adj > --max-vol-adj=$max_vol_adj\n") if ($min_vol_adj > $max_vol_adj);
 	usage("Invalid settings: --min-vol-adj=$min_vol_adj < -100\n")                       if ($min_vol_adj < -100);
 	usage("Invalid settings: --max-vol-adj=$max_vol_adj > 100\n")                        if ($max_vol_adj > 100);
@@ -167,7 +174,7 @@ sub startup {
 		#Check for duplicates
 		if(!$opts{duplicate} && (my $dup = checkdup($fh,$converter))) {
 			print "! [!!!] '$file' is a duplicate of song $dup, skipping file\n";
-			create_playlist_now($opts{playlist}, $dup); #We also add duplicates to a playlist..
+			create_playlist_now(\@plarray, $dup); #We also add duplicates to a playlist..
 			next;
 		}
 
@@ -242,7 +249,7 @@ sub startup {
 			uc($wtf_ftyp),1+$addcount, $fh->{title}, $fh->{album},$fh->{artist});
 
 			my $id = GNUpod::XMLhelper::mkfile({file=>$fh},{addid=>1}); #Try to add an id
-			create_playlist_now($opts{playlist}, $id);
+			create_playlist_now(\@plarray, $id);
 			$addcount++; #Inc. addcount
 		}
 		else { #We failed..
@@ -256,7 +263,7 @@ sub startup {
 
  
  
-	if($opts{playlist} || $addcount) { #We have to modify the xmldoc
+	if(int(@plarray) || $addcount) { #We have to modify the xmldoc
 		print "> Writing new XML File, added $addcount file(s)\n";
 		GNUpod::XMLhelper::writexml($con);
 	}
@@ -268,20 +275,24 @@ sub startup {
 #############################################################
 # Add item to playlist
 sub create_playlist_now {
- my($plname, $id) = @_;
-
- if($plname && $id >= 0) {
-   #Broken-by-design: We don't have a ID-Pool for playlists..
-   #-> Create a fake_entry
-   my $fake_entry = GNUpod::XMLhelper::mkfile({ add => { id => $id } }, { return=>1 });
-   my $found = 0;
-   foreach(GNUpod::XMLhelper::getpl_content($plname)) {
-     if($_ eq $fake_entry) {
-       $found++; last;
-     }
-   }
-   GNUpod::XMLhelper::mkfile({ add => { id => $id } },{"plname"=>$plname}) unless $found;
- }
+	my($plref, $id) = @_;
+	
+	my @pla = @$plref;
+	
+	if(int(@pla) && $id >= 0) {
+		foreach my $plname (@pla) {
+			#Broken-by-design: We don't have a ID-Pool for playlists..
+			#-> Create a fake_entry
+			my $fake_entry = GNUpod::XMLhelper::mkfile({ add => { id => $id } }, { return=>1 });
+			my $found = 0;
+			foreach(GNUpod::XMLhelper::getpl_content($plname)) {
+				if($_ eq $fake_entry) {
+					$found++; last;
+				}
+			}
+			GNUpod::XMLhelper::mkfile({ add => { id => $id } },{"plname"=>$plname}) unless $found;
+		}
+	}
 }
 
 
@@ -458,30 +469,31 @@ die << "EOF";
 $rtxt
 Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
 
-   -h, --help                      display this help and exit
-       --version                   output version information and exit
-   -m, --mount=directory           iPod mountpoint, default is \$IPOD_MOUNTPOINT
-   -r, --restore                   Restore the iPod (create a new GNUtunesDB from scratch)
-   -d, --duplicate                 Allow duplicate files
-   -p, --playlist=string           Add songs to this playlist
-       --disable-v1                Do not read ID3v1 Tags (MP3 Only)
-       --disable-v2                Do not read ID3v2 Tags (MP3 Only)
-       --decode=pcm|mp3|aac|aacbm  Convert FLAC Files to WAVE/MP3 or AAC 'on-the-fly'
-       --decode=video              Convert .avi Files into iPod video 'on-the-fly' (needs ffmpeg with AAC support!)
-   -e  --reencode=int              Reencode MP3/AAC files with new quality 'on-the-fly'
-                                   (0 = Good .. 9 = Bad)
-                                   You may be able to save some space if you do not need
-                                   crystal-clear sound ;-)
-       --set-artist=string         Set Artist (Override ID3 Tag)
-       --set-album=string          Set Album  (Override ID3 Tag)
-       --set-genre=string          Set Genre  (Override ID3 Tag)
-       --set-rating=int            Set Rating
-       --set-playcount=int         Set Playcount
-       --set-songnum               Override 'Songnum/Tracknum' field
-       --min-vol-adj=int           Minimum volume adjustment allowed by ID3v2.4 RVA2 tag
-       --max-vol-adj=int           Maximum ditto.  The volume can be adjusted in the range
-                                   -100% to +100%.  The default for these two options is 0,
-                                   which effectively ignored the RVA2 tag.
+   -h, --help                       display this help and exit
+       --version                    output version information and exit
+   -m, --mount=directory            iPod mountpoint, default is \$IPOD_MOUNTPOINT
+   -r, --restore                    Restore the iPod (create a new GNUtunesDB from scratch)
+   -d, --duplicate                  Allow duplicate files
+   -p, --playlist=string            Add songs to this playlist
+       --playlists=string1;string2  Add songs to multiple playlists. Use ';' as separator
+       --disable-v1                 Do not read ID3v1 Tags (MP3 Only)
+       --disable-v2                 Do not read ID3v2 Tags (MP3 Only)
+       --decode=pcm|mp3|aac|aacbm   Convert FLAC Files to WAVE/MP3 or AAC 'on-the-fly'
+       --decode=video               Convert .avi Files into iPod video 'on-the-fly' (needs ffmpeg with AAC support!)
+   -e  --reencode=int               Reencode MP3/AAC files with new quality 'on-the-fly'
+                                    (0 = Good .. 9 = Bad)
+                                    You may be able to save some space if you do not need
+                                    crystal-clear sound ;-)
+       --set-artist=string          Set Artist (Override ID3 Tag)
+       --set-album=string           Set Album  (Override ID3 Tag)
+       --set-genre=string           Set Genre  (Override ID3 Tag)
+       --set-rating=int             Set Rating
+       --set-playcount=int          Set Playcount
+       --set-songnum                Override 'Songnum/Tracknum' field
+       --min-vol-adj=int            Minimum volume adjustment allowed by ID3v2.4 RVA2 tag
+       --max-vol-adj=int            Maximum ditto.  The volume can be adjusted in the range
+                                    -100% to +100%.  The default for these two options is 0,
+                                    which effectively ignored the RVA2 tag.
 
 Report bugs to <bug-gnupod\@nongnu.org>
 EOF

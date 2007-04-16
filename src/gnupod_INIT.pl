@@ -33,7 +33,7 @@ print "gnupod_INIT.pl ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
-GetOptions(\%opts, "version", "help|h", "mount|m=s", "disable-convert|d", "france|f");
+GetOptions(\%opts, "version", "help|h", "mount|m=s", "disable-convert|d", "france|f", "noask");
 #gnupod_INIT does not read configuration files!
 
 usage() if $opts{help};
@@ -72,7 +72,7 @@ Hit ENTER to continue or CTRL+C to abort
 EOF
 ##
 
-<STDIN>;
+<STDIN> unless $opts{noask};
  
  print "Creating directory structure on $opts{mount}\n\n";
  print "> AppFolders:\n";
@@ -153,6 +153,7 @@ Usage: gnupod_INIT.pl [-h] [-m directory]
                            Firmware 1.x (1st & 2nd generation)
                            You can also use mktunes.pl '--volume PERCENT'
                            to adjust the volume (Works with Firmware 1.x AND 2.x)
+       --noask             Do not wait for any user input
 
 Report bugs to <bug-gnupod\@nongnu.org>
 EOF
