@@ -7,7 +7,7 @@ Summary
 - Added RVA2 (Normalize) patch by Peter Liljenberg
   (*FIXME* Write Documentation)
 - gnupod_INIT.pl: Added --noask option
-- gnupod_addsong.pl: Added --playlists option
+- gnupod_addsong.pl: --playlist can now be used multiple times
 
 GNUpod 0.99.1 - codename 'Klaus ist eine Wurst'
 
