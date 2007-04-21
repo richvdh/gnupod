@@ -140,7 +140,7 @@ sub newpl {
  # Delete or rename needs to rebuild the XML file
  
  my ($el, $name, $plt) = @_;
- if($plt eq "pl" && ref($el->{add}) eq "HASH") { #Add action
+ if(($plt eq "pl" or $plt eq "pcpl") && ref($el->{add}) eq "HASH") { #Add action
   if(defined($el->{add}->{id}) && int(keys(%{$el->{add}})) == 1) { #Only id
    return unless($keeplist[$el->{add}->{id}]); #ID not on keeplist. drop it
   }

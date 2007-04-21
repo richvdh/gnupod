@@ -86,6 +86,9 @@ my $pl_pos   =  $itinfo[2]->{start};
 my $pl_childs = $itinfo[2]->{childs};
 
 
+my $podcast_pos    = $itinfo[3]->{start};
+my $podcast_childs = $itinfo[3]->{childs};
+
 print "> Has $tracklist_childs songs";
 
 #Get all files
@@ -138,12 +141,33 @@ for(my $i=0;$i<$pl_childs;$i++) {
     GNUpod::XMLhelper::addpl($href->{name}, {plid=>$href->{plid}});
     foreach(@{$href->{content}}) {
      my $plfh = ();
-     $plfh->{add}->{id} = $_;
+     $plfh->{add}->{id} = $_->{sid};
      GNUpod::XMLhelper::mkfile($plfh,{plname=>$href->{name}});
     }
   }
+}
 
 
+# Read podcast childs if this iTunesDB provides one..
+if($podcast_childs > 0) {
+	print STDOUT "> Found ".($podcast_childs-1)." podcast-playlists:\n";
+	my $pcnref = ();
+	for(my $i=0;$i<$podcast_childs;$i++) {
+		($podcast_pos, $href) = GNUpod::iTunesDB::get_pl($podcast_pos);
+		
+		foreach my $pccont (@{$href->{content}}) {
+			if(defined($pccont->{subnaming})) {
+				$pcnref->{$pccont->{plid}} = $pccont->{subnaming};
+				GNUpod::XMLhelper::addpodcastpl($pccont->{subnaming});
+			}
+			else {
+				my $plfh = {add=>{id => $pccont->{sid}}};
+				my $pcplname = $pcnref->{$pccont->{podcast_group_ref}};
+				GNUpod::XMLhelper::mkfile($plfh,{pcplname=>$pcplname});
+			}
+			
+		}
+	}
 }
 
 
@@ -183,8 +207,8 @@ GNUpod::XMLhelper::addspl($name, $of);
   foreach my $xr (@{$data}) { #Add spldata
     GNUpod::XMLhelper::mkfile({spl=>$xr}, {splname=>$name});
   }
-  foreach my $cont(@{$content}) { #Add (old?) content
-    GNUpod::XMLhelper::mkfile({splcont=>{id=>$cont}}, {splname=>$name});
+  foreach my $cont (@{$content}) { #Add (old?) content
+    GNUpod::XMLhelper::mkfile({splcont=>{id=>$cont->{sid}}}, {splname=>$name});
   }
 
 }

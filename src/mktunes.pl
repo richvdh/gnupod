@@ -29,10 +29,11 @@ use GNUpod::FooBar;
 use Getopt::Long;
 
 
-use vars qw($cid %pldb %spldb %itb %opts %meat %cmeat @MPLcontent);
+use vars qw($cid %pldb %spldb %pcpldb %itb %opts %meat %cmeat @MPLcontent);
 #cid = CurrentID
 #pldb{name}  = array with id's
 #spldb{name} = '<spl' prefs
+#pcpldb{name} = podcast <add items
 #itb         = buffer for iTunesDB
 #its         = buffer for iTunesSD
 #MPLcontent  = MasterPlaylist content (all songs)
@@ -87,12 +88,21 @@ sub startup {
 
 	## PLAYLIST STUFF
 	print "> Creating playlists:\n";
-
-	$itb{playlist}{_data_} = genpls();
+	
+	my($number_of_playlists, $raw_pldata) = genpls();
+	
+	$itb{playlist}{_data_} = GNUpod::iTunesDB::mk_mhlp({playlists=>$number_of_playlists}).$raw_pldata;
 	$itb{playlist}{_len_}  = length($itb{playlist}{_data_});
 	# Create headers for the playlist part..
 	$itb{mhsd_2}{_data_} = GNUpod::iTunesDB::mk_mhsd({size=>$itb{playlist}{_len_}, type=>2});
 	$itb{mhsd_2}{_len_}  = length($itb{mhsd_2}{_data_});
+
+	# Create podcast playlists and append the other playlists to the data.
+	$itb{podcasts}{_data_}  = genpodcasts($number_of_playlists).$raw_pldata;
+	$itb{podcasts}{_len_}  = length($itb{podcasts}{_data_});
+	# Create headers for the podcast-playlist part..
+	$itb{mhsd_3}{_data_}    = GNUpod::iTunesDB::mk_mhsd({size=>$itb{podcasts}{_len_}, type=>3});
+	$itb{mhsd_3}{_len_}     = length($itb{mhsd_3}{_data_});
 
 	#Calculate filesize from buffered calculations...
 	#This is *very* ugly.. but it's fast :-)
@@ -111,10 +121,12 @@ sub startup {
 	## Write the iTunesDB
 	open(ITB, ">$con->{itunesdb}") or die "** Sorry: Could not write your iTunesDB: $!\n";
 	binmode(ITB); #Maybe this helps win32? ;)
-	print ITB GNUpod::iTunesDB::mk_mhbd({size=>$fl});  #Main header
+	print ITB GNUpod::iTunesDB::mk_mhbd({size=>$fl, childs=>3});  #Main header
 	print ITB $itb{mhsd_1}{_data_};            #Header for FILE part
 	print ITB $itb{mhlt}{_data_};              #mhlt stuff
 	print ITB $itb{mhit}{_data_};              #..now the mhit stuff
+	print ITB $itb{mhsd_3}{_data_};            #Header for podcast-PLAYLIST part : NOTE: This needs to be BEFORE mhsd_2 !
+	print ITB $itb{podcasts}{_data_};          #podcast-Playlist content
 	print ITB $itb{mhsd_2}{_data_};            #Header for PLAYLIST part
 	print ITB $itb{playlist}{_data_};          #Playlist content
 	close(ITB);
@@ -171,8 +183,8 @@ sub r_mpl {
 
 	foreach(@{$xidref}) {
 		$cid++; #Whoo! We ReUse the global CID.. first plitem = last file item+1 (or maybe 2 ;) )
-		my $cmhip = GNUpod::iTunesDB::mk_mhip({childs=>1,plid=>$cid, sid=>$_});
 		my $cmhod = GNUpod::iTunesDB::mk_mhod({fqid=>$_});
+		my $cmhip = GNUpod::iTunesDB::mk_mhip({childs=>1,plid=>$cid, sid=>$_, size=>length($cmhod)});
 		next unless (defined($cmhip) && defined($cmhod)); #mk_mhod needs to be ok
 		$fc++;
 		$pl .= $cmhip.$cmhod;
@@ -181,6 +193,38 @@ sub r_mpl {
 	#mhyp appends a listview to itself
 	return(GNUpod::iTunesDB::mk_mhyp({size=>$plSize,name=>$name,type=>$type,files=>$fc,
 	                                  mhods=>$mhp, plid=>$plid}).$pl,$fc);
+}
+
+
+#########################################################################
+# Create podcast playlists
+sub genpodcasts {
+	my($toslap) = @_;
+	my $item_id    = 1;
+	my $num_childs = 0;
+	my $num_pls    = 0;
+	my $buff       = undef;
+	my $scratch    = undef;
+	
+	foreach my $pcname (keys(%pcpldb)) {
+		my $cpcref = $item_id++;
+		$num_childs++;
+		$scratch = GNUpod::iTunesDB::mk_mhod({stype=>'title', string=>$pcname});
+		$buff   .= GNUpod::iTunesDB::mk_mhip({childs=>1,podcast_group=>256,plid=>$cpcref, size=>length($scratch)}); # 256 .. apple magic
+		$buff   .= $scratch;
+		foreach my $sid (@{$pcpldb{$pcname}}) {
+			$item_id++;
+			$num_childs++;
+			$scratch = GNUpod::iTunesDB::mk_mhod({fqid=>0});
+			$buff .= GNUpod::iTunesDB::mk_mhip({childs=>1,sid=>$sid, plid=>$item_id, podcast_group_ref=>$cpcref, size=>length($scratch)});
+			$buff .= $scratch;
+		}
+		print ">> Created Podcast-Playlist '$pcname'\n";	
+	}
+	
+	my $mhlp = GNUpod::iTunesDB::mk_mhlp({playlists=>1+$toslap});
+	return $mhlp.GNUpod::iTunesDB::mk_mhyp({size=>length($buff),name=>'Podcasts', type=>0,files=>$num_childs,
+	       ,podcast=>1}).$buff;
 }
 
 
@@ -213,8 +257,8 @@ sub genpls {
 			warn "!! SKIPPED Playlist '$plref->{name}', something went wrong...\n";
 		}     
 	}
-
-	return GNUpod::iTunesDB::mk_mhlp({playlists=>$plc}).$pldata;
+	
+	return ($plc,$pldata);
 }
 
 
@@ -291,6 +335,9 @@ sub newpl   {
 	if($pltype eq "pl") {
 		xmk_newpl($el, $name);
 	}
+	elsif($pltype eq "pcpl") {
+		xmk_newpcpl($el,$name);
+	}
 	elsif($pltype eq "spl") {
 		xmk_newspl($el, $name);
 	}
@@ -320,6 +367,26 @@ sub xmk_newspl {
 
 }
 
+sub xmk_newpcpl {
+	my($el, $name) = @_;
+	
+	foreach my $action (keys(%$el)) {
+		if($action eq "add") {
+			my $ntm;
+			my %mk;
+			foreach my $xrn (keys(%{$el->{$action}})) {
+				foreach(split(/ /,$cmeat{$xrn}{lc($el->{$action}->{$xrn})})) {
+					$mk{$_}++;
+				}
+				$ntm++;
+			}
+			foreach(sort {$a <=> $b} keys(%mk)) {
+				push(@{$pcpldb{$name}}, $_) if $mk{$_} == $ntm;
+			}
+		}
+	}
+	
+}
 
 #######################################################################
 # Normal playlist handler

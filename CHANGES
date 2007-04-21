@@ -3,11 +3,13 @@ GNUpod 0.99.2 - codename
 Summary
 -------
 
+- Added support for Podcast-Playlists
 - Filter out bad chars from '--rename' command.
 - Added RVA2 (Normalize) patch by Peter Liljenberg
   (*FIXME* Write Documentation)
 - gnupod_INIT.pl: Added --noask option
 - gnupod_addsong.pl: --playlist can now be used multiple times
+- Raised video-bitrate for on-the-fly converting
 
 GNUpod 0.99.1 - codename 'Klaus ist eine Wurst'
 

@@ -35,16 +35,24 @@ use File::Glob ':glob';
 use vars qw(%mhod_id @mhod_array %SPLDEF %SPLREDEF);
 
 use constant ITUNESDB_MAGIC => 'mhbd';
+use constant MAGIC_PODCAST_GROUP          => 256;
 use constant OLD_ITUNESDB_MHIT_HEADERSIZE => 156;
 use constant NEW_ITUNESDB_MHIT_HEADERSIZE => 244;
+
 #mk_mhod() will take care of lc() entries
-%mhod_id = ("title", 1, "path", 2, "album", 3, "artist", 4, "genre", 5, "fdesc", 6, "eq", 7, 
-            "comment", 8, "category",9, "composer", 12, "group", 13, "desc",14,
-             "podcastguid",15, "podcastrss",16, "subtitle", 18, "tvshow", 19, "tvepisode", 20,
-             "tvnetwork", 21, "albumartist", 22, "artistthe", 23, "keywords", 24);# "SPLPREF",50, "SPLDATA",51, "PLTHING", 100) ;
+my %mhod_id = ( title=>1, path=>2, album=>3, artist=>4, genre=>5, fdesc=>6, eq=>7, comment=>8, category=>9, composer=>12, group=>13,
+                 desc=>14, podcastguid=>15, podcastrss=>16, chapterdata=>17, subtitle=>18, tvshow=>19, tvepisode=>20,
+                 tvnetwork=>21, albumartist=>22, artistthe=>23, keywords=>24, sorttitle=>27, sortalbum=>28, sortalbumartist=>29,
+                 sortcomposer=>30, sorttvshow=>31);
+
  foreach(keys(%mhod_id)) {
   $mhod_array[$mhod_id{$_}] = $_;
  }
+
+
+
+
+
 
 
 ############# SMART PLAYLIST DEFS ##########################
@@ -226,7 +234,7 @@ sub mk_mhbd {
 	   $ret .= pack("V", _icl($hr->{size}+104));      #Size of whole mhdb
 	   $ret .= pack("V", 0x1);                        #?
 	   $ret .= pack("V", 0xC);                        # Version, we are iTunes 4.7 -> 12
-	   $ret .= pack("V", 0x2);                        # Childs, currently always 2
+	   $ret .= pack("V", _icl($hr->{childs}));        # Childs, currently always 2
 	   $ret .= pack("V", 0xE0ADECAD);                 # UID -> 0xA_Decade_0f_bad_f00d
 	   $ret .= pack("V", 0x0DF0ADFB);
 	   $ret .= pack("V", 0x2);                        #?
@@ -242,7 +250,6 @@ return $ret;
 ### XHR: size type
 sub mk_mhsd {
  my ($hr) = @_;
-
  my $ret = "mhsd";
     $ret .= pack("V", _icl(96));                      #Headersize, static
     $ret .= pack("V", _icl($hr->{size}+96));          #Size
@@ -341,9 +348,11 @@ sub mk_mhit {
     $ret .= pack("V", (_icl($file_hash{dbid2_msw}) || _icl($c_id) ));           #DBID2 Postfix (Cannot be 0x0)
 
 		$ret .= pack("H64");
-		$ret .= pack("V", _icl($file_hash{mediatype}));;
-		$ret .= pack("H63");  
-    
+		$ret .= pack("V", _icl($file_hash{mediatype}));
+		$ret .= pack("V", _icl($file_hash{seasonnum}));
+		$ret .= pack("V", _icl($file_hash{episodenum}));
+		$ret .= pack("H47");  
+
 return $ret;
 }
 
@@ -374,7 +383,7 @@ sub mk_mhod {
 	my $apx = undef;
 
 	#Called with fqid, this has to be an PLTHING (100)
-	if($fqid) { 
+	if(defined $fqid) { 
 		#fqid set, that's a pl item!
 		$type = 100;
 	}
@@ -671,26 +680,31 @@ sub mk_mhyp
 my($hr) = @_;
 
 #We need to create a listview-layout and an mhod with the name..
-my $appnd = mk_mhod({stype=>"title", string=>$hr->{name}}).__dummy_listview();   #itunes prefs for this PL & PL name (default PL has  device name as PL name)
 
-##Child mhods calc..
-##We create 2 mhod's here.. mktunes may have created more mhods.. so we
-##have to adjust the childs here
-my $cmh = 2+$hr->{mhods};
+my $append = mk_mhod({stype=>"title", string=>$hr->{name}});
+my $cmh = 1+$hr->{mhods};
+unless($hr->{no_dummy_listview}) {
+	$append .= __dummy_listview();
+	$cmh++; # Add a new ChildMhod
+}
+
 
 
 my $ret .= "mhyp";
    $ret .= pack("V", _icl(108)); #type
-   $ret .= pack("V", _icl($hr->{size}+108+(length($appnd))));          #size
-   $ret .= pack("V", _icl($cmh));			      #mhods
+   $ret .= pack("V", _icl($hr->{size}+108+(length($append))));          #size
+   $ret .= pack("V", _icl($cmh));			      #mhits
    $ret .= pack("V", _icl($hr->{files}));   #songs in pl
    $ret .= pack("V", _icl($hr->{type}));    # 1 = main .. 0=not main
    $ret .= pack("V", "00");                 #Timestamp FIXME
    $ret .= pack("V", _icl($hr->{plid}));    #Playlist ID
-   $ret .= pack("V", "00");                 #?
-   $ret .= pack("H144", "00");              #dummy space
+   $ret .= pack("V", "00");                 #fixme: plid2
+   $ret .= pack("V", "00");
+   $ret .= pack("CC", _icl($hr->{stringmhods},0xff));
+   $ret .= pack("CC", _icl($hr->{podcast}    ,0xff));
+   $ret .= pack("H128", "00");              #dummy space
 
- return $ret.$appnd;
+ return $ret.$append;
 }
 
 
@@ -703,12 +717,14 @@ my ($hr) = @_;
 #plid = playlist order ID
 my $ret = "mhip";
    $ret .= pack("V", _icl(76));
-   $ret .= pack("V", _icl(76));
+   $ret .= pack("V", _icl(76+$hr->{size}));
    $ret .= pack("V", _icl($hr->{childs})); #Mhod childs !
-   $ret .= pack("V", "00");
+   $ret .= pack("V", _icl($hr->{podcast_group}));
    $ret .= pack("V", _icl($hr->{plid}));   #ORDER id
    $ret .= pack("V", _icl($hr->{sid}));    #song id in playlist
-   $ret .= pack("H96", "00");
+   $ret .= pack("V", _icl($hr->{timestamp}));
+   $ret .= pack("V", _icl($hr->{podcast_group_ref}));
+   $ret .= pack("H80", "00");
   return $ret;
  }
 
@@ -972,9 +988,7 @@ sub get_mhod {
 	my $splpref = undef; #dummy
 
 	my $foo = undef; #Mhod value
-	
 	if($id eq "mhod") { #Seek was okay
-#		warn "=> [$mty] $mhl / $ml / $xl\n";
 		if($mty == 16 or $mty == 15) {
 			#Here we go again: Apple did strange things!
 			#They could have used a normal mhod, but no!
@@ -1018,18 +1032,29 @@ sub get_mhip {
 	my($pos) = @_;
 	my $oid = 0;
 	if(get_string($pos, 4) eq "mhip") {
-		my $oof = get_int($pos+4, 4);
-		my $mhods=get_int($pos+12,4);
-		
+		my $oof               = get_int($pos+4, 4);
+		my $mhods             = get_int($pos+12,4);
+		my $podcast_group     = get_int($pos+16,4);
+		my $plid              = get_int($pos+20,4);
+		my $sid               = get_int($pos+24,4);
+		my $timestamp         = get_int($pos+28,4);
+		my $podcast_group_ref = get_int($pos+32,4);
+		my $subnaming         = undef;
 		
 		for(my $i=0;$i<$mhods;$i++) {
-			my $mhs = get_mhod($pos+$oof)->{size};
-			_itBUG("Fatal seek error in get_mhip, can't continue! (debug: $mhs / $i / $pos / $oof)",1) if $mhs == -1;
-			$oid+=$mhs;
+			my $mhr = get_mhod($pos+$oof);
+			my $mhsize = $mhr->{size};
+			
+			if($podcast_group == MAGIC_PODCAST_GROUP && $mhod_array[$mhr->{type}] eq "title") {
+				$subnaming = $mhr->{string};
+				print "&& $subnaming &&\n";
+			}
+			_itBUG("Fatal seek error in get_mhip, can't continue! (debug: $mhsize / $i / $pos / $oof)",1) if $mhsize == -1;
+			$oid+=$mhsize;
 		}
-		my $plid = get_int($pos+5*4,4);
-		my $sid  = get_int($pos+6*4, 4);
-		return({size=>($oid+$oof),sid=>$sid,plid=>$plid});
+		
+		return({size=>($oid+$oof),sid=>$sid,plid=>$plid, podcast_group=>$podcast_group,
+		        timestamp=>$timestamp, podcast_group_ref=>$podcast_group_ref, subnaming=>$subnaming});
 	}
 
 	#we are lost
@@ -1058,63 +1083,63 @@ read($fh, $buffer, $anz);
 # Get a playlist (Should be called get_mhyp, but it does the whole playlist)
 # $opts->{nomplskip} == 1 => Skip FastSkip of MPL. Workaround for broken files written by Anapod..
 sub get_pl {
- my($pos,$opts) = @_;
-
- my %ret_hash = ();
- my @pldata = ();
- 
-  if(get_string($pos, 4) eq "mhyp") { #Ok, its an mhyp
-   my $header_len     = get_int($pos+4, 4);  #Size of the header
-   my $mhyp_len       = get_int($pos+8, 4);  #Size of mhyp
-   my $mhods          = get_int($pos+12,4);  #How many mhods we have here
-   my $scount         = get_int($pos+16, 4); #How many songs should we expect?
-      $ret_hash{type} = get_int($pos+20, 4); #Is it a main playlist?
-      $ret_hash{plid}  = get_int($pos+28,4);  #UID if the playlist..
- 
-#Its a MPL, do a fast skip  --> We don't parse the mpl, because we know the content anyway
-if($ret_hash{type} && ($opts->{nomplskip} != 1) ) {
- return ($pos+$mhyp_len, {type=>1}) 
-}
-   $pos += $header_len; #set pos to start of first mhod
-   #We can now read the name of the Playlist
-   #Ehpod is buggy and writes the playlist name 2 times.. well catch both of them
-   #MusicMatch is also stupid and doesn't create a playlist mhod
-   #for the mainPlaylist
-   my ($oid, $plname, $itt) = undef;
- for(my $i=0;$i<$mhods;$i++) {
-   my $mhh = get_mhod($pos);
-   if($mhh->{size} == -1) {
-    _itBUG("Failed to get $i mhod of $mhods (plpart)",1);
-   }
-
-   $pos+=$mhh->{size};
-   if($mhh->{type} == 1) {
-     $ret_hash{name} = $mhh->{string};
-   }
-   elsif(ref($mhh->{splpref}) eq "HASH") {
-     $ret_hash{splpref} = $mhh->{splpref};
-   }
-   elsif(ref($mhh->{spldata}) eq "ARRAY") {
-     $ret_hash{spldata} = $mhh->{spldata};
-     $ret_hash{matchrule}=$mhh->{matchrule};
-   }
- }
- 
-   #Now get the items
- for(my $i = 0; $i<$scount;$i++) {
-    my $mhih = get_mhip($pos);
-    if($mhih->{size} == -1) {
-       _itBUG("Failed to parse Song $i of $scount songs",1);
-    }
-    $pos += $mhih->{size};
-     push(@pldata, $mhih->{sid}) if $mhih->{sid};
-   }
-   $ret_hash{content} = \@pldata;
-   return ($pos, \%ret_hash);   
-  }
- 
- #Seek was wrong
- return -1;
+	my($pos,$opts) = @_;
+	my %ret_hash = ();
+	my @pldata = ();
+	
+	
+	if(get_string($pos, 4) eq "mhyp") { #Ok, its an mhyp
+		my $header_len     = get_int($pos+4, 4);  #Size of the header
+		my $mhyp_len       = get_int($pos+8, 4);  #Size of mhyp
+		my $mhits          = get_int($pos+12,4);  #How many mhits we have here
+		my $scount         = get_int($pos+16, 4); #How many songs should we expect?
+		$ret_hash{type}    = get_int($pos+20, 4); #Is it a main playlist?
+		$ret_hash{plid}    = get_int($pos+28,4);  #UID if the playlist..
+		
+		
+		#Its a MPL, do a fast skip  --> We don't parse the mpl, because we know the content anyway
+		if($ret_hash{type} && ($opts->{nomplskip} != 1) ) {
+			return ($pos+$mhyp_len, {type=>1}) 
+		}
+		$pos += $header_len; #set pos to start of first mhod
+		#We can now read the name of the Playlist
+		#Ehpod is buggy and writes the playlist name 2 times.. well catch both of them
+		#MusicMatch is also stupid and doesn't create a playlist mhod
+		#for the mainPlaylist
+		my ($oid, $plname, $itt) = undef;
+		for(my $i=0;$i<$mhits;$i++) {
+			my $mhh = get_mhod($pos);
+			if($mhh->{size} == -1) {
+				_itBUG("Failed to get $i mhod of $mhits (plpart) ; Bad mhod found at offset $pos",1);
+			}
+		
+			$pos+=$mhh->{size};
+			if($mhh->{type} == 1) {
+				$ret_hash{name} = $mhh->{string};
+			}
+			elsif(ref($mhh->{splpref}) eq "HASH") {
+				$ret_hash{splpref} = $mhh->{splpref};
+			}
+			elsif(ref($mhh->{spldata}) eq "ARRAY") {
+				$ret_hash{spldata} = $mhh->{spldata};
+				$ret_hash{matchrule}=$mhh->{matchrule};
+			}
+		}
+		#Now get the items
+		for(my $i = 0; $i<$scount;$i++) {
+			my $mhih = get_mhip($pos);
+			if($mhih->{size} == -1) {
+				_itBUG("Failed to parse Song $i of $scount songs",1);
+			}
+			$pos += $mhih->{size};
+			push(@pldata, $mhih);
+		}
+		$ret_hash{content} = \@pldata;
+		return ($pos, \%ret_hash);   
+	}
+	
+	#Seek was wrong
+	return -1;
 }
 
 
@@ -1167,6 +1192,8 @@ if($header_size >= NEW_ITUNESDB_MHIT_HEADERSIZE) {
 	$ret{dbid2_lsw} = get_int($sum+168,4);
 	$ret{dbid2_msw} = get_int($sum+172,4);
 	$ret{mediatype} = get_int($sum+208,4);
+	$ret{seasonnum}  = get_int($sum+212,4);
+	$ret{episodenum} = get_int($sum+216,4);
 	
 	
 	##This parses the ShuffleSkipt and Bookmarkable flag
@@ -1317,7 +1344,6 @@ sub readPLC {
 		$itx = GNUpod::FooBar::shx2int($buff);
 	}
 	
-#	printf("\@ 0x%X ||| PC: $playc / LP: $lastply / BM: $bookmark / RTNG: $rating / ITX: $itx\n",$offset);
 	
 
   $pcrh{playcount}{$chunknum} = $playc    if $playc;

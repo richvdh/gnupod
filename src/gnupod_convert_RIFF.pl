@@ -42,8 +42,10 @@ elsif($gimme eq "GET_META") {
 }
 elsif($gimme eq "GET_VIDEO") {
 	my $tmpout = GNUpod::FooBar::get_u_path("/tmp/gnupod_video", "mp4");
-	my $x = system("ffmpeg", "-i", $file, "-b", 600, "-r", "29.97", "-s", "320x240",
-	               "-vcodec", "mpeg4", "-ab", 128, "-acodec", "aac", $tmpout);
+	
+	my $x = system("ffmpeg", "-i", $file, "-acodec", "aac", "-ab", "128k", "-vcodec", "mpeg4",
+	               "-b", "1200kb", "-mbd", 2, "-flags", "+4mv+trell", "-aic", 2, "-cmp", 2,
+	               "-subcmp", 2, "-s", "320x240", "-r", "29.97", $tmpout);
 	print "PATH:$tmpout\n";
 }
 else {
