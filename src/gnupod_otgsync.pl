@@ -191,7 +191,7 @@ sub newfile {
 		$el->{file}->{rating}    = $plcref->{rating}{int(@keeper)-1};
 		$el->{file}->{playcount} += $playcount;
 		$el->{file}->{bookmark}  = $plcref->{bookmark}{int(@keeper)-1};
-		
+		$el->{file}->{played_flag} = 1 if $el->{file}->{playcount};
 		if($plcref->{lastplay}{int(@keeper)-1}) {
 			$el->{file}->{lastplay}  = $plcref->{lastplay}{int(@keeper)-1};
 		}

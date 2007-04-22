@@ -1,5 +1,11 @@
 GNUpod 0.99.2 - codename
 
+Release-Blocker:
+
+- Podcasts sollten nicht rate-bar sein: 3x klicken sollte eigentlich
+  den comment dazu zeigen, nicht das rating menü
+
+
 Summary
 -------
 

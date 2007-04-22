@@ -259,14 +259,14 @@ sub genpls {
 			if($opts->{nopodcasts}) {
 				next; # Do not create podcasts playlist
 			}
-			else {
+			elsif(ref($pldb{$plref->{name}}) eq "ARRAY") {
 				push(@podcasts, @{$pldb{$plref->{name}}});
 				next;
 			}
 		}
 		
 		#Note: sort isn't aviable for spl's.. hack addspl()
-		my($pl, $xc) = r_mpl({name=>$plref->{name}, type=>0, content=>$pldb{$plref->{name}}, spl=>$splh, plid=>$plref->{plid}, sortby=>$plref->{sort}});
+		my($pl, $xc) = r_mpl({name=>$plref->{name}, type=>0, content=>$pldb{$plref->{name}}, splpref=>$splh, plid=>$plref->{plid}, sortby=>$plref->{sort}});
 		if($pl) { #r_mpl got data, we can create a playlist..
 			$plc++;         #INC Playlist count
 			$pldata .= $pl; #Append data

@@ -336,22 +336,24 @@ sub mk_mhit {
     $ret .= pack("v", _icl($file_hash{artworkcnt}));        #Artwork Count
     $ret .= pack("v");                                      #ipodlinux-wiki => unk9
     $ret .= pack("V", _icl($file_hash{artworksize}));       #Artwork Size
-    $ret .= pack("V8");
-    #Assemble the BookMarkSFX flag
-    my $bmflag = undef;
-    $bmflag += 0x00010000 if $file_hash{bookmarkable};
-    $bmflag += 0x00000100 if $file_hash{shuffleskip};
-    $bmflag += 0x01000000 if $file_hash{mhitpodcastinfo};
-    $bmflag += 0x00000002 if $bmflag;
-    $ret .= pack("V", _icl($bmflag));                    #unk19 ??<bookmark><skip><activate>
-    $ret .= pack("V", (_icl($file_hash{dbid2_lsw}) || 0xDEADBABE) );            #DBID2 Prefix (Cannot be 0x0)
-    $ret .= pack("V", (_icl($file_hash{dbid2_msw}) || _icl($c_id) ));           #DBID2 Postfix (Cannot be 0x0)
-
-		$ret .= pack("H64");
+		$ret .= pack("V8");
+		$ret .= pack("C", _icl(($file_hash{artworkcnt} ?  1 : 2)));
+		$ret .= pack("C", _icl(($file_hash{shuffleskip} ? 1 : 0)));
+		$ret .= pack("C", _icl(($file_hash{bookmarkable} ? 1 : 0)));
+		$ret .= pack("C", _icl(($file_hash{mhitpodcastinfo} ? 1 : 0)));
+		
+		$ret .= pack("V", (_icl($file_hash{dbid2_lsw}) || 0xDEADBABE) );            #DBID2 Prefix (Cannot be 0x0)
+		$ret .= pack("V", (_icl($file_hash{dbid2_msw}) || _icl($c_id) ));           #DBID2 Postfix (Cannot be 0x0)
+		$ret .= pack("C", (_icl(($file_hash{lyrics_flag} ? 1 : 0))));
+		$ret .= pack("C", (_icl(($file_hash{movie_flag} ? 1 : 0))));
+		$ret .= pack("C", (_icl(($file_hash{played_flag} ? 1 : 2))));
+		$ret .= pack("C", 0);		
+		$ret .= pack("H56");
 		$ret .= pack("V", _icl($file_hash{mediatype}));
 		$ret .= pack("V", _icl($file_hash{seasonnum}));
 		$ret .= pack("V", _icl($file_hash{episodenum}));
 		$ret .= pack("H47");  
+
 
 return $ret;
 }
@@ -1186,11 +1188,15 @@ $ret{dbid_msw}   = get_int($sum+116,4); #Database ID#2
 
 ## New iTunesDB data, appeared ~ iTunes 4.5
 if($header_size >= NEW_ITUNESDB_MHIT_HEADERSIZE) {
-	$ret{bpm} = get_int($sum+122,2);
-	$ret{artworkcnt} = get_int($sum+124,2);
-	$ret{artworksize} = get_int($sum+128,4);
-	$ret{dbid2_lsw} = get_int($sum+168,4);
-	$ret{dbid2_msw} = get_int($sum+172,4);
+	$ret{bpm}          = get_int($sum+122,2);
+	$ret{artworkcnt}   = get_int($sum+124,2);
+	$ret{artworksize}  = get_int($sum+128,4);
+	$ret{dbid2_lsw}    = get_int($sum+168,4);
+	$ret{dbid2_msw}    = get_int($sum+172,4);
+	$ret{lyrics_flag}  = get_int($sum+176,1);
+	$ret{movie_flag}   = get_int($sum+177,1);
+	$ret{played_flag}  = ( get_int($sum+178,1) == 1 ? 1 : 0 );
+	# 179 is unknown
 	$ret{mediatype} = get_int($sum+208,4);
 	$ret{seasonnum}  = get_int($sum+212,4);
 	$ret{episodenum} = get_int($sum+216,4);
@@ -1350,7 +1356,6 @@ sub readPLC {
   $pcrh{rating}{$chunknum}    = $rating   if $rating;
   $pcrh{lastplay}{$chunknum}  = $lastply  if $lastply;
   $pcrh{bookmark}{$chunknum}  = $bookmark if $bookmark;
-#	warn "DEBUG: $rating // $chunknum\n" if $rating;
   $offset += $chunksize; #Nex to go!
  }
 close(RATING);
@@ -1366,7 +1371,6 @@ sub readOTG {
 	my @content = ();
 
 	foreach my $file (bsd_glob($glob,GLOB_NOSORT)) {
-#		print "OTG: $file\n";
 		my @otgdb = ();
 		open(OTG, "$file") or next;
 		seek(OTG, 12, 0);
