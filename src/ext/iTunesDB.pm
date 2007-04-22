@@ -1047,7 +1047,6 @@ sub get_mhip {
 			
 			if($podcast_group == MAGIC_PODCAST_GROUP && $mhod_array[$mhr->{type}] eq "title") {
 				$subnaming = $mhr->{string};
-				print "&& $subnaming &&\n";
 			}
 			_itBUG("Fatal seek error in get_mhip, can't continue! (debug: $mhsize / $i / $pos / $oof)",1) if $mhsize == -1;
 			$oid+=$mhsize;
@@ -1095,6 +1094,7 @@ sub get_pl {
 		my $scount         = get_int($pos+16, 4); #How many songs should we expect?
 		$ret_hash{type}    = get_int($pos+20, 4); #Is it a main playlist?
 		$ret_hash{plid}    = get_int($pos+28,4);  #UID if the playlist..
+		$ret_hash{podcast} = get_int($pos+42,2);  #Is-Podcast-Playlist flag
 		
 		
 		#Its a MPL, do a fast skip  --> We don't parse the mpl, because we know the content anyway

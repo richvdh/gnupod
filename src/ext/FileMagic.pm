@@ -77,7 +77,7 @@ sub wtf_is {
    return($nnat->{ref}, {ftyp=>$nnat->{codec}}, $nnat->{encoder});
   }
   elsif(my $xqt = __is_qt($file,$flags)) {
-   return ($xqt->{ref},  {ftyp=>$xqt->{codec}, format=>"m4a", extension=>"m4a|m4p|m4b|mp4"});
+   return ($xqt->{ref},  {ftyp=>$xqt->{codec}, format=>"m4a", extension=>"m4a|m4p|m4b|mp4|m4v"});
   }
   elsif(my $h = __is_pcm($file,$flags)) {
    return ($h, {ftyp=>"PCM", format=>"wav"});

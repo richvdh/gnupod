@@ -117,55 +117,65 @@ print STDOUT "\r> Found $ff files, ok\n";
 #Now get each playlist
 print STDOUT "> Found ".($pl_childs-1)." playlists:\n";
 for(my $i=0;$i<$pl_childs;$i++) {
-  ($pl_pos, $href) = GNUpod::iTunesDB::get_pl($pl_pos, {nomplskip=> $opts{anapodworkaround} }); #Get an mhyp + all child mhods
-  if($pl_pos == -1) {
-   print STDERR "*** FATAL: Expected to find $pl_childs playlists,\n";
-   print STDERR "*** but i failed to get nr. $i\n";
-   print STDERR "*** Your iTunesDB maybe corrupt or you found\n";
-   print STDERR "*** a bug in GNUpod. Please send this\n";
-   print STDERR "*** iTunesDB to pab\@blinkenlights.ch\n\n";
-   print STDERR "!!! If you are an 'Anapod' user, try to set\n";
-   print STDERR "!!!   tunes2pod.anapodworkaround=1\n";
-   print STDERR "!!! inside ~/.gnupodrc and re-run the command.\n";
-   exit(1);
-  }
-  next if $href->{type}; #Don't list the MPL
-  $href->{name} = "NONAME" unless($href->{name}); #Don't create an empty pl
-  if(ref($href->{splpref}) eq "HASH" && ref($href->{spldata}) eq "ARRAY") { #SPL Data present
-    print ">> Smart-Playlist '$href->{name}' found\n";
-    render_spl($href->{name},$href->{splpref}, $href->{spldata}, $href->{matchrule},
-               $href->{content}, $href->{plid});
-  }
-  else { #Normal playlist  
-    print ">> Playlist '$href->{name}' with ".int(@{$href->{content}})." songs\n";
-    GNUpod::XMLhelper::addpl($href->{name}, {plid=>$href->{plid}});
-    foreach(@{$href->{content}}) {
-     my $plfh = ();
-     $plfh->{add}->{id} = $_->{sid};
-     GNUpod::XMLhelper::mkfile($plfh,{plname=>$href->{name}});
-    }
-  }
+	($pl_pos, $href) = GNUpod::iTunesDB::get_pl($pl_pos, {nomplskip=> $opts{anapodworkaround} }); #Get an mhyp + all child mhods
+	if($pl_pos == -1) {
+		print STDERR "*** FATAL: Expected to find $pl_childs playlists,\n";
+		print STDERR "*** but i failed to get nr. $i\n";
+		print STDERR "*** Your iTunesDB maybe corrupt or you found\n";
+		print STDERR "*** a bug in GNUpod. Please send this\n";
+		print STDERR "*** iTunesDB to pab\@blinkenlights.ch\n\n";
+		print STDERR "!!! If you are an 'Anapod' user, try to set\n";
+		print STDERR "!!!   tunes2pod.anapodworkaround=1\n";
+		print STDERR "!!! inside ~/.gnupodrc and re-run the command.\n";
+		exit(1);
+	}
+	next if $href->{type};         #Don't list the MPL
+	
+	$href->{name} = "NONAME" unless($href->{name}); #Don't create an empty pl
+	if(ref($href->{splpref}) eq "HASH" && ref($href->{spldata}) eq "ARRAY") { #SPL Data present
+		print ">> Smart-Playlist '$href->{name}' found\n";
+		render_spl($href->{name},$href->{splpref}, $href->{spldata}, $href->{matchrule},
+		           $href->{content}, $href->{plid});
+	}
+	elsif($href->{podcast} == 1) {
+		print ">> $href->{name}-Playlist with ".int(@{$href->{content}})." songs skipped\n";
+	}
+	else { #Normal playlist  
+		print ">> Playlist '$href->{name}' with ".int(@{$href->{content}})." songs\n";
+		GNUpod::XMLhelper::addpl($href->{name}, {plid=>$href->{plid}});
+		foreach(@{$href->{content}}) {
+		my $plfh = ();
+		$plfh->{add}->{id} = $_->{sid};
+		GNUpod::XMLhelper::mkfile($plfh,{plname=>$href->{name}});
+		}
+	}
 }
 
 
 # Read podcast childs if this iTunesDB provides one..
 if($podcast_childs > 0) {
-	print STDOUT "> Found ".($podcast_childs-1)." podcast-playlists:\n";
+	print STDOUT "> Converting Podcasts-Playlists ...\n";
 	my $pcnref = ();
 	for(my $i=0;$i<$podcast_childs;$i++) {
 		($podcast_pos, $href) = GNUpod::iTunesDB::get_pl($podcast_pos);
 		
-		foreach my $pccont (@{$href->{content}}) {
-			if(defined($pccont->{subnaming})) {
-				$pcnref->{$pccont->{plid}} = $pccont->{subnaming};
-				GNUpod::XMLhelper::addpodcastpl($pccont->{subnaming});
+		if($href->{podcast} != 1) {
+			next;
+		}
+		else {
+			foreach my $pccont (@{$href->{content}}) {
+				if(defined($pccont->{subnaming})) {
+					print ">> $href->{name}-Playlist '$pccont->{subnaming}'\n";
+					$pcnref->{$pccont->{plid}} = $pccont->{subnaming};
+					GNUpod::XMLhelper::addpl($pccont->{subnaming}, {podcast=>1});
+				}
+				else {
+					my $plfh = {add=>{id => $pccont->{sid}}};
+					my $pcplname = $pcnref->{$pccont->{podcast_group_ref}};
+					die "Ouch: No \$pclname ?!\n" unless defined $pcplname;
+					GNUpod::XMLhelper::mkfile($plfh,{plname=>$pcplname});
+				}
 			}
-			else {
-				my $plfh = {add=>{id => $pccont->{sid}}};
-				my $pcplname = $pcnref->{$pccont->{podcast_group_ref}};
-				GNUpod::XMLhelper::mkfile($plfh,{pcplname=>$pcplname});
-			}
-			
 		}
 	}
 }

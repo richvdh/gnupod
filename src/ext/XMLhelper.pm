@@ -179,9 +179,6 @@ sub mkfile {
 	elsif($magic->{plname}) { #Create a playlist item
 		push(@{$XDAT->{playlists}->{data}->{$magic->{plname}}}, $r);
 	}
-	elsif($magic->{pcplname}) { # Create a Podcast-Playlist item
-		push(@{$XDAT->{podcastplaylists}->{data}->{$magic->{pcplname}}},$r);
-	}
 	elsif($magic->{splname}) { #Create a smartplaylist item
 		push(@{$XDAT->{spls}->{data}->{$magic->{splname}}}, $r);
 	}
@@ -208,20 +205,6 @@ sub addpl {
 	push(@plorder, {name=>$name,plid=>$rh{plid},sort=>$rh{sort}});
  
 	$XDAT->{playlists}->{pref}->{$name} = \%rh;
-}
-
-sub addpodcastpl {
-	my($name) = @_;
-	
-	if(ref($XDAT->{podcastplaylists}->{pref}->{$name}) eq "HASH") {
-		warn "XMLhelper.pm: No need to create '$name', podcastplaylist exists already!\n";
-		return;
-	}
-	
-	my %rh = ();
-	$rh{name} = $name;
-	$rh{plid} = int(rand(99999));
-	$XDAT->{podcastplaylists}->{pref}->{$name} = \%rh;
 }
 
 ##############################################################
@@ -301,15 +284,6 @@ sub eventer {
 	elsif($href->{Context}[1] eq "smartplaylist") {
 		main::newpl(mkh($el, @it), $cpn,"spl"); #Call sub  
 	}
-	elsif($href->{Context}[1] eq "podcast") {
-		main::newpl(mkh($el, @it), $cpn, "pcpl");
-	}
-	elsif($href->{Context}[1] eq "" && $el eq "podcast") {
-		my $xh = mkh($el,@it);
-		$xh->{$el}->{name} = "NONAME" unless $xh->{$el}->{name};
-		$cpn = $xh->{$el}->{name};
-		addpodcastpl($cpn,$xh->{$el});
-	}
 }
 
 
@@ -380,15 +354,7 @@ sub writexml {
 			warn "XMLhelper.pm: bug found: unhandled plitem $_ inside $current_plname\n";
 		}
 	}
-	
-	#Print all podcast playlists
-	foreach my $pcname (keys(%{$XDAT->{podcastplaylists}->{pref}})) {
-		print OUT "\n ".mkfile({podcast=>{name=>$pcname}}, {return=>1,noend=>1})."\n";
-		foreach my $pcxml (@{$XDAT->{podcastplaylists}->{data}->{$pcname}}) {
-			print OUT "   $pcxml\n";
-		}
-		print OUT " </podcast>\n";
-	}
+
 	
 	print OUT "</gnuPod>\n";
  

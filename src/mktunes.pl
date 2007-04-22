@@ -29,7 +29,7 @@ use GNUpod::FooBar;
 use Getopt::Long;
 
 
-use vars qw($cid %pldb %spldb %pcpldb %itb %opts %meat %cmeat @MPLcontent);
+use vars qw($cid %pldb %spldb %itb %opts %meat %cmeat @MPLcontent);
 #cid = CurrentID
 #pldb{name}  = array with id's
 #spldb{name} = '<spl' prefs
@@ -98,6 +98,7 @@ sub startup {
 	$itb{mhsd_2}{_len_}  = length($itb{mhsd_2}{_data_});
 
 	# Create podcast playlists and append the other playlists to the data.
+	($number_of_playlists, $raw_pldata) = genpls({nopodcasts=>1, silent=>1});
 	$itb{podcasts}{_data_}  = genpodcasts($number_of_playlists).$raw_pldata;
 	$itb{podcasts}{_len_}  = length($itb{podcasts}{_data_});
 	# Create headers for the podcast-playlist part..
@@ -154,8 +155,16 @@ sub startup {
 #########################################################################
 # Create a single playlist
 sub r_mpl {
-	my($name, $type, $xidref, $spl, $plid, $sortby) = @_;
-
+	my($hr) = @_;
+	
+	my $name   = $hr->{name};
+	my $type   = $hr->{type};
+	my $xidref = $hr->{content};
+	my $spl    = $hr->{splpref};
+	my $plid   = $hr->{plid};
+	my $sortby = $hr->{sortby};
+	my $podcast= $hr->{podcast};
+	
 	my $pl           = undef;
 	my $fc           = 0;
 	my $mhp          = 0;
@@ -192,7 +201,7 @@ sub r_mpl {
 	my $plSize = length($pl);
 	#mhyp appends a listview to itself
 	return(GNUpod::iTunesDB::mk_mhyp({size=>$plSize,name=>$name,type=>$type,files=>$fc,
-	                                  mhods=>$mhp, plid=>$plid}).$pl,$fc);
+	                                  mhods=>$mhp, plid=>$plid, podcast=>$podcast}).$pl,$fc);
 }
 
 
@@ -206,56 +215,79 @@ sub genpodcasts {
 	my $buff       = undef;
 	my $scratch    = undef;
 	
-	foreach my $pcname (keys(%pcpldb)) {
+	foreach my $plref (GNUpod::XMLhelper::getpl_attribs()) {
+		my $plh = GNUpod::XMLhelper::get_plpref($plref->{name});
+		next unless $plh->{podcast} == 1; # Not a podcast, do nothing
+		
 		my $cpcref = $item_id++;
 		$num_childs++;
-		$scratch = GNUpod::iTunesDB::mk_mhod({stype=>'title', string=>$pcname});
+		$scratch = GNUpod::iTunesDB::mk_mhod({stype=>'title', string=>$plref->{name}});
 		$buff   .= GNUpod::iTunesDB::mk_mhip({childs=>1,podcast_group=>256,plid=>$cpcref, size=>length($scratch)}); # 256 .. apple magic
 		$buff   .= $scratch;
-		foreach my $sid (@{$pcpldb{$pcname}}) {
+		foreach my $sid (@{$pldb{$plref->{name}}}) {
 			$item_id++;
 			$num_childs++;
 			$scratch = GNUpod::iTunesDB::mk_mhod({fqid=>0});
 			$buff .= GNUpod::iTunesDB::mk_mhip({childs=>1,sid=>$sid, plid=>$item_id, podcast_group_ref=>$cpcref, size=>length($scratch)});
 			$buff .= $scratch;
 		}
-		print ">> Created Podcast-Playlist '$pcname'\n";	
+		print ">> Created Podcast-Playlist '$plref->{name}'\n";	
 	}
 	
 	my $mhlp = GNUpod::iTunesDB::mk_mhlp({playlists=>1+$toslap});
-	return $mhlp.GNUpod::iTunesDB::mk_mhyp({size=>length($buff),name=>'Podcasts', type=>0,files=>$num_childs,
-	       ,podcast=>1}).$buff;
+	return $mhlp.GNUpod::iTunesDB::mk_mhyp({size=>length($buff),name=>'Podcasts', type=>0,files=>$num_childs,podcast=>1}).$buff;
 }
 
 
 #########################################################################
 # Generate playlists from %pldb (+MPL)
 sub genpls {
-
+	my($opts) = @_;
+	
 	#Create mainPlaylist and set PlayListCount to 1
-	my ($pldata,undef) = r_mpl(Unicode::String::utf8($opts{'ipod-name'})->utf8, 1,\@MPLcontent, undef,MPL_UID);
+	my ($pldata,undef) = r_mpl({name=>Unicode::String::utf8($opts{'ipod-name'})->utf8, type=>1, content=>\@MPLcontent, plid=>MPL_UID});
 	my $plc = 1;
-
+	
+	my @podcasts = ();
+	
 	#CID is now used by r_mpl, dont use it yourself anymore
 	foreach my $plref (GNUpod::XMLhelper::getpl_attribs()) {
 		my $splh = GNUpod::XMLhelper::get_splpref($plref->{name}); #Get SPL Prefs
-
+		my $plh  = GNUpod::XMLhelper::get_plpref($plref->{name});  #Get normal-pl preferences
+		
+		if($plh->{podcast} == 1) {
+			if($opts->{nopodcasts}) {
+				next; # Do not create podcasts playlist
+			}
+			else {
+				push(@podcasts, @{$pldb{$plref->{name}}});
+				next;
+			}
+		}
+		
 		#Note: sort isn't aviable for spl's.. hack addspl()
-		my($pl, $xc) = r_mpl($plref->{name}, 0, $pldb{$plref->{name}}, 
-		                     $splh, $plref->{plid}, $plref->{sort}); #Kick Playlist creator
-
+		my($pl, $xc) = r_mpl({name=>$plref->{name}, type=>0, content=>$pldb{$plref->{name}}, spl=>$splh, plid=>$plref->{plid}, sortby=>$plref->{sort}});
 		if($pl) { #r_mpl got data, we can create a playlist..
 			$plc++;         #INC Playlist count
 			$pldata .= $pl; #Append data
 			#GUI Stuff
-			my $plxt = "Smart-" if $splh;
-			print ">> Created $plxt"."Playlist '$plref->{name}' with $xc file"; print "s" if $xc !=1;
-			print " (sort by '$plref->{sort}')" if $plref->{sort};
-			print "\n";
+			unless($opts->{silent}) {
+				my $plxt = "Smart-" if $splh;
+				print ">> Created $plxt"."Playlist '$plref->{name}' with $xc file"; print "s" if $xc !=1;
+				print " (sort by '$plref->{sort}')" if $plref->{sort};
+				print "\n";
+			}
 		}
 		else {
 			warn "!! SKIPPED Playlist '$plref->{name}', something went wrong...\n";
 		}     
+	}
+	
+	if(int(@podcasts)) {
+		my($pc_pl,undef) = r_mpl({name=>'Podcasts', type=>0, content=>\@podcasts, podcast=>1});
+		$plc++;
+		$pldata .= $pc_pl;
+		print ">> Created podcast playlist for legacy iPods\n" unless $opts->{silent};
 	}
 	
 	return ($plc,$pldata);
@@ -335,9 +367,6 @@ sub newpl   {
 	if($pltype eq "pl") {
 		xmk_newpl($el, $name);
 	}
-	elsif($pltype eq "pcpl") {
-		xmk_newpcpl($el,$name);
-	}
 	elsif($pltype eq "spl") {
 		xmk_newspl($el, $name);
 	}
@@ -367,26 +396,6 @@ sub xmk_newspl {
 
 }
 
-sub xmk_newpcpl {
-	my($el, $name) = @_;
-	
-	foreach my $action (keys(%$el)) {
-		if($action eq "add") {
-			my $ntm;
-			my %mk;
-			foreach my $xrn (keys(%{$el->{$action}})) {
-				foreach(split(/ /,$cmeat{$xrn}{lc($el->{$action}->{$xrn})})) {
-					$mk{$_}++;
-				}
-				$ntm++;
-			}
-			foreach(sort {$a <=> $b} keys(%mk)) {
-				push(@{$pcpldb{$name}}, $_) if $mk{$_} == $ntm;
-			}
-		}
-	}
-	
-}
 
 #######################################################################
 # Normal playlist handler

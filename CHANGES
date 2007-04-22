@@ -9,6 +9,7 @@ Summary
   (*FIXME* Write Documentation)
 - gnupod_INIT.pl: Added --noask option
 - gnupod_addsong.pl: --playlist can now be used multiple times
+- gnupod_addsong.pl: added --playlist-is-podcast command
 - Raised video-bitrate for on-the-fly converting
 
 GNUpod 0.99.1 - codename 'Klaus ist eine Wurst'

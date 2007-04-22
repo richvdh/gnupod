@@ -31,6 +31,9 @@ use File::Copy;
 use File::Glob ':glob';
 use XML::Parser; #Loaded by XMLhelper, but hey..
 
+use constant MEDIATYPE_PODCAST_AUDIO => 4;
+use constant MEDIATYPE_PODCAST_VIDEO => 6;
+
 use constant MACTIME => GNUpod::FooBar::MACTIME;
 use vars qw(%opts %dupdb_normal %dupdb_lazy %dupdb_podcast $int_count %podcast_infos %per_file_info);
 
@@ -43,7 +46,7 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode=s", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
                    "set-artist=s", "set-album=s", "set-genre=s", "set-rating=i", "set-playcount=i",
                    "set-songnum", "playlist|p=s@", "reencode|e=i",
-                   "min-vol-adj=i", "max-vol-adj=i" );
+                   "min-vol-adj=i", "max-vol-adj=i", "playlist-is-podcast" );
 GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b',
                                    'disable-v1'=>'b', 'disable-v2'=>'b', 'set-songnum'=>'b',
                                    'min-vol-adj'=>'i', 'max-vol-adj'=>'i' },
@@ -99,9 +102,9 @@ sub startup {
 	if($opts{playlist}) { #Create this playlist
 		foreach my $xcpl (@{$opts{playlist}}) {
 			print "> Adding songs to Playlist '$xcpl'\n";
-			GNUpod::XMLhelper::addpl($xcpl); #Fixme: this may printout a warning..
+			GNUpod::XMLhelper::addpl($xcpl, {podcast=>$opts{'playlist-is-podcast'}}); #Fixme: this may printout a warning..
 		}
-	} 
+	}
 
 	# Check volume adjustment options for sanity
 	my $min_vol_adj = int($opts{'min-vol-adj'});
@@ -422,6 +425,7 @@ foreach my $key (keys(%podcast_infos)) {
 		$per_file_info{$rssmedia->{file}}->{podcastrss}  = $c_podcastrss;
 		$per_file_info{$rssmedia->{file}}->{title}  = $c_title  if $c_title;
 		$per_file_info{$rssmedia->{file}}->{artist} = $c_author if $c_author;
+		$per_file_info{$rssmedia->{file}}->{mediatype} = MEDIATYPE_PODCAST_AUDIO; # Fixme: We should also set MEDIATYPE_PODCAST_VIDEO
 		push(@files,$rssmedia->{file});
 	}
 }
@@ -471,6 +475,7 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
    -r, --restore                    Restore the iPod (create a new GNUtunesDB from scratch)
    -d, --duplicate                  Allow duplicate files
    -p, --playlist=string            Add songs to this playlist, can be used multiple times
+       --playlist-is-podcast        Set podcast flag for playlist(s) created using '--playlist'
        --disable-v1                 Do not read ID3v1 Tags (MP3 Only)
        --disable-v2                 Do not read ID3v2 Tags (MP3 Only)
        --decode=pcm|mp3|aac|aacbm   Convert FLAC Files to WAVE/MP3 or AAC 'on-the-fly'
