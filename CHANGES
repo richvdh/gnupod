@@ -4,7 +4,8 @@ Release-Blocker:
 
 - Podcasts sollten nicht rate-bar sein: 3x klicken sollte eigentlich
   den comment dazu zeigen, nicht das rating menü
-
+- gtkpod stirbt beim parsen?!
+- Podcasts werden 2x gesogen (Heute morgen podcast)
 
 Summary
 -------
@@ -16,6 +17,7 @@ Summary
 - gnupod_INIT.pl: Added --noask option
 - gnupod_addsong.pl: --playlist can now be used multiple times
 - gnupod_addsong.pl: added --playlist-is-podcast command
+- gnupod_addsong.pl: Added workaround for glibc/linux/perl bug/problem (realloc() error)
 - Raised video-bitrate for on-the-fly converting
 
 GNUpod 0.99.1 - codename 'Klaus ist eine Wurst'

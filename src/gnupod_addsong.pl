@@ -245,9 +245,15 @@ sub startup {
 			warn "*** FATAL *** Skipping '$file' , no target found!\n";
 		}
 		elsif($opts{restore} || File::Copy::copy($file, $target)) {
+			
+			# Note to myself: Using utf8() works around some obscure
+			# glibc/perl/linux problem
 			printf("+ [%-4s][%3d] %-32s | %-32s | %-24s\n",
-			uc($wtf_ftyp),1+$addcount, $fh->{title}, $fh->{album},$fh->{artist});
-
+			uc($wtf_ftyp),1+$addcount,
+			Unicode::String::utf8($fh->{title})->utf8,
+			Unicode::String::utf8($fh->{album})->utf8,
+			Unicode::String::utf8($fh->{artist})->utf8);
+			
 			my $id = GNUpod::XMLhelper::mkfile({file=>$fh},{addid=>1}); #Try to add an id
 			create_playlist_now($opts{playlist}, $id);
 			$addcount++; #Inc. addcount
