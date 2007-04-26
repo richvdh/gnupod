@@ -446,9 +446,9 @@ foreach my $key (keys(%podcast_infos)) {
 		$per_file_info{$rssmedia->{file}}->{artist}      = $c_author if $c_author;
 		
 		# Do the same as iTunes does:
-		$per_file_info{$rssmedia->{file}}->{shuffleskip}     = 1;
-		$per_file_info{$rssmedia->{file}}->{bookmarkable}    = 1;
-		$per_file_info{$rssmedia->{file}}->{mhitpodcastinfo} = 1;
+		$per_file_info{$rssmedia->{file}}->{shuffleskip}  = 1;
+		$per_file_info{$rssmedia->{file}}->{bookmarkable} = 1;
+		$per_file_info{$rssmedia->{file}}->{podcast}      = 1;
 		
 		
 		push(@files,$rssmedia->{file});

@@ -65,12 +65,13 @@ if(!$opts{force} && !(GNUpod::FooBar::_itb_needs_sync($con))) {
 
 
 
-GNUpod::iTunesDB::open_itunesdb($con->{itunesdb}) or usage("Could not open $con->{itunesdb}\n");
+open(ITUNES, $con->{itunesdb}) or usage("Could not open $con->{itunesdb}");
+
 
 
 #Check where the FILES and PLAYLIST part starts..
 #..and how many files are in this iTunesDB
-my @itinfo = GNUpod::iTunesDB::get_starts();
+my @itinfo = GNUpod::iTunesDB::get_starts(*ITUNES);
 
 if(!defined(@itinfo)) {
   warn "File '$con->{itunesdb}' is not an iTunesDB, wrong magic in header!\n";
@@ -97,7 +98,7 @@ my $ff = 0;
 my %hout = ();
 for(my $i=0;$i<$tracklist_childs;$i++) {
 	#get the mhit + all child mhods
-	($tracklist_pos,$href) = GNUpod::iTunesDB::get_mhits($tracklist_pos);
+	($tracklist_pos,$href) = GNUpod::iTunesDB::get_mhits($tracklist_pos, *ITUNES);
 	#Seek failed.. this shouldn't happen..  
 	if($tracklist_pos == -1) {
 		print STDERR "\n*** FATAL: Expected to find $tracklist_childs files,\n";
@@ -117,7 +118,7 @@ print STDOUT "\r> Found $ff files, ok\n";
 #Now get each playlist
 print STDOUT "> Found ".($pl_childs-1)." playlists:\n";
 for(my $i=0;$i<$pl_childs;$i++) {
-	($pl_pos, $href) = GNUpod::iTunesDB::get_pl($pl_pos, {nomplskip=> $opts{anapodworkaround} }); #Get an mhyp + all child mhods
+	($pl_pos, $href) = GNUpod::iTunesDB::get_pl($pl_pos, {nomplskip=> $opts{anapodworkaround} }, *ITUNES); #Get an mhyp + all child mhods
 	if($pl_pos == -1) {
 		print STDERR "*** FATAL: Expected to find $pl_childs playlists,\n";
 		print STDERR "*** but i failed to get nr. $i\n";
@@ -157,7 +158,7 @@ if($podcast_childs > 0) {
 	print STDOUT "> Converting Podcasts-Playlists ...\n";
 	my $pcnref = ();
 	for(my $i=0;$i<$podcast_childs;$i++) {
-		($podcast_pos, $href) = GNUpod::iTunesDB::get_pl($podcast_pos);
+		($podcast_pos, $href) = GNUpod::iTunesDB::get_pl($podcast_pos,{}, *ITUNES);
 		
 		if($href->{podcast} != 1) {
 			next;
@@ -193,6 +194,7 @@ $opts{_no_sync} = 0;
 GNUpod::FooBar::connect(\%opts);
 
 print STDOUT "\n Done\n";
+close(ITUNES);
 exit(0);
 }
 
