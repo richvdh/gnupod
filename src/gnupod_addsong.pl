@@ -49,7 +49,7 @@ GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode=s", "restore|r", "d
                    "min-vol-adj=i", "max-vol-adj=i", "playlist-is-podcast" );
 GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b',
                                    'disable-v1'=>'b', 'disable-v2'=>'b', 'set-songnum'=>'b',
-                                   'min-vol-adj'=>'i', 'max-vol-adj'=>'i' },
+                                   'min-vol-adj'=>'i', 'max-vol-adj'=>'i', 'automktunes'=>'b' },
                                    "gnupod_addsong");
 
 
@@ -149,7 +149,17 @@ sub startup {
 			next unless lc($_) eq $_; #lc keys are there to overwrite $fh keys
 			$fh->{$_} = $c_per_file_info->{$_};
 		}
-				
+		
+		# If this was a podcast, we need to fixup the mediatype
+		if($c_per_file_info->{ISPODCAST}) {
+			if($fh->{mediatype} == GNUpod::FileMagic::MEDIATYPE_AUDIO) {
+				$fh->{mediatype} = MEDIATYPE_PODCAST_AUDIO;
+			}
+			elsif($fh->{mediatype} == GNUpod::FileMagic::MEDIATYPE_VIDEO) {
+				$fh->{mediatype} = MEDIATYPE_PODCAST_VIDEO;
+			}
+		}
+		
 		#wtf_is found a filetype, override data if needed
 		$fh->{artist}      = $opts{'set-artist'}      if $opts{'set-artist'};
 		$fh->{album}       = $opts{'set-album'}       if $opts{'set-album'};
@@ -271,7 +281,7 @@ sub startup {
  
 	if($opts{playlist} || $addcount) { #We have to modify the xmldoc
 		print "> Writing new XML File, added $addcount file(s)\n";
-		GNUpod::XMLhelper::writexml($con);
+		GNUpod::XMLhelper::writexml($con, {automktunes=>$opts{automktunes}});
 	}
 	print "\n Done\n";
 }
@@ -426,12 +436,21 @@ foreach my $key (keys(%podcast_infos)) {
 			next;
 		}
 
-		$per_file_info{$rssmedia->{file}}->{UNLINK} = 1;
+		$per_file_info{$rssmedia->{file}}->{UNLINK}    = 1;  # Remote tempfile
+		$per_file_info{$rssmedia->{file}}->{ISPODCAST} = 1;  # Triggers mediatype fix
+		
+		# Set information/tags from XML-File
 		$per_file_info{$rssmedia->{file}}->{podcastguid} = $c_guid;
 		$per_file_info{$rssmedia->{file}}->{podcastrss}  = $c_podcastrss;
-		$per_file_info{$rssmedia->{file}}->{title}  = $c_title  if $c_title;
-		$per_file_info{$rssmedia->{file}}->{artist} = $c_author if $c_author;
-		$per_file_info{$rssmedia->{file}}->{mediatype} = MEDIATYPE_PODCAST_AUDIO; # Fixme: We should also set MEDIATYPE_PODCAST_VIDEO
+		$per_file_info{$rssmedia->{file}}->{title}       = $c_title  if $c_title;
+		$per_file_info{$rssmedia->{file}}->{artist}      = $c_author if $c_author;
+		
+		# Do the same as iTunes does:
+		$per_file_info{$rssmedia->{file}}->{shuffleskip}     = 1;
+		$per_file_info{$rssmedia->{file}}->{bookmarkable}    = 1;
+		$per_file_info{$rssmedia->{file}}->{mhitpodcastinfo} = 1;
+		
+		
 		push(@files,$rssmedia->{file});
 	}
 }

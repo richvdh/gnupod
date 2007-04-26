@@ -32,7 +32,7 @@ use Unicode::String;
 use GNUpod::FooBar;
 use File::Glob ':glob';
 
-use vars qw(%mhod_id @mhod_array %SPLDEF %SPLREDEF);
+use vars qw(%mhod_id @mhod_array %SPLDEF %SPLREDEF %PLDEF %PLREDEF);
 
 use constant ITUNESDB_MAGIC => 'mhbd';
 use constant MAGIC_PODCAST_GROUP          => 256;
@@ -52,7 +52,37 @@ my %mhod_id = ( title=>1, path=>2, album=>3, artist=>4, genre=>5, fdesc=>6, eq=>
 
 
 
-
+############ PLAYLIST IPOD-SORT DEFINITION ################
+$PLDEF{sort}{1}  = 'manual';
+$PLDEF{sort}{2}  = 'path';
+$PLDEF{sort}{3}  = 'title';
+$PLDEF{sort}{4}  = 'album';
+$PLDEF{sort}{5}  = 'artist';
+$PLDEF{sort}{6}  = 'bitrate';
+$PLDEF{sort}{7}  = 'genre';
+$PLDEF{sort}{8}  = 'fdesc';
+$PLDEF{sort}{9}  = 'changetime';
+$PLDEF{sort}{10} = 'songnum';
+$PLDEF{sort}{11} = 'size';
+$PLDEF{sort}{12} = 'time';
+$PLDEF{sort}{13} = 'year';
+$PLDEF{sort}{14} = 'srate';
+$PLDEF{sort}{15} = 'comment';
+$PLDEF{sort}{16} = 'addtime';
+$PLDEF{sort}{17} = 'eq';
+$PLDEF{sort}{18} = 'composer';
+$PLDEF{sort}{20} = 'playcount';
+$PLDEF{sort}{21} = 'lastplay';
+$PLDEF{sort}{22} = 'cdnum';
+$PLDEF{sort}{23} = 'rating';
+$PLDEF{sort}{24} = 'releasedate';
+$PLDEF{sort}{25} = 'bpm';
+$PLDEF{sort}{26} = 'group';
+$PLDEF{sort}{27} = 'category';
+$PLDEF{sort}{28} = 'desc';
+$PLDEF{sort}{29} = 'tvshow';
+$PLDEF{sort}{30} = 'seasonnum';
+$PLDEF{sort}{31} = 'episodenum';
 
 
 ############# SMART PLAYLIST DEFS ##########################
@@ -116,7 +146,13 @@ $SPLDEF{field}{40} = "playlist";
 $SPLDEF{field}{54} = "DESCRIPTION";
 $SPLDEF{field}{55} = "CATEGORY";
 $SPLDEF{field}{57} = "podcast";
-$SPLDEF{field}{60} = "aaafixme"; #Unknown field! Looks like INT
+$SPLDEF{field}{60} = "videokind";
+$SPLDEF{field}{62} = "TVSHOW";
+$SPLDEF{field}{63} = "seasonnum";
+$SPLDEF{field}{68} = "skipcount";
+$SPLDEF{field}{69} = "lastskip";
+$SPLDEF{field}{71} = "ALBUMARTIST";
+
 
 
 #Checkrule (COMPLETE)
@@ -156,8 +192,9 @@ $SPLDEF{limitsort}{-23} = "rating_low";
 
 
 
-
-%SPLREDEF = _r_spldef();
+# Reverse Hashes used for XML-Search hits
+%SPLREDEF = _r_xdef(%SPLDEF);
+%PLREDEF  = _r_xdef(%PLDEF);
 
 
 ## IPOD SHUFFLE ####################################################
@@ -287,7 +324,6 @@ sub mk_mhit {
   }
  }
 
-
  #Check for stupid input
  my ($c_id) = $file_hash{id} =~ /(\d+)/;
 
@@ -336,8 +372,12 @@ sub mk_mhit {
     $ret .= pack("v", _icl($file_hash{artworkcnt}));        #Artwork Count
     $ret .= pack("v");                                      #ipodlinux-wiki => unk9
     $ret .= pack("V", _icl($file_hash{artworksize}));       #Artwork Size
-		$ret .= pack("V8");
-		$ret .= pack("C", _icl(($file_hash{artworkcnt} ?  1 : 2)));
+		$ret .= pack("V2");
+		$ret .= pack("V", _icl($file_hash{releasedate}));       #Date released
+		$ret .= pack("V3");
+		$ret .= pack("V", _icl($file_hash{skipcount}));
+		$ret .= pack("V", _icl($file_hash{lastskip}));
+		$ret .= pack("C", _icl(($file_hash{has_artwork} ?  1 : 2)));
 		$ret .= pack("C", _icl(($file_hash{shuffleskip} ? 1 : 0)));
 		$ret .= pack("C", _icl(($file_hash{bookmarkable} ? 1 : 0)));
 		$ret .= pack("C", _icl(($file_hash{mhitpodcastinfo} ? 1 : 0)));
@@ -704,7 +744,8 @@ my $ret .= "mhyp";
    $ret .= pack("V", "00");
    $ret .= pack("CC", _icl($hr->{stringmhods},0xff));
    $ret .= pack("CC", _icl($hr->{podcast}    ,0xff));
-   $ret .= pack("H128", "00");              #dummy space
+   $ret .= pack("V", 0); #_icl($PLREDEF{sort}{$hr->{sortflag}})); Fixme: is this even used?
+   $ret .= pack("H120", "00");              #dummy space
 
  return $ret.$append;
 }
@@ -842,7 +883,7 @@ $anz = int($anz);
 #seek to the given position
 seek($fh, $start, 0);
 #start reading
-read($fh, $buffer, $anz);
+read($fh, $buffer, $anz) or die "FATAL: read($fh, \$buffer, $anz) on offset $start failed : $!\n";
  return GNUpod::FooBar::shx2int($buffer);
 }
 
@@ -965,8 +1006,8 @@ $SPLDEF{checkrule}{int($chklim+($chkrgx*2))} or warn "Bug: Checkrule ".int($chkl
 #################################################
 # Do a hexDump ..
 sub __hd {
-   open(KK,">/tmp/XLZ"); print KK $_[0]; close(KK);
-   system("hexdump -vC /tmp/XLZ");
+	open(KK,">/tmp/XLZ"); print KK $_[0]; close(KK);
+	system("hexdump -vC /tmp/XLZ");
 }
 
 
@@ -1090,14 +1131,14 @@ sub get_pl {
 	
 	
 	if(get_string($pos, 4) eq "mhyp") { #Ok, its an mhyp
-		my $header_len     = get_int($pos+4, 4);  #Size of the header
-		my $mhyp_len       = get_int($pos+8, 4);  #Size of mhyp
-		my $mhits          = get_int($pos+12,4);  #How many mhits we have here
-		my $scount         = get_int($pos+16, 4); #How many songs should we expect?
-		$ret_hash{type}    = get_int($pos+20, 4); #Is it a main playlist?
-		$ret_hash{plid}    = get_int($pos+28,4);  #UID if the playlist..
-		$ret_hash{podcast} = get_int($pos+42,2);  #Is-Podcast-Playlist flag
-		
+		my $header_len     = get_int($pos+4, 4);  # Size of the header
+		my $mhyp_len       = get_int($pos+8, 4);  # Size of mhyp
+		my $mhits          = get_int($pos+12,4);  # How many mhits we have here
+		my $scount         = get_int($pos+16, 4); # How many songs should we expect?
+		$ret_hash{type}    = get_int($pos+20, 4); # Is it a main playlist?
+		$ret_hash{plid}    = get_int($pos+28,4);  # UID if the playlist..
+		$ret_hash{podcast} = get_int($pos+42,2);  # Is-Podcast-Playlist flag
+###	$ret_hash{sortflag}= $PLDEF{sort}{get_int($pos+44,4)};  # How to sort .. fixme: is this even used by itunes?
 		
 		#Its a MPL, do a fast skip  --> We don't parse the mpl, because we know the content anyway
 		if($ret_hash{type} && ($opts->{nomplskip} != 1) ) {
@@ -1153,10 +1194,10 @@ my ($sum) = @_;
 if(get_string($sum, 4) eq "mhit") { #Ok, its a mhit
 
 my $header_size = get_int($sum+4,4);
-
 if($header_size < OLD_ITUNESDB_MHIT_HEADERSIZE) { # => Last get_int.. this is ugly
  _itBUG("Assert $header_size >= OLD_ITUNESDB_MHIT_HEADERSIZE failed. get_mhits($sum) will read BEHIND the end of this header!");
 }
+
 
 my %ret     = ();
 #Infos stored in mhit
@@ -1188,34 +1229,27 @@ $ret{dbid_msw}   = get_int($sum+116,4); #Database ID#2
 
 ## New iTunesDB data, appeared ~ iTunes 4.5
 if($header_size >= NEW_ITUNESDB_MHIT_HEADERSIZE) {
-	$ret{bpm}          = get_int($sum+122,2);
-	$ret{artworkcnt}   = get_int($sum+124,2);
-	$ret{artworksize}  = get_int($sum+128,4);
-	$ret{dbid2_lsw}    = get_int($sum+168,4);
-	$ret{dbid2_msw}    = get_int($sum+172,4);
-	$ret{lyrics_flag}  = get_int($sum+176,1);
-	$ret{movie_flag}   = get_int($sum+177,1);
-	$ret{played_flag}  = ( get_int($sum+178,1) == 1 ? 1 : 0 );
+	$ret{bpm}             = get_int($sum+122,2);
+	$ret{artworkcnt}      = get_int($sum+124,2);
+	$ret{artworksize}     = get_int($sum+128,4);
+	$ret{releasedate}     = get_int($sum+140,4);
+	$ret{skipcount}       = get_int($sum+156,4);
+	$ret{lastskip}        = get_int($sum+160,4);
+	$ret{has_artwork}     = 1 if get_int($sum+164,1) == 1; # 1 = Has artwork ; 2 = No artwork ; 0 = undef?
+	$ret{shuffleskip}     = 1 if get_int($sum+165,1);
+	$ret{bookmarkable}    = 1 if get_int($sum+166,1);
+	$ret{mhitpodcastinfo} = 1 if get_int($sum+167,1);
+	$ret{dbid2_lsw}       = get_int($sum+168,4);
+	$ret{dbid2_msw}       = get_int($sum+172,4);
+	$ret{lyrics_flag}     = get_int($sum+176,1);
+	$ret{movie_flag}      = get_int($sum+177,1);
+	$ret{played_flag}     = ( get_int($sum+178,1) == 1 ? 1 : 0 );
 	# 179 is unknown
 	$ret{mediatype} = get_int($sum+208,4);
 	$ret{seasonnum}  = get_int($sum+212,4);
 	$ret{episodenum} = get_int($sum+216,4);
 	
-	
-	##This parses the ShuffleSkipt and Bookmarkable flag
-	$ret{shuffleskip} = $ret{bookmarkable} = 0;
-	my $has_bookmark_flag = get_int($sum+164,1);
-	if($has_bookmark_flag == 2) { #Ok, we know what to expect
-		$ret{shuffleskip}    = 1 if get_int($sum+165,1);
-		$ret{bookmarkable}   =1 if get_int($sum+166,1);
-		$ret{mhitpodcastinfo}=1 if get_int($sum+167,1);
-	}
-	elsif($has_bookmark_flag != 0x00) {
-	## Fixme: write code to parse this
-	#	_itBUG("Whoops! Funny data found, please report this stuff:",undef);
-	#	print "===>DEBUG OUTPUT FOR UNKNOWN BMFLAG STUFF: ".unpack("H*",pack("V",get_int($sum+164,4)))."\n";
-	#	print "===>Don't know how to parse this stuff, ignoring it...\n";
-	}
+#	print "XFLAGS: $ret{has_artwork} ; $ret{shuffleskip} ; $ret{bookmarkable} ; $ret{mhitpodcastinfo}\n";
 }
 
 ####### We have to convert the 'volume' to percent...
@@ -1238,7 +1272,6 @@ my $mhods = get_int($sum+12,4);
 $sum += get_int($sum+4,4);
 
  for(my $i=0;$i<$mhods;$i++) {
-#  print "GET mhod $sum\n";
     my $mhh = get_mhod($sum);
     if($mhh->{size} == -1) {
      _itBUG("Failed to parse mhod $i of $mhods",1);
@@ -1303,63 +1336,32 @@ return(@childs);
 ##############################################
 # Read PlayCounts 
 sub readPLC {
- my($file) = @_;
- open(RATING, "$file") or return ();
- 
- 
- my $offset    = get_int(4 ,4,*RATING); #How long is the header?
- my $chunksize = get_int(8, 4,*RATING); #How long is one entry? (20 for iTunes 0xD / 16 for V2 Firmware, 12 for v1)
- my $chunks    = get_int(12,4,*RATING); #How many chunks do we have?
- 
- my $buff;
- my %pcrh = ();
- my $rating   = 0;
- my $playc    = 0;
- my $bookmark = 0;
- my $lastply  = 0;
- my $chunknum = 0;
- my $itx = 0; #Unknown
+	my($file) = @_;
+	
+	open(PLC, "$file") or return ();
+	my $offset    = get_int(4 ,4,*PLC); #How long is the header?
+	my $chunksize = get_int(8, 4,*PLC); #How long is one entry? (20 for iTunes 0xD / 16 for V2 Firmware, 12 for v1)
+	my $chunks    = get_int(12,4,*PLC); #How many chunks do we have?
+	my $buff;
+	my %pcrh = ();
+	my $rating   = 0;
+	my $playc    = 0;
+	my $bookmark = 0;
+	my $lastply  = 0;
+	my $chunknum = 0;
+	my $itx      = 0; #Unknown
 
-
- 
- for my $chunknum (1..$chunks) {
-  
-  seek(RATING, $offset, 0);
-  if (read(RATING,$buff,4) != 4) { _itBUG("Read failed at $offset while reading PLAYCOUNT ($chunks/$chunksize)"); last; }
-  $playc  = GNUpod::FooBar::shx2int($buff);
- 
-  seek(RATING,$offset+4,0);
-  if (read(RATING,$buff,4) != 4) { _itBUG("Read failed at $offset while reading LASTPLAY ($chunks/$chunksize)"); last; }
-  $lastply = GNUpod::FooBar::shx2int($buff);
-  
-  if($chunksize >= 12) {
-   seek(RATING, $offset+8,0);
-   if(read(RATING, $buff,4) != 4) { _itBUG("Read failed at $offset while reading BOOKMARK ($chunks/$chunksize)"); last;}
-   $bookmark = GNUpod::FooBar::shx2int($buff);
-  }
-  
-  if($chunksize >= 16) { #12+4 - v2 firmware? 
-   seek(RATING, $offset+12, 0);
-   if (read(RATING, $buff,4) != 4) { _itBUG("Read failed at $offset while reading RATING ($chunks/$chunksize)"); last; }
-   $rating = GNUpod::FooBar::shx2int($buff);
-  }
-  
-	if($chunksize >= 20) {
-		seek(RATING, $offset+16,0);
-		if (read(RATING,$buff,4) != 4) { _itBUG("Read failed at $offset while reading ITX ($chunks/$chunksize)"); last; }
-		$itx = GNUpod::FooBar::shx2int($buff);
+	for my $chunknum (1..$chunks) {
+		$pcrh{playcount}{$chunknum} = get_int($offset+0, 4, *PLC) if $chunksize >= 4;
+		$pcrh{lastplay}{$chunknum}  = get_int($offset+4, 4, *PLC) if $chunksize >= 8;
+		$pcrh{bookmark}{$chunknum}  = get_int($offset+8, 4, *PLC) if $chunksize >= 12;
+		$pcrh{rating}{$chunknum}    = get_int($offset+12,4, *PLC) if $chunksize >= 16;
+		$pcrh{skipcount}{$chunknum} = get_int($offset+20,4, *PLC) if $chunksize >= 24;
+		$pcrh{lastskip}{$chunknum}  = get_int($offset+24,4, *PLC) if $chunksize >= 28;
+		$offset += $chunksize; #Nex to go!
 	}
-	
-	
-
-  $pcrh{playcount}{$chunknum} = $playc    if $playc;
-  $pcrh{rating}{$chunknum}    = $rating   if $rating;
-  $pcrh{lastplay}{$chunknum}  = $lastply  if $lastply;
-  $pcrh{bookmark}{$chunknum}  = $bookmark if $bookmark;
-  $offset += $chunksize; #Nex to go!
- }
-close(RATING);
- return \%pcrh;
+	close(PLC);
+	return \%pcrh;
 }
 
 ##############################################
@@ -1449,12 +1451,13 @@ sub _itBUG {
 }
 
 ##########################################
-#ReConvert the SPLDEF hash
-sub _r_spldef {
+#ReConvert the X-defs
+sub _r_xdef {
+	my(%xh) = @_;
 my %RES = ();
- foreach my $spldsc (keys(%SPLDEF)) {
-   foreach my $xkey (keys(%{$SPLDEF{$spldsc}})) {
-    my $xval = $SPLDEF{$spldsc}{$xkey};
+ foreach my $spldsc (keys(%xh)) {
+   foreach my $xkey (keys(%{$xh{$spldsc}})) {
+    my $xval = $xh{$spldsc}{$xkey};
     $RES{$spldsc}{$xval} = int($xkey);
    }
  }

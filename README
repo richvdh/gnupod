@@ -8,15 +8,15 @@ of Perl5 + FireWire / USB2 Support)
 Installing GNUpod
 -----------------
 Running
- #./configure
- #make install
+ # ./configure
+ # make install
 should be enough.
 
 
 Using GNUpod
 ------------
 After installing GNUpod, you can use
-#info gnupod
+# info gnupod
 
 to view GNUpod's info page.
 

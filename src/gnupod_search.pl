@@ -41,7 +41,7 @@ GetOptions(\%opts, "version", "help|h", "mount|m=s", "artist|a=s",
                    "album|l=s", "title|t=s", "id|i=s", "rename=s@",
                    "playcount|c=s", "rating|s=s", "podcastrss|R=s", "podcastguid|U=s",
                    "view=s","genre|g=s", "match-once|o", "delete", "RMME|d");
-GNUpod::FooBar::GetConfig(\%opts, {view=>'s', mount=>'s', 'match-once'=>'b'}, "gnupod_search");
+GNUpod::FooBar::GetConfig(\%opts, {view=>'s', mount=>'s', 'match-once'=>'b', 'automktunes'=>'b'}, "gnupod_search");
 
 
 usage() if $opts{help};
@@ -67,16 +67,13 @@ go();
 ####################################################
 # Worker
 sub go {
- my $con = GNUpod::FooBar::connect(\%opts);
- usage($con->{status}."\n") if $con->{status};
-
- pview(undef,1);
- 
- GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
- #XML::Parser finished, write new file if we deleted or renamed
- GNUpod::XMLhelper::writexml($con) if $opts{delete} or defined($opts{rename});
-
-
+	my $con = GNUpod::FooBar::connect(\%opts);
+	usage($con->{status}."\n") if $con->{status};
+	
+	pview(undef,1);
+	GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
+	#XML::Parser finished, write new file if we deleted or renamed
+	GNUpod::XMLhelper::writexml($con,{automktunes=>$opts{automktunes}}) if $opts{delete} or int(@{$opts{rename}});
 }
 
 #############################################
@@ -85,7 +82,7 @@ sub newfile {
  my($el) =  @_;
 my $matched = undef;
                     # 2 = mount + view (both are ALWAYS set)
-my $ntm = keys(%opts)-2-$opts{'match-once'}-$opts{delete}-(defined $opts{rename});
+my $ntm = keys(%opts)-2-$opts{'match-once'}-$opts{automktunes}-$opts{delete}-(defined $opts{rename});
 
 foreach my $opx (keys(%opts)) {
 	next if $opx =~ /mount|match-once|delete|view|rename/; #Skip this

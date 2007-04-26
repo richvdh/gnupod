@@ -102,6 +102,26 @@ sub _check_casesensitive {
 }
 
 #######################################################################
+# Call mktunes.pl
+sub do_automktunes {
+	my($con) = @_;
+	my $XBIN = "$con->{bindir}/mktunes.pl";
+	if(-x $XBIN) {
+		{
+			local  $ENV{IPOD_MOUNTPOINT} = $con->{mountpoint};
+			if(system("$XBIN > /dev/null")) {
+				die "Unexpected die of $XBIN\n";
+			}
+		}
+	}
+	else {
+		warn "FooBar.pm: Could not execute $XBIN, automktunes SKIPPED!\n";
+		warn "Looks like GNUpod isn't installed correct! did you run 'make install' ?\n";
+	}
+	
+}
+
+#######################################################################
 # Call tunes2pod
 sub do_itbsync {
  my($con) = @_;
@@ -122,7 +142,7 @@ if(-x $XBIN) {
 }
 else {
  warn "FooBar.pm: Could not execute $XBIN, autosync SKIPPED!\n";
- warn "Looks like GNUpod isn't installed correct! did you run 'make install?'\n";
+ warn "Looks like GNUpod isn't installed correct! did you run 'make install' ?\n";
 }
 
 }

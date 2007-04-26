@@ -315,7 +315,7 @@ sub doxml {
 ######################################################
 # Write the XML File
 sub writexml {
-	my($rr) = @_;
+	my($rr, $opts) = @_;
 	my $out = $rr->{xml};
 	my $tmp_out = $out."_tmp_".int(time());
 
@@ -365,6 +365,12 @@ sub writexml {
 		rename($tmp_out, $out) or warn "Could not move $tmp_out to $out\n";
 	}
 	GNUpod::FooBar::setINvalid_otgdata($rr);
+	
+	if($opts->{automktunes}) {
+		print "> Creating new iTunesDB\n";
+		GNUpod::FooBar::do_automktunes($rr);
+	}
+	
 }
 
 1;

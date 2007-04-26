@@ -99,7 +99,9 @@ sub startup {
 
 	# Create podcast playlists and append the other playlists to the data.
 	($number_of_playlists, $raw_pldata) = genpls({nopodcasts=>1, silent=>1});
-	$itb{podcasts}{_data_}  = genpodcasts($number_of_playlists).$raw_pldata;
+	# Note to myself: gtkpod expects the first playlist to be an MPL, itunes and gnupod do not care
+	# as there is no reason for this... anyway.. gnupod is nice and will make gtkpod happy
+	$itb{podcasts}{_data_}  = genpodcasts($raw_pldata,$number_of_playlists);
 	$itb{podcasts}{_len_}  = length($itb{podcasts}{_data_});
 	# Create headers for the podcast-playlist part..
 	$itb{mhsd_3}{_data_}    = GNUpod::iTunesDB::mk_mhsd({size=>$itb{podcasts}{_len_}, type=>3});
@@ -208,7 +210,7 @@ sub r_mpl {
 #########################################################################
 # Create podcast playlists
 sub genpodcasts {
-	my($toslap) = @_;
+	my($toslap,$toslap_plcount) = @_;
 	my $item_id    = 1;
 	my $num_childs = 0;
 	my $num_pls    = 0;
@@ -234,8 +236,8 @@ sub genpodcasts {
 		print ">> Created Podcast-Playlist '$plref->{name}'\n";	
 	}
 	
-	my $mhlp = GNUpod::iTunesDB::mk_mhlp({playlists=>1+$toslap});
-	return $mhlp.GNUpod::iTunesDB::mk_mhyp({size=>length($buff),name=>'Podcasts', type=>0,files=>$num_childs,podcast=>1}).$buff;
+	my $mhlp = GNUpod::iTunesDB::mk_mhlp({playlists=>1+$toslap_plcount});
+	return $mhlp.$toslap.GNUpod::iTunesDB::mk_mhyp({size=>length($buff),name=>'Podcasts', type=>0,files=>$num_childs,podcast=>1}).$buff;
 }
 
 
@@ -265,6 +267,7 @@ sub genpls {
 			}
 		}
 		
+		
 		#Note: sort isn't aviable for spl's.. hack addspl()
 		my($pl, $xc) = r_mpl({name=>$plref->{name}, type=>0, content=>$pldb{$plref->{name}}, splpref=>$splh, plid=>$plref->{plid}, sortby=>$plref->{sort}});
 		if($pl) { #r_mpl got data, we can create a playlist..
@@ -284,7 +287,7 @@ sub genpls {
 	}
 	
 	if(int(@podcasts)) {
-		my($pc_pl,undef) = r_mpl({name=>'Podcasts', type=>0, content=>\@podcasts, podcast=>1});
+		my($pc_pl,undef) = r_mpl({name=>'Podcasts', type=>0, content=>\@podcasts, podcast=>1, sortby=>'releasedate'});
 		$plc++;
 		$pldata .= $pc_pl;
 		print ">> Created podcast playlist for legacy iPods\n" unless $opts->{silent};

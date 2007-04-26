@@ -1,5 +1,5 @@
 ######################################################
-# GNUpod 0.95 Configuration                          #
+# GNUpod 0.99.2 Configuration                          #
 #                                                    #
 # release 20040418                                   #
 # Save this file as:                                 #
@@ -12,6 +12,11 @@
 ##Set the mountpoint for the iPod
 #mount = /mnt/ipod
 
+##Let GNUpod call mktunes.pl itself.
+##This may cause a slow-down when dealing with
+##large databases on slow CPUs because mktunes.pl
+##may take some time to complete
+#automktunes = 1
 
 
 

@@ -38,7 +38,7 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "top4secret");
-GNUpod::FooBar::GetConfig(\%opts, {nosync=>'b', lastfm_enabled=>'b', lastfm_user=>'s', lastfm_password=>'s'}, "otgsync");
+GNUpod::FooBar::GetConfig(\%opts, {nosync=>'b', lastfm_enabled=>'b', lastfm_user=>'s', lastfm_password=>'s', 'automktunes'=>'b'}, "otgsync");
 #otgsync does just red nosync.. DONT add mount and such funny things!
 
 
@@ -90,12 +90,13 @@ sub go {
 			#First, we parse the old xml document and create the keeper
 			GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}\n");
 			mkotg(@xotg) if int(@xotg);
-			GNUpod::XMLhelper::writexml($con);
-			
-			
+			GNUpod::FooBar::setsync($con); # Needed for automktunes
+			GNUpod::XMLhelper::writexml($con, {automktunes=>$opts{automktunes}});
 		}
-		#SetSync for *ALL*
-		GNUpod::FooBar::setsync($con);
+		else {
+			#setsync .. just to be sure..
+			GNUpod::FooBar::setsync($con);
+		}
 		#..and submit lastfm data if enabled in config file
 
 		lfmworker($con->{lastfm_queue}) if $opts{lastfm_enabled}
@@ -186,16 +187,21 @@ sub newfile {
 	
 	push(@keeper, int($el->{file}->{id}));
 	if($plcref) { #PlayCountref exists (=v2 ipod) -> adjust
-		my $playcount = $plcref->{playcount}{int(@keeper)-1};
 		#Adjust rating
-		$el->{file}->{rating}    = $plcref->{rating}{int(@keeper)-1};
+		my $playcount = $plcref->{playcount}{int(@keeper)-1};
+		$el->{file}->{rating}    =  $plcref->{rating}{int(@keeper)-1};
 		$el->{file}->{playcount} += $playcount;
-		$el->{file}->{bookmark}  = $plcref->{bookmark}{int(@keeper)-1};
+		$el->{file}->{skipcount} += $plcref->{skipcount}{int(@keeper)-1};
+		$el->{file}->{bookmark}  =  $plcref->{bookmark}{int(@keeper)-1};
 		$el->{file}->{played_flag} = 1 if $el->{file}->{playcount};
+		
 		if($plcref->{lastplay}{int(@keeper)-1}) {
 			$el->{file}->{lastplay}  = $plcref->{lastplay}{int(@keeper)-1};
 		}
-
+		if($plcref->{lastskip}{int(@keeper)-1}) {
+			$el->{file}->{lastskip}  = $plcref->{lastskip}{int(@keeper)-1};
+		}
+		
 		if($playcount > 0 && $opts{lastfm_enabled}) {
 			my $seconds = int($el->{file}->{time}/1000);
 			for(1..$playcount) {

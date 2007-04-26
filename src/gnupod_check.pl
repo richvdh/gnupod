@@ -38,7 +38,7 @@ print "gnupod_check.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "fixit");
-GNUpod::FooBar::GetConfig(\%opts, {mount=>'s'}, "gnupod_check");
+GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', 'automktunes'=>'b'}, "gnupod_check");
 
 usage() if $opts{help};
 version() if $opts{version};
@@ -67,7 +67,7 @@ sub go {
 		if($TRACKER{FIXED}) {
 			print " -> Writing new GNUtunesDB.xml, i fixed $TRACKER{FIXED} Errors.\n";
 			print "    You may have to re-run $0\n";
-			GNUpod::XMLhelper::writexml($con);
+			GNUpod::XMLhelper::writexml($con, {automktunes=>$opts{automktunes}});
 		}
 		else {
 			print " -> Nothing fixed, no need to rewrite the GNUtunesDB.xml\n";

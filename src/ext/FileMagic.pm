@@ -121,7 +121,7 @@ sub __is_NonNative {
  $rh{songnum}  = int($songa[0]); 
  $rh{comment}  = getutf8($metastuff->{_COMMENT} || $metastuff->{FORMAT}." file");
  $rh{fdesc}    = getutf8($metastuff->{_VENDOR} || "Converted using $encoder"); 
- $rh{mediatype}= int($metastuff->{_MEDIATYPE} || 0);
+ $rh{mediatype}= int($metastuff->{_MEDIATYPE} || MEDIATYPE_AUDIO);
 
  return {ref=>\%rh, encoder=>$encoder, codec=>$NN_HEADERS->{$buff}->{ftyp} };
 }
@@ -160,7 +160,7 @@ sub __is_qt {
  $rh{genre}     = _get_genre( getutf8($ret->{genre} || $ret->{gnre} || "") );
  $rh{composer}  = getutf8($ret->{composer} || ""); 
  $rh{soundcheck}= _parse_iTunNORM($ret->{iTunNORM});
- $rh{mediatype}  = int($ret->{mediatype} || 1);
+ $rh{mediatype}  = int($ret->{mediatype} || MEDIATYPE_AUDIO);
  return  ({codec=>$ret->{_CODEC}, ref=>\%rh});
 }
 
