@@ -24,8 +24,8 @@ File: gnupod.info,  Node: Top,  Next: Requirements,  Up: (dir)
 1 GNUpod
 ********
 
-This edition of the `GNUpod Manual', last updated 24. Jul. 2005,
-documents GNUpod Version 0.98.2
+This edition of the `GNUpod Manual', last updated 27. Apr. 2007,
+documents GNUpod Version 0.99.2
 
 * Menu:
 
@@ -426,6 +426,7 @@ File: gnupod.info,  Node: Using GNUpod,  Next: Problems,  Prev: Installing GNUpo
 * Remove files::                    How to delete files on the iPod
 * Edit tags::                       How to change/edit/rename
 * Creating playlists::              How to create a playlist
+* Dealing with podcasts::           How to create a podcast playlist
 * Unplug the iPod::                 How to unplug the iPod (Not a joke.. read it)
 * Recovering files::                How to rebuild the Database if you lost the iTunesDB & GNUtunesDB
 * Coexistence::                     iTunes/Music Match/xtunes/Ehpod user? Read this!
@@ -557,7 +558,7 @@ artist into 'Johne Doe' and sets the rating to 5 Stars (5*20=100)
    You could also edit the GNUtunesDB.xml with a text editor :-)
 
 
-File: gnupod.info,  Node: Creating playlists,  Next: Unplug the iPod,  Prev: Edit tags,  Up: Using GNUpod
+File: gnupod.info,  Node: Creating playlists,  Next: Dealing with podcasts,  Prev: Edit tags,  Up: Using GNUpod
 
 4.7 Creating playlists
 ======================
@@ -629,9 +630,35 @@ will create and add the listed songs to the named playlist.
    Don't forget to run mktunes before umounting! (See 'Unplug the iPod')
 
 
-File: gnupod.info,  Node: Unplug the iPod,  Next: Recovering files,  Prev: Creating playlists,  Up: Using GNUpod
+File: gnupod.info,  Node: Dealing with podcasts,  Next: Unplug the iPod,  Prev: Creating playlists,  Up: Using GNUpod
 
-4.8 Unplug the iPod
+4.8 Dealing with podcasts
+=========================
+
+To create a podcast playlist you just need to set the podcast flag to
+'1':
+
+      <playlist name="Test Podcast" podcast="1">
+        <iregex artist="John Doe" />
+      </playlist>
+
+   Such a playlist will show up as a Podcast after running mktunes.pl
+
+   gnupod_addsong.pl can also download podcasts and create such
+playlists itself:
+
+     gnupod_addsong.pl -p "Heute Morgen" --playlist-is-podcast http://pod.drs.ch/heutemorgen_mpx.xml
+
+   Running this command will create a Playlist called 'Heute Morgen'
+(`-p') and set `podcast="1"' (`--playlist-is-podcast').
+`gnupod_addsong.pl' will then fetch the podcast from
+`http://pod.drs.ch/heutemorgen_mpx.xml', download all (new) files and
+add them to the 'Heute Morgen' playlist!
+
+
+File: gnupod.info,  Node: Unplug the iPod,  Next: Recovering files,  Prev: Dealing with podcasts,  Up: Using GNUpod
+
+4.9 Unplug the iPod
 ===================
 
 Before umounting the iPod, you have to call `mktunes.pl' which will
@@ -661,8 +688,8 @@ and run it)
 
 File: gnupod.info,  Node: Recovering files,  Next: Coexistence,  Prev: Unplug the iPod,  Up: Using GNUpod
 
-4.9 Recovering files
-====================
+4.10 Recovering files
+=====================
 
 If your computer crashed while uploading/deleting songs, you may have
 some 'zombie' files.
@@ -686,7 +713,7 @@ know that it's possible (Note: Of course you'll lose your Playlists)
 
 File: gnupod.info,  Node: Coexistence,  Prev: Recovering files,  Up: Using GNUpod
 
-4.10 Coexistence
+4.11 Coexistence
 ================
 
 GNUpod can coexist with iTunes and other programs for the iPod.
@@ -1270,21 +1297,22 @@ Node: Using FireWire with GNU/Linux3529
 Node: Convert your Mac iPod7078
 Node: Firmware update12319
 Node: Using GNUpod15265
-Node: Preparation16154
-Node: Configuration16886
-Node: Add files17343
-Node: Search files18825
-Node: Remove files19311
-Node: Edit tags19612
-Node: Creating playlists20157
-Node: Unplug the iPod22632
-Node: Recovering files23541
-Node: Coexistence24436
-Node: Problems25906
-Node: GNUtunesDB26289
-Node: Get rid of '-m'27795
-Node: Known bugs and limitations28080
-Node: Reporting Bugs28371
-Node: GNU Free Documentation License28819
+Node: Preparation16223
+Node: Configuration16955
+Node: Add files17412
+Node: Search files18894
+Node: Remove files19380
+Node: Edit tags19681
+Node: Creating playlists20226
+Node: Dealing with podcasts22707
+Node: Unplug the iPod23608
+Node: Recovering files24520
+Node: Coexistence25417
+Node: Problems26887
+Node: GNUtunesDB27270
+Node: Get rid of '-m'28776
+Node: Known bugs and limitations29061
+Node: Reporting Bugs29352
+Node: GNU Free Documentation License29800
 
 End Tag Table

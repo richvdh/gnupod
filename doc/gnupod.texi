@@ -448,6 +448,7 @@ But please don't blame me if your iPod dies...
 * Remove files::                    How to delete files on the iPod
 * Edit tags::                       How to change/edit/rename
 * Creating playlists::              How to create a playlist
+* Dealing with podcasts::           How to create a podcast playlist
 * Unplug the iPod::                 How to unplug the iPod (Not a joke.. read it)
 * Recovering files::                How to rebuild the Database if you lost the iTunesDB & GNUtunesDB
 * Coexistence::                     iTunes/Music Match/xtunes/Ehpod user? Read this!
@@ -648,6 +649,30 @@ You can also use the --playlist option of gnupod_addsong.pl. This will create an
 named playlist.
 
 Don't forget to run mktunes before umounting! (See 'Unplug the iPod')
+
+@node Dealing with podcasts
+@section Dealing with podcasts
+
+To create a podcast playlist you just need to set the podcast flag to '1':
+
+@example
+ <playlist name="Test Podcast" podcast="1">
+   <iregex artist="John Doe" />
+ </playlist>
+@end example
+
+Such a playlist will show up as a Podcast after running mktunes.pl
+
+gnupod_addsong.pl can also download podcasts and create such playlists itself:
+
+@example
+gnupod_addsong.pl -p "Heute Morgen" --playlist-is-podcast http://pod.drs.ch/heutemorgen_mpx.xml
+@end example
+
+Running this command will create a Playlist called 'Heute Morgen' (@code{@w{-p}}) and set @code{@w{podcast="1"}} (@code{@w{--playlist-is-podcast}}).
+@code{@w{gnupod_addsong.pl}} will then fetch the podcast from @code{@w{http://pod.drs.ch/heutemorgen_mpx.xml}}, download all (new) files 
+and add them to the 'Heute Morgen' playlist!
+
 
 @node Unplug the iPod
 @section Unplug the iPod

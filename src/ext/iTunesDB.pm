@@ -52,7 +52,6 @@ my %mhod_id = ( title=>1, path=>2, album=>3, artist=>4, genre=>5, fdesc=>6, eq=>
 
 
 
-
 ############ PLAYLIST IPOD-SORT DEFINITION ################
 $PLDEF{sort}{1}  = 'manual';
 $PLDEF{sort}{2}  = 'path';
@@ -1058,10 +1057,10 @@ sub get_mhod {
 			$foo = Unicode::String::byteswap2($foo);
 			$foo = Unicode::String::utf16($foo)->utf8;			
 		}
-		return({size=>$ml,string=>$foo,type=>$mty,spldata=>$spldata,splpref=>$splpref,matchrule=>$anym,plpos=>$plpos});
+		return({total_size=>$ml, header_size=>$mhl, string=>$foo,type=>$mty,spldata=>$spldata,splpref=>$splpref,matchrule=>$anym,plpos=>$plpos});
 	}
 	else {
-		return({size=>-1});
+		return({total_size=>-1});
 	}
 }
 
@@ -1071,34 +1070,21 @@ sub get_mhod {
 # get an mhip entry
 sub get_mhip {
 	my($pos,$fd) = @_;
-	my $oid = 0;
+	
+	my %r = ();
+	$r{total_size} = -1;
+	
 	if(get_string($pos, 4,$fd) eq "mhip") {
-		my $oof               = get_int($pos+4, 4,$fd);
-		my $mhods             = get_int($pos+12,4,$fd);
-		my $podcast_group     = get_int($pos+16,4,$fd);
-		my $plid              = get_int($pos+20,4,$fd);
-		my $sid               = get_int($pos+24,4,$fd);
-		my $timestamp         = get_int($pos+28,4,$fd);
-		my $podcast_group_ref = get_int($pos+32,4,$fd);
-		my $subnaming         = undef;
-		
-		for(my $i=0;$i<$mhods;$i++) {
-			my $mhr = get_mhod($pos+$oof,$fd);
-			my $mhsize = $mhr->{size};
-			
-			if($podcast_group == MAGIC_PODCAST_GROUP && $mhod_array[$mhr->{type}] eq "title") {
-				$subnaming = $mhr->{string};
-			}
-			_itBUG("Fatal seek error in get_mhip, can't continue! (debug: $mhsize / $i / $pos / $oof)",1) if $mhsize == -1;
-			$oid+=$mhsize;
-		}
-		
-		return({size=>($oid+$oof),sid=>$sid,plid=>$plid, podcast_group=>$podcast_group,
-		        timestamp=>$timestamp, podcast_group_ref=>$podcast_group_ref, subnaming=>$subnaming});
+		$r{header_size}       = get_int($pos+4, 4,$fd);
+		$r{total_size}        = get_int($pos+8, 4,$fd);
+		$r{childs}            = get_int($pos+12,4,$fd);
+		$r{podcast_group}     = get_int($pos+16,4,$fd);
+		$r{plid}              = get_int($pos+20,4,$fd);
+		$r{sid}               = get_int($pos+24,4,$fd);
+		$r{timestamp}         = get_int($pos+28,4,$fd);
+		$r{podcast_group_ref} = get_int($pos+32,4,$fd);
 	}
-
-	#we are lost
-	return ({size=>-1});
+	return \%r;
 }
 
 
@@ -1117,11 +1103,11 @@ sub get_string {
 }
 
 
+###########################################
+# Read mhfd
 sub get_mhfd {
 	my ($seek,$fd) = @_;
-	
 	my %r = ();
-	
 	my $id = get_string($seek,4,$fd);
 	if($id eq "mhfd") {
 		$r{header_size} = get_int($seek+4,4,$fd);
@@ -1129,104 +1115,6 @@ sub get_mhfd {
 		$r{next_id}     = get_int($seek+28,4,$fd);
 	}
 	return \%r;
-}
-
-sub get_artworkdb {
-	open(AWDB, "/mnt/ipod/iPod_Control/Artwork/ArtworkDB") or die;
-	
-	use Data::Dumper;
-	
-	my $offset = 0;
-	my $mhfd = get_mhfd($offset,*AWDB);
-	$offset += $mhfd->{header_size};
-	
-	
-	while($offset < $mhfd->{total_size}) {
-		my $mhsd = get_mhsd($offset,*AWDB);
-		$offset += $mhsd->{header_size};
-		
-		my $xchild=get_mhxx($offset, *AWDB);
-		$offset+=$xchild->{header_size};
-		if($xchild->{type} eq 'mhli') {
-			for my $child (1..$xchild->{childs}) {
-				my $mhii = get_mhii($offset,*AWDB);
-				my $mhod = get_mhod($offset+$mhii->{header_size},*AWDB);
-				print Data::Dumper::Dumper($mhii);
-				print Data::Dumper::Dumper($mhod);
-				print "---\n";				
-				$offset += $mhii->{total_size};
-			}
-		}
-		die;
-	}
-	
-	die;
-	
-}
-
-
-#############################################
-# Get a playlist (Should be called get_mhyp, but it does the whole playlist)
-# $opts->{nomplskip} == 1 => Skip FastSkip of MPL. Workaround for broken files written by Anapod..
-sub get_pl {
-	my($pos,$opts,$fd) = @_;
-	my %ret_hash = ();
-	my @pldata = ();
-	
-	
-	if(get_string($pos, 4,$fd) eq "mhyp") { #Ok, its an mhyp
-		my $header_len     = get_int($pos+4, 4,$fd);  # Size of the header
-		my $mhyp_len       = get_int($pos+8, 4,$fd);  # Size of mhyp
-		my $mhits          = get_int($pos+12,4,$fd);  # How many mhits we have here
-		my $scount         = get_int($pos+16, 4,$fd); # How many songs should we expect?
-		$ret_hash{type}    = get_int($pos+20, 4,$fd); # Is it a main playlist?
-		$ret_hash{plid}    = get_int($pos+28,4,$fd);  # UID if the playlist..
-		$ret_hash{podcast} = get_int($pos+42,2,$fd);  # Is-Podcast-Playlist flag
-###	$ret_hash{sortflag}= $PLDEF{sort}{get_int($pos+44,4)};  # How to sort .. fixme: is this even used by itunes?
-		
-		#Its a MPL, do a fast skip  --> We don't parse the mpl, because we know the content anyway
-		if($ret_hash{type} && ($opts->{nomplskip} != 1) ) {
-			return ($pos+$mhyp_len, {type=>1}) 
-		}
-		$pos += $header_len; #set pos to start of first mhod
-		#We can now read the name of the Playlist
-		#Ehpod is buggy and writes the playlist name 2 times.. well catch both of them
-		#MusicMatch is also stupid and doesn't create a playlist mhod
-		#for the mainPlaylist
-		my ($oid, $plname, $itt) = undef;
-		for(my $i=0;$i<$mhits;$i++) {
-			my $mhh = get_mhod($pos,$fd);
-			if($mhh->{size} == -1) {
-				_itBUG("Failed to get $i mhod of $mhits (plpart) ; Bad mhod found at offset $pos",1);
-			}
-		
-			$pos+=$mhh->{size};
-			if($mhh->{type} == 1) {
-				$ret_hash{name} = $mhh->{string};
-			}
-			elsif(ref($mhh->{splpref}) eq "HASH") {
-				$ret_hash{splpref} = $mhh->{splpref};
-			}
-			elsif(ref($mhh->{spldata}) eq "ARRAY") {
-				$ret_hash{spldata} = $mhh->{spldata};
-				$ret_hash{matchrule}=$mhh->{matchrule};
-			}
-		}
-		#Now get the items
-		for(my $i = 0; $i<$scount;$i++) {
-			my $mhih = get_mhip($pos,$fd);
-			if($mhih->{size} == -1) {
-				_itBUG("Failed to parse Song $i of $scount songs",1);
-			}
-			$pos += $mhih->{size};
-			push(@pldata, $mhih);
-		}
-		$ret_hash{content} = \@pldata;
-		return ($pos, \%ret_hash);   
-	}
-	
-	#Seek was wrong
-	return -1;
 }
 
 
@@ -1314,20 +1202,20 @@ if(abs($ret{volume}) > 100) {
 my $mhods = get_int($sum+12,4,$fd);
 $sum += get_int($sum+4,4,$fd);
 
- for(my $i=0;$i<$mhods;$i++) {
-    my $mhh = get_mhod($sum,$fd);
-    if($mhh->{size} == -1) {
-     _itBUG("Failed to parse mhod $i of $mhods",1);
-    }
-    $sum+=$mhh->{size};
-    my $xml_name = $mhod_array[$mhh->{type}];
-    if($xml_name) { #Has an xml name.. sounds interesting
-      $ret{$xml_name} = $mhh->{string};
-    }
-    else {
-     _itBUG("found unhandled mhod type '$mhh->{type}' (content: $mhh->{string})");
-    }
- }
+	for(my $i=0;$i<$mhods;$i++) {
+		my $mhh = get_mhod($sum,$fd);
+		if($mhh->{total_size} == -1) {
+			_itBUG("Failed to parse mhod $i of $mhods",1);
+		}
+		$sum+=$mhh->{total_size};
+		my $xml_name = $mhod_array[$mhh->{type}];
+		if($xml_name) { #Has an xml name.. sounds interesting
+			$ret{$xml_name} = $mhh->{string};
+		}
+		else {
+			_itBUG("found unhandled mhod type '$mhh->{type}' (content: $mhh->{string})");
+		}
+	}
 return ($sum,\%ret);          #black magic, returns next (possible?) start of the mhit
 }
 #Was no mhod
@@ -1395,8 +1283,8 @@ sub get_starts {
 	my $cpos = $mhbd_s;
 	my @childs = ();
 	foreach my $current_child (1..$childs) {
-		my $mhsd = get_mhsd($cpos,$fd);
-		my $mhlt = get_mhxx($cpos+$mhsd->{header_size},$fd);
+		my $mhsd = get_mhsd($cpos,$fd);                      # Parse child
+		my $mhlt = get_mhxx($cpos+$mhsd->{header_size},$fd); # Parse child of child
 		my $xstart = $cpos+$mhlt->{header_size}+$mhsd->{header_size};
 		$childs[$mhsd->{type}]->{start} = $xstart;
 		$childs[$mhsd->{type}]->{type}  = $mhsd->{type};
@@ -1405,6 +1293,117 @@ sub get_starts {
 	}
 	return(@childs);
 }
+
+
+sub get_artworkdb {
+	open(AWDB, "/mnt/ipod/iPod_Control/Artwork/ArtworkDB") or die;
+	
+	use Data::Dumper;
+	
+	my $offset = 0;
+	my $mhfd = get_mhfd($offset,*AWDB);
+	$offset += $mhfd->{header_size};
+	
+	
+	while($offset < $mhfd->{total_size}) {
+		my $mhsd = get_mhsd($offset,*AWDB);
+		$offset += $mhsd->{header_size};
+		
+		my $xchild=get_mhxx($offset, *AWDB);
+		$offset+=$xchild->{header_size};
+		if($xchild->{type} eq 'mhli') {
+			for my $child (1..$xchild->{childs}) {
+				my $mhii = get_mhii($offset,*AWDB);
+				my $mhod = get_mhod($offset+$mhii->{header_size},*AWDB);
+				print Data::Dumper::Dumper($mhii);
+				print Data::Dumper::Dumper($mhod);
+				print "---\n";				
+				$offset += $mhii->{total_size};
+			}
+		}
+		die;
+	}
+	
+	die;
+	
+}
+
+
+#############################################
+# Get a playlist (Should be called get_mhyp, but it does the whole playlist)
+# $opts->{nomplskip} == 1 => Skip FastSkip of MPL. Workaround for broken files written by Anapod..
+sub get_pl {
+	my($pos,$opts,$fd) = @_;
+	my %ret_hash = ();
+	my @pldata = ();
+	
+	
+	if(get_string($pos, 4,$fd) eq "mhyp") { #Ok, its an mhyp
+		my $header_len     = get_int($pos+4, 4,$fd);  # Size of the header
+		my $mhyp_len       = get_int($pos+8, 4,$fd);  # Size of mhyp
+		my $mhits          = get_int($pos+12,4,$fd);  # How many mhits we have here
+		my $scount         = get_int($pos+16, 4,$fd); # How many songs should we expect?
+		$ret_hash{type}    = get_int($pos+20, 4,$fd); # Is it a main playlist?
+		$ret_hash{plid}    = get_int($pos+28,4,$fd);  # UID if the playlist..
+		$ret_hash{podcast} = get_int($pos+42,2,$fd);  # Is-Podcast-Playlist flag
+###	$ret_hash{sortflag}= $PLDEF{sort}{get_int($pos+44,4)};  # How to sort .. fixme: is this even used by itunes?
+		
+		#Its a MPL, do a fast skip  --> We don't parse the mpl, because we know the content anyway
+		if($ret_hash{type} && ($opts->{nomplskip} != 1) ) {
+			return ($pos+$mhyp_len, {type=>1}) 
+		}
+		$pos += $header_len; #set pos to start of first mhod
+		#We can now read the name of the Playlist
+		#Ehpod is buggy and writes the playlist name 2 times.. well catch both of them
+		#MusicMatch is also stupid and doesn't create a playlist mhod
+		#for the mainPlaylist
+		my ($oid, $plname, $itt) = undef;
+		for(my $i=0;$i<$mhits;$i++) {
+			my $mhh = get_mhod($pos,$fd);
+			if($mhh->{total_size} == -1) {
+				_itBUG("Failed to get $i mhod of $mhits (plpart) ; Bad mhod found at offset $pos",1);
+			}
+		
+			$pos+=$mhh->{total_size};
+			if($mhh->{type} == 1) {
+				$ret_hash{name} = $mhh->{string};
+			}
+			elsif(ref($mhh->{splpref}) eq "HASH") {
+				$ret_hash{splpref} = $mhh->{splpref};
+			}
+			elsif(ref($mhh->{spldata}) eq "ARRAY") {
+				$ret_hash{spldata} = $mhh->{spldata};
+				$ret_hash{matchrule}=$mhh->{matchrule};
+			}
+		}
+		
+		# Get all child items of this playlist
+		for(my $i=0; $i<$scount;$i++) {
+			my $mhip = get_mhip($pos,$fd);
+			_itBUG("Failed to parse Song $i of $scount songs",1) if $mhip->{total_size} == -1; #Fatal!
+			my $subnaming= undef;			
+			my $org_pos  = $pos;
+			$pos        += $mhip->{header_size};
+			
+			# Get all mhods of this mhip; normally there is only one.. but anyway:
+			for(my $j=0;$j<$mhip->{childs};$j++) {
+				my $mhod = get_mhod($pos,$fd);
+				$pos += $mhod->{total_size};
+				if($mhip->{podcast_group} == MAGIC_PODCAST_GROUP && $mhod_array[$mhod->{type}] eq "title") {
+					$subnaming = $mhod->{string};
+				}
+			}
+			_itBUG("Broken mhip header: $pos != $org_pos ; using calculated offset ($pos)",0) if $pos != $org_pos;
+			push(@pldata, {sid=>$mhip->{sid}, podcast_group=>$mhip->{podcast_group}, timestamp=>$mhip->{timestamp},
+			               plid=>$mhip->{plid}, podcast_group_ref=>$mhip->{podcast_group_ref}, subnaming=>$subnaming});
+		}
+		$ret_hash{content} = \@pldata;
+		return ($pos, \%ret_hash);   
+	}
+	#Seek was wrong
+	return -1;
+}
+
 
 
 
@@ -1494,27 +1493,26 @@ sub getTimezone {
 #########################################################
 # Default Bugreport view
 sub _itBUG {
- my($info, $fatal) = @_;
- 
- warn "\n"; #Make sure to get a newline
- warn "iTunesDB.pm: Ups, something bad happened, you found a bug in GNUpod!\n";
- warn "====================================================================\n";
- warn $info."\n";
- warn "====================================================================\n";
- warn "> Please write a Bugreport to <pab\@blinkenlights.ch>\n";
- warn "> - Please send me the complete Output of the program\n";
- warn "> - Please create a backup of the iTunesDB file, because i may ask you\n";
- warn ">   to send me this file. Thanks.\n";
- 
- if($fatal) {
-  warn " *** THIS ERROR IS FATAL, I CAN'T CONTINUE, SORRY!\n";
-  exit(1);
- }
- else {
-  warn " *** THIS ERROR IS NOT FATAL, BUT GNUPOD MAYBE GET CONFUSED %-)\n";
- }
- 
- 
+	my($info, $fatal) = @_;
+	
+	
+	
+	if($fatal) {
+		warn "\n"; # Get a newline
+		warn "*********************************************************\n";
+		warn "  GNUpod ###__VERSION__###: Fatal error:\n";
+		warn "  $info\n";
+		warn "*********************************************************\n";
+		warn "> - Please write a Bugreport to <adrian\@blinkenlights.ch>\n";
+		warn "> - Please include the COMPLETE output of $0\n";
+		warn "> - Please create a backup of your iTunesDB file because i\n";
+		warn "    may ask you to send it to me. Thanks.\n";
+		Carp::cluck("** ABORTING PARSER **\n");
+		exit(1);
+	}
+	else {
+		warn "iTunesDB.pm: Oops! : $info\n";
+	}
 }
 
 ##########################################

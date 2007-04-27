@@ -415,6 +415,7 @@ foreach my $key (keys(%podcast_infos)) {
 	foreach my $podcast_item (@$cref) {
 		my $c_title = $podcast_item->{title}->{"\0"};
 		my $c_author = $podcast_item->{author}->{"\0"};
+		my $c_desc  = $podcast_item->{description}->{"\0"};
 		my $c_url   = $podcast_item->{enclosure}->{url};
 		#We use the URL as GUID if there isn't one...			
 		my $c_guid  = $podcast_item->{guid}->{"\0"} || $c_url;
@@ -442,8 +443,9 @@ foreach my $key (keys(%podcast_infos)) {
 		# Set information/tags from XML-File
 		$per_file_info{$rssmedia->{file}}->{podcastguid} = $c_guid;
 		$per_file_info{$rssmedia->{file}}->{podcastrss}  = $c_podcastrss;
-		$per_file_info{$rssmedia->{file}}->{title}       = $c_title  if $c_title;
-		$per_file_info{$rssmedia->{file}}->{artist}      = $c_author if $c_author;
+		$per_file_info{$rssmedia->{file}}->{title}       = $c_title   if $c_title;
+		$per_file_info{$rssmedia->{file}}->{artist}      = $c_author  if $c_author;
+		$per_file_info{$rssmedia->{file}}->{desc}        = $c_desc    if $c_desc;
 		
 		# Do the same as iTunes does:
 		$per_file_info{$rssmedia->{file}}->{shuffleskip}  = 1;

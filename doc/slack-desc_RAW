@@ -7,4 +7,4 @@ gnupod: gnuPod needs Unicode::String, you can install it running
 gnupod: #perl -MCPAN -e 'install Unicode::String'
 gnupod: as root
 gnupod:
-gnupod: Package Created By: Adrian Ulrich <pab@blinkenlights.ch>
+gnupod: Package Created By: Adrian Ulrich <adrian@blinkenlights.ch>

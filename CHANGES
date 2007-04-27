@@ -1,14 +1,5 @@
 GNUpod 0.99.2 - codename
 
-Release-Blocker:
-
-- Podcasts sollten nicht rate-bar sein: 3x klicken sollte eigentlich
-  den comment dazu zeigen, nicht das rating menü
-- Podcasts werden 2x gesogen (Heute morgen podcast) : RSS fehler oder GNUpod bug?
-- sortflag dokumentation schreiben (fixme: spl? braucht net, oder?)
-- Podcast dokumentation schreiben
-- RVA2 (Normalize) dokumentieren
-
 Summary
 -------
 
@@ -24,6 +15,8 @@ Summary
   'automktunes = 1' inside ~/.gnupodrc eliminates the need
   to call mktunes.pl after adding/deleting/renaming songs because GNUpod
   will call mktunes.pl itself.
+- Many internal changes / bugfixes to iTunesDB.pm like fixing an incorrect
+  written mhip size. Playlist parsing has also been rewritten and cleaned up.
 
 
 *** OLD STUFF ***
@@ -39,7 +32,6 @@ Summary
 
 
 GNUpod 0.99 - codename 'Pentarou'
-
 
 Summary
 -------
