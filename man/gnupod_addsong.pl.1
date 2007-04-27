@@ -1,6 +1,6 @@
-.TH GNUPOD_ADDSONG "1" "February 2005" "gnupod_addsong.pl 0.98" "User Commands"
+.TH GNUPOD_ADDSONG "27" "April 2007" "gnupod_addsong.pl 0.99.2" "User Commands"
 .SH NAME
-gnupod_addsong.pl \- manual page for gnupod_addsong.pl 0.98
+gnupod_addsong.pl \- manual page for gnupod_addsong.pl 0.99.2
 .SH SYNOPSIS
 .B gnupod_addsong.pl
 [\fIOPTION\fR]...
@@ -41,6 +41,10 @@ Convert FLAC and OGG files On-The-Fly into choosen format and add them.
 You need the Perl modules 'Audio::FLAC::Header' for FLAC files and 'Ogg::Vorbis::Header::PurePerl' for
 OGG files. Lame is needed for MP3 Output and FAAC (>= 1.24) is needed for AAC output.
 Btw: 'aacbm' means a Bookmark-AAC File (M4B)
+See \fB\-\-reencode\fR to specify the quality of the output file.
+.TP
+\fB\-e\fR, \fB\-\-reencode=INT\fR
+Re-encode while adding Files. 0=God / 9=Bad Quality. Lame is needed for MP3, FAAC for AAC (m4a).
 .TP
 \fB\-\-set\-artist=STRING\fR
 Force Artist
@@ -59,6 +63,13 @@ Force Playcount
 .TP
 \fB\-\-set\-songnum\fR
 Order songs on the iPod in the same order as they were added (= Overwrite songnum tag)
+.TP
+\fB\-\-min\-vol\-adj=INT\fR
+Minimum volume adjustment done if ID3v2.4 RVA2 tags are found. Default is 0 (= Do nothing)
+.TP
+\fB\-\-max\-vol\-adj=INT\fR
+Maximum volume adjustment done if ID3v2.4 RVA2 tags are found. Default is 0 (= Do nothing)
+Using this two options, you can adjust the volume in the range -100% to +100%. 
 .SH AUTHOR
 Written by Adrian Ulrich
 .SH "REPORTING BUGS"
