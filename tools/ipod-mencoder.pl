@@ -14,16 +14,22 @@ if(!defined($opts{out}) or !(-d $opts{out})) {
 	die "Usage: $0 --out=outdir [--aid 0 --sid 0 --rate 500]\n";
 }
 
-foreach my $cfile (@ARGV) {
+my @ITEMS = ();
+if(int(@ARGV) == 1 && $ARGV[0] eq '-') {
+	while(<STDIN>) { chomp; push(@ITEMS,$_); }
+}
+else {
+	@ITEMS = @ARGV;
+}
+
+foreach my $cfile (@ITEMS) {
 	my $outfile = get_outfile($cfile);
 	print "Transcoding $cfile -> $outfile\n";
 	if(-e $outfile) {
 		warn "Skipping $outfile: file does exist\n";
 		next;
 	}
-	
 	system(transcode({input=>$cfile, output=>$outfile, vbitrate=>$opts{rate}, aid=>$opts{aid}, sid=>$opts{sid}}));
-	
 }
 
 

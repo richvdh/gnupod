@@ -387,10 +387,19 @@ sub resolve_podcasts {
 	my(@xfiles) = @_;
 	my @files = ();
 	my $i = 0;
+	
+	my $env_is_okay = 1 if $opts{playlist} && $opts{'playlist-is-podcast'};
+	
 	foreach my $cf (@xfiles) {
 		if($cf =~ /^http:\/\//i) {
 			$i++;
 			print "* [HTTP] Fetching Podcast #$i: $cf\n";
+			
+			unless($env_is_okay) {
+				warn "! [!!!!] WARNING: This podcast may not appear on your iPod because you did not specify a podcast-playlist to use.\n";
+				warn "! [!!!!]          Please use the options '--playlist' and '--playlist-is-podcast' while fetching podcasts.\n";
+			}
+			
 			my $pcrss = PODCAST_fetch($cf, "/tmp/gnupodcast$i");
 			if($pcrss->{status} or (!(-f $pcrss->{file}))) {
 				warn "! [HTTP] Unable to download the file '$cf', wget exitcode: $pcrss->{status}\n";
@@ -456,7 +465,6 @@ foreach my $key (keys(%podcast_infos)) {
 		push(@files,$rssmedia->{file});
 	}
 }
-	
 	return @files;
 }
 
