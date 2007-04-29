@@ -220,12 +220,25 @@ sub genpodcasts {
 	foreach my $plref (GNUpod::XMLhelper::getpl_attribs()) {
 		my $plh = GNUpod::XMLhelper::get_plpref($plref->{name});
 		next unless $plh->{podcast} == 1; # Not a podcast, do nothing
-		
+		my $sortby = $plh->{sort};
+		my $reverse_sort = 0;
 		my $cpcref = $item_id++;
 		$num_childs++;
 		$scratch = GNUpod::iTunesDB::mk_mhod({stype=>'title', string=>$plref->{name}});
 		$buff   .= GNUpod::iTunesDB::mk_mhip({childs=>1,podcast_group=>256,plid=>$cpcref, size=>length($scratch)}); # 256 .. apple magic
 		$buff   .= $scratch;
+		
+		##Check, if user want's sorted stuff
+		if($sortby) {
+			$sortby=lc($sortby); #LC
+			if($sortby =~ /reverse.(.+)/) {
+				$reverse_sort = 1;
+				$sortby=$1;
+			}
+			sort_playlist_by({sortby=>lc($sortby), plref=>$pldb{$plref->{name}}, reverse=>$reverse_sort});
+		}
+
+		
 		foreach my $sid (@{$pldb{$plref->{name}}}) {
 			$item_id++;
 			$num_childs++;
