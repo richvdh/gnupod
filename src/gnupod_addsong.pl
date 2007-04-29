@@ -44,7 +44,7 @@ $int_count = 3; #The user has to send INT (Ctrl+C) x times until we stop
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode=s", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
-                   "set-artist=s", "set-album=s", "set-genre=s", "set-rating=i", "set-playcount=i",
+                   "set-title=s", "set-artist=s", "set-album=s", "set-genre=s", "set-rating=i", "set-playcount=i",
                    "set-songnum", "playlist|p=s@", "reencode|e=i",
                    "min-vol-adj=i", "max-vol-adj=i", "playlist-is-podcast" );
 GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b',
@@ -166,6 +166,7 @@ sub startup {
 		$fh->{genre}       = $opts{'set-genre'}       if $opts{'set-genre'};
 		$fh->{rating}      = $opts{'set-rating'}      if $opts{'set-rating'};
 		$fh->{playcount}   = $opts{'set-playcount'}   if $opts{'set-playcount'};
+		$fh->{title}       = $opts{'set-title'}       if $opts{'set-title'};
 		$fh->{songnum}     = 1+$addcount              if $opts{'set-songnum'};
 		
 		#Set the addtime to unixtime(now)+MACTIME (the iPod uses mactime)
@@ -519,6 +520,7 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
                                     (0 = Good .. 9 = Bad)
                                     You may be able to save some space if you do not need
                                     crystal-clear sound ;-)
+       --set-title=string           Set Title  (Override ID3 Tag)
        --set-artist=string          Set Artist (Override ID3 Tag)
        --set-album=string           Set Album  (Override ID3 Tag)
        --set-genre=string           Set Genre  (Override ID3 Tag)
