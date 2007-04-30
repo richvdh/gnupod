@@ -1,5 +1,6 @@
 GNUpod 0.99.2 - codename
 
+
 Summary
 -------
 
@@ -17,7 +18,7 @@ Summary
   will call mktunes.pl itself.
 - Many internal changes / bugfixes to iTunesDB.pm like fixing an incorrect
   written mhip size. Playlist parsing has also been rewritten and cleaned up.
-
+- Bugfix: Do not detect PCM files as movies when using --decode
 
 *** OLD STUFF ***
 

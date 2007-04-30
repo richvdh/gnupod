@@ -41,7 +41,7 @@ my $NN_HEADERS = {'MThd' => { encoder=>'gnupod_convert_MIDI.pl', ftyp=>'MIDI'},
                   'fLaC' => { encoder=>'gnupod_convert_FLAC.pl', ftyp=>'FLAC'},
                   'OggS' => { encoder=>'gnupod_convert_OGG.pl',  ftyp=>'OGG' },
                   'MAC ' => { encoder=>'gnupod_convert_APE.pl',  ftyp=>'APE' },
-                  'RIFF' => { encoder=>'gnupod_convert_RIFF.pl', ftyp=>'RIFF'}};
+                  'RIFF' => { encoder=>'gnupod_convert_RIFF.pl', ftyp=>'RIFF', magic2=>'AVI '}};
                
 
 
@@ -65,65 +65,75 @@ BEGIN {
 #Try to discover the file format (mp3 or QT (AAC) )
 # Returns: (FILE_HASH{artist,album..}, MEDIA_HASH{ftyp,format,extension}, DECODER_SCALAR)
 sub wtf_is {
- my($file, $flags, $con) = @_;
-  
-  if(-d $file) { #Don't add dirs
-   warn "FileMagic.pm: '$file' is a directory!\n";
-  }
-  elsif(!-r $file) {
-   warn "FileMagic.pm: Can't read '$file'\n";
-  }
-  elsif(my $nnat  = __is_NonNative($file,$flags,$con)) { #Handle non-native formats
-   return($nnat->{ref}, {ftyp=>$nnat->{codec}}, $nnat->{encoder});
-  }
-  elsif(my $xqt = __is_qt($file,$flags)) {
-   return ($xqt->{ref},  {ftyp=>$xqt->{codec}, format=>"m4a", extension=>"m4a|m4p|m4b|mp4|m4v"});
-  }
-  elsif(my $h = __is_pcm($file,$flags)) {
-   return ($h, {ftyp=>"PCM", format=>"wav"});
-  }
-  elsif(my $h = __is_mp3($file,$flags)) {
-   return ($h, {ftyp=>"MP3", format=>"mp3"});
-  }
-
-#Still no luck..
-   return (undef, undef, undef);
+	my($file, $flags, $con) = @_;
+	
+	if(-d $file) { #Don't add dirs
+		warn "FileMagic.pm: '$file' is a directory!\n";
+	}
+	elsif(!-r $file) {
+		warn "FileMagic.pm: Can't read '$file'\n";
+	}
+	elsif(my $nnat  = __is_NonNative($file,$flags,$con)) { #Handle non-native formats
+		return($nnat->{ref}, {ftyp=>$nnat->{codec}}, $nnat->{encoder});
+	}
+	elsif(my $xqt = __is_qt($file,$flags)) {
+		return ($xqt->{ref},  {ftyp=>$xqt->{codec}, format=>"m4a", extension=>"m4a|m4p|m4b|mp4|m4v"});
+	}
+	elsif(my $h = __is_pcm($file,$flags)) {
+		return ($h, {ftyp=>"PCM", format=>"wav"});
+	}
+	elsif(my $h = __is_mp3($file,$flags)) {
+		return ($h, {ftyp=>"MP3", format=>"mp3"});
+	}
+	#Still no luck..
+	return (undef, undef, undef);
 }
 
 ########################################################################
 #Handle Non-Native files :)
 sub __is_NonNative {
- my($file, $flags, $con) = @_;
- return undef unless $flags->{decode}; #Decoder is OFF per default!
- 
- open(TNN, $file) or return undef;
-  my $buff = undef;
-  read(TNN,$buff,4);
- close(TNN);
- 
- my $encoder = $NN_HEADERS->{$buff}->{encoder};
- return undef unless $encoder; #Nope
- 
- #Still here? -> We know how to decode this stuff
- my $metastuff = converter_readmeta($encoder, $file, $con);
- return undef unless ref($metastuff) eq "HASH"; #Failed .. hmm
- 
- my %rh = ();
- my $cf = ((split(/\//,$file))[-1]);
- my @songa = pss($metastuff->{_TRACKNUM});
-
-
- $rh{artist}   = getutf8($metastuff->{_ARTIST} || "Unknown Artist");
- $rh{album}    = getutf8($metastuff->{_ALBUM}  || "Unknown Album");
- $rh{title}    = getutf8($metastuff->{_TITLE}  || $cf || "Unknown Title");
- $rh{genre}    = getutf8($metastuff->{_GENRE}  || "");
- $rh{songs}    = int($songa[1]);
- $rh{songnum}  = int($songa[0]); 
- $rh{comment}  = getutf8($metastuff->{_COMMENT} || $metastuff->{FORMAT}." file");
- $rh{fdesc}    = getutf8($metastuff->{_VENDOR} || "Converted using $encoder"); 
- $rh{mediatype}= int($metastuff->{_MEDIATYPE} || MEDIATYPE_AUDIO);
-
- return {ref=>\%rh, encoder=>$encoder, codec=>$NN_HEADERS->{$buff}->{ftyp} };
+	my($file, $flags, $con) = @_;
+	return undef unless $flags->{decode}; #Decoder is OFF per default!
+	
+	my $size = (-s $file);
+	my $magic = undef;
+	my $magic2= undef;
+	
+	return undef if $size < 12;
+	open(TNN, $file) or return undef;
+	seek(TNN,0,0);
+	read(TNN,$magic,4);
+	seek(TNN,8,0);
+	read(TNN,$magic2,4);
+	close(TNN);
+	
+	
+	my $encoder = $NN_HEADERS->{$magic}->{encoder};
+	return undef unless $encoder; # No encoder -> Not supported magic
+	
+	if(defined($NN_HEADERS->{$magic}->{magic2}) && $magic2 ne $NN_HEADERS->{$magic}->{magic2}) {
+		# Submagic failed (currently only used for RIFF-AVI)
+		return undef;
+	}
+	
+	#Still here? -> We know how to decode this stuff
+	my $metastuff = converter_readmeta($encoder, $file, $con);
+	return undef unless ref($metastuff) eq "HASH"; #Failed .. hmm
+	
+	my %rh = ();
+	my $cf = ((split(/\//,$file))[-1]);
+	my @songa = pss($metastuff->{_TRACKNUM});
+	
+	$rh{artist}   = getutf8($metastuff->{_ARTIST} || "Unknown Artist");
+	$rh{album}    = getutf8($metastuff->{_ALBUM}  || "Unknown Album");
+	$rh{title}    = getutf8($metastuff->{_TITLE}  || $cf || "Unknown Title");
+	$rh{genre}    = getutf8($metastuff->{_GENRE}  || "");
+	$rh{songs}    = int($songa[1]);
+	$rh{songnum}  = int($songa[0]); 
+	$rh{comment}  = getutf8($metastuff->{_COMMENT} || $metastuff->{FORMAT}." file");
+	$rh{fdesc}    = getutf8($metastuff->{_VENDOR} || "Converted using $encoder"); 
+	$rh{mediatype}= int($metastuff->{_MEDIATYPE} || MEDIATYPE_AUDIO);
+	return {ref=>\%rh, encoder=>$encoder, codec=>$NN_HEADERS->{$magic}->{ftyp} };
 }
 
 
@@ -169,56 +179,48 @@ sub __is_qt {
 sub __is_pcm {
  my($file) = @_;
 
-  open(PCM, "$file") or return undef;
-   #Get the group id and riff type
-   my ($gid, $rty);
-   seek(PCM, 0, 0);
-   read(PCM, $gid, 4);
-   seek(PCM, 8, 0);
-   read(PCM, $rty, 4);
-   
-   my $size = (-s $file);
+	my $size = (-s $file);
+	return undef if $size < 32;
+	open(PCM, "$file") or return undef;
+	#Get the group id and riff type
+	my ($gid, $rty, $buff,$srate,$bps) = undef;
+	
+	seek(PCM, 0, 0);
+	read(PCM, $gid, 4);
+	seek(PCM, 8, 0);
+	read(PCM, $rty, 4);
+	
+	seek(PCM, 24,0);
+	read(PCM,$buff,4);
+	$srate = GNUpod::FooBar::shx2int($buff);
+	
+	seek(PCM, 28, 0);
+	read(PCM,$buff,4);
+	$bps = GNUpod::FooBar::shx2int($buff);
+	close(PCM);
+	
+	return undef if $gid ne "RIFF";
+	return undef if $rty ne "WAVE";
 
-   if(($gid ne "RIFF") or ($rty ne "WAVE") or ($size < 32)) {
-     close(PCM);
-     return undef 
-   }
-   
-#Ok, maybe a wave file.. try to get BPS and SRATE  
-   my ($bs) = undef;
-   seek(PCM, 24,0);
-   read(PCM, $bs, 4);
-   my $srate = GNUpod::FooBar::shx2int($bs);
-
-
-   seek(PCM, 28,0); 
-   read(PCM, $bs, 4);
-   close(PCM);
-   my $bps = GNUpod::FooBar::shx2int($bs);
-
-
-
-  #Check if something went wrong..
-   if($bps < 1 || $srate < 1) {
-    warn "FileMagic.pm: Looks like '$file' is a crazy pcm-file: bps: *$bps* // srate: *$srate* -> skipping!!\n";
-    return undef;
-   }
-
- 
-  my %rh = ();
-  $rh{bitrate}  = $bps;
-  $rh{filesize} = $size;
-  $rh{srate}    = $srate;
-  $rh{time}     = int(1000*$size/$bps);
-  $rh{fdesc}    = "RIFF Audio File";
-  #No id3 tags for us.. but mmmmaybe...
-  #We use getuft8 because you could use umlauts and such things :)  
-  #Fixme: absolute versus relative paths :
-  $rh{title}    = getutf8(((split(/\//, $file))[-1]) || "Unknown Title");
-  $rh{album} =    getutf8(((split(/\//, $file))[-2]) || "Unknown Album");
-  $rh{artist} =   getutf8(((split(/\//, $file))[-3]) || "Unknown Artist");
-  $rh{mediatype}  = MEDIATYPE_AUDIO;
-
+	#Check if something went wrong..
+	if($bps < 1 || $srate < 1) {
+		warn "FileMagic.pm: Looks like '$file' is a crazy pcm-file: bps: *$bps* // srate: *$srate* -> skipping!!\n";
+		return undef;
+	}
+	
+	my %rh = ();
+	$rh{bitrate}  = $bps;
+	$rh{filesize} = $size;
+	$rh{srate}    = $srate;
+	$rh{time}     = int(1000*$size/$bps);
+	$rh{fdesc}    = "RIFF Audio File";
+	#No id3 tags for us.. but mmmmaybe...
+	#We use getuft8 because you could use umlauts and such things :)  
+	#Fixme: absolute versus relative paths :
+	$rh{title}    = getutf8(((split(/\//, $file))[-1]) || "Unknown Title");
+	$rh{album} =    getutf8(((split(/\//, $file))[-2]) || "Unknown Album");
+	$rh{artist} =   getutf8(((split(/\//, $file))[-3]) || "Unknown Artist");
+	$rh{mediatype}  = MEDIATYPE_AUDIO;
 return \%rh;
 }
 
