@@ -86,13 +86,12 @@ sub _check_casesensitive {
   
    if($inode_a != $inode_b) { #Whops, different inodes? -> case sensitive fs
      #Nerv the user
-     warn "warning: $target seems to be mounted *CASE SENSITIVE*\n";
-     warn "         Mounting VFAT/HFS+ like this is a VERY BAD(tm) idea,\n";
-     warn "         strange things may happen... GNUpod may not work correctly!\n";
+     warn "Warning: $target seems to be mounted *CASE SENSITIVE*\n";
+     warn "         Mounting VFAT like this is a very bad idea!\n";
      warn "         Please mount the Filesystem CASE *IN*SENSITIVE\n";
      warn "         (use 'mount ... -o check=r' for VFAT)\n";
      warn "         [Ignore this message if $target isn't a\n";
-     warn "          VFAT or HFS+ Filesystem ;) ]\n";
+     warn "          VFAT Filesystem (like HFS+) ]\n";
    }
   
  }
