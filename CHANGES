@@ -1,4 +1,12 @@
-GNUpod 0.99.2 - codename
+GNUpod 0.99.3
+
+Summary
+-------
+
+- Fixed invalid warning about broken mhip header.
+- Less stricter Podcast-Playlist parsing
+
+GNUpod 0.99.2
 
 
 Summary

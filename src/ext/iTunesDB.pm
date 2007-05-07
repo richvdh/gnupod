@@ -36,7 +36,6 @@ use Carp;
 use vars qw(%mhod_id @mhod_array %SPLDEF %SPLREDEF %PLDEF %PLREDEF);
 
 use constant ITUNESDB_MAGIC => 'mhbd';
-use constant MAGIC_PODCAST_GROUP          => 256;
 use constant OLD_ITUNESDB_MHIT_HEADERSIZE => 156;
 use constant NEW_ITUNESDB_MHIT_HEADERSIZE => 244;
 
@@ -1363,7 +1362,10 @@ sub get_pl {
 			if($mhh->{total_size} == -1) {
 				_itBUG("Failed to get $i mhod of $mhits (plpart) ; Bad mhod found at offset $pos",1);
 			}
-		
+			
+			
+			
+			
 			$pos+=$mhh->{total_size};
 			if($mhh->{type} == 1) {
 				$ret_hash{name} = $mhh->{string};
@@ -1384,16 +1386,16 @@ sub get_pl {
 			my $subnaming= undef;			
 			my $org_pos  = $pos;
 			$pos        += $mhip->{header_size};
-			
+			$org_pos    += $mhip->{total_size};
 			# Get all mhods of this mhip; normally there is only one.. but anyway:
 			for(my $j=0;$j<$mhip->{childs};$j++) {
 				my $mhod = get_mhod($pos,$fd);
 				$pos += $mhod->{total_size};
-				if($mhip->{podcast_group} == MAGIC_PODCAST_GROUP && $mhod_array[$mhod->{type}] eq "title") {
+				if($mhip->{podcast_group} != 0 && $mhod_array[$mhod->{type}] eq "title") {
 					$subnaming = $mhod->{string};
 				}
 			}
-			_itBUG("Broken mhip header: $pos != $org_pos ; using calculated offset ($pos)",0) if $pos != $org_pos;
+			_itBUG("Broken mhip size header: $pos != $org_pos ; using calculated offset ($pos)",0) if $pos != $org_pos;
 			push(@pldata, {sid=>$mhip->{sid}, podcast_group=>$mhip->{podcast_group}, timestamp=>$mhip->{timestamp},
 			               plid=>$mhip->{plid}, podcast_group_ref=>$mhip->{podcast_group_ref}, subnaming=>$subnaming});
 		}

@@ -173,8 +173,13 @@ if($podcast_childs > 0) {
 				else {
 					my $plfh = {add=>{id => $pccont->{sid}}};
 					my $pcplname = $pcnref->{$pccont->{podcast_group_ref}};
-					die "Ouch: No \$pclname ?!\n" unless defined $pcplname;
-					GNUpod::XMLhelper::mkfile($plfh,{plname=>$pcplname});
+					
+					unless(defined($pcplname)) {
+						warn "Unable to add $pccont->{sid} to a playlist: no reference to group $pccont->{podcast_group_ref} found\n";
+					}
+					else {
+						GNUpod::XMLhelper::mkfile($plfh,{plname=>$pcplname});
+					}
 				}
 			}
 		}
