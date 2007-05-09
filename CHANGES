@@ -3,11 +3,15 @@ GNUpod 0.99.3
 Summary
 -------
 
-- Fixed invalid warning about broken mhip header.
+- Fixed invalid warning about broken mhip header. (tunes2pod.pl)
 - Less stricter Podcast-Playlist parsing
+- Reduced MP3::Info false-positives: Empty files are
+  no longer detected as .mp3 files
+
+*** OLD STUFF ***
+
 
 GNUpod 0.99.2
-
 
 Summary
 -------
@@ -28,7 +32,6 @@ Summary
   written mhip size. Playlist parsing has also been rewritten and cleaned up.
 - Bugfix: Do not detect PCM files as movies when using --decode
 
-*** OLD STUFF ***
 
 GNUpod 0.99.1 - codename 'Klaus ist eine Wurst'
 

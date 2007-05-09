@@ -227,116 +227,114 @@ return \%rh;
 ######################################################################
 # Read mp3 tags, return undef if file is not an mp3
 sub __is_mp3 {
- my($file,$flags) = @_;
- 
- my $h = MP3::Info::get_mp3info($file);
- return undef unless $h; #No mp3
- 
-#This is our default fallback:
-#If we didn't find a title, we'll use the
-#Filename.. why? because you are not able
-#to play the file without an filename ;)
- my $cf = ((split(/\//,$file))[-1]);
- 
- my %rh = ();
+	my($file,$flags) = @_;
+	
+	my $h  = MP3::Info::get_mp3info($file);
+	my $hs = undef;
+	if(ref($h) ne 'HASH') {
+		return undef; # Not an mp3 file
+	}
+	elsif($h->{FRAMES} == 0) {
+		return undef; # Smells fishy..
+	}
+	
+	
+	#This is our default fallback:
+	#If we didn't find a title, we'll use the
+	#Filename.. why? because you are not able
+	#to play the file without an filename ;)
+	my $cf = ((split(/\//,$file))[-1]);
+	
+	my %rh = ();
+	$rh{bitrate} = $h->{BITRATE};
+	$rh{filesize} = $h->{SIZE};
+	$rh{srate}    = int($h->{FREQUENCY}*1000);
+	$rh{time}     = int($h->{SECS}*1000);
+	$rh{fdesc}    = "MPEG ${$h}{VERSION} layer ${$h}{LAYER} file";
+	
+	$h = MP3::Info::get_mp3tag($file,1)     unless $flags->{'noIDv1'};  #Get the IDv1 tag
+	$hs = MP3::Info::get_mp3tag($file, 2,1) unless $flags->{'noIDv2'};  #Get the IDv2 tag
+	
+	
+	#The IDv2 Hashref may return arrays.. kill them :)
+	foreach my $xkey (keys(%$hs)) {
+		if( ref($hs->{$xkey}) eq "ARRAY" ) {
+			$hs->{$xkey} = join(":", @{$hs->{$xkey}});
+		}
+	}
 
- $rh{bitrate} = $h->{BITRATE};
- $rh{filesize} = $h->{SIZE};
- $rh{srate}    = int($h->{FREQUENCY}*1000);
- $rh{time}     = int($h->{SECS}*1000);
- $rh{fdesc}    = "MPEG ${$h}{VERSION} layer ${$h}{LAYER} file";
- 
- my $h =undef;
- my $hs=undef;
- 
- $h = MP3::Info::get_mp3tag($file,1)     unless $flags->{'noIDv1'};  #Get the IDv1 tag
- $hs = MP3::Info::get_mp3tag($file, 2,1) unless $flags->{'noIDv2'};  #Get the IDv2 tag
 
+	#IDv2 is stronger than IDv1..
+	#Try to parse things like 01/01
+	my @songa = pss(getutf8($hs->{TRCK} || $hs->{TRK} || $h->{TRACKNUM}));
+	my @cda   = pss(getutf8($hs->{TPOS}));
+	
+	$rh{songs}    = int($songa[1]);
+	$rh{songnum} =  int($songa[0]);
+	$rh{cdnum}   =  int($cda[0]);
+	$rh{cds}    =   int($cda[1]);
+	$rh{year} =     getutf8($hs->{TYER} || $hs->{TYE} || $h->{YEAR}    || 0);
+	$rh{title} =    getutf8($hs->{TIT2} || $hs->{TT2} || $h->{TITLE}   || $cf || "Untitled");
+	$rh{album} =    getutf8($hs->{TALB} || $hs->{TAL} || $h->{ALBUM}   || "Unknown Album");
+	$rh{artist} =   getutf8($hs->{TPE1} || $hs->{TP1} || $hs->{TPE2} || $hs->{TP2} || $h->{ARTIST}  || "Unknown Artist");
+	$rh{genre} =    _get_genre( getutf8($hs->{TCON} || $hs->{TCO} || $h->{GENRE}   || "") );
+	$rh{comment} =  getutf8($hs->{COMM} || $hs->{COM} || $h->{COMMENT} || "");
+	$rh{composer} = getutf8($hs->{TCOM} || $hs->{TCM} || "");
+	$rh{playcount}= int(getutf8($hs->{PCNT} || $hs->{CNT})) || 0;
+	$rh{soundcheck} = _parse_iTunNORM(getutf8($hs->{COMM} || $hs->{COM} || $h->{COMMENT}));
+	$rh{mediatype}  = MEDIATYPE_AUDIO;
 
- #The IDv2 Hashref may return arrays.. kill them :)
- foreach my $xkey (keys(%$hs)) {
-   if( ref($hs->{$xkey}) eq "ARRAY" ) {
-    $hs->{$xkey} = join(":", @{$hs->{$xkey}});
-   } 
- }
-
-
-#IDv2 is stronger than IDv1..
- #Try to parse things like 01/01
- my @songa = pss(getutf8($hs->{TRCK} || $hs->{TRK} || $h->{TRACKNUM}));
- my @cda   = pss(getutf8($hs->{TPOS}));
- 
-     $rh{songs}    = int($songa[1]);
-     $rh{songnum} =  int($songa[0]);
-     $rh{cdnum}   =  int($cda[0]);
-     $rh{cds}    =   int($cda[1]);
-     $rh{year} =     getutf8($hs->{TYER} || $hs->{TYE} || $h->{YEAR}    || 0);
-     $rh{title} =    getutf8($hs->{TIT2} || $hs->{TT2} || $h->{TITLE}   || $cf || "Untitled");
-     $rh{album} =    getutf8($hs->{TALB} || $hs->{TAL} || $h->{ALBUM}   || "Unknown Album");
-     $rh{artist} =   getutf8($hs->{TPE1} || $hs->{TP1} || $hs->{TPE2} || $hs->{TP2} || $h->{ARTIST}  || "Unknown Artist");
-     $rh{genre} =    _get_genre( getutf8($hs->{TCON} || $hs->{TCO} || $h->{GENRE}   || "") );
-     $rh{comment} =  getutf8($hs->{COMM} || $hs->{COM} || $h->{COMMENT} || "");
-     $rh{composer} = getutf8($hs->{TCOM} || $hs->{TCM} || "");
-     $rh{playcount}= int(getutf8($hs->{PCNT} || $hs->{CNT})) || 0;
-     $rh{soundcheck} = _parse_iTunNORM(getutf8($hs->{COMM} || $hs->{COM} || $h->{COMMENT}));
-     $rh{mediatype}  = MEDIATYPE_AUDIO;
-
- # Handle volume adjustment information
- if ($hs->{RVA2}) {
-   # Very limited RVA2 parsing, only handle master volume changes.
-   # See http://www.id3.org/id3v2.4.0-frames for format spec
-   my ($app, $channel, $adj) = unpack("Z* C n", $hs->{RVA2});
-   if ($channel == 1) {
-     
-     $adj -= 0x10000 if ($adj > 0x8000);
-     
-     my $adjdb = $adj / 512.0;
-
-     # Translate decibel volume adjustment into relative percentage
-     # adjustment.  As far as I understand this, +6dB is perceived
-     # as the double volume, i.e. +100%, while -6dB is
-     # perceived as the half volume, i.e. -50%.
-     
-     # The dB volume adjustment adjdb correlates to the absolute
-     # adjustment adjabs like this:
-     
-     #     adjdb = 20 * log10(1 + adjabs)
-     # =>  adjabs = 10 ** (adjdb / 20) - 1
-     
-     my $vol = int(100 * (10 ** ($adjdb / 20) - 1));
-     
-     $vol = 100 if ($vol > 100);
-     $vol = -100 if ($vol < -100);
-
-     # print "$file: adjusting volume by $vol% ($adjdb dB)\n";
-     $rh{volume} = $vol;
-   }
- }
-
- return \%rh;
+	# Handle volume adjustment information
+	if ($hs->{RVA2}) {
+		# Very limited RVA2 parsing, only handle master volume changes.
+		# See http://www.id3.org/id3v2.4.0-frames for format spec
+		my ($app, $channel, $adj) = unpack("Z* C n", $hs->{RVA2});
+		if ($channel == 1) {
+			
+			$adj -= 0x10000 if ($adj > 0x8000);
+			my $adjdb = $adj / 512.0;
+			# Translate decibel volume adjustment into relative percentage
+			# adjustment.  As far as I understand this, +6dB is perceived
+			# as the double volume, i.e. +100%, while -6dB is
+			# perceived as the half volume, i.e. -50%.
+			# The dB volume adjustment adjdb correlates to the absolute
+			# adjustment adjabs like this:
+			#     adjdb = 20 * log10(1 + adjabs)
+			# =>  adjabs = 10 ** (adjdb / 20) - 1
+			
+			my $vol = int(100 * (10 ** ($adjdb / 20) - 1));
+			$vol = 100 if ($vol > 100);
+			$vol = -100 if ($vol < -100);
+			
+			# print "$file: adjusting volume by $vol% ($adjdb dB)\n";
+			$rh{volume} = $vol;
+		}
+	}
+	
+	return \%rh;
 }
 
 ########
 # Guess a genre
 sub _get_genre {
- my ($string) = @_;
- my $num_to_txt = undef;
- if($string =~ /^\((\d+)\)$/) {
-  $num_to_txt = $mp3_genres[$1];
- }
- return ($num_to_txt || $string);
+	my ($string) = @_;
+	my $num_to_txt = undef;
+	if($string =~ /^\((\d+)\)$/) {
+		$num_to_txt = $mp3_genres[$1];
+	}
+	return ($num_to_txt || $string);
 }
 
 ########
 # Guess format
 sub pss {
- my($string) = @_;
- if(my($s,$n) = $string =~ /(\d+)\/(\d+)/) {
-  return($s,$n);
- }
- else {
-  return int($string);
- }
+	my($string) = @_;
+	if(my($s,$n) = $string =~ /(\d+)\/(\d+)/) {
+		return($s,$n);
+	}
+	else {
+		return int($string);
+	}
 }
 
 #########
@@ -392,12 +390,11 @@ sub getutf8 {
 # Parse iTunNORM string
 # FIXME: result isn't the same as iTunes sometimes..
 sub _parse_iTunNORM {
- my($string) = @_;
- if($string =~ /^(engiTunNORM\s|\s)(\S{8})\s(\S{8})\s/) {
-  return oct("0x".$3);
- }
- return undef;
- 
+	my($string) = @_;
+	if($string =~ /^(engiTunNORM\s|\s)(\S{8})\s(\S{8})\s/) {
+		return oct("0x".$3);
+	}
+	return undef;
 }
 
 #########################################################
@@ -477,22 +474,20 @@ sub kick_reencode {
 #########################################################
 # Read metadata from converter
 sub converter_readmeta {
- my($prog, $file, $con) = @_;
-
- $prog = "$con->{bindir}/$prog";
-
-
- my %metastuff = ();
- open(CFLAC, "-|") or exec($prog, $file, "GET_META") or die "converter_readmeta: Could not exec $prog\n";
-  while(<CFLAC>) {
-   chomp($_);
-   if($_ =~ /^([^:]+):(.*)$/) {
-    $metastuff{$1} = $2;
-   }
-  }
-  close(CFLAC);
- return undef unless $metastuff{FORMAT};
- return \%metastuff;
+	my($prog, $file, $con) = @_;
+	
+	$prog = "$con->{bindir}/$prog";
+	my %metastuff = ();
+	open(CFLAC, "-|") or exec($prog, $file, "GET_META") or die "converter_readmeta: Could not exec $prog\n";
+	while(<CFLAC>) {
+		chomp($_);
+		if($_ =~ /^([^:]+):(.*)$/) {
+		$metastuff{$1} = $2;
+		}
+	}
+	close(CFLAC);
+	return undef unless $metastuff{FORMAT};
+	return \%metastuff;
 }
 
 1;
