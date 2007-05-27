@@ -59,6 +59,9 @@ usage() if $opts{help};
 version() if $opts{version};
 
 $SIG{'INT'} = \&handle_int;
+
+
+my @XFILES = ();
 if($opts{restore}) {
 	print "If you use --restore, you'll *lose* your playlists\n";
 	print " Hit ENTER to continue or CTRL+C to abort\n\n";
@@ -66,20 +69,24 @@ if($opts{restore}) {
 	delete($opts{decode});    #We don't decode anything
 	$opts{duplicate} = 1;     #Don't skip dups on restore
 	$opts{decode}    = undef; #Do not encode, only native files are on an iPod
-	startup(bsd_glob("$opts{mount}/iPod_Control/Music/*/*", GLOB_NOSORT));
+	@XFILES = bsd_glob("$opts{mount}/iPod_Control/Music/*/*", GLOB_NOSORT)
 }
 elsif($ARGV[0] eq "-" && @ARGV == 1) {
 	print STDERR "Reading from STDIN, hit CTRL+D (EOF) when finished\n";
-	my @files = ();
 	while(<STDIN>) {
 		chomp;
-		push(@files, $_); #This eats memory, but it isn't so bad...
+		push(@XFILES, $_); #This eats memory, but it isn't so bad...
 	}
-	startup(@files);
 }
 else {
-	startup(@ARGV);
+	@XFILES = @ARGV;
 }
+
+
+my $exit_code = startup(@XFILES);
+exit($exit_code);
+
+
 
 
 
@@ -91,7 +98,7 @@ sub startup {
 	#Don't sync if restore is true
 	$opts{_no_sync} = $opts{restore};
 	
-	
+	my $fatal_error = 0;
 	my $con = GNUpod::FooBar::connect(\%opts);
 	usage($con->{status}."\n") if $con->{status} || !@argv_files;
 
@@ -254,6 +261,7 @@ sub startup {
 
 		if(!defined($target)) {
 			warn "*** FATAL *** Skipping '$file' , no target found!\n";
+			$fatal_error++;
 		}
 		elsif($opts{restore} || File::Copy::copy($file, $target)) {
 			
@@ -272,6 +280,7 @@ sub startup {
 		else { #We failed..
 			warn "*** FATAL *** Could not copy '$file' to '$target': $!\n";
 			unlink($target); #Wipe broken file
+			$fatal_error++;
 		}
 		#Is it a tempfile? Remove it.
 		#This is the case for 'converter' files and 'rss'
@@ -285,6 +294,7 @@ sub startup {
 		GNUpod::XMLhelper::writexml($con, {automktunes=>$opts{automktunes}});
 	}
 	print "\n Done\n";
+	return $fatal_error;
 }
 
 
