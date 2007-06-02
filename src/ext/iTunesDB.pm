@@ -730,7 +730,6 @@ unless($hr->{no_dummy_listview}) {
 }
 
 
-
 my $ret .= "mhyp";
    $ret .= pack("V", _icl(108)); #type
    $ret .= pack("V", _icl($hr->{size}+108+(length($append))));          #size

@@ -263,26 +263,32 @@ sub genpls {
 	my ($pldata,undef) = r_mpl({name=>Unicode::String::utf8($opts{'ipod-name'})->utf8, type=>1, content=>\@MPLcontent, plid=>MPL_UID});
 	my $plc = 1;
 	
-	my @podcasts = ();
+	my @podcasts     = ();
+	my $num_podcasts = 0;
+	
 	
 	#CID is now used by r_mpl, dont use it yourself anymore
 	foreach my $plref (GNUpod::XMLhelper::getpl_attribs()) {
 		my $splh = GNUpod::XMLhelper::get_splpref($plref->{name}); #Get SPL Prefs
 		my $plh  = GNUpod::XMLhelper::get_plpref($plref->{name});  #Get normal-pl preferences
 		
+		
+		
 		if($plh->{podcast} == 1) {
-			if($opts->{nopodcasts}) {
-				next; # Do not create podcasts playlist
-			}
-			elsif(ref($pldb{$plref->{name}}) eq "ARRAY") {
+			next if $opts->{nopodcasts};
+			
+			$num_podcasts++;
+			if(ref($pldb{$plref->{name}}) eq "ARRAY") {
 				push(@podcasts, @{$pldb{$plref->{name}}});
-				next;
 			}
+			next;
 		}
 		
 		
 		#Note: sort isn't aviable for spl's.. hack addspl()
-		my($pl, $xc) = r_mpl({name=>$plref->{name}, type=>0, content=>$pldb{$plref->{name}}, splpref=>$splh, plid=>$plref->{plid}, sortby=>$plref->{sort}});
+		my($pl, $xc) = r_mpl({name=>$plref->{name}, type=>0, content=>$pldb{$plref->{name}}, splpref=>$splh,
+		                      plid=>$plref->{plid}, sortby=>$plref->{sort}});
+		
 		if($pl) { #r_mpl got data, we can create a playlist..
 			$plc++;         #INC Playlist count
 			$pldata .= $pl; #Append data
@@ -299,7 +305,7 @@ sub genpls {
 		}     
 	}
 	
-	if(int(@podcasts)) {
+	if($num_podcasts > 0) {
 		my($pc_pl,undef) = r_mpl({name=>'Podcasts', type=>0, content=>\@podcasts, podcast=>1, sortby=>'releasedate'});
 		$plc++;
 		$pldata .= $pc_pl;
