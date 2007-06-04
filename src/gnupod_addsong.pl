@@ -45,6 +45,7 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode=s", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
                    "set-title=s", "set-artist=s", "set-album=s", "set-genre=s", "set-rating=i", "set-playcount=i",
+                   "set-bookmarkable", "set-shuffleskip",
                    "set-songnum", "playlist|p=s@", "reencode|e=i",
                    "min-vol-adj=i", "max-vol-adj=i", "playlist-is-podcast" );
 GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b',
@@ -168,13 +169,15 @@ sub startup {
 		}
 		
 		#wtf_is found a filetype, override data if needed
-		$fh->{artist}      = $opts{'set-artist'}      if $opts{'set-artist'};
-		$fh->{album}       = $opts{'set-album'}       if $opts{'set-album'};
-		$fh->{genre}       = $opts{'set-genre'}       if $opts{'set-genre'};
-		$fh->{rating}      = $opts{'set-rating'}      if $opts{'set-rating'};
-		$fh->{playcount}   = $opts{'set-playcount'}   if $opts{'set-playcount'};
-		$fh->{title}       = $opts{'set-title'}       if $opts{'set-title'};
-		$fh->{songnum}     = 1+$addcount              if $opts{'set-songnum'};
+		$fh->{artist}       = $opts{'set-artist'}      if $opts{'set-artist'};
+		$fh->{album}        = $opts{'set-album'}       if $opts{'set-album'};
+		$fh->{genre}        = $opts{'set-genre'}       if $opts{'set-genre'};
+		$fh->{rating}       = $opts{'set-rating'}      if $opts{'set-rating'};
+		$fh->{bookmarkable} = 1                        if defined($opts{'set-bookmarkable'});
+		$fh->{shuffleskip}  = 1                        if defined($opts{'set-shuffleskip'});
+		$fh->{playcount}    = $opts{'set-playcount'}   if $opts{'set-playcount'};
+		$fh->{title}        = $opts{'set-title'}       if $opts{'set-title'};
+		$fh->{songnum}      = 1+$addcount              if $opts{'set-songnum'};
 		
 		#Set the addtime to unixtime(now)+MACTIME (the iPod uses mactime)
 		#This breaks perl < 5.8 if we don't use int(time()) !
@@ -537,6 +540,8 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
        --set-rating=int             Set Rating
        --set-playcount=int          Set Playcount
        --set-songnum                Override 'Songnum/Tracknum' field
+       --set-bookmarkable           Set this song as bookmarkable (= Remember position)
+       --set-shuffleskip            Exclude this file in shuffle-mode
        --min-vol-adj=int            Minimum volume adjustment allowed by ID3v2.4 RVA2 tag
        --max-vol-adj=int            Maximum ditto.  The volume can be adjusted in the range
                                     -100% to +100%.  The default for these two options is 0,
