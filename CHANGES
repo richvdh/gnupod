@@ -1,3 +1,11 @@
+
+
+ ===> >>> TODO <<===
+ 
+ neuere ffmpeg versionen wollen -acodec libfaac , anstelle von aac
+ Runtime check? mit -formats!
+
+
 GNUpod 0.99.3
 
 Summary

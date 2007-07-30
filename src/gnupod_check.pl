@@ -79,6 +79,7 @@ sub go {
 		}
 		elsif($TRACKER{GLOBFILES} != $TRACKER{ITFILES}) {
 			print " -> The GNUtunesDB.xml is inconsistent. Please try to fix the errors or run $0 --fixit\n";
+			print "    (Note: --fixit removes 'stale' files on the iPod)\n";
 		}
 		
 		if($TRACKER{ERR} > 25) {
@@ -226,7 +227,7 @@ gnupod_check.pl checks for 'lost' files
    -h, --help              display this help and exit
        --version           output version information and exit
    -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
-       --fixit             Try to fixup some errors
+       --fixit             Try to fixup some errors (may delete 'lost' files)
 Report bugs to <bug-gnupod\@nongnu.org>
 EOF
 }

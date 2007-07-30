@@ -1020,6 +1020,7 @@ sub get_mhod {
 	my $plpos = get_int($seek+24, 4,$fd);          #Used for 100 MHODs => Position
 	my $xl    = get_int($seek+28,4,$fd);           #String length
 	
+	
 	## That's spl stuff, only to be used with 51 mhod's
 	my $htm = get_int($seek+35,1,$fd); #Only set for 51
 	my $anym= get_int($seek+39,1,$fd); #Only set for 51
@@ -1034,6 +1035,11 @@ sub get_mhod {
 			#aargs!
 			$foo = get_string($seek+$mhl,$ml-$mhl,$fd);
 			$foo = Unicode::String::utf8($foo)->utf8; #Paranoia
+		}
+		elsif($mty == 17) {
+			my $cdlen = $ml - $mhl;
+#			print "\n\nHL: $mhl ; tolen: $ml ; $cdlen\n";
+#			__hd(get_string($seek+36,$cdlen-12,$fd));
 		}
 		##Special handling for SPLs
 		elsif($mty == 51) { #Get data from spldata mhod
@@ -1053,8 +1059,10 @@ sub get_mhod {
 			_itBUG("Assert \$xl < \$ml failed! ($xl => $ml) [type: $mty]",1) if $xl >= $ml;
 			$foo = get_string($seek+($ml-$xl), $xl,$fd); #String of entry
 			$foo = Unicode::String::byteswap2($foo);
-			$foo = Unicode::String::utf16($foo)->utf8;			
+			$foo = Unicode::String::utf16($foo)->utf8;
 		}
+		
+		
 		return({total_size=>$ml, header_size=>$mhl, string=>$foo,type=>$mty,spldata=>$spldata,splpref=>$splpref,matchrule=>$anym,plpos=>$plpos});
 	}
 	else {

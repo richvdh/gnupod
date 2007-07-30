@@ -152,6 +152,7 @@ my @METADEF = ("album",   "\xA9alb",
    $reth{$METADEF[$i]} = $lx{metadat}{$cKey}[$sound_index];
   }
  }
+ 
 
 ###INT and such fields are here:
  
@@ -219,6 +220,7 @@ sub get_atom {
 	my $typ = rseek($pos+4,4);
 	#..and keep track of it..
 	$level = $lt->{ltrack}->{$pos} if $lt->{ltrack}->{$pos};
+	
 	
 	#Build a chain for this level.. looks like '::foo::bar::bla'
 	$LEVELA[$level] = $typ;
