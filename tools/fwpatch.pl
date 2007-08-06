@@ -29,16 +29,26 @@
 #
 #
 use strict;
+use Getopt::Long;
 
 use constant LEN => 1; #DunnoTouch
 
 use constant USPOD => chr(0).chr(1);
 use constant EUPOD => chr(1).chr(0);
 
-my @TOSEEK = (0x00, 0x08, 0x00, 0x9f, 0xe5,
-              0x38, 0x01, 0x90, 0xe5);
+my %opts = ();
+GetOptions(\%opts, "video");
 
 
+my @TOSEEK       = (0x00, 0x08, 0x00, 0x9f, 0xe5,
+                    0x38, 0x01, 0x90, 0xe5);
+
+my @TOSEEK_VIDEO = (0xbd, 0xe8, 0x08, 0x00, 0x9F, 0xE5, 0x94,
+                    0x00, 0x90, 0xE5);
+
+if($opts{video}) {
+	@TOSEEK = @TOSEEK_VIDEO;
+}
 
 
 my $FIRMWARE = $ARGV[0] or usage();
@@ -113,6 +123,7 @@ sub get_status {
 		return 0;
 	}
 	else {
+	printf("%X %X\n",$iE, $iI);
 		return -1;
 	}
 }
@@ -167,7 +178,9 @@ fwpatch.pl 0.3 - (C) Adrian Ulrich
 Idea and \@TOSEEK stolen from
 goPod : http://gopod.free-go.net, written by  JiB, kang & Alf
 
-Usage: $0 <FIRMWARE> [EU|INT]
+Usage: $0 <FIRMWARE> [--video] [EU|INT]
+
+--video         : Given image is a Video / 5.x gen iPod
 
 Commands:
  <FIRMWARE>     : Check firmware, do not write anything
