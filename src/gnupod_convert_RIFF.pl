@@ -42,8 +42,9 @@ elsif($gimme eq "GET_META") {
 }
 elsif($gimme eq "GET_VIDEO") {
 	my $tmpout = GNUpod::FooBar::get_u_path("/tmp/gnupod_video", "mp4");
+	my $acodec = check_ffmpeg_aac();
 	
-	my $x = system("ffmpeg", "-i", $file, "-acodec", "aac", "-ab", "128k", "-vcodec", "mpeg4",
+	my $x = system("ffmpeg", "-i", $file, "-acodec", $acodec, "-ab", "128k", "-vcodec", "mpeg4",
 	               "-b", "1200kb", "-mbd", 2, "-flags", "+4mv+trell", "-aic", 2, "-cmp", 2,
 	               "-subcmp", 2, "-s", "320x240", "-r", "29.97", $tmpout);
 	print "PATH:$tmpout\n";
@@ -52,6 +53,16 @@ else {
 	warn "$0 can't encode into $gimme\n";
 	exit(1);
 }
+
+
+# Check if ffmpeg knows 'libfaac' or if we
+# still shall call it with AAC
+sub check_ffmpeg_aac {
+	my @newstyle = grep(/\s+EA\s+libfaac/,split(/\n/,
+	               `ffmpeg -formats 2> /dev/null`));
+	return (defined(@newstyle) ? 'libfaac' : 'aac');
+}
+
 
 exit(0);
 

@@ -173,14 +173,14 @@ sub is_FW {
 sub usage {
  die << "EOF";
 
-fwpatch.pl 0.3 - (C) Adrian Ulrich
+fwpatch.pl 0.4 - (C) Adrian Ulrich
 
 Idea and \@TOSEEK stolen from
 goPod : http://gopod.free-go.net, written by  JiB, kang & Alf
 
 Usage: $0 <FIRMWARE> [--video] [EU|INT]
 
---video         : Given image is a Video / 5.x gen iPod
+--video         : Given firmware is a Video / 5.x gen iPod
 
 Commands:
  <FIRMWARE>     : Check firmware, do not write anything
@@ -190,7 +190,9 @@ Commands:
 **NOTE** fwpatch.pl writes to <FIRMWARE>, create a backup if you don't
          like this! You've been warned!
          <FIRMWARE> can also be an iPod FW-Partition (= first partition for FAT iPods)
-         Example: $0 /dev/sda1
+         Examples
+            Get information:  $0 /dev/sda1
+            Patch Video-iPod: $0 /dev/sda1 --video INT
 
 Have fun and beware of tinnitus! (Not a joke)
 

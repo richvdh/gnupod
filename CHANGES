@@ -1,11 +1,3 @@
-
-
- ===> >>> TODO <<===
- 
- neuere ffmpeg versionen wollen -acodec libfaac , anstelle von aac
- Runtime check? mit -formats!
-
-
 GNUpod 0.99.3
 
 Summary
@@ -15,6 +7,8 @@ Summary
 - Less stricter Podcast-Playlist parsing
 - Reduced MP3::Info false-positives: Empty files are
   no longer detected as .mp3 files
+- tools/fwpatch.pl: Support for video iPods added (yeah!)
+- gnupod_convert_RIFF.pl: Support for new ffmpeg builds (s/aac/libfaac/)
 
 *** OLD STUFF ***
 
