@@ -9,6 +9,7 @@ Summary
   no longer detected as .mp3 files
 - tools/fwpatch.pl: Support for video iPods added (yeah!)
 - gnupod_convert_RIFF.pl: Support for new ffmpeg builds (s/aac/libfaac/)
+- Upgraded from GPLv2 to GPLv3
 
 *** OLD STUFF ***
 
