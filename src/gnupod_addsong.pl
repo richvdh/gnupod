@@ -46,7 +46,7 @@ GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode=s", "restore|r", "d
                    "set-title=s", "set-artist=s", "set-album=s", "set-genre=s", "set-rating=i", "set-playcount=i",
                    "set-bookmarkable", "set-shuffleskip",
                    "set-songnum", "playlist|p=s@", "reencode|e=i",
-                   "min-vol-adj=i", "max-vol-adj=i", "playlist-is-podcast" );
+                   "min-vol-adj=i", "max-vol-adj=i", "playlist-is-podcast", "set-compilation");
 GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b',
                                    'disable-v1'=>'b', 'disable-v2'=>'b', 'set-songnum'=>'b',
                                    'min-vol-adj'=>'i', 'max-vol-adj'=>'i', 'automktunes'=>'b' },
@@ -172,6 +172,7 @@ sub startup {
 		$fh->{album}        = $opts{'set-album'}       if $opts{'set-album'};
 		$fh->{genre}        = $opts{'set-genre'}       if $opts{'set-genre'};
 		$fh->{rating}       = $opts{'set-rating'}      if $opts{'set-rating'};
+		$fh->{compilation}  = 1                        if defined($opts{'set-compilation'});
 		$fh->{bookmarkable} = 1                        if defined($opts{'set-bookmarkable'});
 		$fh->{shuffleskip}  = 1                        if defined($opts{'set-shuffleskip'});
 		$fh->{playcount}    = $opts{'set-playcount'}   if $opts{'set-playcount'};
@@ -541,6 +542,7 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
        --set-songnum                Override 'Songnum/Tracknum' field
        --set-bookmarkable           Set this song as bookmarkable (= Remember position)
        --set-shuffleskip            Exclude this file in shuffle-mode
+       --set-compilation            Mark songs as being part of a compilation
        --min-vol-adj=int            Minimum volume adjustment allowed by ID3v2.4 RVA2 tag
        --max-vol-adj=int            Maximum ditto.  The volume can be adjusted in the range
                                     -100% to +100%.  The default for these two options is 0,

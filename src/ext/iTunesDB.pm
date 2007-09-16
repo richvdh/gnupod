@@ -340,7 +340,7 @@ sub mk_mhit {
     $ret .= pack("V", _icl(1));                             #Visible?
     $ret .= pack("V");                                      #FileType. Should be 'MP3 '. (FIXME: Extension or type?)
     $ret .= pack("v", 0x100);                               #cbr = 100, vbr = 101, aac = 0x010 ##FIXME: COrrect?
-    $ret .= pack("c", (($file_hash{compilation})==0));      #compilation ?
+    $ret .= pack("c", (($file_hash{compilation})!=0));      #compilation
     $ret .= pack("c",$file_hash{rating});                   #rating
     $ret .= pack("V", _icl($file_hash{changetime}));        #Time changed
     $ret .= pack("V", _icl($file_hash{filesize}));          #filesize
@@ -1141,7 +1141,7 @@ my %ret     = ();
 $ret{id}         = get_int($sum+16,4,$fd);
 #$ret{rating}     = int((get_int($sum+28,4)-256)/oct('0x14000000')) * 20;
 ##XXX 26-30 are useless for us..
-$ret{compilation}= (get_int($sum+30,1,$fd)==0);
+$ret{compilation}= (get_int($sum+30,1,$fd)!=0);
 $ret{rating}     = get_int($sum+31,1,$fd);
 $ret{changetime} = get_int($sum+32,4,$fd);
 $ret{filesize}   = get_int($sum+36,4,$fd);
