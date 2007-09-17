@@ -214,8 +214,9 @@ sub mk_itunes_sd_file {
 	my $ret = undef;
 
 	#The Shuffle needs / , not :
-	$ref->{path} =~ tr/:/\//;
-	my $uc = new Unicode::String($ref->{path});
+	my $path = $ref->{path};
+	$path =~ tr/:/\//;
+	my $uc = new Unicode::String($path);
 	
 	$ret .= tnp(0x00022E);	#Static?
 	$ret .= tnp(0x5AA501);	#unk1
@@ -229,10 +230,10 @@ sub mk_itunes_sd_file {
 	
 	## This is ugly!
 	my $fixmetype = 1; #MP3
-	if($ref->{path} =~ /\.m4.$/i) {
+	if($path =~ /\.m4.$/i) {
 		$fixmetype = 2;
 	}
-	elsif($ref->{path} =~ /\.wav$/i) {
+	elsif($path =~ /\.wav$/i) {
 		$fixmetype = 4;
 	}
 
