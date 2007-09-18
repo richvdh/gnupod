@@ -25,6 +25,7 @@ use strict;
 use GNUpod::XMLhelper;
 use GNUpod::FooBar;
 use GNUpod::Mktunes;
+use GNUpod::Hash58;
 use Getopt::Long;
 
 use constant MPL_UID => 1234567890; #This is the MasterPlaylist ID
@@ -59,6 +60,9 @@ sub main {
 	
 	print "\r> ".$mktunes->GetFileCount." files parsed, writing new iTunesDB...";
 	$mktunes->WriteItunesDB;
+	
+	print "> Calculating some stuff using random numbers...\n";
+	GNUpod::Hash58::HashItunesDB(FirewireId=>[0x01, 0x20, 0x3f, 0x12, 0x33, 0xbb, 0xaa, 0xf0], iTunesDB=>$con->{itunesdb});
 	
 	print "> Writing new iTunesShuffle DB\n";
 	$mktunes->WriteItunesSD;

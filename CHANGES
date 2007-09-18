@@ -3,6 +3,11 @@ Summary
  - Added README_FIRMWARE.txt file
  - Added compilation-patch, thanks to Ray Lortie
  - Rewrote mktunes.pl to be faster and more readable :-)
+ - Added support for 2007 iPods (iPod Classic, iPod Nano-2 and iPod Touch (?) )
+   They require some calcluation using some random numbers.
+   'Wtbw' discovered them, thanks a lot!
+   Url:    http://main.wtbw.co.uk/hash58.zip
+   Mirror: http://www.blinkenlights.ch/hash58/hash58.zip
 
 GNUpod 0.99.3
 
