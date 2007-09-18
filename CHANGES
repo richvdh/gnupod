@@ -2,7 +2,7 @@ Summary
 -------
  - Added README_FIRMWARE.txt file
  - Added compilation-patch, thanks to Ray Lortie
-
+ - Rewrote mktunes.pl to be faster and more readable :-)
 
 GNUpod 0.99.3
 
