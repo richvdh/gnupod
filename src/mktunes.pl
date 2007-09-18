@@ -23,510 +23,95 @@
 
 use strict;
 use GNUpod::XMLhelper;
-use GNUpod::iTunesDB;
 use GNUpod::FooBar;
+use GNUpod::Mktunes;
 use Getopt::Long;
 
-
-use vars qw($cid %pldb %spldb %itb %opts %meat %cmeat @MPLcontent);
-#cid = CurrentID
-#pldb{name}  = array with id's
-#spldb{name} = '<spl' prefs
-#pcpldb{name} = podcast <add items
-#itb         = buffer for iTunesDB
-#its         = buffer for iTunesSD
-#MPLcontent  = MasterPlaylist content (all songs)
-#              Note: if you don't add ALL songs to MPLcontent,
-#                    you'd break OTG and Rating AND the iPod
-#                    wouldn't boot if it finds a hidden-id in the
-#                    OTGPlaylist!!
-
-
 use constant MPL_UID => 1234567890; #This is the MasterPlaylist ID
+
+$| = 1;
+
+my $mktunes = undef;
+my %opts    = ();
+
 
 print "mktunes.pl ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
-
 GetOptions(\%opts, "version", "help|h", "ipod-name|n=s", "mount|m=s", "volume|v=i", "energy|e");
 GNUpod::FooBar::GetConfig(\%opts, {'ipod-name'=>'s', mount=>'s', volume=>'i', energy=>'b'}, "mktunes");
-
 $opts{'ipod-name'} ||= "GNUpod ###__VERSION__###";
 
 
 usage()   if $opts{help};
 version() if $opts{version};
+main();
 
-startup();
-
-
-
-
-sub startup {
+#########################################################################
+# main() :-)
+sub main {
 	my $con = GNUpod::FooBar::connect(\%opts);
 	usage("$con->{status}\n") if $con->{status};
-	print "! Volume-adjust set to $opts{volume} percent\n" if defined($opts{volume});
-
-	#Open the iTunesSD and write a dummy header
-	open(ITS, ">$con->{itunessd}") or die "*** Sorry: Could not write your iTunesSD: $!, did you run gnupod_INIT.pl ?\n";
-	binmode(ITS);
-	syswrite(ITS,GNUpod::iTunesDB::mk_itunes_sd_header());
 	
-	print "> Parsing XML and creating FileDB\n";
+	$mktunes = GNUpod::Mktunes->new(Connection=>$con, iPodName=>$opts{'ipod-name'});
+	print "> Parsing XML document...\n";
 	GNUpod::XMLhelper::doxml($con->{xml}) or usage("Could not read $con->{xml}, did you run gnupod_INIT.pl ?");
-
-	# Create header for mhits
-	$itb{mhlt}{_data_}   = GNUpod::iTunesDB::mk_mhlt({songs=>$itb{INFO}{FILES}});
-	$itb{mhlt}{_len_}    = length($itb{mhlt}{_data_});
-
-	# Create header for the mhit header
-	$itb{mhsd_1}{_data_} = GNUpod::iTunesDB::mk_mhsd({size=>$itb{mhit}{_len_}+$itb{mhlt}{_len_}, type=>1});
-	$itb{mhsd_1}{_len_} = length($itb{mhsd_1}{_data_});
-
-
-
-	## PLAYLIST STUFF
-	print "> Creating playlists:\n";
 	
-	my($number_of_playlists, $raw_pldata) = genpls();
+	print "\r> ".$mktunes->GetFileCount." files parsed, writing new iTunesDB...";
+	$mktunes->WriteItunesDB;
 	
-	$itb{playlist}{_data_} = GNUpod::iTunesDB::mk_mhlp({playlists=>$number_of_playlists}).$raw_pldata;
-	$itb{playlist}{_len_}  = length($itb{playlist}{_data_});
-	# Create headers for the playlist part..
-	$itb{mhsd_2}{_data_} = GNUpod::iTunesDB::mk_mhsd({size=>$itb{playlist}{_len_}, type=>2});
-	$itb{mhsd_2}{_len_}  = length($itb{mhsd_2}{_data_});
-
-	# Create podcast playlists and append the other playlists to the data.
-	($number_of_playlists, $raw_pldata) = genpls({nopodcasts=>1, silent=>1});
-	# Note to myself: gtkpod expects the first playlist to be an MPL, itunes and gnupod do not care
-	# as there is no reason for this... anyway.. gnupod is nice and will make gtkpod happy
-	$itb{podcasts}{_data_}  = genpodcasts($raw_pldata,$number_of_playlists);
-	$itb{podcasts}{_len_}  = length($itb{podcasts}{_data_});
-	# Create headers for the podcast-playlist part..
-	$itb{mhsd_3}{_data_}    = GNUpod::iTunesDB::mk_mhsd({size=>$itb{podcasts}{_len_}, type=>3});
-	$itb{mhsd_3}{_len_}     = length($itb{mhsd_3}{_data_});
-
-	#Calculate filesize from buffered calculations...
-	#This is *very* ugly.. but it's fast :-)
-	my $fl = 0;
-	foreach my $xk (keys(%itb)) {
-		foreach my $xx (keys(%{$itb{$xk}})) {
-			next if $xx ne "_len_";
-			$fl += $itb{$xk}{_len_};
-		}
-	}
-
-
-	## FINISH IT :-)
-	print "> Writing iTunesDB...\n";
+	print "> Writing new iTunesShuffle DB\n";
+	$mktunes->WriteItunesSD;
 	
-	## Write the iTunesDB
-	open(ITB, ">$con->{itunesdb}") or die "** Sorry: Could not write your iTunesDB: $!\n";
-	binmode(ITB); #Maybe this helps win32? ;)
-	print ITB GNUpod::iTunesDB::mk_mhbd({size=>$fl, childs=>3});  #Main header
-	print ITB $itb{mhsd_1}{_data_};            #Header for FILE part
-	print ITB $itb{mhlt}{_data_};              #mhlt stuff
-	print ITB $itb{mhit}{_data_};              #..now the mhit stuff
-	print ITB $itb{mhsd_3}{_data_};            #Header for podcast-PLAYLIST part : NOTE: This needs to be BEFORE mhsd_2 !
-	print ITB $itb{podcasts}{_data_};          #podcast-Playlist content
-	print ITB $itb{mhsd_2}{_data_};            #Header for PLAYLIST part
-	print ITB $itb{playlist}{_data_};          #Playlist content
-	close(ITB);
-	## Finished!
-
-	#Fix iTunesSD .. Seek to beginning and write a correct header
-	print "> Fixing iTunesSD...\n";
-	sysseek(ITS,0,0);
-	syswrite(ITS,GNUpod::iTunesDB::mk_itunes_sd_header({files=>$itb{INFO}{FILES}}));
-	close(ITS);
-
 	print "> Updating Sync-Status\n";
 	GNUpod::FooBar::setsync_itunesdb($con);
 	GNUpod::FooBar::setvalid_otgdata($con);
 	GNUpod::FooBar::wipe_shufflestat($con);
-	print "You can now umount your iPod. [Files: ".int($itb{INFO}{FILES})."]\n";
-	print " - May the iPod be with you!\n\n";
-}
 
-
-
-
-
-
-#########################################################################
-# Create a single playlist
-sub r_mpl {
-	my($hr) = @_;
-	
-	my $name   = $hr->{name};
-	my $type   = $hr->{type};
-	my $xidref = $hr->{content};
-	my $spl    = $hr->{splpref};
-	my $plid   = $hr->{plid};
-	my $sortby = $hr->{sortby};
-	my $podcast= $hr->{podcast};
-	
-	my $pl           = undef;
-	my $fc           = 0;
-	my $mhp          = 0;
-	my $reverse_sort = 0;
-
-	if(ref($spl) eq "HASH") { #We got splpref!
-		$pl .= GNUpod::iTunesDB::mk_splprefmhod({item=>$spl->{limititem},sort=>$spl->{limitsort},mos=>$spl->{moselected}
-		                                         ,liveupdate=>$spl->{liveupdate},value=>$spl->{limitval},
-		                                         checkrule=>$spl->{checkrule}}) || return undef;
-
-		$pl .= GNUpod::iTunesDB::mk_spldatamhod({anymatch=>$spl->{matchany},data=>$spldb{$name}}) || return undef;
-		$mhp=2; #Add a mhod
-	}
-
-
-	##Check, if user want's sorted stuff
-	if($sortby) {
-		$sortby=lc($sortby); #LC
-		if($sortby =~ /reverse.(.+)/) {
-			$reverse_sort = 1;
-			$sortby=$1;
-		}
-		sort_playlist_by({sortby=>lc($sortby), plref=>$xidref, reverse=>$reverse_sort});
-	}
-
-	foreach(@{$xidref}) {
-		$cid++; #Whoo! We ReUse the global CID.. first plitem = last file item+1 (or maybe 2 ;) )
-		my $cmhod = GNUpod::iTunesDB::mk_mhod({fqid=>$_});
-		my $cmhip = GNUpod::iTunesDB::mk_mhip({childs=>1,plid=>$cid, sid=>$_, size=>length($cmhod)});
-		next unless (defined($cmhip) && defined($cmhod)); #mk_mhod needs to be ok
-		$fc++;
-		$pl .= $cmhip.$cmhod;
-	}
-	my $plSize = length($pl);
-	#mhyp appends a listview to itself
-	return(GNUpod::iTunesDB::mk_mhyp({size=>$plSize,name=>$name,type=>$type,files=>$fc,
-	                                  mhods=>$mhp, plid=>$plid, podcast=>$podcast}).$pl,$fc);
 }
 
 
 #########################################################################
-# Create podcast playlists
-sub genpodcasts {
-	my($toslap,$toslap_plcount) = @_;
-	my $item_id    = 1;
-	my $num_childs = 0;
-	my $num_pls    = 0;
-	my $buff       = undef;
-	my $scratch    = undef;
+# Called by doxml if it finds a new <file tag
+sub newfile {
+	my($item) = @_;
 	
-	foreach my $plref (GNUpod::XMLhelper::getpl_attribs()) {
-		my $plh = GNUpod::XMLhelper::get_plpref($plref->{name});
-		next unless $plh->{podcast} == 1; # Not a podcast, do nothing
-		my $sortby = $plh->{sort};
-		my $reverse_sort = 0;
-		my $cpcref = $item_id++;
-		$num_childs++;
-		$scratch = GNUpod::iTunesDB::mk_mhod({stype=>'title', string=>$plref->{name}});
-		$buff   .= GNUpod::iTunesDB::mk_mhip({childs=>1,podcast_group=>256,plid=>$cpcref, size=>length($scratch)}); # 256 .. apple magic
-		$buff   .= $scratch;
-		
-		##Check, if user want's sorted stuff
-		if($sortby) {
-			$sortby=lc($sortby); #LC
-			if($sortby =~ /reverse.(.+)/) {
-				$reverse_sort = 1;
-				$sortby=$1;
-			}
-			sort_playlist_by({sortby=>lc($sortby), plref=>$pldb{$plref->{name}}, reverse=>$reverse_sort});
-		}
-
-		
-		foreach my $sid (@{$pldb{$plref->{name}}}) {
-			$item_id++;
-			$num_childs++;
-			$scratch = GNUpod::iTunesDB::mk_mhod({fqid=>0});
-			$buff .= GNUpod::iTunesDB::mk_mhip({childs=>1,sid=>$sid, plid=>$item_id, podcast_group_ref=>$cpcref, size=>length($scratch)});
-			$buff .= $scratch;
-		}
-		print ">> Created Podcast-Playlist '$plref->{name}'\n";	
+	if($opts{energy}) {
+		# Crop title if requested. Note: Cropping it here affects regexps! 
+		# But ... this had only a visible effect on 1st-gen ipods
+		# and didn't work well with iTunes anyway..
+		$item->{file}->{title} = Unicode::String::utf8($item->{file}->{title})->substr(0,18)->utf8;
 	}
 	
-	my $mhlp = GNUpod::iTunesDB::mk_mhlp({playlists=>1+$toslap_plcount});
-	return $mhlp.$toslap.GNUpod::iTunesDB::mk_mhyp({size=>length($buff),name=>'Podcasts', type=>0,files=>$num_childs,podcast=>1}).$buff;
-}
-
-
-#########################################################################
-# Generate playlists from %pldb (+MPL)
-sub genpls {
-	my($opts) = @_;
-	
-	#Create mainPlaylist and set PlayListCount to 1
-	my ($pldata,undef) = r_mpl({name=>Unicode::String::utf8($opts{'ipod-name'})->utf8, type=>1, content=>\@MPLcontent, plid=>MPL_UID});
-	my $plc = 1;
-	
-	my @podcasts     = ();
-	my $num_podcasts = 0;
-	
-	
-	#CID is now used by r_mpl, dont use it yourself anymore
-	foreach my $plref (GNUpod::XMLhelper::getpl_attribs()) {
-		my $splh = GNUpod::XMLhelper::get_splpref($plref->{name}); #Get SPL Prefs
-		my $plh  = GNUpod::XMLhelper::get_plpref($plref->{name});  #Get normal-pl preferences
-		
-		
-		
-		if($plh->{podcast} == 1) {
-			next if $opts->{nopodcasts};
-			
-			$num_podcasts++;
-			if(ref($pldb{$plref->{name}}) eq "ARRAY") {
-				push(@podcasts, @{$pldb{$plref->{name}}});
-			}
-			next;
-		}
-		
-		
-		#Note: sort isn't aviable for spl's.. hack addspl()
-		my($pl, $xc) = r_mpl({name=>$plref->{name}, type=>0, content=>$pldb{$plref->{name}}, splpref=>$splh,
-		                      plid=>$plref->{plid}, sortby=>$plref->{sort}});
-		
-		if($pl) { #r_mpl got data, we can create a playlist..
-			$plc++;         #INC Playlist count
-			$pldata .= $pl; #Append data
-			#GUI Stuff
-			unless($opts->{silent}) {
-				my $plxt = "Smart-" if $splh;
-				print ">> Created $plxt"."Playlist '$plref->{name}' with $xc file"; print "s" if $xc !=1;
-				print " (sort by '$plref->{sort}')" if $plref->{sort};
-				print "\n";
-			}
-		}
-		else {
-			warn "!! SKIPPED Playlist '$plref->{name}', something went wrong...\n";
-		}     
-	}
-	
-	if($num_podcasts > 0) {
-		my($pc_pl,undef) = r_mpl({name=>'Podcasts', type=>0, content=>\@podcasts, podcast=>1, sortby=>'releasedate'});
-		$plc++;
-		$pldata .= $pc_pl;
-		print ">> Created podcast playlist for legacy iPods\n" unless $opts->{silent};
-	}
-	
-	return ($plc,$pldata);
-}
-
-
-#########################################################################
-# Create the file index (like <files>)
-sub build_mhit {
-	my($oid, $xh) = @_;
-	my %chr = %{$xh};
-	$chr{id} = $oid;
-	my ($nhod,$cmhod,$cmhod_count) = undef;
-
-	foreach my $def (keys(%chr)) {
-		next unless $chr{$def}; #Dont create empty fields
-
-		#Crop title if enabled
-		$chr{$def} = Unicode::String::utf8($chr{$def})->substr(0,18)->utf8 if $def eq "title" && $opts{energy};
-
-		$nhod = GNUpod::iTunesDB::mk_mhod({stype=>$def, string=>$chr{$def}});
-		next unless $nhod; #mk_mhod refused work, go to next item
-		$cmhod .= $nhod;
-		$cmhod_count++;
-	}
-
-	push(@MPLcontent,$oid);
-
 	#Volume adjust
 	if($opts{volume}) {
-		$chr{volume} += int($opts{volume});
-		if(abs($chr{volume}) > 100) {
-			print "** Warning: volume=\"$chr{volume}\" out of range: Volume set to ";
-			$chr{volume} = ($chr{volume}/abs($chr{volume})*100);
-			print "$chr{volume}% for id $chr{id}\n";
+		$item->{file}->{volume} += int($opts{volume});
+		if(abs($item->{file}->{volume}) > 100) {
+			print "\n** Warning: volume=\"$item->{file}->{volume}\" out of range: Volume set to ";
+			$item->{file}->{volume} = ($item->{file}->{volume}/abs($item->{file}->{volume})*100);
+			print "$item->{file}->{volume}% for id $item->{file}->{id}\n";
 		}
 	}
 
-	#Ok, we created the mhod's for this item, now we have to create an mhit
-	my $mhit = GNUpod::iTunesDB::mk_mhit({size=>length($cmhod), count=>$cmhod_count, fh=>\%chr}).$cmhod;
-	$itb{mhit}{_data_} .= $mhit;
-	my $length = length($mhit);
-	$itb{INFO}{FILES}++; #Count all files (Needed for iTunesDB header (first part))
-
-	return $length;
+	my $id = $mktunes->AddFile($item->{file});
+	print "\r> $id files parsed" if $id % 96 == 0;
 }
-
-
 
 #########################################################################
-# EventHandler for <file items
-sub newfile {
-	my($el) = @_;
-	$cid++;
-	##Create the gnuPod 0.2x like memeater
-	#$meat{KEY}{VAL} = id." ";
-	foreach(keys(%{$el->{file}})) {
-		$meat{$_}{$el->{file}->{$_}} .= $cid." ";
-		$cmeat{$_}{lc($el->{file}->{$_})} .= $cid." ";
+# Called by doxml if it a new <playlist.. has been found
+sub newpl {
+	my($item, $name, $type) = @_;
+	if($type eq "pl") {
+		$mktunes->AddNormalPlaylistItem(Name=>$name, Item=>$item);
 	}
-
-	$itb{mhit}{_len_} += build_mhit($cid, $el->{file}); 
-
-	#Append to iTunesSD
-	syswrite(ITS,GNUpod::iTunesDB::mk_itunes_sd_file({path=>$el->{file}->{path},
-	                                                  volume=>$el->{file}->{volume},
-	                                                  bookmarkable=>$el->{file}->{bookmarkable},
-	                                                  shuffleskip=>$el->{file}->{shuffleskip}}));
-}
-
-
-#########################################################################
-# EventHandler for <playlist childs
-sub newpl   {
-	my($el, $name, $pltype) = @_;
-
-	if($pltype eq "pl") {
-		xmk_newpl($el, $name);
-	}
-	elsif($pltype eq "spl") {
-		xmk_newspl($el, $name);
+	elsif($type eq "spl") {
+		$mktunes->AddSmartPlaylistItem(Name=>$name, Item=>$item);
 	}
 	else {
-		warn "mktunes.pl: unknown pltype '$pltype', skipped\n";
+		warn "$0: unknown playlist type '$type' skipped\n";
 	}
 }
 
-########################################################################
-# Smartplaylist handler
-sub xmk_newspl {
-	my($el, $name) = @_;
-	my $mpref = GNUpod::XMLhelper::get_splpref($name)->{matchany};
-
-	#Is spl data, add it
-	if(my $xr = $el->{spl}) {
-		push(@{$spldb{$name}}, $xr);
-	}
-
-	unless(GNUpod::XMLhelper::get_splpref($name)->{liveupdate}) {
-		warn "mktunes.pl: warning: (pl: $name) Liveupdate disabled. Please set liveupdate=\"1\" if you don't want an empty playlist\n";
-	}
-
-	if(my $id = $el->{splcont}->{id}) { #We found an old id with disabled liveupdate
-		foreach(sort {$a <=> $b} split(/ /,$meat{id}{$id})) { push(@{$pldb{$name}}, $_); }
-	}
-
-}
-
-
-#######################################################################
-# Normal playlist handler
-sub xmk_newpl {
-	my($el, $name) = @_;
-	foreach my $action (keys(%$el)) {
-		if($action eq "add") {
-			my $ntm;
-			my %mk;
-			foreach my $xrn (keys(%{$el->{$action}})) {
-				foreach(split(/ /,$cmeat{$xrn}{lc($el->{$action}->{$xrn})})) {
-					$mk{$_}++;
-				}
-				$ntm++;
-			}
-			foreach(sort {$a <=> $b} keys(%mk)) {
-				push(@{$pldb{$name}}, $_) if $mk{$_} == $ntm;
-			}
-		}
-		elsif($action eq "regex" || $action eq "iregex") {
-			my $ntm;
-			my %mk;
-			foreach my $xrn (keys(%{$el->{$action}})) {
-				$ntm++;
-				my $regex = $el->{$action}->{$xrn};
-				foreach my $val (keys(%{$meat{$xrn}})) {
-					my $mval;
-					if($val =~ /$regex/) {
-						$mval = $val;
-					}
-					elsif($action eq "iregex" && $val =~ /$regex/i) {
-						$mval = $val;
-					}
-					##get the keys
-					foreach(split(/ /,$meat{$xrn}{$mval})) {
-						$mk{$_}++;
-					}
-				}
-			}
-			foreach(sort {$a <=> $b} keys(%mk)) {
-				push(@{$pldb{$name}}, $_) if $mk{$_} == $ntm;
-			}
-		}
-	}
-}
-
-#######################################################################
-#Sort a playlist ($xidref) by $sortby
-#
-#Only used for full playlists atm.. and could need a speedup!
-#
-sub sort_playlist_by {
-	my($hr) = @_;
-	my $sortby = lc($hr->{sortby});  #SortBy
-	my $xidref = $hr->{plref};       #Playlist Reference
-	my $reverse= $hr->{reverse};     #Reverse?
-	my $isInt  = 0;                  #String by default
-
-	my %sortbuff = ();
-	my %xidhash  = ();
-	my %sortme   = ();
-	my $sortsub  = sub {};
-
-	#Check if $sortby is a string
-	$isInt = $GNUpod::iTunesDB::SPLREDEF{field}{lc($sortby)};
-
-
-	#Create a sub for this search type:
-	if($isInt) {
-		$sortsub = sub { $a <=> $b }; #Num
-		$sortsub = sub { $b <=> $a } if $reverse; #Reverse num
-	}
-	else {
-		$sortsub = sub { uc($a) cmp uc($b)};              #String
-		$sortsub = sub { uc($b) cmp uc($a)} if $reverse;  #Reversed String
-	}
-
-
-	#Map array into hash
-	%xidhash = map { $_ => 1} @{$xidref};
-	@$xidref = (); #Cleanup (do not use undef!)
-
-	#Walk cmeat... cmeat looks like this:
-	#$cmeat{'year'}{'2014'} = "13 14 15 16 33 ";
-	#We got the value and the 1. key (year) .. now we search all
-	#second keys with matching values.. sounds ugly? it is...
-	foreach my $cmval (keys(%{$cmeat{$sortby}})) {
-		foreach(split(/ /,$cmeat{$sortby}{$cmval})) {
-			next unless $xidhash{$_}; #Nope, we don't search for this
-			delete($xidhash{$_});     #We found the item, delete it from here
-			$sortme{$cmval} .= "$_ "; #Add it..
-		}
-	}
-
-
-	foreach(sort $sortsub keys(%sortme)) {
-		foreach(split(/ /,$sortme{$_})) {
-			push(@$xidref,$_);
-		}
-	}
-
-	#Maybe something didn't have a $sortby value?
-	#We know them: Everything still in %xidhash..
-	#-> Append them to the end (i think the beginning isn't good)
-	foreach(keys(%xidhash)) {
-		push(@$xidref,$_);
-	}
-
-	#No need to return anything.. We modify the hashref directly
-}
 
 
 #########################################################################
@@ -550,18 +135,18 @@ Report bugs to <bug-gnupod\@nongnu.org>
 EOF
 }
 
+#########################################################################
+# Displays current version
 sub version {
 die << "EOF";
 mktunes.pl (gnupod) ###__VERSION__###
-Copyright (C) Adrian Ulrich 2002-2004
+Copyright (C) Adrian Ulrich 2002-2007
 
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EOF
 }
-
-
 
 
 
