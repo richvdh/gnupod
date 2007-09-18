@@ -269,12 +269,14 @@ sub mk_mhbd {
 	   $ret .= pack("V", 320);                        #Header Size
 	   $ret .= pack("V", _icl($hr->{size}+320));      #Size of whole mhdb
 	   $ret .= pack("V", 0x1);                        #?
-	   $ret .= pack("V", 0xC);                        # Version, we are iTunes 4.7 -> 12
+	   $ret .= pack("V", 0x19);                       # Version, we are iTunes 7.4.2 -> 0x19
 	   $ret .= pack("V", _icl($hr->{childs}));        # Childs, currently always 2
 	   $ret .= pack("V", 0xE0ADECAD);                 # UID -> 0xA_Decade_0f_bad_f00d
 	   $ret .= pack("V", 0x0DF0ADFB);
 	   $ret .= pack("V", 0x2);                        #?
-	   $ret .= pack("V71", "00");                     #dummy space
+	   $ret .= pack("V3", "00");
+		 $ret .= pack("V",1);                           # 0x30 .. only set to 1 if the hash is set?
+	   $ret .= pack("V67", "00");                     #dummy space
 return $ret;
 }
 
