@@ -67,10 +67,10 @@ sub main {
 	$mktunes->WriteItunesDB;
 	
 	if($fwguid) {
-		GNUpod::Hash58::HashItunesDB(FirewireId=>$fwguid, iTunesDB=>$con->{itunesdb});
+		my $k = GNUpod::Hash58::HashItunesDB(FirewireId=>$fwguid, iTunesDB=>$con->{itunesdb});
 	}
 	else {
-		print "> No iPod-GUID found, database not hashed. Use --fwguid specify a GUID.\n";
+		print "> iPod-GUID not detected. You can force the GUID using --fwguid\n";
 	}
 	
 	print "> Writing new iTunesShuffle DB\n";
@@ -143,6 +143,10 @@ Usage: mktunes.pl [-h] [-m directory] [-v VALUE]
                             (Works with Firmware 1.x and 2.x!)
    -e, --energy            Save energy (= Disable scrolling title)
    -g, --fwguid=HEXVAL     FirewireGuid / Serial of connected iPod
+                           Late 2007 iPod models refuse to work unless
+                           the iTunesDB is signed with a hash. GNUpod
+                           needs to know the iPod serial/firewire-guid
+                           to calculate this top secret hash.
 
 
 Report bugs to <bug-gnupod\@nongnu.org>

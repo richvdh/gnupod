@@ -24,9 +24,9 @@ package GNUpod::Hash58;
 use strict;
 use Digest::SHA1;
 
-use constant BUFF_MAX      => 0x4006C;  # Never read more than 0x4006C bytes
+use constant OFFSET_UNK30  => 0x30;     # Will set this to 1
 use constant OFFSET_DBID   => 0x18;     # Offset of dbid, we need to blank it out
-use constant OFFSET_UNK32  => 0x32;     # Another blank-out offset     ... fixme: ev. muss 0x30 VOR dem hashing auf 1 gesetzt sein.
+use constant OFFSET_UNK32  => 0x32;     # Another blank-out offset
 use constant OFFSET_SHA58  => 0x58;     # dbid offset, we are going to write our data there
 
 
@@ -93,21 +93,16 @@ my $fixed = [
 sub HashItunesDB {
 	my(%args) = @_;
 	
-	my $fwid = $args{FirewireId};
-	my $file = $args{iTunesDB};
-	
-	my $fwref  = _StringToArrayRef(pack("H16",$fwid));
+	my $fwid  = $args{FirewireId};
+	my $file  = $args{iTunesDB};
+	my $fwref = _StringToArrayRef(pack("H16",$fwid));
 	
 	print "> Hashing database for iPod GUID '0x".unpack("H*",_ArrayRefToString($fwref))."'\n";
 	
 	my $this_key  = CreateKey($fwref);
-#	print "Key is   : ".unpack("H*",_ArrayRefToString($this_key))."\n";
 	my $this_hash = CreateHash(Keyref=>$this_key, Filepath=>$file);
-	print "Final hash is: ".unpack("H*",$this_hash)." \n";
-	open(ITUNES, "+<",$file) or die "Could not write to $file : $!\n";
-	seek(ITUNES, OFFSET_SHA58,0);
-	syswrite(ITUNES,$this_hash);
-	close(ITUNES);
+	#print unpack("H*",$this_hash)."\n";
+	return $this_hash;
 }
 
 
@@ -117,26 +112,31 @@ sub HashItunesDB {
 sub CreateHash {
 	my(%args) = @_;
 	
-	my $key  = $args{Keyref};
-	my $path = $args{Filepath};
+	my $key   = $args{Keyref};
+	my $path  = $args{Filepath};
+	my $sha1  = undef;
+	my $phash = undef;
+	my $fkey  = undef;
+	open(ITUNES, "+<",$path) or die "FATAL: Unable to open $path : $!\n";  # Open iTunesDB for read/write
+	my $brain = _PrepareItunes(FD=>*ITUNES);                               # Blank out some offsets in iTunesDB
+
+	Hmac($key,64,0x36);                                                    # Create HMAC for $key
+	$sha1 = Digest::SHA1->new;                                             # SHA1-Round1
+	$sha1->add(_ArrayRefToString($key));                                   # -> Add HMACed $key
+	$sha1->addfile(*ITUNES);                                               # -> Add iTunesDB with some blanks
+	$phash = $sha1->digest;                                                # -> this is the phash
 	
-	Hmac($key,64,0x36); # Create hmac
-	print "Hmaced   : ".unpack("H*",_ArrayRefToString($key))." (len: ".int(@$key).")\n";
+	Hmac($key,64,0x36^0x5c);                                               # HMAC key again..
+	$sha1->reset;                                                          # And start with a new sha1 round
+	$sha1->add(_ArrayRefToString($key));                                   # -> Add HMACed $key
+	$sha1->add($phash);                                                    # -> Add $phash
+	$fkey = $sha1->digest;                                                 # -> Uh, what's that?! :-)
 	
-	my $sha1 = Digest::SHA1->new;
-	   $sha1->add(_ArrayRefToString($key));
-	   $sha1->add(_GrabDataToHash($path));
-	my $phash = $sha1->digest;
-#	print "PHASH    : ".unpack("H*",$phash)."\n";
+	$brain->{OFFSET_SHA58.""} = { size => 20, write => $fkey };            # Do some brain surgery to get SHA58 written
+	_Pretender(FD=>*ITUNES, Workload => $brain);                           # Writeback blanked-out data + SHA58
+	close(ITUNES);                                                         # We are done
 	
-	Hmac($key,64,0x36^0x5c);
-#	print "NKEY     : ".unpack("H*",_ArrayRefToString($key))." (len: ".int(@$key).")\n";
-	
-	my $sha = Digest::SHA1->new;
-	   $sha->add(_ArrayRefToString($key));
-	   $sha->add($phash);
-	
-	return $sha->digest;
+	return $fkey;
 }
 
 ###############################################################
@@ -150,7 +150,7 @@ sub CreateKey {
 		my $b = $id->[$i+1];
 		my $lcm = LCM($a,$b);
 		my $hi = ($lcm & 0xFF00) >> 8;
-		my $lo = $lcm & 0xFF;
+		my $lo = ($lcm & 0xFF  );
 		push(@$y, _usc(($table1->[$hi] * 0xB5) - 3));
 		push(@$y, _usc(($table2->[$hi] * 0xB7) + 0x49));
 		push(@$y, _usc(($table1->[$lo] * 0xB5) - 3));
@@ -169,23 +169,44 @@ sub CreateKey {
 }
 
 ###############################################################
-# Reads data from the iTunesDB and blanks out stuff
-sub _GrabDataToHash {
-	my($path) = @_;
-	my $buff = '';
-
-#	my $toread = BUFF_MAX;
-	open(IT, "<", $path) or die "Unable to open $path : $!\n";
-	while(<IT>) {
-		$buff .= $_;
-	}
-	close(IT);
+# Defines some funky parts that needs some fixing
+sub _PrepareItunes {
+	my(%args) = @_;
+	my $fd = $args{FD};
 	
-	substr($buff,OFFSET_DBID , 8,(chr(0) x 8));
-	substr($buff,OFFSET_UNK32,20,(chr(0) x 20));
-	substr($buff,OFFSET_SHA58,20,(chr(0) x 20));
-	return $buff;
+	my $preserve = { OFFSET_DBID.""  => {size => 8, fill=>0} , OFFSET_UNK32."" => {size => 20, fill=>0},
+	                 OFFSET_UNK30."" => {size => 1, fill=>1} , OFFSET_SHA58."" => {size => 20, fill=>0} };  # Stuff we need to overwrite
+	_Pretender(FD=>$fd, Workload => $preserve);                                                             # -> Start overwriting
+	delete($preserve->{OFFSET_UNK30.""}) or die "Could not delete UNK30 workload!\n";                       # -> Don't write back UNK30, has to be 1
+	return $preserve;
 }
+
+###############################################################
+# Takes a Workload-Reference and writes/backups data
+sub _Pretender {
+	my(%args) = @_;
+	my $fd = $args{FD};
+	my $wl = $args{Workload};
+	
+	foreach my $k (keys(%$wl)) {
+		my $fill_with = delete($wl->{$k}->{fill});
+		my $writeback = delete($wl->{$k}->{write});
+		my $size      = $wl->{$k}->{size};
+		
+		if(defined($fill_with)) {
+			seek($fd,$k,0) or die "Unable to seek to $k : $!\n";
+			my $br = sysread($fd, $wl->{$k}->{write}, $size);
+			die "Failed to read $size bytes, got only $br\n" if $br != $size;
+			$writeback = chr($fill_with) x $size;
+		}
+		seek($fd,$k,0) or die "Unable to seek to $k : $!\n";
+		my $bw = syswrite($fd, $writeback, $size);
+		die "Failed to write $size bytes, only wrote $bw\n" if $bw != $size;
+	}
+	seek($fd,0,0); # Doesn't hurt :-)
+}
+
+
 
 ###############################################################
 # Converts perl scalar to unsigned int
