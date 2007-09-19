@@ -62,7 +62,7 @@ sub main {
 	$mktunes->WriteItunesDB;
 	
 	print "> Calculating some stuff using random numbers...\n";
-	GNUpod::Hash58::HashItunesDB(FirewireId=>[0x01, 0x20, 0x3f, 0x12, 0x33, 0xbb, 0xaa, 0xf0], iTunesDB=>$con->{itunesdb});
+	GNUpod::Hash58::HashItunesDB(FirewireId=>[0x00, 0x01, 0x02, 0x13, 0x15, 0x23, 0x12, 0xba], iTunesDB=>$con->{itunesdb});
 	
 	print "> Writing new iTunesShuffle DB\n";
 	$mktunes->WriteItunesSD;

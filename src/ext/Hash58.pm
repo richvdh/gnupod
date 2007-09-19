@@ -89,6 +89,7 @@ my $fixed = [
 	0x67, 0x23, 0xFE, 0x30, 0x45, 0x33, 0xF8, 0x90, 0x99, 0x21, 0x07, 0xC1, 0xD0, 0x12, 0xB2, 0xA1, 0x07, 0x81
 ];
 
+
 sub HashItunesDB {
 	my(%args) = @_;
 	
@@ -167,16 +168,20 @@ sub CreateKey {
 sub _GrabDataToHash {
 	my($path) = @_;
 	my $buff = '';
-	my $toread = BUFF_MAX;
+
+#	my $toread = BUFF_MAX;
 	open(IT, "<", $path) or die "Unable to open $path : $!\n";
-		while($toread !=0) {
-			my $chunk      = '';
-			my $bytes_read = sysread(IT,$chunk,$toread);
-			$toread -= $bytes_read;
-			$buff .= $chunk;
-			last if $bytes_read < 1;
-			die "Assert failed\n" if $toread < 0;
-		}
+	while(<IT>) {
+		$buff .= $_;
+	}
+#		while($toread !=0) {
+#			my $chunk      = '';
+#			my $bytes_read = sysread(IT,$chunk,$toread);
+#			$toread -= $bytes_read;
+#			$buff .= $chunk;
+#			last if $bytes_read < 1;
+#			die "Assert failed\n" if $toread < 0;
+#		}
 	close(IT);
 	
 	substr($buff,OFFSET_DBID , 8,(chr(0) x 8));
