@@ -26,6 +26,7 @@ use GNUpod::XMLhelper;
 use GNUpod::FooBar;
 use GNUpod::Mktunes;
 use GNUpod::Hash58;
+use GNUpod::SysInfo;
 use Getopt::Long;
 
 use constant MPL_UID => 1234567890; #This is the MasterPlaylist ID
@@ -39,8 +40,8 @@ my %opts    = ();
 print "mktunes.pl ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
-GetOptions(\%opts, "version", "help|h", "ipod-name|n=s", "mount|m=s", "volume|v=i", "energy|e");
-GNUpod::FooBar::GetConfig(\%opts, {'ipod-name'=>'s', mount=>'s', volume=>'i', energy=>'b'}, "mktunes");
+GetOptions(\%opts, "version", "help|h", "ipod-name|n=s", "mount|m=s", "volume|v=i", "energy|e", "fwguid|g=s");
+GNUpod::FooBar::GetConfig(\%opts, {'ipod-name'=>'s', mount=>'s', volume=>'i', energy=>'b', fwguid=>'s'}, "mktunes");
 $opts{'ipod-name'} ||= "GNUpod ###__VERSION__###";
 
 
@@ -54,15 +55,23 @@ sub main {
 	my $con = GNUpod::FooBar::connect(\%opts);
 	usage("$con->{status}\n") if $con->{status};
 	
+	my $sysinfo = GNUpod::SysInfo::GetDeviceInformation(Connection=>$con);
+	my $fwguid  = ($opts{fwguid} || $sysinfo->{FirewireGuid});
+	
 	$mktunes = GNUpod::Mktunes->new(Connection=>$con, iPodName=>$opts{'ipod-name'});
+	
 	print "> Parsing XML document...\n";
 	GNUpod::XMLhelper::doxml($con->{xml}) or usage("Could not read $con->{xml}, did you run gnupod_INIT.pl ?");
 	
 	print "\r> ".$mktunes->GetFileCount." files parsed, writing new iTunesDB...";
 	$mktunes->WriteItunesDB;
 	
-	print "> Calculating some stuff using random numbers...\n";
-	GNUpod::Hash58::HashItunesDB(FirewireId=>[0x00, 0x01, 0x02, 0x13, 0x15, 0x23, 0x12, 0xba], iTunesDB=>$con->{itunesdb});
+	if($fwguid) {
+		GNUpod::Hash58::HashItunesDB(FirewireId=>$fwguid, iTunesDB=>$con->{itunesdb});
+	}
+	else {
+		print "> No iPod-GUID found, database not hashed. Use --fwguid specify a GUID.\n";
+	}
 	
 	print "> Writing new iTunesShuffle DB\n";
 	$mktunes->WriteItunesSD;
@@ -133,6 +142,7 @@ Usage: mktunes.pl [-h] [-m directory] [-v VALUE]
    -v, --volume=VALUE      Adjust volume +-VALUE% (example: -v -20)
                             (Works with Firmware 1.x and 2.x!)
    -e, --energy            Save energy (= Disable scrolling title)
+   -g, --fwguid=HEXVAL     FirewireGuid / Serial of connected iPod
 
 
 Report bugs to <bug-gnupod\@nongnu.org>

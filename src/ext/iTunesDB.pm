@@ -275,7 +275,7 @@ sub mk_mhbd {
 	   $ret .= pack("V", 0x0DF0ADFB);
 	   $ret .= pack("V", 0x2);                        #?
 	   $ret .= pack("V3", "00");
-		 $ret .= pack("V",1);                           # 0x30 .. only set to 1 if the hash is set?
+		 $ret .= pack("V",  "01");                      # 0x30 Hash58 will set this to 1
 	   $ret .= pack("V67", "00");                     #dummy space
 return $ret;
 }

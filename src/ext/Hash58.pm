@@ -96,8 +96,12 @@ sub HashItunesDB {
 	my $fwid = $args{FirewireId};
 	my $file = $args{iTunesDB};
 	
-	my $this_key  = CreateKey($fwid);
-	print "Key is   : ".unpack("H*",_ArrayRefToString($this_key))."\n";
+	my $fwref  = _StringToArrayRef(pack("H16",$fwid));
+	
+	print "> Hashing database for iPod GUID '0x".unpack("H*",_ArrayRefToString($fwref))."'\n";
+	
+	my $this_key  = CreateKey($fwref);
+#	print "Key is   : ".unpack("H*",_ArrayRefToString($this_key))."\n";
 	my $this_hash = CreateHash(Keyref=>$this_key, Filepath=>$file);
 	print "Final hash is: ".unpack("H*",$this_hash)." \n";
 	open(ITUNES, "+<",$file) or die "Could not write to $file : $!\n";
@@ -123,9 +127,10 @@ sub CreateHash {
 	   $sha1->add(_ArrayRefToString($key));
 	   $sha1->add(_GrabDataToHash($path));
 	my $phash = $sha1->digest;
-	print "PHASH    : ".unpack("H*",$phash)."\n";
+#	print "PHASH    : ".unpack("H*",$phash)."\n";
+	
 	Hmac($key,64,0x36^0x5c);
-	print "NKEY     : ".unpack("H*",_ArrayRefToString($key))." (len: ".int(@$key).")\n";
+#	print "NKEY     : ".unpack("H*",_ArrayRefToString($key))." (len: ".int(@$key).")\n";
 	
 	my $sha = Digest::SHA1->new;
 	   $sha->add(_ArrayRefToString($key));
@@ -174,14 +179,6 @@ sub _GrabDataToHash {
 	while(<IT>) {
 		$buff .= $_;
 	}
-#		while($toread !=0) {
-#			my $chunk      = '';
-#			my $bytes_read = sysread(IT,$chunk,$toread);
-#			$toread -= $bytes_read;
-#			$buff .= $chunk;
-#			last if $bytes_read < 1;
-#			die "Assert failed\n" if $toread < 0;
-#		}
 	close(IT);
 	
 	substr($buff,OFFSET_DBID , 8,(chr(0) x 8));
