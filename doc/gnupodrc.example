@@ -34,7 +34,8 @@
 # *** mktunes.pl ***
 ## Set --volume boost to +10 percent 
 #mktunes.volume = +10
-
+## Enforce iPod serial number:
+#mktunes.fwguid = 000ba3100310abcf
 
 # *** gnupod_search.pl ***
 

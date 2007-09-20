@@ -50,6 +50,7 @@ if(-d $opth->{mount}) {
   $rr->{itunessd}       = $opth->{mount}."/iPod_Control/iTunes/iTunesSD";
   $rr->{shufflestat}    = $opth->{mount}."/iPod_Control/iTunes/iTunesShuffle";
   $rr->{sysinfo}        = $opth->{mount}."/iPod_Control/Device/SysInfo";
+  $rr->{extsysinfo}     = $opth->{mount}."/iPod_Control/Device/SysInfoExtended";
   $rr->{playcounts}     = "$rr->{mountpoint}/iPod_Control/iTunes/Play Counts";
   $rr->{itunesdb_md5}   = "$rr->{etc}/.itunesdb_md5";
   $rr->{onthego_invalid}  = "$rr->{etc}/.onthego_invalid";

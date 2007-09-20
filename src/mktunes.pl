@@ -55,8 +55,9 @@ sub main {
 	my $con = GNUpod::FooBar::connect(\%opts);
 	usage("$con->{status}\n") if $con->{status};
 	
-	my $sysinfo = GNUpod::SysInfo::GetDeviceInformation(Connection=>$con);
-	my $fwguid  = ($opts{fwguid} || $sysinfo->{FirewireGuid});
+	my $sysinfo = GNUpod::SysInfo::GetDeviceInformation(Connection=>$con, NoDeviceSearch=>(defined($opts{fwguid}) ? 1 : 0 ) );
+	my $fwguid  = (defined($opts{fwguid}) ? $opts{fwguid} : $sysinfo->{FirewireGuid}); # Always prefer fwguid. may be 0 to disable search
+	
 	
 	$mktunes = GNUpod::Mktunes->new(Connection=>$con, iPodName=>$opts{'ipod-name'});
 	
@@ -142,12 +143,7 @@ Usage: mktunes.pl [-h] [-m directory] [-v VALUE]
    -v, --volume=VALUE      Adjust volume +-VALUE% (example: -v -20)
                             (Works with Firmware 1.x and 2.x!)
    -e, --energy            Save energy (= Disable scrolling title)
-   -g, --fwguid=HEXVAL     FirewireGuid / Serial of connected iPod
-                           Late 2007 iPod models refuse to work unless
-                           the iTunesDB is signed with a hash. GNUpod
-                           needs to know the iPod serial/firewire-guid
-                           to calculate this top secret hash.
-
+   -g, --fwguid=HEXVAL     FirewireGuid / Serial of connected iPod:
 
 Report bugs to <bug-gnupod\@nongnu.org>
 EOF

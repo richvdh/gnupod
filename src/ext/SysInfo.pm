@@ -21,16 +21,11 @@ package GNUpod::SysInfo;
 
 use strict;
 use Config;
-use Data::Dumper;
 use GNUpod::FooBar;
 
-my %opts = ();
-$opts{mount} = '/mnt/ipod';
 
-my $con = GNUpod::FooBar::connect(\%opts);
-
-GetDeviceInformation(Connection=>$con);
-
+############################################################
+# Collects various device information
 sub GetDeviceInformation {
 	my(%args) = @_;
 	
@@ -40,7 +35,8 @@ sub GetDeviceInformation {
 	             HasAudio => 1,   HasVideo => undef, HasAlac => undef, HasPhotos => undef };
 	
 	_GrabSysinfo(Sysinfo=>$connection->{sysinfo}, Hash=>$info);
-	_GrabFirewireGuid($info) if !defined($info->{FirewireGuid});
+	_GrabSysinfoExtended(Sysinfo=>$connection->{extsysinfo}, Hash=>$info);
+	_GrabFirewireGuid($info) if !defined($info->{FirewireGuid}) && !$args{NoDeviceSearch};
 	return $info;
 }
 
@@ -62,20 +58,30 @@ sub _GrabSysinfo {
 	close(SYSINFO);
 }
 
+############################################################
+# Parse libgpod/gtkpod extended sysinfo file
+sub _GrabSysinfoExtended {
+	my(%args) = @_;
+	
+	# tbd
+}
 
 
 ############################################################
 # Detect operating system and dispatch the firewireguid grabber
 sub _GrabFirewireGuid {
 	my($ref) = @_;
-	
 	if($Config{'osname'} eq "linux") {
+		print "> Searching iPod on /proc/bus/usb/devices\n";
 		__GrabFWGUID_LINUX($ref);
+	}
+	elsif($Config{'osname'} eq "solaris") {
+		print "> Searching iPod via prtconf -v\n";
+		__GrabFWGUID_SOLARIS($ref);
 	}
 	else {
 		warn "$0: Support for '$Config{osname}' not implemented\n";
 	}
-
 }
 
 ############################################################
@@ -107,8 +113,40 @@ sub __GrabFWGUID_LINUX {
 		}
 	}
 	close(PROC);
+}
+
+############################################################
+# Grab iPod firewire guid using solaris prtconf
+sub __GrabFWGUID_SOLARIS {
+	my($ref) = @_;
+	my $hw = 0;
+	my $i  = -1;
+	my $cn = '';
+	my @A  = ();
 	
+	open(PRT, "/usr/sbin/prtconf -v |") or return;
+	while(<PRT>) {
+		my $l = $_; chomp($l);
+		if($l =~ /\s+Hardware properties:$/) {
+			$i++;
+			$hw=1;
+		}
+		elsif($hw) {
+			if($l =~ /\s+name='([^']*)'/)        { $cn           = $1; }
+			elsif($l =~ /\s+value='?([^']+)'?$/) { $A[$i]->{$cn} = $1; }
+			else                                 { $hw           = 0;  }
+		}
+	}
+	close(PRT);
 	
+	foreach my $r (@A) {
+		if($r->{'usb-vendor-name'}  =~ /^Apple/ &&
+		   $r->{'usb-product-name'} =~ /^iPod/ &&
+		   $r->{'usb-serialno'}     =~ /^([A-Za-z0-9]{16})$/) {
+			$ref->{FirewireGuid} = $r->{'usb-serialno'};
+			return;
+		}
+	}
 }
 
 

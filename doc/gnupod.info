@@ -1,6 +1,6 @@
 This is gnupod.info, produced by makeinfo version 4.8 from gnupod.texi.
 
-   Copyright (C) 2002, 2003, 2004, 2005 and 2006 Adrian Ulrich
+   Copyright (C) 2002, 2003, 2004, 2005, 2006 and 2007 Adrian Ulrich
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -24,8 +24,8 @@ File: gnupod.info,  Node: Top,  Next: Requirements,  Up: (dir)
 1 GNUpod
 ********
 
-This edition of the `GNUpod Manual', last updated 27. Apr. 2007,
-documents GNUpod Version 0.99.2
+This edition of the `GNUpod Manual', last updated 20. Sep. 2007,
+documents GNUpod Version 0.99.4
 
 * Menu:
 
@@ -221,25 +221,13 @@ experimental and may do nasty things. (But it works well for me..)  If
 you build your kernel with HFS+ support, you don't have to convert your
 iPod :)
 
-   The first step is to upgrade your iPod to Firmware 1.1.0 or newer.
-(YES: 1.1.0 can read FAT32, but Apple never shipped FAT32 formatted
-iPods with 1.1.0.  Firmware 1.1.0 seems to use less power (has 1.20 a
-rtc problem?), but the name of the iPod won't show up in the 'Info'
-menu and it may crash on very large MP3 files.
-
-   You can do this with Mac OSX using the Apple Firmware upgrader, it's
-aviable from: http://www.apple.com/ipod/download/
-
-   If you don't own Mac OSX you can update the Mac-iPod using Linux.
-Have a look at the next section to learn how to do this.
-
-   Also note that you will need a fdisk for DOS-Style partitions. The
-kernel you are running has also to support DOS-Style partitions (to
-access the device after you converted it) and Mac partitions (to read
-the firmware).  If you are using GNU/Linux on x86, your fdisk should be
-fine, but if you are running GNU/Linux on (for example) PowerPC you may
-have to get a suitable fdisk from the util-linux package which can be
-retrieved from: ftp://ftp.kernel.org/pub/linux/utils/util-linux/
+   Please note that you will need a fdisk for DOS-Style partitions, you
+will also need a kernel that supports Mac- (to read the firmware) and
+Dos-style (to access the device after converting it) partitions.  If
+you are using GNU/Linux on x86, your fdisk should be fine, but if you
+are running GNU/Linux on (for example) PowerPC you may have to get a
+suitable fdisk from the util-linux package which can be retrieved from:
+ftp://ftp.kernel.org/pub/linux/utils/util-linux/
 
    Compile and install the pc-fdisk (and only the pc-fdisk!)
      tar -xjvf util-linux-X.XXx.tar.bz2
@@ -344,72 +332,73 @@ File: gnupod.info,  Node: Firmware update,  Prev: Convert your Mac iPod,  Up: In
 ** Don't update the Firmware just for fun, only do it if you need a new
 Firmware or/and the documentation told you to do this **
 
+   Note: This steps do not work on late 2007 iPods (such as Classic,
+Touch and 3th gen. Nano).
+
    Setup Firewire (or USB) as described in 'Using FireWire with
 GNU/Linux', load the modules and make sure sbp2 detected your iPod.
 Mount the iPod and run `mktunes.pl' to bring the device into a 'clean'
 state. Unmount the iPod after mktunes.pl finished but do *not* unplug
 the iPod. Ready? Ok, we assume your iPod is `/dev/sda':
 
-   First you need to get a new Firmware.  You can download the Update
-from http://www.apple.com/ipod/download/ , take care to choose the Mac
-OSX Version!
+   First you need to get a new Firmware.  Checkout the latest firmware
+list:
+     wget -O list.gz http://ax.phobos.apple.com.edgesuite.net//WebObjects/MZStore.woa/wa/com.apple.jingle.appserver.client.MZITunesClientCheck/version
+     gunzip list.gz
 
-   While the huge image is about to download, grab 'dmg2iso.pl' from
-`http://blinkenlights.ch/gnupod/dmg2iso.pl' (or try the C++ version
-from `http://www.binaryriot.org/cisc/dmg2iso') and make sure that your
-kernel supports HFS+. (Or/And use the script from
-http://www.ubuntu-de.org/wiki/multimedia:ipod_mit_linux_verwenden:firmwareupdate_unter_linux)
-(Note: This version of dmg2iso was found at
-http://www.ubuntu-de.org/wiki/multimedia:ipod_mit_linux_verwenden:firmwareupdate_unter_linux
-The current script provided by the author himself at
-http://vu1tur.eu.org/tools/ does not work with the latest updater. ?!)
+   Open the list in a text editor and find the correct Fimrware-URL for
+iPod model:
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-3877.20070914.n9gGb/iPod_24.1.0.1.ipsw</string>  iPod Classic (2007)
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-2790.20061206.iPr9t/iPod_25.1.2.1.ipsw</string>  iPod Video late 5th Gen (30 or 80 gb)
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-3878.20070914.P0omB/iPod_26.1.0.1.ipsw</string>  ipod Nano 3th Generation
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-3326.20070507.0Pm87/iPod_29.1.1.3.ipsw</string>  iPod Nano 2nd Generation
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-3316.20070618.9n1bC/iPod_130.1.0.3.ipsw</string> iPod Shuffle 2nd Generation
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-3317.20070618.nBh6t/iPod_131.1.0.3.ipsw</string> iPod Shuffle 2nd Generation
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-2975.20061218.in8Uq/iPod_128.1.1.5.ipsw</string> iPod Shuffle 1st Generation
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-2692.20060912.pODcW/iPod_10.3.1.1.ipsw</string>  iPod Clickwheel
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-2694.20060912.ipDcD/iPod_11.1.2.1.ipsw</string>  iPod Photo
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-2788.20061206.nS1yA/iPod_13.1.2.1.ipsw</string>  iPod 5th Gen.
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-3190.20070315.p0oj7/iPod_14.1.3.1.ipsw</string>  iPod Nano 1st Generation
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-3191.20070315.BgV6t/iPod_17.1.3.1.ipsw</string>  iPod Nano 1st Generation
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-3325.20070507.KnB7v/iPod_19.1.1.3.ipsw</string>  iPod Nano 2nd Generation
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-2686.20060912.ipTsW/iPod_1.1.5.ipsw</string>     Scroll-Wheel iPod (1st iPod ever)
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-2687.20060912.IPwdC/iPod_2.2.3.ipsw</string>     iPod 'Dock connector'
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-2688.20060912.iDMni/iPod_3.1.4.1.ipsw</string>   iPod mini 1st Generation
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-2691.20060912.ipDcw/iPod_4.3.1.1.ipsw</string>   iPod Clickwheel
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-2693.20060912.PdwCD/iPod_5.1.2.1.ipsw</string>   iPod Photo
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-2689.20060912.ipDmn/iPod_6.1.4.1.ipsw</string>   iPod mini 1st Generation
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-2690.20060912.PdMin/iPod_7.1.4.1.ipsw</string>   iPod mini 2nd Generation (?)
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-2953.20061218.yRet5/iPod_129.1.1.5.ipsw</string> iPod Shuffle 1st Generation
+         <string>http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-2789.20061206.9IIut/iPod_20.1.2.1.ipsw</string>  iPod 5th Gen.
 
-   An Example:
-     # Grab a working copy of dmg2iso.pl
-     wget http://blinkenlights.ch/gnupod/dmg2iso.pl
-     # Convert the dmg into iso
-     perl dmg2iso.pl iPodUpdater2005-06-26.dmg out.iso
-     # ..and mount it. You need hfs+ support!
-     mount -o loop -t hfsplus out /mnt/cdrom
-     # Target directory for output:
-     mkdir /tmp/foo
-     cd /tmp/foo
-     # Extract the firmware archive
-     gunzip -dc /mnt/cdrom/iPod.mpkg/Contents/Resources/iPod*.pkg/Contents/Archive.pax.gz | cpio -idv
-     # ..and umount
-     umount /mnt/cdrom
-     # voila! 'cd' into the firmware dir
-     cd Applications/Utilities/iPod\ Software\ Updater.localized/iPod\ Updater\ *.app/Contents/Resources/Updates
-     # .. and pick a Firmware-* image
-     #
-     # 1.*         : 1.x Firmware (1st, 2nd Generation)
-     # 2.*         : 2.x Firmware (3rd Generation)
-     # 3.* & 6.*   : iPod Mini
-     # 4.* & 10.*  : Clickwheel (?)
-     # 5.* & 11.*  : iPod Photo
-     # 7.*         : ????
-     # 128.*       : Shuffle (??)
+   Download the correct firmware image of your iPod
+(http://docs.info.apple.com/article.html?artnum=61688 should help you
+identify our iPod model) and extract it:
+     # Example for ipod photo: iPod_11.1.2.1.ipsw : 11 = Model (Photo) 1.2.1 = Firmware version
+     wget http://appldnld.apple.com.edgesuite.net/content.info.apple.com/iPod/SBML/osx/bundles/061-2694.20060912.ipDcD/iPod_11.1.2.1.ipsw
+     unzip iPod_11.1.2.1.ipsw
+       Archive:  iPod_11.1.2.1.ipsw
+         inflating: Firmware-11.4.2.1
+         inflating: manifest.plist
 
    Ok, we are now ready to write the new firmware to the iPod.
 
    If your iPod is HFS+ Formatted (your kernel supports 'mac-style'
 partitions??), use
-     dd if=121.bin of=/dev/sda2
+     dd if=Firmware-11.4.2.1 of=/dev/sda2  # <-- this is the extracted image, do NOT write the .ipsw file!
      sync
 
-   to upgrade the Firmware. If you own a FAT32 Formatted (your kernel
-supports 'dos-style' partitions??) iPod, use
-     dd if=121.bin of=/dev/sda1
+   to upgrade the Firmware. If you own a FAT32 Formatted iPod (most
+common), use
+     dd if=Firmware-11.4.2.1 of=/dev/sda1 # <-- this is the extracted image, do NOT write the .ipsw file!
      sync
 
-   After `dd' finished (it can take some time), remove sbp2
-     rmmod sbp2
-
-   You can now unplug the iPod and pray ;)
+   After `dd' finished (it can take some time), run a `sync' and unplug
+the iPod.
 
    Please note: Your Warranty Is Now Void ;-)
 
-   But please don't blame me if your iPod dies...
+   And please don't blame me if your iPod dies...
 
 
 File: gnupod.info,  Node: Using GNUpod,  Next: Problems,  Prev: Installing GNUpod,  Up: Top
@@ -430,6 +419,7 @@ File: gnupod.info,  Node: Using GNUpod,  Next: Problems,  Prev: Installing GNUpo
 * Unplug the iPod::                 How to unplug the iPod (Not a joke.. read it)
 * Recovering files::                How to rebuild the Database if you lost the iTunesDB & GNUtunesDB
 * Coexistence::                     iTunes/Music Match/xtunes/Ehpod user? Read this!
+* Late 2007 iPods::                 Information about iPod Classic, Touch and 3th gen Nano
 
 
 File: gnupod.info,  Node: Preparation,  Next: Configuration,  Up: Using GNUpod
@@ -711,7 +701,7 @@ a GNUtunesDB including the Songs which are on the iPod
 know that it's possible (Note: Of course you'll lose your Playlists)
 
 
-File: gnupod.info,  Node: Coexistence,  Prev: Recovering files,  Up: Using GNUpod
+File: gnupod.info,  Node: Coexistence,  Next: Late 2007 iPods,  Prev: Recovering files,  Up: Using GNUpod
 
 4.11 Coexistence
 ================
@@ -756,6 +746,23 @@ your iPod with other programs.
 
    The songs are still in the playlists, but the expressions you wrote
 are 'lost'.
+
+
+File: gnupod.info,  Node: Late 2007 iPods,  Prev: Coexistence,  Up: Using GNUpod
+
+4.12 Late 2007 iPods
+====================
+
+Late 2007 iPod models (3gen Nano, Classic, Touch) refuse to work unless
+the iTunesDB has been signed with a sha1 hash.  This hash helps to
+detect corrupted databases, prevents sharing an iTunesDB between
+multiple iPods and locks out non-apple software. GNUpod is able to
+create the required hash value if it knows the iPods serial number,
+this is a 16 chars long hex value such as: `000ba3100310abcf' and
+should be autodetected on GNU/Linux (via `/proc/bus/usb/devices') and
+Solaris (via `prtconf -v').  If GNUpod somehow fails to find the
+correct serial number of your iPod you'll have to specify the correct
+value using the `--fwguid' switch of `mktunes.pl'.
 
 
 File: gnupod.info,  Node: Problems,  Next: GNU Free Documentation License,  Prev: Using GNUpod,  Up: Top
@@ -1289,30 +1296,31 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top870
-Node: Requirements1461
-Node: Installing GNUpod1984
-Node: Installation of GNUpod2411
-Node: Using FireWire with GNU/Linux3529
-Node: Convert your Mac iPod7078
-Node: Firmware update12319
-Node: Using GNUpod15265
-Node: Preparation16223
-Node: Configuration16955
-Node: Add files17412
-Node: Search files18894
-Node: Remove files19380
-Node: Edit tags19681
-Node: Creating playlists20226
-Node: Dealing with podcasts22707
-Node: Unplug the iPod23608
-Node: Recovering files24520
-Node: Coexistence25417
-Node: Problems26887
-Node: GNUtunesDB27270
-Node: Get rid of '-m'28776
-Node: Known bugs and limitations29061
-Node: Reporting Bugs29352
-Node: GNU Free Documentation License29800
+Node: Top876
+Node: Requirements1467
+Node: Installing GNUpod1990
+Node: Installation of GNUpod2417
+Node: Using FireWire with GNU/Linux3535
+Node: Convert your Mac iPod7084
+Node: Firmware update11735
+Node: Using GNUpod17872
+Node: Preparation18921
+Node: Configuration19653
+Node: Add files20110
+Node: Search files21592
+Node: Remove files22078
+Node: Edit tags22379
+Node: Creating playlists22924
+Node: Dealing with podcasts25405
+Node: Unplug the iPod26306
+Node: Recovering files27218
+Node: Coexistence28115
+Node: Late 2007 iPods29609
+Node: Problems30398
+Node: GNUtunesDB30781
+Node: Get rid of '-m'32287
+Node: Known bugs and limitations32572
+Node: Reporting Bugs32863
+Node: GNU Free Documentation License33311
 
 End Tag Table
