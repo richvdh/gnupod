@@ -80,7 +80,7 @@ sub _GrabFirewireGuid {
 		__GrabFWGUID_SOLARIS($ref);
 	}
 	else {
-		warn "$0: Support for '$Config{osname}' not implemented\n";
+		warn "$0: iPod-GUID detection for '$Config{osname}' not implemented (yet)\n";
 	}
 }
 
