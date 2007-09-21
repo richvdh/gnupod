@@ -1,3 +1,12 @@
+GNUpod 0.99.5
+
+Summary
+-------
+- The iTunesDB parsing code is now much more flexible and uses callbacks.
+
+
+*** OLD STUFF ***
+
 GNUpod 0.99.4
 
 Summary
@@ -15,8 +24,6 @@ Summary
   Feel free to express your feelings about this
   issue at http://www.apple.com/feedback/ipod.html
  
-*** OLD STUFF ***
-
 GNUpod 0.99.3
 
 Summary

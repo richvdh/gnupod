@@ -26,6 +26,11 @@ use GNUpod::iTunesDB;
 use GNUpod::XMLhelper;
 use GNUpod::FooBar;
 use Getopt::Long;
+use Data::Dumper;
+
+use constant MODE_SONGS => 1;
+use constant MODE_OLDPL => 2;
+use constant MODE_NEWPL => 3;
 
 use vars qw(%opts);
 $| = 1;
@@ -42,199 +47,303 @@ GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', force=>'b', anapodworkaround=>'b'
 usage() if $opts{help};
 version() if $opts{version};
 
+convert();
 
 
-#Normal operation
-converter();
-
-sub converter {
-$opts{_no_sync} = 1;
-my $con = GNUpod::FooBar::connect(\%opts);
-usage("$con->{status}\n") if $con->{status};
-
-#We disabled all autosyncing (_no_sync set to 1), so we do a test
-#ourself
-if(!$opts{force} && !(GNUpod::FooBar::_itb_needs_sync($con))) {
- print "I don't think that you have to run tunes2pod.pl\n";
- print "The GNUtunesDB looks up-to-date\n";
- print "\n";
- print "If you think i'm wrong, use '$0 --force'\n";
- exit(1);
-}
-
-
-
-open(ITUNES, $con->{itunesdb}) or usage("Could not open $con->{itunesdb}");
-
-
-
-#Check where the FILES and PLAYLIST part starts..
-#..and how many files are in this iTunesDB
-my @itinfo = GNUpod::iTunesDB::get_starts(*ITUNES);
-
-if(!defined(@itinfo)) {
-  warn "File '$con->{itunesdb}' is not an iTunesDB, wrong magic in header!\n";
-  exit(1);
-}
-
-#Start of Tracklist
-my $tracklist_pos   = $itinfo[1]->{start};
-my $tracklist_childs = $itinfo[1]->{childs};
-
-#Start of Playlist
-my $pl_pos   =  $itinfo[2]->{start};
-my $pl_childs = $itinfo[2]->{childs};
-
-
-my $podcast_pos    = $itinfo[3]->{start};
-my $podcast_childs = $itinfo[3]->{childs};
-
-print "> Has $tracklist_childs songs";
-
-#Get all files
-my $href= undef;
-my $ff = 0;
-my %hout = ();
-for(my $i=0;$i<$tracklist_childs;$i++) {
-	#get the mhit + all child mhods
-	($tracklist_pos,$href) = GNUpod::iTunesDB::get_mhits($tracklist_pos, *ITUNES);
-	#Seek failed.. this shouldn't happen..  
-	if($tracklist_pos == -1) {
-		print STDERR "\n*** FATAL: Expected to find $tracklist_childs files,\n";
-		print STDERR "*** but i failed to get nr. $i\n";
-		print STDERR "*** Your iTunesDB maybe corrupt or you found\n";
-		print STDERR "*** a bug in GNUpod. Please send this\n";
-		print STDERR "*** iTunesDB to pab\@blinkenlights.ch\n\n";
-		exit(1);
-	}
-	GNUpod::XMLhelper::mkfile({file=>$href});  
-	$ff++;
-}
-#<files> part built
-print STDOUT "\r> Found $ff files, ok\n";
-
-
-#Now get each playlist
-print STDOUT "> Found ".($pl_childs-1)." playlists:\n";
-for(my $i=0;$i<$pl_childs;$i++) {
-	($pl_pos, $href) = GNUpod::iTunesDB::get_pl($pl_pos, {nomplskip=> $opts{anapodworkaround} }, *ITUNES); #Get an mhyp + all child mhods
-	if($pl_pos == -1) {
-		print STDERR "*** FATAL: Expected to find $pl_childs playlists,\n";
-		print STDERR "*** but i failed to get nr. $i\n";
-		print STDERR "*** Your iTunesDB maybe corrupt or you found\n";
-		print STDERR "*** a bug in GNUpod. Please send this\n";
-		print STDERR "*** iTunesDB to pab\@blinkenlights.ch\n\n";
-		print STDERR "!!! If you are an 'Anapod' user, try to set\n";
-		print STDERR "!!!   tunes2pod.anapodworkaround=1\n";
-		print STDERR "!!! inside ~/.gnupodrc and re-run the command.\n";
-		exit(1);
-	}
-	next if $href->{type};         #Don't list the MPL
+sub convert {
+	$opts{_no_sync} = 1;
+	my $con = GNUpod::FooBar::connect(\%opts);
+	usage("$con->{status}\n") if $con->{status};
 	
-	$href->{name} = "NONAME" unless($href->{name}); #Don't create an empty pl
-	if(ref($href->{splpref}) eq "HASH" && ref($href->{spldata}) eq "ARRAY") { #SPL Data present
-		print ">> Smart-Playlist '$href->{name}' found\n";
-		render_spl($href->{name},$href->{splpref}, $href->{spldata}, $href->{matchrule},
-		           $href->{content}, $href->{plid});
+	#We disabled all autosyncing (_no_sync set to 1), so we do a test
+	#ourself
+	if(!$opts{force} && !(GNUpod::FooBar::_itb_needs_sync($con))) {
+		print "I don't think that you have to run tunes2pod.pl\n";
+		print "The GNUtunesDB looks up-to-date\n";
+		print "\n";
+		print "If you think i'm wrong, use '$0 --force'\n";
+		exit(1);
 	}
-	elsif($href->{podcast} == 1) {
-		print ">> $href->{name}-Playlist with ".int(@{$href->{content}})." songs skipped\n";
+	
+	open(ITUNES, $con->{itunesdb}) or usage("Could not open $con->{itunesdb}");
+	
+	while(<ITUNES>) {}; seek(ITUNES,0,0); # the iPod is a sloooow mass-storage device, slurp it into the fs-cache
+	
+	my $self = { ctx => {}, mode => 0, playlist => {}, pc_playlist => {}, count_songs_done => 0, count_songs_total => 0 };
+	bless($self,__PACKAGE__);
+	$self->ResetPlaylists;
+	
+	# Define callbacks
+	my $obj = { offset => 0, childs => 1, fd=>*ITUNES,
+	               callback => {
+	                              PACKAGE=>$self, mhod => { item => 'MhodItem' }, mhit => { start => 'MhitStart', end => 'MhitEnd' },
+	                              mhsd => { start => 'MhsdStart' },               mhip => { item => 'MhipItem' }, 
+	                              mhyp => { item => 'MhypItem', end=>'MhypEnd' }, mhlt => { item => 'MhltItem' },
+	                            }
+	           };
+	GNUpod::iTunesDB::ParseiTunesDB($obj,0);    # Parses the iTunesDB
+	GNUpod::XMLhelper::writexml($con);          # Writes out the new XML file
+	GNUpod::FooBar::setsync_itunesdb($con);     # Mark as in-sync
+	GNUpod::FooBar::setvalid_otgdata($con);     # dududio
+	
+	#The iTunes is now set to clean .. maybe we have to
+	#update the otg..
+	$opts{_no_sync} = 0;
+	GNUpod::FooBar::connect(\%opts);
+	
+	print "\n Done\n";
+	close(ITUNES);
+	exit(0);
+}
+
+#######################################################################
+# Cleans current playlist buffer
+sub ResetPlaylists {
+	my($self) = @_;
+	$self->{playlist}    = { name => 'Lost and Found', plid => 0, mpl => 0, podcast => 0, content => [], spl => {} };
+	$self->{pc_playlist} = { index => 0, lists => {} };
+}
+
+#######################################################################
+# Set name of current playlist
+sub SetPlaylistName {
+	my($self,$arg) = @_;
+	$self->{playlist}->{name} = $arg if length($arg) != 0;
+}
+
+#######################################################################
+# Set SmartPlaylists preferences for current playlist
+sub SetSplPreferences {
+	my($self,$ref) = @_;
+	$self->{playlist}->{spl}->{preferences} = $ref;
+}
+
+#######################################################################
+# Sets content of current SmartPlaylist
+sub SetSplData {
+	my($self,$ref) = @_;
+	$self->{playlist}->{spl}->{data} = $ref;
+}
+
+#######################################################################
+# Sets Matchrule for current SmartPlaylist
+sub SetSplMatchrule {
+	my($self,$ref) = @_;
+	$self->{playlist}->{spl}->{matchrule} = $ref;
+}
+
+#######################################################################
+# Sets current podcast index
+sub SetPodcastIndex {
+	my($self,$index) = @_;
+	return if $index == 0;
+	$self->{pc_playlist}->{index} = $index;
+	$self->{pc_playlist}->{lists}->{$index} = { name => 'Lost and Found', content => [] };
+}
+
+#######################################################################
+sub SetPodcastName {
+	my($self,$name) = @_;
+	my $index = $self->{pc_playlist}->{index};
+	return if $index == 0;
+	$self->{pc_playlist}->{lists}->{$index}->{name} = $name if length($name) != 0;
+}
+
+#######################################################################
+# Append item to podcast playlist
+sub AppendPodcastItem {
+	my($self,$index,$item) = @_;
+	my $index = $self->{pc_playlist}->{index};
+	return if $index == 0;
+	push(@{$self->{pc_playlist}->{lists}->{$index}->{content}},$item);
+}
+
+
+#######################################################################
+# Dumps object content
+sub Dumpit {
+	my($self,%args) = @_;
+	print Data::Dumper::Dumper(\%args);
+}
+
+#######################################################################
+# Switch to current mhsd mode
+sub MhsdStart {
+	my($self,%args) = @_;
+	my $type = int($args{ref}->{type});
+	my $old  = $self->{mode};
+	$self->{mode} = $type;
+	
+	if($old == MODE_SONGS) { print "\r> $self->{count_songs_done} of $self->{count_songs_total} files found, searching playlists\n" }
+}
+
+#######################################################################
+# A mhit, holds information about size, length.. etc.. Should have a
+# mhod as child
+sub MhitStart {
+	my($self, %args) = @_;
+	if($self->{mode} == MODE_SONGS) {
+		$self->{ctx} = $args{ref}->{ref};                                 # Swallow-in mhit reference
 	}
-	else { #Normal playlist  
-		print ">> Playlist '$href->{name}' with ".int(@{$href->{content}})." songs\n";
-		GNUpod::XMLhelper::addpl($href->{name}, {plid=>$href->{plid}});
-		foreach(@{$href->{content}}) {
-		my $plfh = ();
-		$plfh->{add}->{id} = $_->{sid};
-		GNUpod::XMLhelper::mkfile($plfh,{plname=>$href->{name}});
+	else {
+		warn "unknown mode: $self->{mode}\n";
+	}
+}
+
+#######################################################################
+# We've seen all mhit childs, so we can write the <file /> item itself
+sub MhitEnd {
+	my($self, %args) = @_;
+	if($self->{mode} == MODE_SONGS) {
+		GNUpod::XMLhelper::mkfile({file=>$self->{ctx}});                  # Add <file element to xml
+		$self->{ctx} = ();                                                # And drop this buffer
+		my $i = ++$self->{count_songs_done};
+		if($i % 32 == 0) {
+			printf("\r> %d files left, %d%% done    ", $self->{count_songs_total}-$i, ($i/(1+$self->{count_songs_total})*100));
+		}
+	}
+	else {
+		warn "unknown mode: $self->{mode}\n";
+	}
+}
+
+sub MhltItem {
+	my($self, %args) = @_;
+	$self->{count_songs_total} = $args{ref}->{childs};
+}
+
+#######################################################################
+# A DataObject
+sub MhodItem {
+	my($self, %args) = @_;
+	
+	if($self->{mode} == MODE_SONGS) {
+		# -> Songs mode, just add string to current context
+		$self->{ctx}->{$args{ref}->{type_string}} = $args{ref}->{string}; # Add mhod item
+	}
+	elsif($self->{mode} == MODE_OLDPL) {
+		# Legacy playlist
+		if($args{ref}->{type_string} eq 'title') {
+			# -> Set title of playlist following
+			$self->SetPlaylistName($args{ref}->{string});
+		}
+		elsif($args{ref}->{type} == 50) {
+			# -> Remember spl preferences
+			$self->SetSplPreferences($args{ref}->{splpref});
+		}
+		elsif($args{ref}->{type} == 51) {
+			# -> Remember spl data
+			$self->SetSplData($args{ref}->{spldata});
+			$self->SetSplMatchrule($args{ref}->{matchrule});
+		}
+	}
+	elsif($self->{mode} == MODE_NEWPL) {
+		# -> Newstyle playlist
+		if($args{ref}->{type_string} eq 'title' && $self->{playlist}->{podcast}) {
+			# Title of playlist: create it
+			$self->SetPodcastName($args{ref}->{string});
 		}
 	}
 }
 
 
-# Read podcast childs if this iTunesDB provides one..
-if($podcast_childs > 0) {
-	print STDOUT "> Converting Podcasts-Playlists ...\n";
-	my $pcnref = ();
-	for(my $i=0;$i<$podcast_childs;$i++) {
-		($podcast_pos, $href) = GNUpod::iTunesDB::get_pl($podcast_pos,{}, *ITUNES);
-		
-		if($href->{podcast} != 1) {
-			next;
+#######################################################################
+# Playlist item
+sub MhipItem {
+	my($self, %args) = @_;
+	if($self->{mode} == MODE_OLDPL) {
+		# -> Old playlist. Add SongID to current content container
+		push(@{$self->{playlist}->{content}}, $args{ref}->{sid});
+	}
+	elsif($self->{mode} == MODE_NEWPL && $self->{playlist}->{podcast}) {
+		# Only read podcasts in this mode (we do normal playlists in MODE_OLDPL)
+		if($args{ref}->{podcast_group} == 256 && $args{ref}->{podcast_group_ref} == 0) {
+			# -> Podcast index found
+			$self->SetPodcastIndex($args{ref}->{plid});
 		}
-		else {
-			foreach my $pccont (@{$href->{content}}) {
-				if(defined($pccont->{subnaming})) {
-					print ">> $href->{name}-Playlist '$pccont->{subnaming}'\n";
-					$pcnref->{$pccont->{plid}} = $pccont->{subnaming};
-					GNUpod::XMLhelper::addpl($pccont->{subnaming}, {podcast=>1});
+		elsif($args{ref}->{podcast_group} == 0 && $args{ref}->{podcast_group_ref} != 0) {
+			# -> New item for an index found, add it
+			$self->AppendPodcastItem($args{ref}->{podcast_group_ref}, $args{ref}->{sid});
+		}
+	}
+}
+
+#######################################################################
+# Playlist 'uberblock'
+sub MhypItem {
+	my($self, %args) = @_;
+	$self->{playlist}->{plid}    = $args{ref}->{plid};
+	$self->{playlist}->{mpl}     = ($args{ref}->{is_mpl} != 0 ? 1 : 0 );
+	$self->{playlist}->{podcast} = ($args{ref}->{podcast} != 0 ? 1 : 0);
+}
+
+#######################################################################
+# Write out whole playlist
+sub MhypEnd {
+	my($self, %args) = @_;
+	if($self->{mode} == MODE_OLDPL) {
+		if($self->{playlist}->{mpl} == 0 && $self->{playlist}->{podcast} == 0) {
+			# -> 'Old' non-podcast playlist
+			my $plname = $self->{playlist}->{name};
+			
+			if(ref($self->{playlist}->{spl}->{preferences}) eq "HASH" && ref($self->{playlist}->{spl}->{data}) eq "ARRAY") {
+				# -> Handle this as a smart-playlist
+				print ">> Smart-Playlist '$plname'";
+				my $pref = $self->{playlist}->{spl}->{preferences};
+				my $ns   = 0;
+				my $nr   = 0;
+				GNUpod::XMLhelper::addspl($plname, { liveupdate => $pref->{live}, moselected => $pref->{mos}, limititem=>$pref->{iitem},
+				                                      limitsort=>$pref->{isort}, limitval=>$pref->{value},
+				                                      matchany=>$self->{playlist}->{spl}->{matchrule},
+				                                      checkrule=>$pref->{checkrule}, plid=>$self->{playlist}->{plid} } );
+				foreach my $splitem (@{$self->{playlist}->{spl}->{data}}) {
+					GNUpod::XMLhelper::mkfile({spl=>$splitem}, {splname=> $plname});
+					$nr++;
 				}
-				else {
-					my $plfh = {add=>{id => $pccont->{sid}}};
-					my $pcplname = $pcnref->{$pccont->{podcast_group_ref}};
-					
-					unless(defined($pcplname)) {
-						warn "Unable to add $pccont->{sid} to a playlist: no reference to group $pccont->{podcast_group_ref} found\n";
-					}
-					else {
-						GNUpod::XMLhelper::mkfile($plfh,{plname=>$pcplname});
-					}
+				foreach my $id (@{$self->{playlist}->{content}}) {
+					GNUpod::XMLhelper::mkfile({splcont=>{id=>$id}}, {splname=>$plname});
+					$ns++;
 				}
+				print " with $nr rules and $ns songs\n";
+			}
+			else {
+				# -> This is a normal playlist
+				print ">> Playlist '$plname'";
+				my $ns = 0;
+				GNUpod::XMLhelper::addpl($plname, {plid=>$self->{playlist}->{plid}});
+				foreach my $id (@{$self->{playlist}->{content}}) {
+					GNUpod::XMLhelper::mkfile({add => { id => $id } },{plname=>$self->{playlist}->{name}});
+					$ns++;
+				}
+				print " with $ns songs\n";
 			}
 		}
 	}
+	elsif($self->{mode} == MODE_NEWPL) {
+		# -> We are supposed to have a complete podcasts list here..
+		foreach my $pci (sort keys(%{$self->{pc_playlist}->{lists}})) {
+			my $cl = $self->{pc_playlist}->{lists}->{$pci};
+			my $ns = 0;
+			print ">> Podcast-Playlist '$cl->{name}'";
+			GNUpod::XMLhelper::addpl($cl->{name}, {podcast=>1});
+			foreach my $i (@{$cl->{content}}) {
+				GNUpod::XMLhelper::mkfile({add => { id => $i } }, {plname=>$cl->{name}});
+				$ns ++;
+			}
+			print " with $ns songs\n";
+		}
+	}
+	$self->ResetPlaylists; # Resets podcast and normal playlist data
 }
 
 
-
-
-GNUpod::XMLhelper::writexml($con);
-GNUpod::FooBar::setsync_itunesdb($con);
-GNUpod::FooBar::setvalid_otgdata($con);
-
-#The iTunes is now set to clean .. maybe we have to
-#update the otg..
-$opts{_no_sync} = 0;
-GNUpod::FooBar::connect(\%opts);
-
-print STDOUT "\n Done\n";
-close(ITUNES);
-exit(0);
-}
-
-
-
-#######################################################
-# create a spl
-sub render_spl {
- my($name, $pref, $data, $mr, $content, $plid) = @_;
- my $of = undef;
- $of->{liveupdate} = $pref->{live};
- $of->{moselected} = $pref->{mos};
- $of->{matchany}   = $mr;
- $of->{limitsort} = $pref->{isort};
- $of->{limitval}  = $pref->{value};
- $of->{limititem} = $pref->{iitem};
- $of->{checkrule} = $pref->{checkrule};
- $of->{plid}       = $plid;
-#create this playlist
-GNUpod::XMLhelper::addspl($name, $of);
-
-  foreach my $xr (@{$data}) { #Add spldata
-    GNUpod::XMLhelper::mkfile({spl=>$xr}, {splname=>$name});
-  }
-  foreach my $cont (@{$content}) { #Add (old?) content
-    GNUpod::XMLhelper::mkfile({splcont=>{id=>$cont->{sid}}}, {splname=>$name});
-  }
-
-}
 
 
 
 
 
 sub usage {
-my($rtxt) = @_;
+	my($rtxt) = @_;
 die << "EOF";
 $rtxt
 Usage: tunes2pod.pl [-h] [-m directory]
@@ -251,7 +360,7 @@ EOF
 sub version {
 die << "EOF";
 tunes2pod.pl (gnupod) ###__VERSION__###
-Copyright (C) Adrian Ulrich 2002-2004
+Copyright (C) Adrian Ulrich 2002-2007
 
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

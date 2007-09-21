@@ -179,12 +179,15 @@ else {
 ######################################################################
 # Get int value (Network format)
 sub shx2int {
- my($shx) = @_;
- my $buff = undef;
-   foreach(split(//,$shx)) {
-    $buff = sprintf("%02X",ord($_)).$buff;
-   }
-  return hex($buff);
+	my($shx) = @_;
+	my $buff = undef;
+	return unpack("V",pack("H16",unpack("H16",$shx)));
+=head
+	foreach(split(//,$shx)) {
+		$buff = sprintf("%02X",ord($_)).$buff;
+	}
+	return hex($buff);
+=cut
 }
 
 ######################################################################
@@ -260,22 +263,22 @@ sub setINvalid_otgdata {
 ######################################################################
 # Getmd5line
 sub getmd5line {
- my($file) = @_;
-   open(MDX, "$file") || warn "Could not open $file, md5 will fail!\n";
-    my $plmd = <MDX>;
-   close(MDX);
-   chomp($plmd);
-   return $plmd;
+	my($file) = @_;
+	open(MDX, "$file") || warn "Could not open $file, md5 will fail!\n";
+	my $plmd = <MDX>;
+	close(MDX);
+	chomp($plmd);
+	return $plmd;
 }
 
 ######################################################################
 # Call this to set GNUtunesDB <-> iTuneDB 'in-sync'
 sub setsync {
- my($rr) = @_;
- setsync_itunesdb($rr);
- setsync_playcounts($rr);
- setsync_otg($rr);
- setvalid_otgdata($rr);
+	my($rr) = @_;
+	setsync_itunesdb($rr);
+	setsync_playcounts($rr);
+	setsync_otg($rr);
+	setvalid_otgdata($rr);
 }
 
 ######################################################################
@@ -318,15 +321,15 @@ if( !(-e $rr->{playcounts}) || unlink($rr->{playcounts})) {
 # Set only itunesdb sync
 sub setsync_itunesdb {
 my($rr) = @_;
- if(-r $rr->{itunesdb}) {
- #Write the file with md5sum content
- open(MDX,">$rr->{itunesdb_md5}") or die "Can't write md5-sum, $!\n";
-  print MDX getmd5($rr->{itunesdb})."\n";
- close(MDX);
- return undef;
- }
- warn "Can't set sync for iTunesDB to true: file not found\n";
- return 1;
+	if(-r $rr->{itunesdb}) {
+		#Write the file with md5sum content
+		open(MDX,">$rr->{itunesdb_md5}") or die "Can't write md5-sum, $!\n";
+		print MDX getmd5($rr->{itunesdb})."\n";
+		close(MDX);
+		return undef;
+	}
+	warn "Can't set sync for iTunesDB to true: file not found\n";
+	return 1;
 }
 
 
@@ -334,12 +337,12 @@ my($rr) = @_;
 ######################################################################
 # Get the MD5 sum of a file
 sub getmd5 {
- my($file) = @_;
-   open(UTDATE, $file) or die "** FATAL: Unable to open $file, $!\n";
-   binmode(UTDATE);
-   my $md5 = Digest::MD5->new->addfile(*UTDATE)->hexdigest;
-   close(UTDATE);
- return $md5;
+	my($file) = @_;
+	open(UTDATE, $file) or die "** FATAL: Unable to open $file, $!\n";
+	binmode(UTDATE);
+	my $md5 = Digest::MD5->new->addfile(*UTDATE)->hexdigest;
+	close(UTDATE);
+	return $md5;
 }
 
 
@@ -397,12 +400,12 @@ sub GetConfig {
 #############################################
 # Get Unique path
 sub get_u_path {
- my($prefix, $ext) = @_;
- my $dst = undef;
- while($dst = sprintf("%s_%d_%d.$ext",$prefix, int(time()), int(rand(99999)))) {
-  last unless -e $dst;
- }
- return $dst;
+	my($prefix, $ext) = @_;
+	my $dst = undef;
+	while($dst = sprintf("%s_%d_%d.$ext",$prefix, int(time()), int(rand(99999)))) {
+		last unless -e $dst;
+	}
+	return $dst;
 }
 
 

@@ -38,6 +38,8 @@ use constant ITUNESDB_MAGIC => 'mhbd';
 use constant OLD_ITUNESDB_MHIT_HEADERSIZE => 156;
 use constant NEW_ITUNESDB_MHIT_HEADERSIZE => 244;
 
+use constant TREEDUMP => 0;
+
 #mk_mhod() will take care of lc() entries
 my %mhod_id = ( title=>1, path=>2, album=>3, artist=>4, genre=>5, fdesc=>6, eq=>7, comment=>8, category=>9, composer=>12, group=>13,
                  desc=>14, podcastguid=>15, podcastrss=>16, chapterdata=>17, subtitle=>18, tvshow=>19, tvepisode=>20,
@@ -195,6 +197,9 @@ $SPLDEF{limitsort}{-23} = "rating_low";
 %PLREDEF  = _r_xdef(%PLDEF);
 
 
+
+
+
 ## IPOD SHUFFLE ####################################################
 # Create iPod shuffle header
 sub mk_itunes_sd_header {
@@ -275,7 +280,7 @@ sub mk_mhbd {
 	   $ret .= pack("V", 0x0DF0ADFB);
 	   $ret .= pack("V", 0x2);                        #?
 	   $ret .= pack("V3", "00");
-		 $ret .= pack("V",  "00");                      # 0x30 Hash58 will set this to 1
+	   $ret .= pack("V",  "00");                      # 0x30 Hash58 will set this to 1
 	   $ret .= pack("V67", "00");                     #dummy space
 return $ret;
 }
@@ -287,13 +292,13 @@ return $ret;
 #
 ### XHR: size type
 sub mk_mhsd {
- my ($hr) = @_;
- my $ret = "mhsd";
-    $ret .= pack("V", _icl(96));                      #Headersize, static
-    $ret .= pack("V", _icl($hr->{size}+96));          #Size
-    $ret .= pack("V", _icl($hr->{type}));             #type .. 1 = song .. 2 = playlist
-    $ret .= pack("V20", "00");                         #dummy space
- return $ret;
+	my ($hr) = @_;
+	my $ret = "mhsd";
+	   $ret .= pack("V", _icl(96));                      #Headersize, static
+	   $ret .= pack("V", _icl($hr->{size}+96));          #Size
+	   $ret .= pack("V", _icl($hr->{type}));             #type .. 1 = song .. 2 = playlist
+	   $ret .= pack("V20", "00");                         #dummy space
+	return $ret;
 }
 
 
@@ -303,76 +308,75 @@ sub mk_mhsd {
 # mhod(s) (You have to create them yourself..!)
 ### XHR: fh 
 sub mk_mhit {
- my($hr) = @_;
- my %file_hash = %{$hr->{fh}};
+	my($hr) = @_;
+	my %file_hash = %{$hr->{fh}};
+	
+	#We have to fix 'volume'
+	my $vol = sprintf("%.0f",( int($file_hash{volume})*2.55 ));
+	
+	if($vol >= 0 && $vol <= 255) { } #Nothing to do
+	elsif($vol < 0 && $vol >= -255) {            #Convert value
+		$vol = ((0xFFFFFFFF) + $vol); 
+	}
+	else {
+		warn "** Warning: ID $file_hash{id} has volume set to $file_hash{volume} percent. Volume set to +-0%\n";
+		$vol = 0; #We won't nuke the iPod with an ultra high volume setting..
+	}
+	
+	foreach( ("rating", "prerating") ) {
+		if($file_hash{$_} && $file_hash{$_} !~ /^(2|4|6|8|10)0$/) {
+			warn "Warning: Song $file_hash{id} has an invalid $_: $file_hash{$_}\n";
+			$file_hash{$_} = 0;
+		}
+	}
+	
+	#Check for stupid input
+	my ($c_id) = $file_hash{id} =~ /(\d+)/;
+	
+	if($c_id < 1) {
+		warn "Warning: ID can't be '$c_id', has to be > 0\n";
+		warn "  ---->  This song *won't* be visible on the iPod\n";
+		warn "  ---->  This may confuse other scripts...\n";
+		warn "  ----> !! YOU SHOULD FIX THIS AND RERUN mktunes.pl !!\n";
+	}
 
- #We have to fix 'volume'
- my $vol = sprintf("%.0f",( int($file_hash{volume})*2.55 ));
-
- if($vol >= 0 && $vol <= 255) { } #Nothing to do
- elsif($vol < 0 && $vol >= -255) {            #Convert value
-  $vol = ((0xFFFFFFFF) + $vol); 
- }
- else {
-  print STDERR "** Warning: ID $file_hash{id} has volume set to $file_hash{volume} percent. Volume set to +-0%\n";
-  $vol = 0; #We won't nuke the iPod with an ultra high volume setting..
- }
-
- foreach( ("rating", "prerating") ) {
-  if($file_hash{$_} && $file_hash{$_} !~ /^(2|4|6|8|10)0$/) {
-   print STDERR "Warning: Song $file_hash{id} has an invalid $_: $file_hash{$_}\n";
-   $file_hash{$_} = 0;
-  }
- }
-
- #Check for stupid input
- my ($c_id) = $file_hash{id} =~ /(\d+)/;
-
- if($c_id < 1) {
-  print STDERR "Warning: ID can't be '$c_id', has to be > 0\n";
-  print STDERR "  ---->  This song *won't* be visible on the iPod\n";
-  print STDERR "  ---->  This may confuse other scripts...\n";
-  print STDERR "  ----> !! YOU SHOULD FIX THIS AND RERUN mktunes.pl !!\n";
- }
-
- my $ret = "mhit";
-    $ret .= pack("V", _icl(0xF4));                          #header size
-    $ret .= pack("V", _icl(int($hr->{size})+0xF4));         #len of this entry
-    $ret .= pack("V", _icl($hr->{count}));                  #num of mhods in this mhit
-    $ret .= pack("V", _icl($c_id));                         #Song index number
-    $ret .= pack("V", _icl(1));                             #Visible?
-    $ret .= pack("V");                                      #FileType. Should be 'MP3 '. (FIXME: Extension or type?)
-    $ret .= pack("v", 0x100);                               #cbr = 100, vbr = 101, aac = 0x010 ##FIXME: COrrect?
-    $ret .= pack("c", (($file_hash{compilation})!=0));      #compilation
-    $ret .= pack("c",$file_hash{rating});                   #rating
-    $ret .= pack("V", _icl($file_hash{changetime}));        #Time changed
-    $ret .= pack("V", _icl($file_hash{filesize}));          #filesize
-    $ret .= pack("V", _icl($file_hash{time}));              #seconds of song
-    $ret .= pack("V", _icl($file_hash{songnum}));           #nr. on CD .. we dunno use it (in this version)
-    $ret .= pack("V", _icl($file_hash{songs}));             #songs on this CD
-    $ret .= pack("V", _icl($file_hash{year}));              #the year
-    $ret .= pack("V", _icl($file_hash{bitrate}));           #bitrate
-    $ret .= pack("v", "00");                                #??
-    $ret .= pack("v", _icl( ($file_hash{srate} || 44100),0xffff));    #Srate (note: v4!)
-    $ret .= pack("V", _icl($vol));                          #Volume
-    $ret .= pack("V", _icl($file_hash{starttime}));         #Start time?
-    $ret .= pack("V", _icl($file_hash{stoptime}));          #Stop time?
-    $ret .= pack("V", _icl($file_hash{soundcheck}));        #Soundcheck from iTunesNorm
-    $ret .= pack("V", _icl($file_hash{playcount}));         #Playcount
-    $ret .= pack("V", _icl($file_hash{playcount}));         #Sometimes eq playcount .. ?!
-    $ret .= pack("V", _icl($file_hash{lastplay}));          #Last playtime..
-    $ret .= pack("V", _icl($file_hash{cdnum}));             #cd number
-    $ret .= pack("V", _icl($file_hash{cds}));               #number of cds
-    $ret .= pack("V");                                      #hardcoded space ? (Apple DRM id?)
-    $ret .= pack("V", _icl($file_hash{addtime}));           #File added @
-    $ret .= pack("V", _icl($file_hash{bookmark}));          #QTFile Bookmark
-    $ret .= pack("V", (_icl($file_hash{dbid_lsw}) || 0xDEADBABE) );            #DBID Prefix (Cannot be 0x0)
-    $ret .= pack("V", (_icl($file_hash{dbid_msw}) || _icl($c_id) ));           #DBID Postfix (Cannot be 0x0)
-    $ret .= pack("v");                                      #??
-    $ret .= pack("v", _icl($file_hash{bpm},0xffff));        #BPM
-    $ret .= pack("v", _icl($file_hash{artworkcnt}));        #Artwork Count
-    $ret .= pack("v");                                      #ipodlinux-wiki => unk9
-    $ret .= pack("V", _icl($file_hash{artworksize}));       #Artwork Size
+	my $ret = "mhit";
+		$ret .= pack("V", _icl(0xF4));                          #header size
+		$ret .= pack("V", _icl(int($hr->{size})+0xF4));         #len of this entry
+		$ret .= pack("V", _icl($hr->{count}));                  #num of mhods in this mhit
+		$ret .= pack("V", _icl($c_id));                         #Song index number
+		$ret .= pack("V", _icl(1));                             #Visible?
+		$ret .= pack("V");                                      #FileType. Should be 'MP3 '. (FIXME: Extension or type?)
+		$ret .= pack("v", 0x100);                               #cbr = 100, vbr = 101, aac = 0x010 ##FIXME: COrrect?
+		$ret .= pack("c", (($file_hash{compilation})!=0));      #compilation
+		$ret .= pack("c",$file_hash{rating});                   #rating
+		$ret .= pack("V", _icl($file_hash{changetime}));        #Time changed
+		$ret .= pack("V", _icl($file_hash{filesize}));          #filesize
+		$ret .= pack("V", _icl($file_hash{time}));              #seconds of song
+		$ret .= pack("V", _icl($file_hash{songnum}));           #nr. on CD .. we dunno use it (in this version)
+		$ret .= pack("V", _icl($file_hash{songs}));             #songs on this CD
+		$ret .= pack("V", _icl($file_hash{year}));              #the year
+		$ret .= pack("V", _icl($file_hash{bitrate}));           #bitrate
+		$ret .= pack("v", "00");                                #??
+		$ret .= pack("v", _icl( ($file_hash{srate} || 44100),0xffff));    #Srate (note: v4!)
+		$ret .= pack("V", _icl($vol));                          #Volume
+		$ret .= pack("V", _icl($file_hash{starttime}));         #Start time?
+		$ret .= pack("V", _icl($file_hash{stoptime}));          #Stop time?
+		$ret .= pack("V", _icl($file_hash{soundcheck}));        #Soundcheck from iTunesNorm
+		$ret .= pack("V", _icl($file_hash{playcount}));         #Playcount
+		$ret .= pack("V", _icl($file_hash{playcount}));         #Sometimes eq playcount .. ?!
+		$ret .= pack("V", _icl($file_hash{lastplay}));          #Last playtime..
+		$ret .= pack("V", _icl($file_hash{cdnum}));             #cd number
+		$ret .= pack("V", _icl($file_hash{cds}));               #number of cds
+		$ret .= pack("V");                                      #hardcoded space ? (Apple DRM id?)
+		$ret .= pack("V", _icl($file_hash{addtime}));           #File added @
+		$ret .= pack("V", _icl($file_hash{bookmark}));          #QTFile Bookmark
+		$ret .= pack("H16", ($file_hash{dbid_1} or $c_id));     # First dbid, should not be null
+		$ret .= pack("v");                                      #??
+		$ret .= pack("v", _icl($file_hash{bpm},0xffff));        #BPM
+		$ret .= pack("v", _icl($file_hash{artworkcnt}));        #Artwork Count
+		$ret .= pack("v");                                      #ipodlinux-wiki => unk9
+		$ret .= pack("V", _icl($file_hash{artworksize}));       #Artwork Size
 		$ret .= pack("V2");
 		$ret .= pack("V", _icl($file_hash{releasedate}));       #Date released
 		$ret .= pack("V3");
@@ -382,9 +386,7 @@ sub mk_mhit {
 		$ret .= pack("C", _icl(($file_hash{shuffleskip} ? 1 : 0)));
 		$ret .= pack("C", _icl(($file_hash{bookmarkable} ? 1 : 0)));
 		$ret .= pack("C", _icl(($file_hash{podcast} ? 1 : 0)));
-		
-		$ret .= pack("V", (_icl($file_hash{dbid2_lsw}) || 0xDEADBABE) );            #DBID2 Prefix (Cannot be 0x0)
-		$ret .= pack("V", (_icl($file_hash{dbid2_msw}) || _icl($c_id) ));           #DBID2 Postfix (Cannot be 0x0)
+		$ret .= pack("H16", ($file_hash{dbid_2} or $c_id));    # second dbid, should not be null
 		$ret .= pack("C", (_icl(($file_hash{lyrics_flag} ? 1 : 0))));
 		$ret .= pack("C", (_icl(($file_hash{movie_flag} ? 1 : 0))));
 		$ret .= pack("C", (_icl(($file_hash{played_flag} ? 1 : 2))));
@@ -424,7 +426,7 @@ sub mk_mhod {
 	
 	#Append
 	my $apx = undef;
-
+	
 	#Called with fqid, this has to be an PLTHING (100)
 	if(defined $fqid) { 
 		#fqid set, that's a pl item!
@@ -436,8 +438,8 @@ sub mk_mhod {
 	else { #has a type, default fqid
 		$fqid=1;
 	}
-
-
+	
+	
 	
 	if($type == 7 && $string !~ /#!#\d+#!#/) {
 		warn "iTunesDB.pm: warning: wrong format: '$type_string=\"$string\"'\n";
@@ -682,15 +684,14 @@ return $ret;
 
 ## FILES #########################################################
 # header for all files (like you use mk_mhlp for playlists)
-sub mk_mhlt
-{
-my ($hr) = @_;
-
-my $ret = "mhlt";
-   $ret .= pack("V", _icl(92)); 		    #Header size (static)
-   $ret .= pack("V", _icl($hr->{songs})); #songs in this itunesdb
-   $ret .= pack("V20", "00");                      #dummy space
-return $ret;
+sub mk_mhlt {
+	my ($hr) = @_;
+	
+	my $ret = "mhlt";
+	   $ret .= pack("V", _icl(92));            #Header size (static)
+	   $ret .= pack("V", _icl($hr->{songs}));  #songs in this itunesdb
+	   $ret .= pack("V20", "00");              #dummy space
+	return $ret;
 }
 
 
@@ -703,73 +704,69 @@ return $ret;
 
 ## PLAYLIST #######################################################
 # header for ALL playlists
-sub mk_mhlp
-{
-
-my ($hr) = @_;
-
-my $ret = "mhlp";
-   $ret .= pack("V", _icl(92));                   #Static header size
-   $ret .= pack("V", _icl($hr->{playlists}));     #playlists on iPod (including main!)
-   $ret .= pack("V20", "00");                      #dummy space
-return $ret;
+sub mk_mhlp {
+	my ($hr) = @_;
+	
+	my $ret = "mhlp";
+	   $ret .= pack("V", _icl(92));                   #Static header size
+	   $ret .= pack("V", _icl($hr->{playlists}));     #playlists on iPod (including main!)
+	   $ret .= pack("V20", "00");                     #dummy space
+	return $ret;
 }
 
 
 ## PLAYLIST ######################################################
 # Creates an header for a new playlist (child of mk_mhlp)
-sub mk_mhyp
-{
-my($hr) = @_;
-
-#We need to create a listview-layout and an mhod with the name..
-
-my $append = mk_mhod({stype=>"title", string=>$hr->{name}});
-my $cmh = 1+$hr->{mhods};
-unless($hr->{no_dummy_listview}) {
-	$append .= __dummy_listview();
-	$cmh++; # Add a new ChildMhod
-}
-
-
-my $ret .= "mhyp";
-   $ret .= pack("V", _icl(108)); #type
-   $ret .= pack("V", _icl($hr->{size}+108+(length($append))));          #size
-   $ret .= pack("V", _icl($cmh));			      #mhits
-   $ret .= pack("V", _icl($hr->{files}));   #songs in pl
-   $ret .= pack("V", _icl($hr->{type}));    # 1 = main .. 0=not main
-   $ret .= pack("V", "00");                 #Timestamp FIXME
-   $ret .= pack("V", _icl($hr->{plid}));    #Playlist ID
-   $ret .= pack("V", "00");                 #fixme: plid2
-   $ret .= pack("V", "00");
-   $ret .= pack("CC", _icl($hr->{stringmhods},0xff));
-   $ret .= pack("CC", _icl($hr->{podcast}    ,0xff));
-   $ret .= pack("V", 0); #_icl($PLREDEF{sort}{$hr->{sortflag}})); Fixme: is this even used?
-   $ret .= pack("H120", "00");              #dummy space
-
- return $ret.$append;
+sub mk_mhyp {
+	my($hr) = @_;
+	
+	#We need to create a listview-layout and an mhod with the name..
+	
+	my $append = mk_mhod({stype=>"title", string=>$hr->{name}});
+	my $cmh = 1+$hr->{mhods};
+	unless($hr->{no_dummy_listview}) {
+		$append .= __dummy_listview();
+		$cmh++; # Add a new ChildMhod
+	}
+	
+	
+	my $ret .= "mhyp";
+	   $ret .= pack("V", _icl(108)); #type
+	   $ret .= pack("V", _icl($hr->{size}+108+(length($append))));          #size
+	   $ret .= pack("V", _icl($cmh));			      #mhits
+	   $ret .= pack("V", _icl($hr->{files}));   #songs in pl
+	   $ret .= pack("V", _icl($hr->{type}));    # 1 = main .. 0=not main
+	   $ret .= pack("V", "00");                 #Timestamp FIXME
+	   $ret .= pack("V", _icl($hr->{plid}));    #Playlist ID
+	   $ret .= pack("V", "00");                 #fixme: plid2
+	   $ret .= pack("V", "00");
+	   $ret .= pack("CC", _icl($hr->{stringmhods},0xff));
+	   $ret .= pack("CC", _icl($hr->{podcast}    ,0xff));
+	   $ret .= pack("V", 0); #_icl($PLREDEF{sort}{$hr->{sortflag}})); Fixme: is this even used?
+	   $ret .= pack("H120", "00");              #dummy space
+	
+	return $ret.$append;
 }
 
 
 ## PLAYLIST ##################################################
 # header for new Playlist item (child if mk_mhyp)
-sub mk_mhip
- {
-my ($hr) = @_;
-#sid = SongId
-#plid = playlist order ID
-my $ret = "mhip";
-   $ret .= pack("V", _icl(76));
-   $ret .= pack("V", _icl(76+$hr->{size}));
-   $ret .= pack("V", _icl($hr->{childs})); #Mhod childs !
-   $ret .= pack("V", _icl($hr->{podcast_group}));
-   $ret .= pack("V", _icl($hr->{plid}));   #ORDER id
-   $ret .= pack("V", _icl($hr->{sid}));    #song id in playlist
-   $ret .= pack("V", _icl($hr->{timestamp}));
-   $ret .= pack("V", _icl($hr->{podcast_group_ref}));
-   $ret .= pack("H80", "00");
-  return $ret;
- }
+sub mk_mhip {
+	my ($hr) = @_;
+	#sid = SongId
+	#plid = playlist order ID
+	my $ret = "mhip";
+	   $ret .= pack("V", _icl(76));
+	   $ret .= pack("V", _icl(76+$hr->{size}));
+	   $ret .= pack("V", _icl($hr->{childs})); #Mhod childs !
+	   $ret .= pack("V", _icl($hr->{podcast_group}));
+	   $ret .= pack("V", _icl($hr->{plid}));   #ORDER id
+	   $ret .= pack("V", _icl($hr->{sid}));    #song id in playlist
+	   $ret .= pack("V", _icl($hr->{timestamp}));
+	   $ret .= pack("V", _icl($hr->{podcast_group_ref}));
+	   $ret .= pack("H80", "00");
+	return $ret;
+}
 
 
 
@@ -781,11 +778,11 @@ my $ret = "mhip";
 ## _INTERNAL ###################################################
 #Convert utf8 (what we got from XML::Parser) to utf16 (ipod)
 sub _ipod_string {
-my ($utf8string) = @_;
-#We got utf8 from parser, the iPod likes utf16.., swapped..
-$utf8string = Unicode::String::utf8($utf8string)->utf16;
-$utf8string = Unicode::String::byteswap2($utf8string);
-return $utf8string;
+	my ($utf8string) = @_;
+	#We got utf8 from parser, the iPod likes utf16.., swapped..
+	$utf8string = Unicode::String::utf8($utf8string)->utf16;
+	$utf8string = Unicode::String::byteswap2($utf8string);
+	return $utf8string;
 }
 
 
@@ -872,17 +869,12 @@ return $ret
 ###########################################
 # Get a INT value
 sub get_int {
-	my($start, $anz, $fh) = @_;
-	my $buffer = undef;
-	Carp::confess("No filehandle!") unless $fh;
-	# paranoia checks
-	$start = int($start);
-	$anz = int($anz);
-	#seek to the given position
-	seek($fh, $start, 0);
-	#start reading
-	read($fh, $buffer, $anz) or die "FATAL: read($fh, \$buffer, $anz) on offset $start failed : $!\n";
-	return GNUpod::FooBar::shx2int($buffer);
+	my($pos, $toread, $fd) = @_;
+	seek($fd,$pos,0) or Carp::confess("Unable to seek to $pos : $!");
+	my $buff       = '';
+	my $bytes_read = read($fd, $buff, $toread);
+	Carp::confess("Short read: Wanted $toread bytes, got $bytes_read, syserr: $!\n") if $toread != $bytes_read;
+	return GNUpod::FooBar::shx2int($buff);
 }
 
 
@@ -908,97 +900,93 @@ sub get_x86_int {
 ####################################################
 # Get all SPL items
 sub read_spldata {
- my($hr,$fd) = @_;
- 
-my $diff = $hr->{start}+160;
-my @ret = ();
- for(1..$hr->{htm}) {
-  my $field = get_int($diff+3, 1,$fd);       #Field
-  my $ftype = get_int($diff+4,1,$fd);        #Field TYPE
-  my $action= get_x86_int($diff+5, 3,$fd);   #Field ACTION
-  my $slen  = get_int($diff+55,1,$fd);       #Whoa! This is true: string is limited to 0xfe (254) chars!! (iTunes4)
-  my $rs    = undef;                     #ReturnSting
-
-
-  my $human_exp = $SPLDEF{hprefix}{$ftype}; #Set NOT for $ftype
- 
-   if($SPLDEF{is_string}{$ftype}) { #Is a string type
-	my $string= get_string($diff+56, $slen,$fd);
-    #No byteswap here?? why???
-    $rs = Unicode::String::utf16($string)->utf8;
-    #Translate $action to a human field
-    $human_exp .= $SPLDEF{string_action}{$action}; 
-	#Warn about bugs 
-	$SPLDEF{string_action}{$action} or _itBUG("Unknown s_action $action for $ftype (= GNUpod doesn't understand this SmartPlaylist)");
-   }
-   elsif($action == $SPLREDEF{num_action}{within} 
-         && get_x86_int($diff+56+8,4,$fd) == 0xffffffff
-         && get_x86_int($diff+56,4,$fd)   == 0x2dae2dae) {
-     ## Within type is handled different... ask apple why...
-     
-     #Get the value (Bug: we are 32 bit.. this looks 64 bit)
-     $rs = (0xffffffff-get_x86_int($diff+56+12,4,$fd)+1);
-  
-     $human_exp .= $SPLDEF{num_action}{$action}; #Set human exp
-     my $within_key = $SPLDEF{within_key}{get_x86_int($diff+56+20,4,$fd)}; #Set within key
-     if($within_key) {
-      $rs = $rs."_".$within_key;
-     }
-     else {
-      _itBUG("Can't handle within_SPL_FIELD - unknown within_key, using 1_day");
-      $rs = "1_day"; #Default fallback
-     }
-   }
-   else { #Is INT (Or range)
-		my $xfint = get_x86_int($diff+56+4,4,$fd);
-		my $xtint = get_x86_int($diff+56+28,4,$fd);
-		$rs = "$xfint:$xtint";
-		$human_exp .= $SPLDEF{num_action}{$action};
-		$SPLDEF{num_action}{$action} or  _itBUG("Unknown num_action $action for $ftype (= GNUpod doesn't understand this SmartPlaylist)");
-   }
-   
-  $diff += $slen+56;
-  
-  my $human_field = $SPLDEF{field}{$field};
-  $SPLDEF{field}{$field} or _itBUG("Unknown SPL-Field: $field (= GNUpod doesn't understand this SmartPlaylist)");
-  
-  push(@ret, {action=>$human_exp,field=>$human_field,string=>$rs});
- }
- return \@ret;
+	my($hr,$fd) = @_;
+	
+	my $diff = $hr->{start}+160;  # Hardcoded start offset (we are still inside a mhod)
+	my @ret = ();
+	
+	for(1..$hr->{htm}) {
+		my $field = get_int($diff+3, 1,$fd);       #Field
+		my $ftype = get_int($diff+4,1,$fd);        #Field TYPE
+		my $action= get_x86_int($diff+5, 3,$fd);   #Field ACTION
+		my $slen  = get_int($diff+55,1,$fd);       #Whoa! This is true: string is limited to 0xfe (254) chars!! (iTunes4)
+		my $rs    = undef;                     #ReturnSting
+		
+		
+		my $human_exp = $SPLDEF{hprefix}{$ftype}; #Set NOT for $ftype
+		
+		if($SPLDEF{is_string}{$ftype}) { #Is a string type
+			my $string= get_string($diff+56, $slen,$fd);
+			#No byteswap here?? why???
+			$rs = Unicode::String::utf16($string)->utf8;
+			#Translate $action to a human field
+			$human_exp .= $SPLDEF{string_action}{$action}; 
+			#Warn about bugs 
+			$SPLDEF{string_action}{$action} or _itBUG("Unknown s_action $action for $ftype (= GNUpod doesn't understand this SmartPlaylist)");
+		}
+		elsif($action == $SPLREDEF{num_action}{within}  && get_x86_int($diff+56+8,4,$fd) == 0xffffffff && get_x86_int($diff+56,4,$fd)   == 0x2dae2dae) {
+			## Within type is handled different... ask apple why...
+			#Get the value (Bug: we are 32 bit.. this looks 64 bit)
+			$rs = (0xffffffff-get_x86_int($diff+56+12,4,$fd)+1);
+			
+			$human_exp .= $SPLDEF{num_action}{$action}; #Set human exp
+			my $within_key = $SPLDEF{within_key}{get_x86_int($diff+56+20,4,$fd)}; #Set within key
+			if($within_key) {
+				$rs = $rs."_".$within_key;
+			}
+			else {
+				_itBUG("Can't handle within_SPL_FIELD - unknown within_key, using 1_day");
+				$rs = "1_day"; #Default fallback
+			}
+		}
+		else { #Is INT (Or range)
+			my $xfint = get_x86_int($diff+56+4,4,$fd);
+			my $xtint = get_x86_int($diff+56+28,4,$fd);
+			$rs = "$xfint:$xtint";
+			$human_exp .= $SPLDEF{num_action}{$action};
+			$SPLDEF{num_action}{$action} or  _itBUG("Unknown num_action $action for $ftype (= GNUpod doesn't understand this SmartPlaylist)");
+		}
+		
+		$diff += $slen+56; # Advance to next offset..
+		
+		my $human_field = $SPLDEF{field}{$field};
+		$SPLDEF{field}{$field} or _itBUG("Unknown SPL-Field: $field (= GNUpod doesn't understand this SmartPlaylist)");
+		push(@ret, {action=>$human_exp,field=>$human_field,string=>$rs});
+	}
+return \@ret;
 }
 
 
 #################################################
 # Read SPLpref data
 sub read_splpref {
- my($hs,$fd) = @_;
- my ($live, $chkrgx, $chklim, $mos, $sort_low);
- 
-    $live     = 1 if   get_int($hs->{start}+24,1,$fd);
-    $chkrgx   = 1 if   get_int($hs->{start}+25,1,$fd);
-    $chklim   = 1 if   get_int($hs->{start}+26,1,$fd);
- my $item     =        get_int($hs->{start}+27,1,$fd);
- my $sort     =        get_int($hs->{start}+28,1,$fd);
- my $limit    =        get_int($hs->{start}+32,4,$fd);
-    $mos      = 1 if   get_int($hs->{start}+36,1,$fd);
-    $sort_low = 1 if   get_int($hs->{start}+37,1,$fd) == 0x1;
-
-#We don't pollute everything with this sort_low flag, we do something nasty to the
-#$sort value ;)
-$sort *= -1 if $sort_low;
-
- if($SPLDEF{limitsort}{$sort}) {
-  $sort = $SPLDEF{limitsort}{$sort}; #Convert it to a human word
- }
- else { #Hups, unknown field, random is our fallback
-  _itBUG("Don't know how to handle SPLSORT '$sort', setting sort to RANDOM",);
-  $sort = "random";
- }
-
-$SPLDEF{limititem}{int($item)} or warn "Bug: limititem $item unknown\n";
-$SPLDEF{checkrule}{int($chklim+($chkrgx*2))} or warn "Bug: Checkrule ".int($chklim+($chkrgx*2))." unknown\n";
- return({live=>$live,
-         value=>$limit, iitem=>$SPLDEF{limititem}{int($item)}, isort=>$sort,mos=>$mos,checkrule=>$SPLDEF{checkrule}{int($chklim+($chkrgx*2))}});
+	my($hs,$fd) = @_;
+	my ($live, $chkrgx, $chklim, $mos, $sort_low, $item, $limit, $sort);
+	
+	$live     = 1 if   get_int($hs->{start}+24,1,$fd);
+	$chkrgx   = 1 if   get_int($hs->{start}+25,1,$fd);
+	$chklim   = 1 if   get_int($hs->{start}+26,1,$fd);
+	$item     =        get_int($hs->{start}+27,1,$fd);
+	$sort     =        get_int($hs->{start}+28,1,$fd);
+	$limit    =        get_int($hs->{start}+32,4,$fd);
+	$mos      = 1 if   get_int($hs->{start}+36,1,$fd);
+	$sort_low = 1 if   get_int($hs->{start}+37,1,$fd) == 0x1;
+	
+	#We don't pollute everything with this sort_low flag, we do something nasty to the
+	#$sort value ;)
+	$sort *= -1 if $sort_low;
+	
+	if($SPLDEF{limitsort}{$sort}) {
+		$sort = $SPLDEF{limitsort}{$sort}; #Convert it to a human word
+	}
+	else { #Hups, unknown field, random is our fallback
+		_itBUG("Don't know how to handle SPLSORT '$sort', setting sort to RANDOM",);
+		$sort = "random";
+	}
+	
+	$SPLDEF{limititem}{int($item)} or warn "Bug: limititem $item unknown\n";
+	$SPLDEF{checkrule}{int($chklim+($chkrgx*2))} or warn "Bug: Checkrule ".int($chklim+($chkrgx*2))." unknown\n";
+	return({live=>$live, value=>$limit, iitem=>$SPLDEF{limititem}{int($item)}, isort=>$sort,mos=>$mos,checkrule=>$SPLDEF{checkrule}{int($chklim+($chkrgx*2))}});
 }
 
 #################################################
@@ -1015,61 +1003,48 @@ sub __hd {
 sub get_mhod {
 	my ($seek,$fd) = @_;
 
-	my $id    = get_string($seek, 4,$fd);          #are we lost?
-	my $mhl   = get_int($seek+4, 4,$fd);           #Mhod Header Length
-	my $ml    = get_int($seek+8, 4,$fd);           #Length of this mhod
-	my $mty   = get_int($seek+12, 4,$fd);          #type number
-	my $plpos = get_int($seek+24, 4,$fd);          #Used for 100 MHODs => Position
-	my $xl    = get_int($seek+28,4,$fd);           #String length
+	my $mhl     = get_int($seek+4, 4,$fd);           # Mhod Header Length
+	my $ml      = get_int($seek+8, 4,$fd);           # Length of this mhod
+	my $mty     = get_int($seek+12, 4,$fd);          # type number
+	my $plpos   = get_int($seek+24, 4,$fd);          # Used for 100 MHODs => Position
+	my $xl      = get_int($seek+28,4,$fd);           # String length
+	my $htm     = get_int($seek+35,1,$fd);           # HasToMatch .. only used for 51-type mhods
+	my $anym    = get_int($seek+39,1,$fd);           # Anymatch .. only used for 51-type mhods
+	my $spldata = undef;                             # Holds spldata
+	my $splpref = undef;                             # Holds splprefs
+	my $string  = undef;                             # Stringval of mhod
+	
+	if($mty == 16 or $mty == 15) {
+		#Here we go again: Apple did strange things!
+		#They could have used a normal mhod, but no!
+		#Apple is cool and needs to f*ckup mhod-type 16 and 15!
+		#aargs!
+		$string = Unicode::String::utf8(get_string($seek+$mhl,$ml-$mhl,$fd))->utf8;
+	}
+	elsif($mty == 17) {
+#		my $cdlen = $ml - $mhl;
+	}
+	elsif($mty == 51) { #Get data from spldata mhod
+		$spldata = read_spldata({start=>$seek, htm=>$htm},$fd);
+	}
+	elsif($mty == 50) { #Get prefs from splpref mhod
+		$splpref = read_splpref({start=>$seek, end=>$ml},$fd);
+	}
+	elsif($mty == 100) { #This is a PLTHING mhod
+	}
+	elsif($mty == 32) {
+# ?
+	}
+	else { #A normal Mhod, puh!
+		_itBUG("Assert \$xl < \$ml failed! ($xl => $ml) [type: $mty]",1) if $xl >= $ml;
+		$string = get_string($seek+($ml-$xl), $xl,$fd); #String of entry
+		$string = Unicode::String::byteswap2($string);
+		$string = Unicode::String::utf16($string)->utf8;
+	}
 	
 	
-	## That's spl stuff, only to be used with 51 mhod's
-	my $htm = get_int($seek+35,1,$fd); #Only set for 51
-	my $anym= get_int($seek+39,1,$fd); #Only set for 51
-	my $spldata = undef; #dummy
-	my $splpref = undef; #dummy
-	my $foo = undef; #Mhod value
-	if($id eq "mhod") { #Seek was okay
-		if($mty == 16 or $mty == 15) {
-			#Here we go again: Apple did strange things!
-			#They could have used a normal mhod, but no!
-			#Apple is cool and needs to f*ckup mhod-type 16 and 15!
-			#aargs!
-			$foo = get_string($seek+$mhl,$ml-$mhl,$fd);
-			$foo = Unicode::String::utf8($foo)->utf8; #Paranoia
-		}
-		elsif($mty == 17) {
-			my $cdlen = $ml - $mhl;
-#			print "\n\nHL: $mhl ; tolen: $ml ; $cdlen\n";
-#			__hd(get_string($seek+36,$cdlen-12,$fd));
-		}
-		##Special handling for SPLs
-		elsif($mty == 51) { #Get data from spldata mhod
-			$foo = undef;
-			$spldata = read_spldata({start=>$seek, htm=>$htm},$fd);
-		}
-		elsif($mty == 50) { #Get prefs from splpref mhod
-			$foo = undef;
-			$splpref = read_splpref({start=>$seek, end=>$ml},$fd);
-		}
-		elsif($mty == 100) { #This is a PLTHING mhod
-			#No more information and the stringlength is garbage...
-			$foo = undef;
-		}
-		elsif($mty == 32) { $foo = undef; } # iTunes bug?
-		else { #A normal Mhod, puh!
-			_itBUG("Assert \$xl < \$ml failed! ($xl => $ml) [type: $mty]",1) if $xl >= $ml;
-			$foo = get_string($seek+($ml-$xl), $xl,$fd); #String of entry
-			$foo = Unicode::String::byteswap2($foo);
-			$foo = Unicode::String::utf16($foo)->utf8;
-		}
-		
-		
-		return({total_size=>$ml, header_size=>$mhl, string=>$foo,type=>$mty,spldata=>$spldata,splpref=>$splpref,matchrule=>$anym,plpos=>$plpos});
-	}
-	else {
-		return({total_size=>-1});
-	}
+	return({total_size=>$ml, header_size=>$mhl, string=>$string,type=>$mty, type_string=>$mhod_array[$mty],
+	        spldata=>$spldata,splpref=>$splpref,matchrule=>$anym,plpos=>$plpos});
 }
 
 
@@ -1080,18 +1055,14 @@ sub get_mhip {
 	my($pos,$fd) = @_;
 	
 	my %r = ();
-	$r{total_size} = -1;
-	
-	if(get_string($pos, 4,$fd) eq "mhip") {
-		$r{header_size}       = get_int($pos+4, 4,$fd);
-		$r{total_size}        = get_int($pos+8, 4,$fd);
-		$r{childs}            = get_int($pos+12,4,$fd);
-		$r{podcast_group}     = get_int($pos+16,4,$fd);
-		$r{plid}              = get_int($pos+20,4,$fd);
-		$r{sid}               = get_int($pos+24,4,$fd);
-		$r{timestamp}         = get_int($pos+28,4,$fd);
-		$r{podcast_group_ref} = get_int($pos+32,4,$fd);
-	}
+	$r{header_size}       = get_int($pos+4, 4,$fd);
+	$r{total_size}        = get_int($pos+8, 4,$fd);
+	$r{childs}            = get_int($pos+12,4,$fd);
+	$r{podcast_group}     = get_int($pos+16,4,$fd);
+	$r{plid}              = get_int($pos+20,4,$fd);
+	$r{sid}               = get_int($pos+24,4,$fd);
+	$r{timestamp}         = get_int($pos+28,4,$fd);
+	$r{podcast_group_ref} = get_int($pos+32,4,$fd);
 	return \%r;
 }
 
@@ -1103,7 +1074,7 @@ sub get_string {
 	my($buffer) = undef;
 	Carp::confess("No filehandle!") unless $fh;
 	$start = int($start);
-	$anz = int($anz);
+	$anz   = int($anz);
 	seek($fh, $start, 0);
 	#start reading
 	read($fh, $buffer, $anz);
@@ -1116,131 +1087,97 @@ sub get_string {
 sub get_mhfd {
 	my ($seek,$fd) = @_;
 	my %r = ();
-	my $id = get_string($seek,4,$fd);
-	if($id eq "mhfd") {
-		$r{header_size} = get_int($seek+4,4,$fd);
-		$r{total_size}  = get_int($seek+8,4,$fd);
-		$r{next_id}     = get_int($seek+28,4,$fd);
+	$r{header_size} = get_int($seek+4,4,$fd);
+	$r{total_size}  = get_int($seek+8,4,$fd);
+	$r{childs}      = get_int($seek+20,4,$fd);
+	$r{next_id}     = get_int($seek+28,4,$fd);
+}
+
+
+
+sub get_mhit {
+	my($offset,$fd) = @_;
+	my %r = ();
+	my %o = ();
+	
+	$r{header_size} = get_int($offset+4,4,$fd);
+	$r{total_size}  = get_int($offset+8,4,$fd);
+	$r{childs}      = get_int($offset+12,4,$fd);
+	$o{id}          = get_int($offset+16,4,$fd);
+	$o{compilation} = (get_int($offset+30,1,$fd)!=0);
+	$o{rating}      = get_int($offset+31,1,$fd);
+	$o{changetime}  = get_int($offset+32,4,$fd);
+	$o{filesize}    = get_int($offset+36,4,$fd);
+	$o{time}        = get_int($offset+40,4,$fd);
+	$o{songnum}     = get_int($offset+44,4,$fd);
+	$o{songs}       = get_int($offset+48,4,$fd);
+	$o{year}        = get_int($offset+52,4,$fd);
+	$o{bitrate}     = get_int($offset+56,4,$fd);
+	$o{srate}       = get_int($offset+62,2,$fd); #What is 60-61 ?!!
+	$o{volume}      = get_int($offset+64,4,$fd);
+	$o{starttime}   = get_int($offset+68,4,$fd);
+	$o{stoptime}    = get_int($offset+72,4,$fd);
+	$o{soundcheck}  = get_int($offset+76,4,$fd);
+	$o{playcount}   = get_int($offset+80,4,$fd); #84 has also something to do with playcounts. (Like rating + prerating?)
+	$o{lastplay}    = get_int($offset+88,4,$fd);
+	$o{cdnum}       = get_int($offset+92,4,$fd);
+	$o{cds}         = get_int($offset+96,4,$fd);
+	$o{addtime}     = get_int($offset+104,4,$fd);
+	$o{bookmark}    = get_int($offset+108,4,$fd);
+	$o{dbid_1}      = unpack("H16",get_string($offset+112,8,$fd));
+	if($r{header_size} >= NEW_ITUNESDB_MHIT_HEADERSIZE) {
+		$o{bpm}             = get_int($offset+122,2,$fd);
+		$o{artworkcnt}      = get_int($offset+124,2,$fd);
+		$o{artworksize}     = get_int($offset+128,4,$fd);
+		$o{releasedate}     = get_int($offset+140,4,$fd);
+		$o{skipcount}       = get_int($offset+156,4,$fd);
+		$o{lastskip}        = get_int($offset+160,4,$fd);
+		$o{has_artwork}     = 1 if get_int($offset+164,1,$fd) == 1; # 1 = Has artwork ; 2 = No artwork ; 0 = undef?
+		$o{shuffleskip}     = 1 if get_int($offset+165,1,$fd);
+		$o{bookmarkable}    = 1 if get_int($offset+166,1,$fd);
+		$o{podcast}         = 1 if get_int($offset+167,1,$fd);
+		$o{dbid_2}          = unpack("H16",get_string($offset+168,8,$fd));
+		$o{lyrics_flag}     = get_int($offset+176,1,$fd);
+		$o{movie_flag}      = get_int($offset+177,1,$fd);
+		$o{played_flag}     = ( get_int($offset+178,1,$fd) == 1 ? 1 : 0 );
+		# 179 is unknown
+		$o{mediatype}       = get_int($offset+208,4,$fd);
+		$o{seasonnum}       = get_int($offset+212,4,$fd);
+		$o{episodenum}      = get_int($offset+216,4,$fd);
 	}
+	
+	# Minus value (-X%)
+	$o{volume} -= oct("0xffffffff") if $o{volume} > 255;
+	# Convert into percent:
+	$o{volume} = sprintf("%.0f",($o{volume}/2.55));
+	# Paranoia check
+	if(abs($o{volume})) {
+		_itBUG("Volume at $offset out of range: $o{volume}. Zeroing value");
+		$o{volume} = 0;
+	}
+	$r{ref} = \%o;
 	return \%r;
 }
-
-
-
-###########################################
-# Get mhit + child mhods
-sub get_mhits {
-my ($sum,$fd) = @_;
-if(get_string($sum, 4,$fd) eq "mhit") { #Ok, its a mhit
-
-my $header_size = get_int($sum+4,4,$fd);
-if($header_size < OLD_ITUNESDB_MHIT_HEADERSIZE) { # => Last get_int.. this is ugly
- _itBUG("Assert $header_size >= OLD_ITUNESDB_MHIT_HEADERSIZE failed. get_mhits($sum) will read BEHIND the end of this header!");
-}
-
-
-my %ret     = ();
-#Infos stored in mhit
-$ret{id}         = get_int($sum+16,4,$fd);
-#$ret{rating}     = int((get_int($sum+28,4)-256)/oct('0x14000000')) * 20;
-##XXX 26-30 are useless for us..
-$ret{compilation}= (get_int($sum+30,1,$fd)!=0);
-$ret{rating}     = get_int($sum+31,1,$fd);
-$ret{changetime} = get_int($sum+32,4,$fd);
-$ret{filesize}   = get_int($sum+36,4,$fd);
-$ret{time}       = get_int($sum+40,4,$fd);
-$ret{songnum}    = get_int($sum+44,4,$fd);
-$ret{songs}      = get_int($sum+48,4,$fd);
-$ret{year}       = get_int($sum+52,4,$fd);
-$ret{bitrate}    = get_int($sum+56,4,$fd);
-$ret{srate}      = get_int($sum+62,2,$fd); #What is 60-61 ?!!
-$ret{volume}     = get_int($sum+64,4,$fd);
-$ret{starttime}  = get_int($sum+68,4,$fd);
-$ret{stoptime}   = get_int($sum+72,4,$fd);
-$ret{soundcheck} = get_int($sum+76,4,$fd);
-$ret{playcount}  = get_int($sum+80,4,$fd); #84 has also something to do with playcounts. (Like rating + prerating?)
-$ret{lastplay}   = get_int($sum+88,4,$fd);
-$ret{cdnum}      = get_int($sum+92,4,$fd);
-$ret{cds}        = get_int($sum+96,4,$fd);
-$ret{addtime}    = get_int($sum+104,4,$fd);
-$ret{bookmark}   = get_int($sum+108,4,$fd);
-$ret{dbid_lsw}   = get_int($sum+112,4,$fd); #Database ID#1
-$ret{dbid_msw}   = get_int($sum+116,4,$fd); #Database ID#2
-
-## New iTunesDB data, appeared ~ iTunes 4.5
-if($header_size >= NEW_ITUNESDB_MHIT_HEADERSIZE) {
-	$ret{bpm}             = get_int($sum+122,2,$fd);
-	$ret{artworkcnt}      = get_int($sum+124,2,$fd);
-	$ret{artworksize}     = get_int($sum+128,4,$fd);
-	$ret{releasedate}     = get_int($sum+140,4,$fd);
-	$ret{skipcount}       = get_int($sum+156,4,$fd);
-	$ret{lastskip}        = get_int($sum+160,4,$fd);
-	$ret{has_artwork}     = 1 if get_int($sum+164,1,$fd) == 1; # 1 = Has artwork ; 2 = No artwork ; 0 = undef?
-	$ret{shuffleskip}     = 1 if get_int($sum+165,1,$fd);
-	$ret{bookmarkable}    = 1 if get_int($sum+166,1,$fd);
-	$ret{podcast}         = 1 if get_int($sum+167,1,$fd);
-	$ret{dbid2_lsw}       = get_int($sum+168,4,$fd);
-	$ret{dbid2_msw}       = get_int($sum+172,4,$fd);
-	$ret{lyrics_flag}     = get_int($sum+176,1,$fd);
-	$ret{movie_flag}      = get_int($sum+177,1,$fd);
-	$ret{played_flag}     = ( get_int($sum+178,1,$fd) == 1 ? 1 : 0 );
-	# 179 is unknown
-	$ret{mediatype} = get_int($sum+208,4,$fd);
-	$ret{seasonnum}  = get_int($sum+212,4,$fd);
-	$ret{episodenum} = get_int($sum+216,4,$fd);
-	
-}
-
-####### We have to convert the 'volume' to percent...
-####### The iPod doesn't store the volume-value in percent..
-#Minus value (-X%)
-$ret{volume} -= oct("0xffffffff") if $ret{volume} > 255;
-
-#Convert it to percent
-$ret{volume} = sprintf("%.0f",($ret{volume}/2.55));
-
-## Paranoia check
-if(abs($ret{volume}) > 100) {
- _itBUG("Volume is $ret{volume} percent. Impossible Value! -> Volume set to 0 percent!");
- $ret{volume} = 0;
-}
-
-
- #Now get the mhods from this mhit
-my $mhods = get_int($sum+12,4,$fd);
-$sum += get_int($sum+4,4,$fd);
-
-	for(my $i=0;$i<$mhods;$i++) {
-		my $mhh = get_mhod($sum,$fd);
-		if($mhh->{total_size} == -1) {
-			_itBUG("Failed to parse mhod $i of $mhods",1);
-		}
-		$sum+=$mhh->{total_size};
-		my $xml_name = $mhod_array[$mhh->{type}];
-		if($xml_name) { #Has an xml name.. sounds interesting
-			$ret{$xml_name} = $mhh->{string};
-		}
-		else {
-			_itBUG("found unhandled mhod type '$mhh->{type}' (content: $mhh->{string})");
-		}
-	}
-return ($sum,\%ret);          #black magic, returns next (possible?) start of the mhit
-}
-#Was no mhod
- return -1;
-}
-
 
 #########################################################
 # Parse mhsd atom
 sub get_mhsd {
 	my($offset,$fd) = @_;
 	my %r = ();
-	if(get_string($offset,4,$fd) eq 'mhsd') {
-		$r{header_size} = get_int($offset+4,4,$fd);
-		$r{total_size}  = get_int($offset+8,4,$fd);
-		$r{type}        = get_int($offset+12,4,$fd);
-	}
+	$r{header_size} = get_int($offset+4,4,$fd);
+	$r{total_size}  = get_int($offset+8,4,$fd);
+	$r{type}        = get_int($offset+12,4,$fd);
+	$r{childs}      = 1; # always only one child
+	return \%r;
+}
+#########################################################
+# Parse mhsd atom
+sub get_mhia {
+	my($offset,$fd) = @_;
+	my %r = ();
+	$r{header_size} = get_int($offset+4,4,$fd);
+	$r{total_size}  = get_int($offset+8,4,$fd);
+	$r{childs}        = get_int($offset+12,4,$fd);
 	return \%r;
 }
 
@@ -1249,12 +1186,9 @@ sub get_mhsd {
 sub get_mhxx {
 	my($offset,$fd) = @_;
 	my %r = ();
-	my $magic = get_string($offset,4,$fd);
-	if($magic eq 'mhlt' or $magic eq 'mhlp' or $magic eq 'mhla' or $magic eq 'mhlf' or $magic eq 'mhli') {
-		$r{header_size} = get_int($offset+4,4,$fd);
-		$r{childs}      = get_int($offset+8,4,$fd);
-		$r{type}        = $magic;
-	}
+	$r{header_size} = get_int($offset+4,4,$fd);
+	$r{total_size}  = $r{header_size};
+	$r{childs}      = get_int($offset+8,4,$fd);
 	return \%r;
 }
 
@@ -1263,157 +1197,140 @@ sub get_mhxx {
 sub get_mhii {
 	my($offset,$fd) = @_;
 	my %r = ();
-	if(get_string($offset,4,$fd) eq 'mhii') {
-		$r{header_size} = get_int($offset+4,4,$fd);
-		$r{total_size}  = get_int($offset+8,4,$fd);
-		$r{childs}      = get_int($offset+12,4,$fd);
-		$r{id}          = get_int($offset+16,4,$fd);
-		$r{dbid_lsw}    = get_int($offset+20,4,$fd);
-		$r{dbid_msw}    = get_int($offset+24,4,$fd);
-		$r{rating}      = get_int($offset+32,4,$fd);
-		$r{source_size} = get_int($offset+48,4,$fd);
-	}
+	$r{header_size} = get_int($offset+4,4,$fd);
+	$r{total_size}  = get_int($offset+8,4,$fd);
+	$r{childs}      = get_int($offset+12,4,$fd);
+	$r{id}          = get_int($offset+16,4,$fd);
+	$r{dbid}        = unpack("H16",get_string($offset+20,8,$fd));
+	$r{rating}      = get_int($offset+32,4,$fd);
+	$r{source_size} = get_int($offset+48,4,$fd);
+	return \%r;
+}
+#########################################################
+# Parse mhif atom
+sub get_mhif {
+	my($offset,$fd) = @_;
+	my %r = ();
+	$r{header_size} = get_int($offset+4,4,$fd);
+	$r{total_size}  = get_int($offset+8,4,$fd);
+	$r{childs}      = get_int($offset+12,4,$fd);
+	$r{id}          = get_int($offset+16,4,$fd);
+	$r{imgsize}     = get_int($offset+32,4,$fd);
+	return \%r;
+}
+#########################################################
+# Parse mhii atom
+sub get_mhni {
+	my($offset,$fd) = @_;
+	my %r = ();
+	$r{header_size} = get_int($offset+4,4,$fd);
+	$r{total_size}  = get_int($offset+8,4,$fd);
+	$r{childs}      = get_int($offset+12,4,$fd);
+	$r{id}          = get_int($offset+16,4,$fd);
 	return \%r;
 }
 
-#########################################################
-# Search all mhbd's and return information about them
-sub get_starts {
-	my($fd) = @_;
-	#Get magic
-	my $magic      = get_string(0,4,$fd);
-	return undef if $magic ne ITUNESDB_MAGIC;
+
+
+sub get_mhbd {
+	my($offset,$fd) = @_;
+	my %r = ();
+	$r{header_size} = get_int($offset+4,4,$fd);
+	$r{total_size}  = get_int($offset+8,4,$fd);
+	$r{childs}      = get_int($offset+20,4,$fd);
+	return \%r;
+}
+
+sub get_mhyp {
+	my($offset,$fd) = @_;
+	my %r = ();
+	$r{header_size} = get_int($offset+4,4,$fd);
+	$r{total_size}  = get_int($offset+8,4,$fd);
+	$r{childs}      = get_int($offset+12,4,$fd);
+	$r{scount}      = get_int($offset+16,4,$fd);
+	$r{is_mpl}      = get_int($offset+20,1,$fd);
+	$r{plid}        = get_int($offset+28,8,$fd);
+	$r{podcast}     = get_int($offset+42,2,$fd);
+	return \%r;
+}
+
+
+sub ParseiTunesDB {
+	my($obj,$deep) = @_;
 	
-	my $mhbd_s     = get_int(4,4,$fd);  #Size of the Header
-	my $total_len  = get_int(8,4,$fd);  #Total Length (of whole iTunesDB)
-	my $dbversion  = get_int(16,4,$fd); #Database Version
-	my $childs     = get_int(20,4,$fd); #How many childs do we have?
-	my $cpos = $mhbd_s;
-	my @childs = ();
-	foreach my $current_child (1..$childs) {
-		my $mhsd = get_mhsd($cpos,$fd);                      # Parse child
-		my $mhlt = get_mhxx($cpos+$mhsd->{header_size},$fd); # Parse child of child
-		my $xstart = $cpos+$mhlt->{header_size}+$mhsd->{header_size};
-		$childs[$mhsd->{type}]->{start} = $xstart;
-		$childs[$mhsd->{type}]->{type}  = $mhsd->{type};
-		$childs[$mhsd->{type}]->{childs}= $mhlt->{childs};
-		$cpos += ($mhsd->{total_size});
+	my $this_childs = $obj->{childs};
+	my $r           = ();
+	my $t           = '';
+	my $ft          = '';
+	my $next_atom   = 0;
+	foreach my $this_child (1..$this_childs) {
+		$r  = ();
+		$t  = get_string($obj->{offset}+0,4,$obj->{fd});
+		
+		
+		
+		if(0) {}
+		elsif($t eq 'mhit')                 { $r = get_mhit($obj->{offset},$obj->{fd}) }
+		elsif($t eq 'mhod')                 { $r = get_mhod($obj->{offset},$obj->{fd}); $r->{header_size} = $r->{total_size} }
+		elsif($t eq 'mhyp')                 { $r = get_mhyp($obj->{offset},$obj->{fd}); $obj->{xhack} = $r->{childs}; $r->{childs} += $r->{scount}; }
+		elsif($t eq 'mhbd')                 { $r = get_mhbd($obj->{offset},$obj->{fd}) }
+		elsif($t eq 'mhfd')                 { $r = get_mhfd($obj->{offset},$obj->{fd}) }
+		elsif($t eq 'mhsd')                 { $r = get_mhsd($obj->{offset},$obj->{fd}) }
+		elsif($t eq 'mhii')                 { $r = get_mhii($obj->{offset},$obj->{fd}) }
+		elsif($t eq 'mhip')                 { $r = get_mhip($obj->{offset},$obj->{fd}) }
+		elsif($t eq 'mhni')                 { $r = get_mhni($obj->{offset},$obj->{fd}) }
+		elsif($t eq 'mhif')                 { $r = get_mhif($obj->{offset},$obj->{fd}) }
+		elsif($t eq 'mhia')                 { $r = get_mhia($obj->{offset},$obj->{fd}) }
+		elsif($t =~ /^mh(lt|lp|la|lf|li)$/) { $r = get_mhxx($obj->{offset},$obj->{fd}) }
+		$next_atom = $obj->{offset} + $r->{header_size};
+		$obj->{tree}->{$deep} = { name => $t, ref=>$r };
+		
+		if($this_child == 1) {
+			$ft = $t;
+			if(defined(my $cb = $obj->{callback}->{$obj->{tree}->{$deep-1}->{name}}->{start})) {
+				$obj->{callback}->{PACKAGE}->$cb(ref=>$obj->{tree}->{$deep-1}->{ref});
+			}
+		}
+		elsif($ft ne $t) {
+			die sprintf("Walking error at %08X , found type $t but expected to find $ft\n",$obj->{offset});
+		}
+		elsif($next_atom == $obj->{offset}) {
+			die sprintf("Failed to parse %s at %08X\n",$t,$obj->{offset}) if $next_atom == $obj->{offset};
+		}
+		
+		if(defined(my $cb = $obj->{callback}->{$t}->{item})) {
+			$obj->{callback}->{PACKAGE}->$cb(ref=>$r);
+		}
+		
+		if(TREEDUMP) {
+			print " " x ($deep * 3);
+			printf("%02d Type=>%s Offset=>%04X, ThisCount=>%d, TotalCount=>%d, NextAtom=>%04X, NextChilds=>%d, Mt=>%d\n",
+			         $deep, $t, $obj->{offset}, $this_child, $this_childs, $next_atom,$r->{childs}, $r->{type});
+		}
+		
+		if(defined($obj->{xhack}) && $t eq 'mhod' && $this_child == $obj->{xhack}) {
+			# Hack for mhyp children.. switch to mhip after the Xth mhod
+			$obj->{xhack} = undef;;
+			$ft           = 'mhip';
+		}
+		$obj->{offset} += $r->{header_size};
+		$obj->{childs}  = $r->{childs};
+		ParseiTunesDB($obj, $deep+1) if $obj->{childs} > 0;
 	}
-	return(@childs);
+	
+	if(defined(my $cb = $obj->{callback}->{$obj->{tree}->{$deep-1}->{name}}->{end})) {
+		$obj->{callback}->{PACKAGE}->$cb(ref=>$obj->{tree}->{$deep-1}->{ref});
+	}
+	
 }
 
 
 sub get_artworkdb {
-	open(AWDB, "/mnt/ipod/iPod_Control/Artwork/ArtworkDB") or die;
-	
-	use Data::Dumper;
-	
-	my $offset = 0;
-	my $mhfd = get_mhfd($offset,*AWDB);
-	$offset += $mhfd->{header_size};
-	
-	
-	while($offset < $mhfd->{total_size}) {
-		my $mhsd = get_mhsd($offset,*AWDB);
-		$offset += $mhsd->{header_size};
-		
-		my $xchild=get_mhxx($offset, *AWDB);
-		$offset+=$xchild->{header_size};
-		if($xchild->{type} eq 'mhli') {
-			for my $child (1..$xchild->{childs}) {
-				my $mhii = get_mhii($offset,*AWDB);
-				my $mhod = get_mhod($offset+$mhii->{header_size},*AWDB);
-				print Data::Dumper::Dumper($mhii);
-				print Data::Dumper::Dumper($mhod);
-				print "---\n";				
-				$offset += $mhii->{total_size};
-			}
-		}
-		die;
-	}
-	
+	#open(AWDB, "/mnt/ipod/iPod_Control/Artwork/ArtworkDB") or die;
+	open(AWDB, "/mnt/ipod/iPod_Control/iTunes/iTunesDB") or die;
 	die;
-	
 }
 
-
-#############################################
-# Get a playlist (Should be called get_mhyp, but it does the whole playlist)
-# $opts->{nomplskip} == 1 => Skip FastSkip of MPL. Workaround for broken files written by Anapod..
-sub get_pl {
-	my($pos,$opts,$fd) = @_;
-	my %ret_hash = ();
-	my @pldata = ();
-	
-	
-	if(get_string($pos, 4,$fd) eq "mhyp") { #Ok, its an mhyp
-		my $header_len     = get_int($pos+4, 4,$fd);  # Size of the header
-		my $mhyp_len       = get_int($pos+8, 4,$fd);  # Size of mhyp
-		my $mhits          = get_int($pos+12,4,$fd);  # How many mhits we have here
-		my $scount         = get_int($pos+16, 4,$fd); # How many songs should we expect?
-		$ret_hash{type}    = get_int($pos+20, 4,$fd); # Is it a main playlist?
-		$ret_hash{plid}    = get_int($pos+28,4,$fd);  # UID if the playlist..
-		$ret_hash{podcast} = get_int($pos+42,2,$fd);  # Is-Podcast-Playlist flag
-###	$ret_hash{sortflag}= $PLDEF{sort}{get_int($pos+44,4)};  # How to sort .. fixme: is this even used by itunes?
-		
-		#Its a MPL, do a fast skip  --> We don't parse the mpl, because we know the content anyway
-		if($ret_hash{type} && ($opts->{nomplskip} != 1) ) {
-			return ($pos+$mhyp_len, {type=>1}) 
-		}
-		$pos += $header_len; #set pos to start of first mhod
-		#We can now read the name of the Playlist
-		#Ehpod is buggy and writes the playlist name 2 times.. well catch both of them
-		#MusicMatch is also stupid and doesn't create a playlist mhod
-		#for the mainPlaylist
-		my ($oid, $plname, $itt) = undef;
-		for(my $i=0;$i<$mhits;$i++) {
-			my $mhh = get_mhod($pos,$fd);
-			if($mhh->{total_size} == -1) {
-				_itBUG("Failed to get $i mhod of $mhits (plpart) ; Bad mhod found at offset $pos",1);
-			}
-			
-			
-			
-			
-			$pos+=$mhh->{total_size};
-			if($mhh->{type} == 1) {
-				$ret_hash{name} = $mhh->{string};
-			}
-			elsif(ref($mhh->{splpref}) eq "HASH") {
-				$ret_hash{splpref} = $mhh->{splpref};
-			}
-			elsif(ref($mhh->{spldata}) eq "ARRAY") {
-				$ret_hash{spldata} = $mhh->{spldata};
-				$ret_hash{matchrule}=$mhh->{matchrule};
-			}
-		}
-		
-		# Get all child items of this playlist
-		for(my $i=0; $i<$scount;$i++) {
-			my $mhip = get_mhip($pos,$fd);
-			_itBUG("Failed to parse Song $i of $scount songs",1) if $mhip->{total_size} == -1; #Fatal!
-			my $subnaming= undef;			
-			my $org_pos  = $pos;
-			$pos        += $mhip->{header_size};
-			$org_pos    += $mhip->{total_size};
-			# Get all mhods of this mhip; normally there is only one.. but anyway:
-			for(my $j=0;$j<$mhip->{childs};$j++) {
-				my $mhod = get_mhod($pos,$fd);
-				$pos += $mhod->{total_size};
-				if($mhip->{podcast_group} != 0 && $mhod_array[$mhod->{type}] eq "title") {
-					$subnaming = $mhod->{string};
-				}
-			}
-			_itBUG("Broken mhip size header: $pos != $org_pos ; using calculated offset ($pos)",0) if $pos != $org_pos;
-			push(@pldata, {sid=>$mhip->{sid}, podcast_group=>$mhip->{podcast_group}, timestamp=>$mhip->{timestamp},
-			               plid=>$mhip->{plid}, podcast_group_ref=>$mhip->{podcast_group_ref}, subnaming=>$subnaming});
-		}
-		$ret_hash{content} = \@pldata;
-		return ($pos, \%ret_hash);   
-	}
-	#Seek was wrong
-	return -1;
-}
 
 
 
