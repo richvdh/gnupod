@@ -1146,15 +1146,17 @@ sub get_mhit {
 		$o{episodenum}      = get_int($offset+216,4,$fd);
 	}
 	
+	
 	# Minus value (-X%)
 	$o{volume} -= oct("0xffffffff") if $o{volume} > 255;
 	# Convert into percent:
 	$o{volume} = sprintf("%.0f",($o{volume}/2.55));
 	# Paranoia check
-	if(abs($o{volume})) {
+	if(abs($o{volume}) > 100) {
 		_itBUG("Volume at $offset out of range: $o{volume}. Zeroing value");
 		$o{volume} = 0;
 	}
+	
 	$r{ref} = \%o;
 	return \%r;
 }
