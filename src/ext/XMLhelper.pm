@@ -33,7 +33,7 @@ use File::Glob ':glob';
 #who cares, but don't go below 31! it would break getpath
 use constant MAX_PATHLENGTH => 49;
 #Try X times to find a path
-use constant MAX_PATHLOOP => 1024;
+use constant MAX_PATHLOOP => 2048;
 
 ## Release 20050203
 
@@ -51,77 +51,61 @@ sub realpath {
 	return $mountp.$ipath;
 }
 
-###############################################
-# Get an iPod-safe path for filename
+
+##############################################
+# Finds a filename on the iPod
 sub getpath {
-	my($mountp, $filename, $opts) = @_;
-	my $path = undef;
-
-	if($opts->{keepfile}) { #Don't create a new filename..
-		$path = $filename;
+	my($mountpoint, $source, $opts) = @_;
+	my $destination = undef;
+	
+	if($opts->{keepfile}) {
+		$destination = $source;  # Keep source path
 	}
-	else { #Default action.. new filename to create 
-		my $test_extension = $opts->{extension} || $opts->{format}; #Test extension
-		my $name = (split(/\//, $filename))[-1];                    #Name
-		my $i = 0;                                                  #Count
-		my $mountpoint_length = length($mountp);                    #Length of the mountpoint
-		$name =~ tr/a-zA-Z0-9\./_/c;                                #CleanName for dumb Filesystems
-
-		#Hups, current filename has a wrong extension...
-		if($opts->{format} && $test_extension && ($name !~ /\.($test_extension)$/i)) {
-			my($ext) = $name =~ /\.([^.]*)$/;          #Get the current extension (maybe null)
-			#Warn IF the old file HAD an extension. We are silent if it didn't have one.. (It's unix :) )
-			warn "Warning: File '$name' has a wrong extension [$ext], changed extension to $opts->{format}\n" if $ext;
-			$name =~ s/\.?$ext$/.$opts->{format}/;  #Replace current extension with newone
-		}
- 
-		#### #Search a place for the MP3 file ####
-		# 1. Glob to find all dirs
-		## We don't cache this, we do a glob for each new file..
-		## Shouldn't be a waste if time.. We belive in the Cacheing of the OS ;)
-		my @aviable_targets = bsd_glob("$mountp/iPod_Control/Music/*", GLOB_NOSORT);
-		# 2. Paranoia check..
-		unless(@aviable_targets) {
-			warn "No folders found, did you run gnupod_INIT.pl ?\n";
+	else {
+		my $clean_filename      = (split(/\//,$source))[-1];               # Extracts the filename
+		my ($current_extension) = $clean_filename =~ /\.([^.]*)$/;         # Current file extension
+		   $clean_filename      =~ tr/a-zA-Z0-9/_/c;                     # Remove bad chars
+		my $requested_ext       = ($opts->{extension} || $opts->{format}); # Checks if existing extension matches regexp
+		my @aviable_targets     = bsd_glob("$mountpoint/iPod_Control/Music/*", GLOB_NOSORT);
+		
+		unless(int(@aviable_targets)) {
+			warn "No iPod folders found at $mountpoint, did you run gnupod_INIT.pl ?\n";
 			return undef;
 		}
-
-		# 3. Search
-		while(++$i) {
+		if(length($current_extension) != 0) {
+			# -> Removes extension
+			$clean_filename = substr($clean_filename,0,(1+length($current_extension))*-1);
+		}
+		if($opts->{format} && $requested_ext && $current_extension !~ /$requested_ext/i) {
+			warn "Warning: $source has a wrong extension [$current_extension], changed extension to $opts->{format}\n";
+			$current_extension = $opts->{format};
+		}
 		
-			if($i > MAX_PATHLOOP) { #Abort
-				warn "getpath() : No path for $name found, giving up!\n";
-				return undef;
-			}
-			
-			#Prefix for the filename
-			my $pdiff = $i."_";
-			#Target (including mountpoint)
-			my $target = $aviable_targets[int(rand(@aviable_targets))];
-			#-> $ipod_mountpoint/musicdir/$pdiff
-			my $tmp_ipodpath = $target."/".$pdiff;
-			#How many chars are left for the filename?
-			my $chars_left = MAX_PATHLENGTH - length($tmp_ipodpath) + $mountpoint_length;
-			next if $chars_left < 6; #We would like to get more than 6 chars for the filename (XXX.mp3)
-			#Note: Chars needs to be positive for this substr call!
-			$path = $tmp_ipodpath.substr($name,$chars_left*-1);
-			
-			if( !(-e $path) && open(TESTFILE,">",$path) ) { #This is false if we would write to a globed file :)
-				close(TESTFILE);
-				unlink($path); #Maybe it's a dup.. we don't create empty files
+		for(my $i = 0; $i < MAX_PATHLOOP; $i++) {
+			my $dp_prefix  = sprintf("g%x_",$i);
+			my $dp_target  = $aviable_targets[int(rand(@aviable_targets))];
+			my $dp_path    = $dp_target."/".$dp_prefix;
+			my $dp_chrleft = MAX_PATHLENGTH - length($dp_path) + length($mountpoint);
+			my $dp_ext     = ".$current_extension";
+			my $dp_extlen  = length($dp_ext);
+			next if $dp_chrleft < $dp_extlen; # No space for extension, checkout something else
+			$dp_path .= substr($clean_filename,($dp_chrleft-$dp_extlen)*-1).$dp_ext;
+			if(!(-e $dp_path) && open(TEST, ">", $dp_path)) {
+				close(TEST);
+				unlink($dp_path) or die "FATAL: Unable to unlink $dp_path : $!\n";
+				$destination = $dp_path;
 				last;
 			}
 		}
-	} ## End default action
-
-#Remove mountpoint from $path
-my $ipath = $path;
-$ipath =~ s/^$mountp(.+)/$1/;
-
-#Convert /'s to :'s
-$ipath =~ tr/\//:/;
-return ($ipath, $path);
+	}
+	
+	
+	my $ipod_dest =  $destination;
+	   $ipod_dest =~ s/^$mountpoint(.+)/$1/;
+	   $ipod_dest =~ tr/\//:/;
+	return ($ipod_dest, $destination);
 }
+
 
 
 ################################################################

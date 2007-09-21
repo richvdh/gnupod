@@ -140,15 +140,16 @@ sub startup {
 		my ($fh,$media_h,$converter) =  GNUpod::FileMagic::wtf_is($file, {noIDv1=>$opts{'disable-v1'}, 
 		                                                                  noIDv2=>$opts{'disable-v2'},
 		                                                                  decode=>$opts{'decode'}},$con);
-
+		
 		unless($fh) {
 			warn "* [****] Skipping '$file', unknown file type\n";
 			next;
 		}
+		
 		my $wtf_ftyp = $media_h->{ftyp};      #'codec' .. maybe ALAC
 		my $wtf_frmt = $media_h->{format};    #container ..maybe M4A
 		my $wtf_ext  = $media_h->{extension}; #Possible extensions (regexp!)
-
+		
 		#Force tags for current file
 		#This is only used for RSS ATM.
 		my $c_per_file_info = $per_file_info{$file};
@@ -156,16 +157,9 @@ sub startup {
 			next unless lc($_) eq $_; #lc keys are there to overwrite $fh keys
 			$fh->{$_} = $c_per_file_info->{$_};
 		}
+		$c_per_file_info->{ISPODCAST} ||= $opts{'playlist-is-podcast'};  # Enforce podcast settings if we are going to create a pc-playlist
 		
-		# If this was a podcast, we need to fixup the mediatype
-		if($c_per_file_info->{ISPODCAST}) {
-			if($fh->{mediatype} == GNUpod::FileMagic::MEDIATYPE_AUDIO) {
-				$fh->{mediatype} = MEDIATYPE_PODCAST_AUDIO;
-			}
-			elsif($fh->{mediatype} == GNUpod::FileMagic::MEDIATYPE_VIDEO) {
-				$fh->{mediatype} = MEDIATYPE_PODCAST_VIDEO;
-			}
-		}
+		print "=>$c_per_file_info->{ISPODCAST}\n";
 		
 		#wtf_is found a filetype, override data if needed
 		$fh->{artist}       = $opts{'set-artist'}      if $opts{'set-artist'};
@@ -198,7 +192,28 @@ sub startup {
 			create_playlist_now($opts{playlist}, $dup); #We also add duplicates to a playlist..
 			next;
 		}
-
+		
+		# If this was a podcast, we need to fixup the mediatype
+		if($c_per_file_info->{ISPODCAST}) {
+			$fh->{shuffleskip}   = 1;
+			$fh->{bookmarkable}  = 1;
+			$fh->{podcast}       = 1;
+			$fh->{podcastguid} ||= sprintf("GNUpodG%X",int(rand(0xFFFFF)));
+			$fh->{podcastrss}  ||= sprintf("GNUpodR%X",int(rand(0xFFFFF)));
+			
+			if($fh->{mediatype} == GNUpod::FileMagic::MEDIATYPE_AUDIO) {
+				$fh->{mediatype} = MEDIATYPE_PODCAST_AUDIO;
+			}
+			elsif($fh->{mediatype} == GNUpod::FileMagic::MEDIATYPE_VIDEO) {
+				$fh->{mediatype} = MEDIATYPE_PODCAST_VIDEO;
+				
+				# Enforce M4V extension for video podcasts
+				my $enforced_ext = $file.".m4v";
+				rename($file,$enforced_ext) or die "Unable to rename $file into $enforced_ext : $!\n";
+				$file = $enforced_ext;
+			}
+		}
+		
 		if($converter) {
 			print "> Converting '$file' from $wtf_ftyp into $opts{decode}, please wait...\n";
 			my $path_of_converted_file = GNUpod::FileMagic::kick_convert($converter,$opts{reencode},$file, uc($opts{decode}), $con);
@@ -211,19 +226,18 @@ sub startup {
 			
 			unless($conv_fh) {
 				warn "* [***] Internal problem: $converter did not produce valid data.\n";
-				warn "* [***] Something is wrong with $path_of_converted_file (file not deleted, debug it! :) )\n";
+				warn "* [***] Something is wrong with $path_of_converted_file (file not deleted, debug it! :-) )\n";
 				next; 	
 			}
-    
+			
 			#We didn't know things like 'filesize' before...
 			$fh->{time}     = $conv_fh->{time};
 			$fh->{bitrate}  = $conv_fh->{bitrate};
 			$fh->{srate}    = $conv_fh->{srate};        
 			$fh->{filesize} = $conv_fh->{filesize};   
-			$wtf_frmt = $conv_media_h->{format};    #Set the new format (-> container)
-			$wtf_ext  = $conv_media_h->{extension}; #Set the new possible extension
-			#BUT KEEP ftyp! (= codec)
-			$file = $path_of_converted_file; #Point $file to new file
+			$wtf_frmt       = $conv_media_h->{format};    #Set the new format (-> container)
+			$wtf_ext        = $conv_media_h->{extension}; #Set the new possible extension, but keep ftype (=codec)
+			$file           = $path_of_converted_file;    #Point $file to new file
 			$per_file_info{$file}->{UNLINK} = 1; #Request unlink of this file after adding
 		}
 		elsif(defined($opts{reencode})) {
@@ -234,10 +248,8 @@ sub startup {
 				#Ok, we could convert.. check if it made sense:
 				if( (-s $path_of_converted_file) < (-s $file) ) {
 					#Ok, output is smaller, we are going to use thisone
-					#1. Replace path to file
-					$file = $path_of_converted_file;
-					#2. Set UNLINK-state : This will unlink the file after copy finished!
-					$per_file_info{$file}->{UNLINK} = 1;
+					$file = $path_of_converted_file;      # Replace the file path
+					$per_file_info{$file}->{UNLINK} = 1;  # Request unlinking file (as we are going to use the copy)
 				}
 				else {
 					#Nope.. input was smaller, converting was silly..
@@ -259,8 +271,7 @@ sub startup {
 		$fh->{volume} = $vol;
 		
 		#Get a path
-		(${$fh}{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file, 
-		                                                        {format=>$wtf_frmt, extension=>$wtf_ext, keepfile=>$opts{restore}});
+		(${$fh}{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file,  {format=>$wtf_frmt, extension=>$wtf_ext, keepfile=>$opts{restore}});
 
 		if(!defined($target)) {
 			warn "*** FATAL *** Skipping '$file' , no target found!\n";
@@ -469,12 +480,6 @@ foreach my $key (keys(%podcast_infos)) {
 		$per_file_info{$rssmedia->{file}}->{title}       = $c_title   if $c_title;
 		$per_file_info{$rssmedia->{file}}->{artist}      = $c_author  if $c_author;
 		$per_file_info{$rssmedia->{file}}->{desc}        = $c_desc    if $c_desc;
-		
-		# Do the same as iTunes does:
-		$per_file_info{$rssmedia->{file}}->{shuffleskip}  = 1;
-		$per_file_info{$rssmedia->{file}}->{bookmarkable} = 1;
-		$per_file_info{$rssmedia->{file}}->{podcast}      = 1;
-		
 		
 		push(@files,$rssmedia->{file});
 	}

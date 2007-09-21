@@ -3,6 +3,7 @@ GNUpod 0.99.5
 Summary
 -------
 - The iTunesDB parsing code is now much more flexible and uses callbacks.
+- Fixed Video-Podcast support for late 2007 iPods
 
 
 *** OLD STUFF ***
