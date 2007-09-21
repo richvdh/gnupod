@@ -97,7 +97,7 @@ sub __GrabFWGUID_LINUX {
 		return;
 	}
 	
-	while(<PROC>) {
+	foreach(<PROC>,"") {
 		if($_ =~ /^$/) {
 			if($hbuff->{Manufacturer} =~ /^Apple/ &&
 			  $hbuff->{Product}      =~ /^iPod/ &&
