@@ -6,9 +6,10 @@ use Digest::MD5;
 use Data::Dumper;
 	
 	my $profiles = { 'Nano_3G' => [ { height=>320, width=>320, dbi=>1060, bpp=>16, size=>204800 }, { height=>128, width=>128, dbi=>1055, bpp=>16, size=>32768 }, ],
+	                 'Nano'    => [ { height=>100, width=>100, dbi=>1027, bpp=>16, size=>20000 },  { height=> 42, width=> 42, dbi=>1031, bpp=>16, size=>3528  }, ],
+	                 'Video'   => [ { height=>200, width=>200, dbi=>1029, bpp=>16, size=>80000  }, { height=>100, width=>100, dbi=>1028, bpp=>16, size=>20000 }, ],
 	               };
-	
-	
+
 	####################################################################
 	# Create new object and start parsing the ArtworkDB
 	sub new {
@@ -33,6 +34,7 @@ use Data::Dumper;
 		GNUpod::iTunesDB::ParseiTunesDB($obj,0);
 		$self->{dirty} = 0; # InMemory is the same as stored version
 		close(AWDB);
+		print Data::Dumper::Dumper($self);
 		return $self;
 	}
 	
@@ -53,7 +55,7 @@ use Data::Dumper;
 		
 		if(!defined($self->GetImage($imgid))) {
 			$self->RegisterNewImage(ref => {id=>0, dbid=>$imgid, source_size=>$srcsize});
-			my $mode = $profiles->{'Nano_3G'};
+			my $mode = $profiles->{'Video'};
 			foreach my $mr (@$mode) {
 				my $buff = '';
 				open(IM, "convert -resize $mr->{height}x$mr->{width}! -filter sinc -depth 8 $file RGB:- |"); # Fixme: Security
@@ -234,11 +236,8 @@ use Data::Dumper;
 	# 'Registers' a new storage chunk
 	sub RegisterStorage {
 		my($self, %args) = @_;
-		if(exists $self->{storages}->{$args{id}}) {
-			$self->{storages}->{$args{id}}->{size} = $args{used} if $args{used} > $self->{storages}->{$args{id}}->{size};
-		}
-		else {
-			$self->{storages}->{$args{id}} = { ithmb => {}, imgsize=>$args{imgsize}, size=>$args{used} };
+		unless(exists $self->{storages}->{$args{id}}) {
+			$self->{storages}->{$args{id}} = { ithmb => {}, imgsize=>$args{imgsize} };
 			push(@{$self->{a_storages}},$args{id});
 		}
 		
