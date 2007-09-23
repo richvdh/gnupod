@@ -46,6 +46,8 @@ if(-d $opth->{mount}) {
   $rr->{xml}            = $opth->{mount}."/iPod_Control/.gnupod/GNUtunesDB";
   #It can also be called GNUtunesDB.xml
   $rr->{xml}            = $rr->{xml}.".xml" if !(-e $rr->{xml});
+  $rr->{artworkdir}     = $opth->{mount}."/iPod_Control/Artwork";
+  $rr->{artworkdb}      = $opth->{mount}."/iPod_Control/Artwork/ArtworkDB";
   $rr->{itunesdb}       = $opth->{mount}."/iPod_Control/iTunes/iTunesDB";
   $rr->{itunessd}       = $opth->{mount}."/iPod_Control/iTunes/iTunesSD";
   $rr->{shufflestat}    = $opth->{mount}."/iPod_Control/iTunes/iTunesShuffle";

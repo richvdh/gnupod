@@ -38,10 +38,10 @@ use constant ITUNESDB_MAGIC => 'mhbd';
 use constant OLD_ITUNESDB_MHIT_HEADERSIZE => 156;
 use constant NEW_ITUNESDB_MHIT_HEADERSIZE => 244;
 
-use constant TREEDUMP => 0;
+use constant ITUNES_DUMP => 0;
 
 #mk_mhod() will take care of lc() entries
-my %mhod_id = ( title=>1, path=>2, album=>3, artist=>4, genre=>5, fdesc=>6, eq=>7, comment=>8, category=>9, composer=>12, group=>13,
+my %mhod_id = (  title=>1, path=>2, album=>3, artist=>4, genre=>5, fdesc=>6, eq=>7, comment=>8, category=>9, composer=>12, group=>13,
                  desc=>14, podcastguid=>15, podcastrss=>16, chapterdata=>17, subtitle=>18, tvshow=>19, tvepisode=>20,
                  tvnetwork=>21, albumartist=>22, artistthe=>23, keywords=>24, sorttitle=>27, sortalbum=>28, sortalbumartist=>29,
                  sortcomposer=>30, sorttvshow=>31);
@@ -197,7 +197,7 @@ $SPLDEF{limitsort}{-23} = "rating_low";
 %PLREDEF  = _r_xdef(%PLDEF);
 
 
-
+#get_artworkdb();
 
 
 ## IPOD SHUFFLE ####################################################
@@ -371,7 +371,7 @@ sub mk_mhit {
 		$ret .= pack("V");                                      #hardcoded space ? (Apple DRM id?)
 		$ret .= pack("V", _icl($file_hash{addtime}));           #File added @
 		$ret .= pack("V", _icl($file_hash{bookmark}));          #QTFile Bookmark
-		$ret .= pack("H16", ($file_hash{dbid_1} or $c_id));     # First dbid, should not be null
+		$ret .= pack("H16", ($file_hash{dbid_1}));               # First dbid, should not be null
 		$ret .= pack("v");                                      #??
 		$ret .= pack("v", _icl($file_hash{bpm},0xffff));        #BPM
 		$ret .= pack("v", _icl($file_hash{artworkcnt}));        #Artwork Count
@@ -386,7 +386,7 @@ sub mk_mhit {
 		$ret .= pack("C", _icl(($file_hash{shuffleskip} ? 1 : 0)));
 		$ret .= pack("C", _icl(($file_hash{bookmarkable} ? 1 : 0)));
 		$ret .= pack("C", _icl(($file_hash{podcast} ? 1 : 0)));
-		$ret .= pack("H16", ($file_hash{dbid_2} or $c_id));    # second dbid, should not be null
+		$ret .= pack("H16", ($file_hash{dbid_2}));              # second dbid, should not be null
 		$ret .= pack("C", (_icl(($file_hash{lyrics_flag} ? 1 : 0))));
 		$ret .= pack("C", (_icl(($file_hash{movie_flag} ? 1 : 0))));
 		$ret .= pack("C", (_icl(($file_hash{played_flag} ? 1 : 2))));
@@ -420,26 +420,21 @@ sub mk_mhod {
 
 	my ($hr) = @_;
 	my $type_string = $hr->{stype};
-	my $string = $hr->{string};
-	my $fqid = $hr->{fqid};
-	my $type = $mhod_id{lc($type_string)};
+	my $string      = $hr->{string};
+	my $fqid        = $hr->{fqid};
+	my $type        = $mhod_id{lc($type_string)};
 	
-	#Append
-	my $apx = undef;
-	
-	#Called with fqid, this has to be an PLTHING (100)
-	if(defined $fqid) { 
-		#fqid set, that's a pl item!
+	if(defined $fqid) {
+		# fqid is set, so this has to be a playlist item
 		$type = 100;
 	}
 	elsif(!$type) { #No type and no fqid, skip it
 		return undef;
 	}
-	else { #has a type, default fqid
+	else {
+		# Has a known type, so fqid is set to 1
 		$fqid=1;
 	}
-	
-	
 	
 	if($type == 7 && $string !~ /#!#\d+#!#/) {
 		warn "iTunesDB.pm: warning: wrong format: '$type_string=\"$string\"'\n";
@@ -449,38 +444,34 @@ sub mk_mhod {
 	###
 	
 	#Create AppendX for Special types
-	
+	my $apx = '';
 	#Podcast
 	if($type == 16 or $type == 15) {
-		#Dummy: Podcast UTF8 stuff.
-		#Dunno convert utf8-string into byteswap2-utf16
+		# -> Podcasts are not UTF16, just UTF8
 		$apx .= $string;
 	}
-	#Playlist
 	elsif($type == 100) {
-		#Playlist mhod
+		# -> Playlist item, just create the fqid
 		$apx .= pack("V", _icl($fqid));  #Refers to this id
 		$apx .= pack("V", 0x00);         #Mhod 0 has no string
-		$apx .= pack("V3"); #Playlist append
+		$apx .= pack("V3");              #Playlist append
 	}
-	#Normal
 	else {
-		#Normal mhods:
+		# -> This is a normal mhod
 		warn "ASSERT: Bug? -> fqid defined for non-playlist id!\n" if $fqid != 1;
-		$string = _ipod_string($string); #cache data
-		$apx .= pack("V", _icl($fqid));                  #Refers to this id if a PL item, else -> 1
-		$apx .= pack("V", _icl(length($string)));        #size of string
-		$apx .= pack("V2");           #trash
-		$apx .= $string;               #the string
+		$string = _ipod_string($string);             # Convert t utf16
+		$apx .= pack("V", _icl($fqid));              # Always set to 1 here
+		$apx .= pack("V", _icl(length($string)));    # Size of string
+		$apx .= pack("V2");                          # Flags we do not write
+		$apx .= $string;                             # The string itself
 	}
 
-	my $ret = "mhod";                 		           #header
-	$ret .= pack("V", _icl(24));                     #size of header
-	$ret .= pack("V", _icl(24+length($apx)));   # size of header+body
-	$ret .= pack("V", _icl($type));                #type of the entry
-	$ret .= pack("V2");                               #dummy space
+	my $ret = "mhod";                              # dataobject header
+	$ret .= pack("V", _icl(24));                   # size of header
+	$ret .= pack("V", _icl(24+length($apx)));      # size of header+body
+	$ret .= pack("V", _icl($type));                # type of the entry
+	$ret .= pack("V2");                            # Dummy space
 	###
-
 	return $ret.$apx;
 }
 
@@ -770,10 +761,131 @@ sub mk_mhip {
 
 
 
+## ARTWORK-DB SPECIFIC ###################################################
 
 
+#########################################################
+# Create an mhii (ImageInformation atom)
+sub mk_mhii {
+	my($hr) = @_;
+	
+	my $size_header = 0x98;
+	my $size_total  = $size_header + length($hr->{payload});
+	
+	
+	my $ret = 'mhii';
+	   $ret .= pack("V", _icl($size_header));       # Size of header
+	   $ret .= pack("V", _icl($size_total));        # Size of Header + Childs
+	   $ret .= pack("V", _icl($hr->{childs}));      # Number of children
+	   $ret .= pack("V", _icl($hr->{id}));          # Internal ID
+	   $ret .= pack("H16", $hr->{dbid});            # DB-ID we are referencing to
+	   $ret .= pack("V", _icl(0x00));               # ?
+	   $ret .= pack("V", _icl($hr->{rating}));      # A rating (?)
+	   $ret .= pack("V", _icl(0x00));               # ?
+	   $ret .= pack("V", _icl(0x00));               # ?
+	   $ret .= pack("V", _icl(0x00));               # ?
+	   $ret .= pack("V", _icl($hr->{source_size})); # Size of source image
+	   $ret .= pack("V", _icl(0x00));               # ?
+	   $ret .= pack("V", _icl(0x01));
+	   $ret .= pack("V", _icl(0x01));
+	   $ret .= pack("V22", _icl(0x00));             # padding
+	return $ret.$hr->{payload};
+}
 
+#########################################################
+# Creates a mhod for the artwork db
+sub mk_awdb_mhod {
+	my($hr) = @_;
+	
+	my $append = '';
+	if($hr->{type} == 0x03) {
+		my $utf16 = _ipod_string($hr->{payload});
+		$append  = pack("V", _icl(length($utf16)));  # Size of string
+		$append .= pack("V", _icl(0x02));            # Unknown, always 2 ?
+		$append .= pack("V", _icl(0x00));            # Unknown, always 0 ?
+		$append .= $utf16;                           # UTF16 encoded string
+	}
+	else {
+		$append = $hr->{payload};
+	}
+	
+	my $size_header = 0x18;
+	my $size_mhod   = $size_header+length($append);
+	
+	my $ret = 'mhod';
+	   $ret .= pack("V", _icl($size_header));  # Size of header
+	   $ret .= pack("V", _icl($size_mhod));    # Size of header + 2 unknown items + size of payload
+	   $ret .= pack("V", _icl($hr->{type}));   # 
+	   $ret .= pack("V", _icl(0));             # ?
+	   $ret .= pack("V", _icl(0));             # ?
+	   $ret .= $append;
+	return $ret;
+}
 
+#########################################################
+# Creates an mhni
+sub mk_mhni {
+	my($hr) = @_;
+	
+	my $size_header = 0x4C;                                # Size of mhni header
+	my $size_mhni   = $size_header+length($hr->{payload}); # Size of mhni + append
+	
+	
+	my $ret = 'mhni';   # Identifier
+	   $ret .= pack("V", _icl($size_header));
+	   $ret .= pack("V", _icl($size_mhni));
+	   $ret .= pack("V", _icl($hr->{childs}));    # childs of mhni
+	   $ret .= pack("V", _icl($hr->{id}));        # mhni id
+	   $ret .= pack("V", _icl($hr->{offset}));    # Offset in ithmb
+	   $ret .= pack("V", _icl($hr->{imgsize}));   # Image size
+	   $ret .= pack("v", _icl($hr->{vpadding}));  # Vertical Padding
+	   $ret .= pack("v", _icl($hr->{hpadding}));  # Horizontal Padding
+	   $ret .= pack("v", _icl($hr->{height}));    # Image height
+	   $ret .= pack("v", _icl($hr->{width}));     # Image widht
+	   $ret .= pack("V1",0x00);
+	   $ret .= pack("V", _icl($hr->{imgsize}));   # Image size, again
+	   $ret .= pack("V8", 0x00);
+	return $ret.$hr->{payload};
+}
+
+sub mk_mhxx {
+	my($hr) = @_;
+	my $ret  = sprintf("%-4s",$hr->{name});
+	   $ret .= pack("V",  _icl(0x5c));
+	   $ret .= pack("V",  _icl($hr->{childs}));
+	   $ret .= pack("V20",_icl(0x00));
+}
+
+sub mk_mhif {
+	my($hr) = @_;
+	
+	my $size_header = 0x7c;
+	my $size_mhif   = $size_header + length($hr->{payload});
+	my $ret = 'mhif';                             # Identifier
+	   $ret .= pack("V", _icl($size_header));
+	   $ret .= pack("V", _icl($size_mhif));
+	   $ret .= pack("V", _icl($hr->{childs}));    # childs of mhni
+	   $ret .= pack("V", _icl($hr->{id}));        # mhni id
+	   $ret .= pack("V", _icl($hr->{imgsize}));   # Offset in ithmb
+	   $ret .= pack("V25",0);
+	return $ret.$hr->{payload};
+}
+
+sub mk_mhfd {
+	my($hr) = @_;
+	my $ret = 'mhfd';                             # Identifier
+	   $ret .= pack("V", _icl(0x84));
+	   $ret .= pack("V", _icl(0x84+$hr->{size}));
+	   $ret .= pack("V", _icl(0x00));             # Unknown, always 0x00 ?
+	   $ret .= pack("V", _icl(0x02));             # Db-Version ?!
+	   $ret .= pack("V", _icl($hr->{childs}));    # childs of mhni
+	   $ret .= pack("V", _icl(0x00));             # Unknown, always 0x00 ?
+	   $ret .= pack("V", _icl($hr->{next_id}));   # mhni id
+	   $ret .= pack("V4", 0);
+	   $ret .= pack("V", _icl(0x02));             # Always 2 ?!
+	   $ret .= pack("V20", 0);
+	return $ret;
+}
 
 ## _INTERNAL ###################################################
 #Convert utf8 (what we got from XML::Parser) to utf16 (ipod)
@@ -996,55 +1108,76 @@ sub __hd {
 	system("hexdump -vC /tmp/XLZ");
 }
 
+###########################################
+# Get mhod in artworkdb-mode
+sub get_awdb_mhod {
+	my($seek,$fd) = @_;
+	my %r           = ();
+	$r{header_size} = get_int($seek+4, 4, $fd);      # Mhod header length
+	$r{total_size}  = get_int($seek+8, 4, $fd);     # Total mhod size
+	$r{type}        = get_int($seek+12,2, $fd);
+	$r{type_string} = $mhod_array[$r{type}];
+	
+	if($r{type} == 2) {
+		$r{childs} = 1;  # artworkdb mhods hold a mhni
+	}
+	elsif($r{type} == 3) {
+		my $strlen    = get_int($seek+24,4,$fd);
+		my $tmpstring = get_string($seek+$r{total_size}-$strlen, $strlen, $fd);
+		   $tmpstring   = Unicode::String::byteswap2($tmpstring);
+		   $r{string}   = Unicode::String::utf16($tmpstring)->utf8;
+		   $r{header_size} = $r{total_size};
+	}
+	else {
+		die "Unexpected artwork-mhod type: $r{type}\n";
+	}
+	return \%r;
+}
 
 ###########################################
 #get a SINGLE mhod entry:
-# return+seek = new_mhod should be there
 sub get_mhod {
 	my ($seek,$fd) = @_;
-
-	my $mhl     = get_int($seek+4, 4,$fd);           # Mhod Header Length
-	my $ml      = get_int($seek+8, 4,$fd);           # Length of this mhod
-	my $mty     = get_int($seek+12, 4,$fd);          # type number
-	my $plpos   = get_int($seek+24, 4,$fd);          # Used for 100 MHODs => Position
-	my $xl      = get_int($seek+28,4,$fd);           # String length
-	my $htm     = get_int($seek+35,1,$fd);           # HasToMatch .. only used for 51-type mhods
-	my $anym    = get_int($seek+39,1,$fd);           # Anymatch .. only used for 51-type mhods
-	my $spldata = undef;                             # Holds spldata
-	my $splpref = undef;                             # Holds splprefs
-	my $string  = undef;                             # Stringval of mhod
 	
-	if($mty == 16 or $mty == 15) {
-		#Here we go again: Apple did strange things!
-		#They could have used a normal mhod, but no!
-		#Apple is cool and needs to f*ckup mhod-type 16 and 15!
-		#aargs!
-		$string = Unicode::String::utf8(get_string($seek+$mhl,$ml-$mhl,$fd))->utf8;
-	}
-	elsif($mty == 17) {
-#		my $cdlen = $ml - $mhl;
-	}
-	elsif($mty == 51) { #Get data from spldata mhod
-		$spldata = read_spldata({start=>$seek, htm=>$htm},$fd);
-	}
-	elsif($mty == 50) { #Get prefs from splpref mhod
-		$splpref = read_splpref({start=>$seek, end=>$ml},$fd);
-	}
-	elsif($mty == 100) { #This is a PLTHING mhod
-	}
-	elsif($mty == 32) {
-# ?
-	}
-	else { #A normal Mhod, puh!
-		_itBUG("Assert \$xl < \$ml failed! ($xl => $ml) [type: $mty]",1) if $xl >= $ml;
-		$string = get_string($seek+($ml-$xl), $xl,$fd); #String of entry
-		$string = Unicode::String::byteswap2($string);
-		$string = Unicode::String::utf16($string)->utf8;
-	}
+	my %r           = ();
+	$r{header_size} = get_int($seek+4, 4, $fd);      # Mhod header length
+	$r{total_size}  = get_int($seek+8, 4, $fd);     # Total mhod size
+	$r{type}        = get_int($seek+12,2, $fd);
+	$r{padding}     = get_int($seek+15,1, $fd);
+	$r{plpos}       = get_int($seek+24,4, $fd);
+	$r{type_string} = $mhod_array[$r{type}];
 	
 	
-	return({total_size=>$ml, header_size=>$mhl, string=>$string,type=>$mty, type_string=>$mhod_array[$mty],
-	        spldata=>$spldata,splpref=>$splpref,matchrule=>$anym,plpos=>$plpos});
+	if($r{type} == 15 or $r{type} == 16) {
+		# Podcasts
+		# Strings are the same as < 15 mhods but utf8 encoded... .. ........ why?
+		my $tmpstring = get_string($seek+$r{header_size}, $r{total_size}-$r{header_size}, $fd);
+		   $r{string} = Unicode::String::utf8($tmpstring)->utf8;
+	}
+	elsif($r{type} == 17) {
+		warn "Chapter data not supported yet\n";
+	}
+	elsif($r{type} == 32) {
+		# ?
+	}
+	elsif($r{type} == 50) {
+		$r{splpref} = read_splpref({start=>$seek, end=>$r{total_size}},$fd);
+	}
+	elsif($r{type} == 51) {
+		$r{matchrule} = get_int($seek+39,1,$fd);
+		$r{spldata}   = read_spldata({start=>$seek, htm=>get_int($seek+35,1,$fd)},$fd);
+	}
+	elsif($r{type} == 100) {
+		# -> Playlist mhod, nothing special to read
+	}
+	else {
+		# Looks like a normal mhod
+		$r{string_size} = get_int($seek+28,4,$fd);
+		my $tmpstring   = get_string($seek+($r{total_size}-$r{string_size}), $r{string_size}, $fd);
+		   $tmpstring   = Unicode::String::byteswap2($tmpstring);
+		   $r{string}   = Unicode::String::utf16($tmpstring)->utf8;
+	}
+	return \%r;
 }
 
 
@@ -1091,6 +1224,7 @@ sub get_mhfd {
 	$r{total_size}  = get_int($seek+8,4,$fd);
 	$r{childs}      = get_int($seek+20,4,$fd);
 	$r{next_id}     = get_int($seek+28,4,$fd);
+	return \%r;
 }
 
 
@@ -1217,7 +1351,7 @@ sub get_mhif {
 	$r{total_size}  = get_int($offset+8,4,$fd);
 	$r{childs}      = get_int($offset+12,4,$fd);
 	$r{id}          = get_int($offset+16,4,$fd);
-	$r{imgsize}     = get_int($offset+32,4,$fd);
+	$r{imgsize}     = get_int($offset+20,4,$fd);
 	return \%r;
 }
 #########################################################
@@ -1229,6 +1363,13 @@ sub get_mhni {
 	$r{total_size}  = get_int($offset+8,4,$fd);
 	$r{childs}      = get_int($offset+12,4,$fd);
 	$r{id}          = get_int($offset+16,4,$fd);
+	$r{offset}      = get_int($offset+20,4,$fd);
+	$r{imgsize}     = get_int($offset+24,4,$fd);
+	$r{vpadding}    = get_int($offset+28,2,$fd);
+	$r{hpadding}    = get_int($offset+30,2,$fd);
+	$r{height}      = get_int($offset+32,2,$fd);
+	$r{width}       = get_int($offset+34,2,$fd);
+	
 	return \%r;
 }
 
@@ -1273,7 +1414,8 @@ sub ParseiTunesDB {
 		
 		if(0) {}
 		elsif($t eq 'mhit')                 { $r = get_mhit($obj->{offset},$obj->{fd}) }
-		elsif($t eq 'mhod')                 { $r = get_mhod($obj->{offset},$obj->{fd}); $r->{header_size} = $r->{total_size} }
+		elsif($t eq 'mhod' && $obj->{awdb}) { $r = get_awdb_mhod($obj->{offset},$obj->{fd}) }                                    # ArtworkDB mhods are different :-/
+		elsif($t eq 'mhod')                 { $r = get_mhod($obj->{offset},$obj->{fd}); ($r->{header_size} = $r->{total_size}) } # Don't care about the string
 		elsif($t eq 'mhyp')                 { $r = get_mhyp($obj->{offset},$obj->{fd}); $obj->{xhack} = $r->{childs}; $r->{childs} += $r->{scount}; }
 		elsif($t eq 'mhbd')                 { $r = get_mhbd($obj->{offset},$obj->{fd}) }
 		elsif($t eq 'mhfd')                 { $r = get_mhfd($obj->{offset},$obj->{fd}) }
@@ -1284,13 +1426,16 @@ sub ParseiTunesDB {
 		elsif($t eq 'mhif')                 { $r = get_mhif($obj->{offset},$obj->{fd}) }
 		elsif($t eq 'mhia')                 { $r = get_mhia($obj->{offset},$obj->{fd}) }
 		elsif($t =~ /^mh(lt|lp|la|lf|li)$/) { $r = get_mhxx($obj->{offset},$obj->{fd}) }
+		else { die "Unsupported atom: $t\n"; }
+		
+		
 		$next_atom = $obj->{offset} + $r->{header_size};
 		$obj->{tree}->{$deep} = { name => $t, ref=>$r };
 		
 		if($this_child == 1) {
 			$ft = $t;
 			if(defined(my $cb = $obj->{callback}->{$obj->{tree}->{$deep-1}->{name}}->{start})) {
-				$obj->{callback}->{PACKAGE}->$cb(ref=>$obj->{tree}->{$deep-1}->{ref});
+				$obj->{callback}->{PACKAGE}->$cb(offset => $obj->{offset}, ref=>$obj->{tree}->{$deep-1}->{ref});
 			}
 		}
 		elsif($ft ne $t) {
@@ -1301,14 +1446,17 @@ sub ParseiTunesDB {
 		}
 		
 		if(defined(my $cb = $obj->{callback}->{$t}->{item})) {
-			$obj->{callback}->{PACKAGE}->$cb(ref=>$r);
+			$obj->{callback}->{PACKAGE}->$cb(offset => $obj->{offset}, ref=>$r);
 		}
 		
-		if(TREEDUMP) {
+		if(ITUNES_DUMP) {
 			print " " x ($deep * 3);
-			printf("%02d Type=>%s Offset=>%04X, ThisCount=>%d, TotalCount=>%d, NextAtom=>%04X, NextChilds=>%d, Mt=>%d\n",
+			printf("%02d Atom=>%s, Offset=>%04X, ThisCount=>%d, TotalCount=>%d, NextAtom=>%04X, NextChilds=>%d, Type=>%d\n",
 			         $deep, $t, $obj->{offset}, $this_child, $this_childs, $next_atom,$r->{childs}, $r->{type});
+	#		print Data::Dumper::Dumper($r);
+	 #		print "-----------------------------------------------------\n";
 		}
+		
 		
 		if(defined($obj->{xhack}) && $t eq 'mhod' && $this_child == $obj->{xhack}) {
 			# Hack for mhyp children.. switch to mhip after the Xth mhod
@@ -1321,16 +1469,9 @@ sub ParseiTunesDB {
 	}
 	
 	if(defined(my $cb = $obj->{callback}->{$obj->{tree}->{$deep-1}->{name}}->{end})) {
-		$obj->{callback}->{PACKAGE}->$cb(ref=>$obj->{tree}->{$deep-1}->{ref});
+		$obj->{callback}->{PACKAGE}->$cb(offset => $obj->{offset}, ref=>$obj->{tree}->{$deep-1}->{ref});
 	}
 	
-}
-
-
-sub get_artworkdb {
-	#open(AWDB, "/mnt/ipod/iPod_Control/Artwork/ArtworkDB") or die;
-	open(AWDB, "/mnt/ipod/iPod_Control/iTunes/iTunesDB") or die;
-	die;
 }
 
 

@@ -25,6 +25,7 @@ use strict;
 use GNUpod::XMLhelper;
 use GNUpod::FooBar;
 use GNUpod::FileMagic;
+use GNUpod::ArtworkDB;
 use Getopt::Long;
 use File::Copy;
 use File::Glob ':glob';
@@ -44,7 +45,7 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode=s", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
                    "set-title=s", "set-artist=s", "set-album=s", "set-genre=s", "set-rating=i", "set-playcount=i",
-                   "set-bookmarkable", "set-shuffleskip",
+                   "set-bookmarkable", "set-shuffleskip", "artwork=s",
                    "set-songnum", "playlist|p=s@", "reencode|e=i",
                    "min-vol-adj=i", "max-vol-adj=i", "playlist-is-podcast", "set-compilation");
 GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b',
@@ -99,7 +100,8 @@ sub startup {
 	$opts{_no_sync} = $opts{restore};
 	
 	my $fatal_error = 0;
-	my $con = GNUpod::FooBar::connect(\%opts);
+	my $dbid        = undef;
+	my $con         = GNUpod::FooBar::connect(\%opts);
 	usage($con->{status}."\n") if $con->{status} || !@argv_files;
 
 	unless($opts{restore}) { #We parse the old file, if we are NOT restoring the iPod
@@ -112,7 +114,15 @@ sub startup {
 			GNUpod::XMLhelper::addpl($xcpl, {podcast=>$opts{'playlist-is-podcast'}}); #Fixme: this may printout a warning..
 		}
 	}
-
+	
+	if($opts{artwork}) {
+		my $awdb = GNUpod::ArtworkDB->new($con);
+		$dbid    = $awdb->InjectImage($opts{artwork});
+		print "Added file with dbid: $dbid\n";
+		$awdb->WriteArtworkDb;
+		$awdb->CleanupIthumb;
+	}
+	
 	# Check volume adjustment options for sanity
 	my $min_vol_adj = int($opts{'min-vol-adj'});
 	my $max_vol_adj = int($opts{'max-vol-adj'});
@@ -159,7 +169,6 @@ sub startup {
 		}
 		$c_per_file_info->{ISPODCAST} ||= $opts{'playlist-is-podcast'};  # Enforce podcast settings if we are going to create a pc-playlist
 		
-		print "=>$c_per_file_info->{ISPODCAST}\n";
 		
 		#wtf_is found a filetype, override data if needed
 		$fh->{artist}       = $opts{'set-artist'}      if $opts{'set-artist'};
@@ -286,6 +295,12 @@ sub startup {
 			Unicode::String::utf8($fh->{title})->utf8,
 			Unicode::String::utf8($fh->{album})->utf8,
 			Unicode::String::utf8($fh->{artist})->utf8);
+			
+			if(defined($dbid)) {
+				$fh->{dbid_1}      = $dbid;
+				$fh->{has_artwork} = 1;
+				$fh->{artworkcnt}  = 1;
+			}
 			
 			my $id = GNUpod::XMLhelper::mkfile({file=>$fh},{addid=>1}); #Try to add an id
 			create_playlist_now($opts{playlist}, $id);

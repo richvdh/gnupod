@@ -44,16 +44,18 @@ on the iPod.
 Supported iPods
 ---------------
 
-* First Generation iPod (No SPL support)
-* Second Generation iPod (No SPL support)
-* Third Generation iPod (Almost everything supported)
-* Fourth Generation iPod (Almost everything supported)
-* iPod Mini (Almost everything supported)
-* iPod-Photo (No support for Pictures, only sound.. Sorry)
-* iPod-Shuffle (Supported since GNUpod 0.98)
- See: http://www.scoutingaround.com/computers/ipod/ipod_generations.html
+* All iPods up to late 2007 (Touch, Classic and Nano) are supported,
+  GNUpod supports:
 
-*Note* GNUpod does not support DRM-Stuff!
-iTMS is not aviable where i live (Switzerland), so i can't test it...
-Maybe you should give 'finetunes.net' and 'allofmp3.com' a try...
-(DRM Free Music)
+ - ALAC, MP4 (AAC), MP3 and PCM
+ - MP4  Videos
+ - On-The-Fly re-encoding from flac, ogg, avi, etc..
+ - Normal Playlists
+ - On-The-Go Playlists
+ - GNUpod extended playlists (<regex />)
+ - iTunes Smart-Playlists (not supported by all models)
+
+ See: http://docs.info.apple.com/article.html?artnum=61688
+
+*Note*  - GNUpod does *not* support DRM-Stuff!
+        - GNUpod does *not* support album artwork.
