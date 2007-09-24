@@ -115,10 +115,9 @@ sub startup {
 		}
 	}
 	
-	if($opts{artwork}) {
-		my $awdb = GNUpod::ArtworkDB->new($con);
+	if($opts{artwork} && (my $awdb = GNUpod::ArtworkDB->new($con))) {
 		$dbid    = $awdb->InjectImage($opts{artwork});
-		print "Added file with dbid: $dbid\n";
+		print "> Using '$opts{artwork}' as cover (internal id: $dbid)\n";
 		$awdb->WriteArtworkDb;
 		$awdb->CleanupIthumb;
 	}
@@ -197,7 +196,7 @@ sub startup {
 
 		#Check for duplicates
 		if(!$opts{duplicate} && (my $dup = checkdup($fh,$converter))) {
-			print "! [!!!] '$file' is a duplicate of song $dup, skipping file\n";
+			print "! [!!!!] '$file' is a duplicate of song $dup, skipping file\n";
 			create_playlist_now($opts{playlist}, $dup); #We also add duplicates to a playlist..
 			next;
 		}
@@ -227,15 +226,15 @@ sub startup {
 			print "> Converting '$file' from $wtf_ftyp into $opts{decode}, please wait...\n";
 			my $path_of_converted_file = GNUpod::FileMagic::kick_convert($converter,$opts{reencode},$file, uc($opts{decode}), $con);
 			unless($path_of_converted_file) {
-				print "! [!!!] Could not convert $file into $opts{decode}\n";
+				print "! [!!!!] Could not convert $file into $opts{decode}\n";
 				next;
 			}
 			#Ok, we got a converted file, fillout the gaps
 			my($conv_fh, $conv_media_h) = GNUpod::FileMagic::wtf_is($path_of_converted_file, undef, $con);
 			
 			unless($conv_fh) {
-				warn "* [***] Internal problem: $converter did not produce valid data.\n";
-				warn "* [***] Something is wrong with $path_of_converted_file (file not deleted, debug it! :-) )\n";
+				warn "* [****] Internal problem: $converter did not produce valid data.\n";
+				warn "* [****] Something is wrong with $path_of_converted_file (file not deleted, debug it! :-) )\n";
 				next; 	
 			}
 			
@@ -262,13 +261,13 @@ sub startup {
 				}
 				else {
 					#Nope.. input was smaller, converting was silly..
-					print "* [***] Reencoded output bigger than input! Adding source file\n";
+					print "* [****] Reencoded output bigger than input! Adding source file\n";
 					unlink($path_of_converted_file) or warn "Could not unlink $path_of_converted_file, $!\n";
 					#Ok, do nothing! 
 				}
 			}
 			else {
-				print "* [***] ReEncoding of file failed! Adding given file\n";
+				print "* [****] ReEncoding of file failed! Adding given file\n";
 			}
 		}
 		

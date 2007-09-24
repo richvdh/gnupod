@@ -4,7 +4,10 @@ use GNUpod::iTunesDB;
 use Carp;
 use Digest::MD5;
 use Data::Dumper;
+
+use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching ~ 256 mb
 	
+	# Artwork profiles:
 	my $profiles = { 'Nano_3G' => [ { height=>320, width=>320, dbi=>1060, bpp=>16, size=>204800 }, { height=>128, width=>128, dbi=>1055, bpp=>16, size=>32768 }, ],
 	                 'Nano'    => [ { height=>100, width=>100, dbi=>1027, bpp=>16, size=>20000 },  { height=> 42, width=> 42, dbi=>1031, bpp=>16, size=>3528  }, ],
 	                 'Video'   => [ { height=>200, width=>200, dbi=>1029, bpp=>16, size=>80000  }, { height=>100, width=>100, dbi=>1028, bpp=>16, size=>20000 }, ],
@@ -19,8 +22,9 @@ use Data::Dumper;
 		             last_id_seen => 100, images_count => 0, ctx => '', _mhni_buff => {}, dirty=>1 };
 		bless($self, $class);
 		
-		unless(-d $self->{artworkdir}) {
-			mkdir($self->{artworkdir}) or die "Unable to create $self->{artworkdir} : $!\n";
+		if(!(-d $self->{artworkdir}) && !mkdir($self->{artworkdir})) {
+			warn "$0: Unable to create directory $self->{artworkdir} : $!\n";
+			return undef;
 		}
 		
 		open(AWDB, "<", $self->{artworkdb}) or return $self;
@@ -34,7 +38,6 @@ use Data::Dumper;
 		GNUpod::iTunesDB::ParseiTunesDB($obj,0);
 		$self->{dirty} = 0; # InMemory is the same as stored version
 		close(AWDB);
-		print Data::Dumper::Dumper($self);
 		return $self;
 	}
 	
@@ -55,10 +58,11 @@ use Data::Dumper;
 		
 		if(!defined($self->GetImage($imgid))) {
 			$self->RegisterNewImage(ref => {id=>0, dbid=>$imgid, source_size=>$srcsize});
-			my $mode = $profiles->{'Video'};
+			my $mode = $profiles->{'Nano_3G'};
 			foreach my $mr (@$mode) {
 				my $buff = '';
-				open(IM, "convert -resize $mr->{height}x$mr->{width}! -filter sinc -depth 8 $file RGB:- |"); # Fixme: Security
+				open(IM, "-|") || exec("convert", "-resize", "$mr->{height}x$mr->{width}!",
+				                         "-filter", "sinc", "-depth", 8, "--", $file, "RGB:-");
 				while(<IM>) { $buff .= $_  }
 				close(IM);
 				
@@ -94,6 +98,7 @@ use Data::Dumper;
 			while(my($fnam,$fsiz) = each(%{$self->GetStorage($id)->{ithmb}})) {
 				my $fpath = $dir."/".substr($fnam,1); # kill's the :
 				my @stat  = stat($fpath);
+				print "Checking $fpath\n";
 				if($fsiz == 0) {
 					print "# unlink\n";
 					unlink($fpath); # Don't bark if file doesn't exist
@@ -171,10 +176,20 @@ use Data::Dumper;
 	sub StoreImage {
 		my($self, %args) = @_;
 		
-		my $fnam   = "F".$args{Dbid}."_1.ithmb";
-		my $fpath  = $self->{artworkdir}."/$fnam";
-		my $start  = 0;
-		my $end    = 0;
+		my $f_prefix = "F".$args{Dbid}."_";
+		my $f_ext    = ".ithmb";
+		my $fnam     = '';
+		my $fpath    = '';
+		my $start    = 0;
+		my $end      = 0;
+		for(my $i=1; $i<=500;$i++) {
+			$fnam  = $f_prefix.$i.$f_ext;
+			$fpath = $self->{artworkdir}."/$fnam";
+			last if ((stat($fpath))[7]) < MAX_ITHMB_SIZE;
+		}
+		
+		warn "# Writing to $fpath\n";
+		
 		open(ITHMB, ">>", $fpath) or die "Unable to write to $fpath : $!\n";
 		$start = tell(ITHMB);
 		print ITHMB $args{Data};
@@ -191,8 +206,6 @@ use Data::Dumper;
 		my %h = %{$args{ref}};
 		
 		$h{id} ||= $self->{last_id_seen}+1;
-		
-		print "Found image $h{dbid}\n";
 		
 		$self->{dirty}++;
 		push(@{$self->{a_images}},$h{dbid}) if !exists($self->{images}->{$h{dbid}});

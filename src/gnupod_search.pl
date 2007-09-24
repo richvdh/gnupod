@@ -24,20 +24,26 @@
 use strict;
 use GNUpod::XMLhelper;
 use GNUpod::FooBar;
+use GNUpod::ArtworkDB;
 use Getopt::Long;
+
 use vars qw(%opts @keeplist %rename_tags);
 
 use constant DEFAULT_SPACE => 32;
 
-print "gnupod_search.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
+my $dbid     = undef;  # Artwork DB-ID
+my $dirty    = 0;      # Do we need to re-write the XML version?
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
-#Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
-#
+
+
+
+print "gnupod_search.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
+
 # WARNING: If you add new options wich don't do matching, change newfile()
 #
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "artist|a=s",
-                   "album|l=s", "title|t=s", "id|i=s", "rename=s@",
+                   "album|l=s", "title|t=s", "id|i=s", "rename=s@", "artwork=s",
                    "playcount|c=s", "rating|s=s", "podcastrss|R=s", "podcastguid|U=s",
                    "view=s","genre|g=s", "match-once|o", "delete", "RMME|d");
 GNUpod::FooBar::GetConfig(\%opts, {view=>'s', mount=>'s', 'match-once'=>'b', 'automktunes'=>'b'}, "gnupod_search");
@@ -51,14 +57,6 @@ $opts{view} ||= 'ialt'; #Default view
 #Check if input makes sense:
 die "You can't use --delete and --rename together\n" if($opts{delete} && $opts{rename});
 
-#Build %rename_tags
-foreach(@{$opts{rename}}) {
-  my($key,$val) =  split(/=/,$_,2);
-  next unless $key && defined($val);
-  #$key =~ s/^\s*-+//g; # -- is not valid for xml tags!
-  next if $key eq "id";#Dont allow something like THIS
-  $rename_tags{lc($key)} = $val;
-}
 
 
 go();
@@ -69,20 +67,37 @@ sub go {
 	my $con = GNUpod::FooBar::connect(\%opts);
 	usage($con->{status}."\n") if $con->{status};
 	
+	#Build %rename_tags
+	foreach(@{$opts{rename}}) {
+		my($key,$val) =  split(/=/,$_,2);
+		next unless $key && defined($val);
+		#$key =~ s/^\s*-+//g; # -- is not valid for xml tags!
+		next if $key eq "id";#Dont allow something like THIS
+		$rename_tags{lc($key)} = $val;
+	}
+	# Add image to artworkdb if requested
+	if($opts{artwork} && (my $awdb = GNUpod::ArtworkDB->new($con))) {
+		$dbid    = $awdb->InjectImage($opts{artwork});
+		$awdb->WriteArtworkDb;
+		$awdb->CleanupIthumb;
+	}
+	
 	pview(undef,1);
 	GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
 	#XML::Parser finished, write new file if we deleted or renamed
-	GNUpod::XMLhelper::writexml($con,{automktunes=>$opts{automktunes}}) if $opts{delete} or int(@{$opts{rename}});
+	if($dirty) {
+		GNUpod::XMLhelper::writexml($con,{automktunes=>$opts{automktunes}});
+	}
 }
 
 #############################################
 # Eventhandler for FILE items
 sub newfile {
  my($el) =  @_;
-my $matched = undef;
-                    # 2 = mount + view (both are ALWAYS set)
-my $ntm = keys(%opts)-2-$opts{'match-once'}-$opts{automktunes}-$opts{delete}-(defined $opts{rename});
-
+                          # 2 = mount + view (both are ALWAYS set)
+my $ntm      = keys(%opts)-2-$opts{'match-once'}-$opts{automktunes}-$opts{delete}-(defined $opts{rename})-(defined $opts{artwork});
+my $matched  = undef;
+my $dounlink = 0;
 foreach my $opx (keys(%opts)) {
 	next if $opx =~ /mount|match-once|delete|view|rename/; #Skip this
 		
@@ -104,49 +119,57 @@ foreach my $opx (keys(%opts)) {
 }
 
 
-  if(($opts{'match-once'} && $matched) || $ntm == $matched) {
-    ##Rename HashRef items
-    foreach(keys(%rename_tags)) {
-      $el->{file}->{$_} = $rename_tags{$_};
-    }
-    ##Print it
-    pview($el->{file},undef,$opts{delete});
-    ##maybe unlinkit..
-    unlink(GNUpod::XMLhelper::realpath($opts{mount},$el->{file}->{path}))
-    or warn "[!!] Remove failed: $!\n" if $opts{delete};
-  }
-  elsif($opts{delete}) { #Did not match, keep this item..
-   GNUpod::XMLhelper::mkfile($el);
-   $keeplist[$el->{file}->{id}] = 1;
-  }
-  
-  ##We'll rewrite the xml file: add it  
-  if(!$opts{delete} && defined($opts{rename})) {
-      GNUpod::XMLhelper::mkfile($el);
-      $keeplist[$el->{file}->{id}] = 1;
-  }
-  
+	if(($opts{'match-once'} && $matched) || $ntm == $matched) {
+		# => HIT
+		
+		# -> Rename tags
+		foreach(keys(%rename_tags)) {
+			$el->{file}->{$_} = $rename_tags{$_};
+			$dirty++;
+		}
+		# -> Print output
+		pview($el->{file},undef,$opts{delete});
+		
+		if($opts{delete}) {
+			$dounlink = 1; # Request deletion
+		}
+		elsif(defined($dbid)) {
+			# -> Add/Set artwork
+			$el->{file}->{has_artwork} = 1;
+			$el->{file}->{artworkcnt}  = 1;
+			$el->{file}->{dbid_1}      = $dbid;
+			$dirty++;
+		}
+	}
+	
+	if($dounlink) {
+		# -> Remove file as requested
+		unlink(GNUpod::XMLhelper::realpath($opts{mount},$el->{file}->{path})) or warn "[!!] Remove failed: $!\n";
+		$dirty++;
+	}
+	else {
+		# -> Keep file: add it to XML
+		GNUpod::XMLhelper::mkfile($el);
+		$keeplist[$el->{file}->{id}] = 1;
+	}
 }
 
 ############################################
 # Eventhandler for PLAYLIST items
 sub newpl {
- return unless $opts{delete} or defined($opts{rename}); #Just searching
- 
- # Delete or rename needs to rebuild the XML file
- 
- my ($el, $name, $plt) = @_;
- if(($plt eq "pl" or $plt eq "pcpl") && ref($el->{add}) eq "HASH") { #Add action
-  if(defined($el->{add}->{id}) && int(keys(%{$el->{add}})) == 1) { #Only id
-   return unless($keeplist[$el->{add}->{id}]); #ID not on keeplist. drop it
-  }
- }
- elsif($plt eq "spl" && ref($el->{splcont}) eq "HASH") { #spl content
-  if(defined($el->{splcont}->{id}) && int(keys(%{$el->{splcont}})) == 1) { #Only one item
-   return unless($keeplist[$el->{splcont}->{id}]);
-  }
- }
-  GNUpod::XMLhelper::mkfile($el,{$plt."name"=>$name});
+	# Delete or rename needs to rebuild the XML file
+	my ($el, $name, $plt) = @_;
+	if(($plt eq "pl" or $plt eq "pcpl") && ref($el->{add}) eq "HASH") { #Add action
+		if(defined($el->{add}->{id}) && int(keys(%{$el->{add}})) == 1) { #Only id
+			return unless($keeplist[$el->{add}->{id}]); #ID not on keeplist. drop it
+		}
+	}
+	elsif($plt eq "spl" && ref($el->{splcont}) eq "HASH") { #spl content
+		if(defined($el->{splcont}->{id}) && int(keys(%{$el->{splcont}})) == 1) { #Only one item
+			return unless($keeplist[$el->{splcont}->{id}]);
+		}
+	}
+	GNUpod::XMLhelper::mkfile($el,{$plt."name"=>$name});
 }
 
 
