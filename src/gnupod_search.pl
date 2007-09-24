@@ -45,27 +45,29 @@ print "gnupod_search.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "artist|a=s",
                    "album|l=s", "title|t=s", "id|i=s", "rename=s@", "artwork=s",
                    "playcount|c=s", "rating|s=s", "podcastrss|R=s", "podcastguid|U=s",
-                   "view=s","genre|g=s", "match-once|o", "delete", "RMME|d");
+                   "view=s","genre|g=s", "match-once|o", "delete");
 GNUpod::FooBar::GetConfig(\%opts, {view=>'s', mount=>'s', 'match-once'=>'b', 'automktunes'=>'b'}, "gnupod_search");
 
-
-usage() if $opts{help};
-version() if $opts{version};
-usage("\n-d was removed, use '--delete'\n") if $opts{RMME};
 $opts{view} ||= 'ialt'; #Default view
 
+usage()   if $opts{help};
+version() if $opts{version};
 #Check if input makes sense:
 die "You can't use --delete and --rename together\n" if($opts{delete} && $opts{rename});
 
+# -> Connect the iPod
+my $connection = GNUpod::FooBar::connect(\%opts);
+usage($connection->{status}."\n") if $connection->{status};
 
+my $AWDB  = GNUpod::ArtworkDB->new(Connection=>$connection, DropUnseen=>1);
+my $IMGID = undef;
 
-go();
+main($connection);
 
 ####################################################
 # Worker
-sub go {
-	my $con = GNUpod::FooBar::connect(\%opts);
-	usage($con->{status}."\n") if $con->{status};
+sub main {
+	my($con) = @_;
 	
 	#Build %rename_tags
 	foreach(@{$opts{rename}}) {
@@ -75,11 +77,9 @@ sub go {
 		next if $key eq "id";#Dont allow something like THIS
 		$rename_tags{lc($key)} = $val;
 	}
-	# Add image to artworkdb if requested
-	if($opts{artwork} && (my $awdb = GNUpod::ArtworkDB->new($con))) {
-		$dbid    = $awdb->InjectImage($opts{artwork});
-		$awdb->WriteArtworkDb;
-		$awdb->CleanupIthumb;
+	
+	if($opts{artwork}) {
+		$IMGID = $AWDB->IdentifyImage($opts{artwork})->{imgid};
 	}
 	
 	pview(undef,1);
@@ -88,6 +88,10 @@ sub go {
 	if($dirty) {
 		GNUpod::XMLhelper::writexml($con,{automktunes=>$opts{automktunes}});
 	}
+	
+	$AWDB->LoadArtworkDb;
+	$AWDB->InjectImage($opts{artwork}) if defined $IMGID;
+	$AWDB->WriteArtworkDb;
 }
 
 #############################################
@@ -133,11 +137,11 @@ foreach my $opx (keys(%opts)) {
 		if($opts{delete}) {
 			$dounlink = 1; # Request deletion
 		}
-		elsif(defined($dbid)) {
+		elsif(defined($IMGID)) {
 			# -> Add/Set artwork
 			$el->{file}->{has_artwork} = 1;
 			$el->{file}->{artworkcnt}  = 1;
-			$el->{file}->{dbid_1}      = $dbid;
+			$el->{file}->{dbid_1}      = $IMGID;
 			$dirty++;
 		}
 	}
@@ -150,6 +154,7 @@ foreach my $opx (keys(%opts)) {
 	else {
 		# -> Keep file: add it to XML
 		GNUpod::XMLhelper::mkfile($el);
+		$AWDB->KeepImage($el->{file}->{dbid_1});
 		$keeplist[$el->{file}->{id}] = 1;
 	}
 }
@@ -191,6 +196,7 @@ sub pview {
  $qh{G}{k} = $orf->{podcastguid};               $qh{G}{s} = "GUID";
  $qh{c}{k} = $orf->{playcount}; $qh{c}{w} = 4;  $qh{c}{s} = "CNT";
  $qh{i}{k} = $orf->{id};        $qh{i}{w} = 4;  $qh{i}{s} = "ID";
+ $qh{d}{k} = $orf->{dbid_1};    $qh{i}{w} = 16; $qh{d}{s} = "DBID";
  $qh{u}{k} = GNUpod::XMLhelper::realpath($opts{mount},$orf->{path}); $qh{u}{w} = 96; $qh{u}{s} = "UNIXPATH";
  
  #Prepare view
@@ -248,6 +254,7 @@ Usage: gnupod_search.pl [-h] [-m directory] File1 File2 ...
                             l = album    g = genre    c = playcount   i = id
                             u = UnixPath n = Songnum  G = podcastguid R = podcastrss
        --rename=KEY=VAL    Change tags on found songs. Example: --rename="ARTIST=Foo Bar"
+       --artwork=FILE      Set FILE as Cover for found files, do not forget to run mktunes.pl
 
 Note: * Argument for title/artist/album/etc has to be UTF8 encoded, *not* latin1!
       * Use '>3' to search all values above 3, use '<3' to search for values below 3
@@ -263,7 +270,7 @@ EOF
 sub version {
 die << "EOF";
 gnupod_search.pl (gnupod) ###__VERSION__###
-Copyright (C) Adrian Ulrich 2002-2005
+Copyright (C) Adrian Ulrich 2002-2007
 
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

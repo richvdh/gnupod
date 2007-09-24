@@ -1,4 +1,26 @@
 package GNUpod::ArtworkDB;
+#  Copyright (C) 2007 Adrian Ulrich <pab at blinkenlights.ch>
+#  Part of the gnupod-tools collection
+#
+#  URL: http://www.gnu.org/software/gnupod/
+#
+#    GNUpod is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    GNUpod is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.#
+#
+# iTunes and iPod are trademarks of Apple
+#
+# This product is not supported/written/published by Apple!
+
 use strict;
 use GNUpod::iTunesDB;
 use Carp;
@@ -8,20 +30,28 @@ use Data::Dumper;
 use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching ~ 256 mb
 	
 	# Artwork profiles:
-	my $profiles = { 'Nano_3G' => [ { height=>320, width=>320, dbi=>1060, bpp=>16, size=>204800 }, { height=>128, width=>128, dbi=>1055, bpp=>16, size=>32768 }, ],
-	                 'Nano'    => [ { height=>100, width=>100, dbi=>1027, bpp=>16, size=>20000 },  { height=> 42, width=> 42, dbi=>1031, bpp=>16, size=>3528  }, ],
-	                 'Video'   => [ { height=>200, width=>200, dbi=>1029, bpp=>16, size=>80000  }, { height=>100, width=>100, dbi=>1028, bpp=>16, size=>20000 }, ],
+	my $profiles = { 'Nano_3G' => [ { height=>320, width=>320, dbi=>1060, bpp=>16,  }, { height=>128, width=>128, dbi=>1055, bpp=>16,  }, ],
+	                 'Nano'    => [ { height=>100, width=>100, dbi=>1027, bpp=>16,  },  { height=> 42, width=> 42, dbi=>1031, bpp=>16, }, ],
+	                 'Video'   => [ { height=>200, width=>200, dbi=>1029, bpp=>16,  }, { height=>100, width=>100, dbi=>1028, bpp=>16,  }, ],
 	               };
 
 	####################################################################
-	# Create new object and start parsing the ArtworkDB
+	# Create new object
 	sub new {
-		my($class,$con) = @_;
+		my($class,%args) = @_;
 		
-		my $self = { a_storages => [], storages => {}, a_images => [], images => {}, artworkdb => $con->{artworkdb}, artworkdir => $con->{artworkdir},
-		             last_id_seen => 100, images_count => 0, ctx => '', _mhni_buff => {}, dirty=>1 };
+		my $self = { a_storages => [], storages => {}, a_images => [], images => {}, 
+		             artworkdb => $args{Connection}->{artworkdb}, artworkdir => $args{Connection}->{artworkdir},
+		             drop_unseen => $args{DropUnseen}, seendb => {},
+		             last_id_seen => 100, images_count => 0, ctx => undef, _mhni_buff => {}, dirty=>0 };
 		bless($self, $class);
-		
+		return $self;
+	}
+	
+	####################################################################
+	# Starts parsing the database and creates internal structure
+	sub LoadArtworkDb {
+		my($self) = @_;
 		if(!(-d $self->{artworkdir}) && !mkdir($self->{artworkdir})) {
 			warn "$0: Unable to create directory $self->{artworkdir} : $!\n";
 			return undef;
@@ -30,34 +60,50 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		open(AWDB, "<", $self->{artworkdb}) or return $self;
 		my $obj = { offset => 0, childs => 1, fd=>*AWDB, awdb => 1,
 		               callback => {
-		                              PACKAGE=>$self, mhod => { item  => '_MhodItem'    },
-		                                              mhii => { start => '_MhiiStart'  },
-		                                              mhni => { start => '_MhniStart', },
+		                              PACKAGE=>$self, mhod => { item  => '_MhodItem'  },
+		                                              mhii => { start => '_MhiiStart' },
+		                                              mhni => { start => '_MhniStart' },
 		                            }
 		          };
 		GNUpod::iTunesDB::ParseiTunesDB($obj,0);
-		$self->{dirty} = 0; # InMemory is the same as stored version
 		close(AWDB);
 		return $self;
 	}
 	
+	####################################################################
+	# Do not drop image with given id if DropUnseen is true
+	sub KeepImage {
+		my($self,$dbid) = @_;
+		my $cdbid = unpack("H16",pack("H*",$dbid));
+		$self->{seendb}->{$cdbid}++;
+	}
 	
+	####################################################################
+	# Get hash of source image
+	sub IdentifyImage {
+		my($self,$file) = @_;
+		my $r = {imgid => undef, srcsize => undef};
+		open(TOHASH, "<", $file) or return $r;
+		my $md5 = Digest::MD5->new;
+		$md5->addfile(*TOHASH);
+		$r->{imgid}   = lc(substr($md5->hexdigest,0,16));
+		$r->{srcsize} = tell(TOHASH);
+		close(TOHASH);
+		return $r;
+	}
+	
+	####################################################################
+	# Converts and injects an image using imagemagick
 	sub InjectImage {
 		my($self, $file) = @_;
 		
-		my $imgid   = '';
-		my $srcsize = 0;
-		
-		open(TOHASH, "<", $file) or return undef;
-		my $md5 = Digest::MD5->new;
-		$md5->addfile(*TOHASH);
-		$imgid   = substr($md5->hexdigest,0,16);
-		$srcsize = tell(*TOHASH);
-		close(TOHASH);
+		my $imginfo = $self->IdentifyImage($file);
 		
 		
-		if(!defined($self->GetImage($imgid))) {
-			$self->RegisterNewImage(ref => {id=>0, dbid=>$imgid, source_size=>$srcsize});
+		if(defined($imginfo->{imgid}) && !defined($self->GetImage($imginfo->{imgid}))) {
+			$self->KeepImage($imginfo->{imgid});                                                                 # Tell RegisterImage to accept this id
+			$self->RegisterNewImage(ref => {id=>0, dbid=>$imginfo->{imgid}, source_size=>$imginfo->{srcsize}});  # Register image
+			
 			my $mode = $profiles->{'Nano_3G'};
 			foreach my $mr (@$mode) {
 				my $buff = '';
@@ -71,48 +117,31 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 				
 				my $rgb565  = $conv->RGB888ToRGB565;
 				my $outlen  = length($rgb565);
-				
-				if($mr->{size} != $outlen) {
-					warn "$0: Could not inject $file to $mr->{height}x$mr->{width}: expected $mr->{size} bytes but got only $outlen bytes\n";
+				my $size    = ($mr->{height}*$mr->{width}*$mr->{bpp}/8);
+				if( $size != $outlen) {
+					warn "$0: Could not inject $file to $mr->{height}x$mr->{width}: expected $size bytes but got only $outlen bytes\n";
 					next;
 				}
+				
+				# -> Inject image into ithumb
 				my $imgs = $self->StoreImage(Data=>$rgb565, Dbid=>$mr->{dbi});
-				$self->RegisterSubImage(id=>$mr->{dbi}, imgsize=>$mr->{size}, path=>':'.$imgs->{filename}, offset=>$imgs->{start}, height=>$mr->{height}, width=>$mr->{width});
+				# -> And register child item
+				$self->RegisterSubImage(id=>$mr->{dbi}, imgsize=>$outlen, path=>':'.$imgs->{filename}, offset=>$imgs->{start}, height=>$mr->{height}, width=>$mr->{width});
+				$self->{dirty}++;
 			}
 		}
-		else {
-			print "$imgid did exist\n";
-		}
-		return $imgid;
+		return $imginfo->{imgid};
 	}
 	
 	
-	
-	####################################################################
-	# Frees unused storage space, does NOT 'defrag' data
-	sub CleanupIthumb {
-		my($self) = @_;
-		my $dir = $self->{artworkdir};
-		foreach my $id ($self->GetStorageIds) {
-		print "-> cleanup $id\n";
-			while(my($fnam,$fsiz) = each(%{$self->GetStorage($id)->{ithmb}})) {
-				my $fpath = $dir."/".substr($fnam,1); # kill's the :
-				my @stat  = stat($fpath);
-				print "Checking $fpath\n";
-				if($fsiz == 0) {
-					print "# unlink\n";
-					unlink($fpath); # Don't bark if file doesn't exist
-				}
-				elsif($fsiz < $stat[7]) {
-					print "# truncate\n";
-					truncate($fpath,$fsiz); # Errors are non-fatal here
-				}
-			}
-		}
-	}
 	
 	sub WriteArtworkDb {
 		my($self) = @_;
+		
+		return undef if $self->{dirty} == 0;
+		
+		print "=> Writing new ArtworkDB\n";
+		print Data::Dumper::Dumper($self);
 		
 		my $tmp = $self->{artworkdb}."$$";
 		my $dst = $self->{artworkdb};
@@ -173,25 +202,38 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 	}
 	
 	
+	####################################################################
+	# Injects image into ithmb file
 	sub StoreImage {
 		my($self, %args) = @_;
 		
-		my $f_prefix = "F".$args{Dbid}."_";
-		my $f_ext    = ".ithmb";
-		my $fnam     = '';
-		my $fpath    = '';
-		my $start    = 0;
-		my $end      = 0;
-		for(my $i=1; $i<=500;$i++) {
+		my $f_prefix = "F".$args{Dbid}."_"; # Database prefix
+		my $f_ext    = ".ithmb";            # Extension
+		my $fnam     = '';                  # Holds filename, such as F1006_1.ithmb
+		my $fpath    = '';                  # Full path
+		my $start    = 0;                   # Offset we are going to write
+		my $end      = 0;                   # End of write
+		my $i        = 1;                   # Image-Id index
+		my $len      = length($args{Data}) or Carp::confess("Datalen cannot be null");
+		
+		for($start = 0 ; ; $start += $len) {
 			$fnam  = $f_prefix.$i.$f_ext;
-			$fpath = $self->{artworkdir}."/$fnam";
-			last if ((stat($fpath))[7]) < MAX_ITHMB_SIZE;
+			print "Check: $start \@ $fnam ?\n";
+			if($self->{storages}->{$args{Dbid}}->{ithmb}->{":".$fnam}->{$start} == 0) {
+				print "$fnam : Writing $len bytes \@ $start\n";
+				last;
+			}
+			elsif($start >= MAX_ITHMB_SIZE) {
+				$start = -1*$len; # uargs
+				$i++;
+			}
 		}
+		$fpath = $self->{artworkdir}."/".$fnam;
 		
-		warn "# Writing to $fpath\n";
-		
-		open(ITHMB, ">>", $fpath) or die "Unable to write to $fpath : $!\n";
-		$start = tell(ITHMB);
+		if(! open(ITHMB, "+<", $fpath) ) {
+			open(ITHMB, ">", $fpath) or die "Unable to write to $fpath : $!\n";
+		}
+		seek(ITHMB,$start,0) or die "Unable to seek to $start at $fnam\n";
 		print ITHMB $args{Data};
 		$end   = tell(ITHMB);
 		close(ITHMB);
@@ -205,14 +247,20 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		my($self, %args) = @_;
 		my %h = %{$args{ref}};
 		
-		$h{id} ||= $self->{last_id_seen}+1;
-		
-		$self->{dirty}++;
-		push(@{$self->{a_images}},$h{dbid}) if !exists($self->{images}->{$h{dbid}});
-		$self->{images}->{$h{dbid}} = { dbid => $h{dbid}, source_size => $h{source_size}, id=>$h{id}, subimages => [] };
-		$self->{ctx}                = $h{dbid}; # Set context
-		$self->{images_count}++;                # Increment image count
-		$self->{last_id_seen}       = $h{id} if $self->{last_id_seen} < $h{id};
+		$self->{ctx} = undef;
+		if( !($self->{drop_unseen}) || $self->{seendb}->{$h{dbid}} ) {
+			warn "## Keeping $h{dbid}\n";
+			$h{id} ||= $self->{last_id_seen}+1;     # Create new id if none specified
+			push(@{$self->{a_images}},$h{dbid}) if !exists($self->{images}->{$h{dbid}});  # Push to images-indexing array
+			$self->{images_count}++;                # Increment image count
+			$self->{images}->{$h{dbid}} = { dbid => $h{dbid}, source_size => $h{source_size}, id=>$h{id}, subimages => [] };
+			$self->{ctx}                = $h{dbid}; # Set context
+			$self->{last_id_seen}       = $h{id} if $self->{last_id_seen} < $h{id};       # Remember latest id we saw
+		}
+		else {
+			warn "## Dropping $h{dbid}\n";
+			$self->{dirty}++;
+		}
 	}
 	
 	####################################################################
@@ -233,9 +281,10 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 	# Adds a new image version to the dbid
 	sub RegisterSubImage {
 		my($self, %args) = @_;
-		$self->{dirty}++;
-		push(@{$self->{images}->{$self->{ctx}}->{subimages}}, \%args);
-		$self->RegisterStorage(id=>$args{id}, imgsize=>$args{imgsize}, path=>$args{path}, used=>$args{offset}+$args{imgsize});
+		if(defined($self->{ctx})) {
+			push(@{$self->{images}->{$self->{ctx}}->{subimages}}, \%args);
+			$self->RegisterStorage(id=>$args{id}, imgsize=>$args{imgsize}, path=>$args{path}, used=>$args{offset});
+		}
 	}
 	
 	####################################################################
@@ -244,7 +293,7 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		my($self,$obj) = @_;
 		return $obj->{subimages};
 	}
-
+	
 	####################################################################
 	# 'Registers' a new storage chunk
 	sub RegisterStorage {
@@ -255,10 +304,10 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		}
 		
 		my $itr = $self->{storages}->{$args{id}}->{ithmb};
-		$itr->{$args{path}} = $args{used} if $args{used} >= $itr->{$args{path}};
+		$itr->{$args{path}}->{$args{used}} = 1;            # Mark this beginning block as used
 		
 	}
-
+	
 	####################################################################
 	# Returns given storage object
 	sub GetStorage {
@@ -272,8 +321,6 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		my($self) = @_;
 		return @{$self->{a_storages}};
 	}
-	
-	
 	
 	####################################################################
 	# Handler for MHNIs
@@ -301,18 +348,15 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		}
 	}
 
-
-
-
-
-
-sub _Fixup {
-	my($fd,$at,$string) = @_;
-	my $now = tell($fd);
-	seek($fd,$at,0) or die "Unable to seek to $at in $fd : $!\n";
-	print $fd $string;
-	seek($fd,$now,0) or die "Unable to seek to $now in $fd : $!\n";
-}
+	####################################################################
+	# Seek and destroy ;-)
+	sub _Fixup {
+		my($fd,$at,$string) = @_;
+		my $now = tell($fd);
+		seek($fd,$at,0) or die "Unable to seek to $at in $fd : $!\n";
+		print $fd $string;
+		seek($fd,$now,0) or die "Unable to seek to $now in $fd : $!\n";
+	}
 
 1;
 

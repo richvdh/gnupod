@@ -56,13 +56,12 @@ GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b',
 
 
 usage("\n--decode needs 'pcm' 'mp3' 'aac' 'video' or 'aacbm' -> '--decode=mp3'\n") if $opts{decode} && $opts{decode} !~ /^(mp3|video|aac|aacbm|pcm|crashme)$/;
-usage() if $opts{help};
+usage()   if $opts{help};
 version() if $opts{version};
 
 $SIG{'INT'} = \&handle_int;
+my @XFILES  = ();
 
-
-my @XFILES = ();
 if($opts{restore}) {
 	print "If you use --restore, you'll *lose* your playlists\n";
 	print " Hit ENTER to continue or CTRL+C to abort\n\n";
@@ -84,7 +83,14 @@ else {
 }
 
 
-my $exit_code = startup(@XFILES);
+my $connection = GNUpod::FooBar::connect(\%opts);
+usage($connection->{status}."\n") if $connection->{status} || !@XFILES;
+
+my $AWDB  = GNUpod::ArtworkDB->new(Connection=>$connection, DropUnseen=>1);
+my $IMGID = undef;
+
+
+my $exit_code = startup($connection,@XFILES);
 exit($exit_code);
 
 
@@ -94,20 +100,20 @@ exit($exit_code);
 ####################################################
 # Worker
 sub startup {
-	my(@argv_files) = @_;
+	my($con,@argv_files) = @_;
 	
 	#Don't sync if restore is true
 	$opts{_no_sync} = $opts{restore};
-	
 	my $fatal_error = 0;
-	my $dbid        = undef;
-	my $con         = GNUpod::FooBar::connect(\%opts);
-	usage($con->{status}."\n") if $con->{status} || !@argv_files;
-
+	
 	unless($opts{restore}) { #We parse the old file, if we are NOT restoring the iPod
 		GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
+		$IMGID = $AWDB->IdentifyImage($opts{artwork})->{imgid} if $opts{artwork};
+		$AWDB->LoadArtworkDb;
+		$AWDB->InjectImage($opts{artwork}) if defined $IMGID;
+		$AWDB->WriteArtworkDb;
 	}
-
+	
 	if($opts{playlist}) { #Create this playlist
 		foreach my $xcpl (@{$opts{playlist}}) {
 			print "> Adding songs to Playlist '$xcpl'\n";
@@ -115,12 +121,6 @@ sub startup {
 		}
 	}
 	
-	if($opts{artwork} && (my $awdb = GNUpod::ArtworkDB->new($con))) {
-		$dbid    = $awdb->InjectImage($opts{artwork});
-		print "> Using '$opts{artwork}' as cover (internal id: $dbid)\n";
-		$awdb->WriteArtworkDb;
-		$awdb->CleanupIthumb;
-	}
 	
 	# Check volume adjustment options for sanity
 	my $min_vol_adj = int($opts{'min-vol-adj'});
@@ -133,10 +133,7 @@ sub startup {
 	
 	#We parsed the XML-Document
 	#resolve_podcasts fetches new podcasts from http:// stuff and adds them to real_files
-#	warn "DEBUG: START RESOLVE\n";
 	my @real_files = resolve_podcasts(@argv_files);
-#	warn "DEBUG: END RESOLVE\n";
-	
 	my $addcount = 0;
 	#We are ready to copy each file..
 	foreach my $file (@real_files) {
@@ -180,6 +177,11 @@ sub startup {
 		$fh->{playcount}    = $opts{'set-playcount'}   if $opts{'set-playcount'};
 		$fh->{title}        = $opts{'set-title'}       if $opts{'set-title'};
 		$fh->{songnum}      = 1+$addcount              if $opts{'set-songnum'};
+		if(defined($IMGID)) {
+			$fh->{has_artwork} = 1;
+			$fh->{artworkcnt}  = 1;
+			$fh->{dbid_1}      = $IMGID;
+		}
 		
 		#Set the addtime to unixtime(now)+MACTIME (the iPod uses mactime)
 		#This breaks perl < 5.8 if we don't use int(time()) !
@@ -295,12 +297,6 @@ sub startup {
 			Unicode::String::utf8($fh->{album})->utf8,
 			Unicode::String::utf8($fh->{artist})->utf8);
 			
-			if(defined($dbid)) {
-				$fh->{dbid_1}      = $dbid;
-				$fh->{has_artwork} = 1;
-				$fh->{artworkcnt}  = 1;
-			}
-			
 			my $id = GNUpod::XMLhelper::mkfile({file=>$fh},{addid=>1}); #Try to add an id
 			create_playlist_now($opts{playlist}, $id);
 			$addcount++; #Inc. addcount
@@ -362,12 +358,12 @@ sub newfile {
 	if($_[0]->{file}->{podcastguid}) {
 		$dupdb_podcast{$_[0]->{file}->{podcastguid}."\0".$_[0]->{file}->{podcastrss}}++;
 	}
-	
+	$AWDB->KeepImage($_[0]->{file}->{dbid_1});
 	GNUpod::XMLhelper::mkfile($_[0],{addid=>1});
 }
 
 sub newpl {
- GNUpod::XMLhelper::mkfile($_[0],{$_[2]."name"=>$_[1]});
+	GNUpod::XMLhelper::mkfile($_[0],{$_[2]."name"=>$_[1]});
 }
 ##################
 
