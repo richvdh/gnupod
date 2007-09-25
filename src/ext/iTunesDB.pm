@@ -835,7 +835,7 @@ sub mk_mhni {
 	   $ret .= pack("V", _icl($size_header));
 	   $ret .= pack("V", _icl($size_mhni));
 	   $ret .= pack("V", _icl($hr->{childs}));    # childs of mhni
-	   $ret .= pack("V", _icl($hr->{id}));        # mhni id
+	   $ret .= pack("V", _icl($hr->{storage_id}));# mhni id
 	   $ret .= pack("V", _icl($hr->{offset}));    # Offset in ithmb
 	   $ret .= pack("V", _icl($hr->{imgsize}));   # Image size
 	   $ret .= pack("v", _icl($hr->{vpadding}));  # Vertical Padding
@@ -1362,7 +1362,7 @@ sub get_mhni {
 	$r{header_size} = get_int($offset+4,4,$fd);
 	$r{total_size}  = get_int($offset+8,4,$fd);
 	$r{childs}      = get_int($offset+12,4,$fd);
-	$r{id}          = get_int($offset+16,4,$fd);
+	$r{storage_id}  = get_int($offset+16,4,$fd);
 	$r{offset}      = get_int($offset+20,4,$fd);
 	$r{imgsize}     = get_int($offset+24,4,$fd);
 	$r{vpadding}    = get_int($offset+28,2,$fd);

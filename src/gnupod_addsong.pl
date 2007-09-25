@@ -87,7 +87,6 @@ my $connection = GNUpod::FooBar::connect(\%opts);
 usage($connection->{status}."\n") if $connection->{status} || !@XFILES;
 
 my $AWDB  = GNUpod::ArtworkDB->new(Connection=>$connection, DropUnseen=>1);
-my $IMGID = undef;
 
 
 my $exit_code = startup($connection,@XFILES);
@@ -107,11 +106,18 @@ sub startup {
 	my $fatal_error = 0;
 	
 	unless($opts{restore}) { #We parse the old file, if we are NOT restoring the iPod
+		
+		if($opts{artwork}) {
+			if( $AWDB->PrepareImage($opts{artwork}) ) {
+				$AWDB->LoadArtworkDb;
+			}
+			else {
+				warn "$0: Could not load $opts{artwork}, skipping artwork\n";
+				delete($opts{artwork});
+			}
+		}
+		
 		GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
-		$IMGID = $AWDB->IdentifyImage($opts{artwork})->{imgid} if $opts{artwork};
-		$AWDB->LoadArtworkDb;
-		$AWDB->InjectImage($opts{artwork}) if defined $IMGID;
-		$AWDB->WriteArtworkDb;
 	}
 	
 	if($opts{playlist}) { #Create this playlist
@@ -177,10 +183,10 @@ sub startup {
 		$fh->{playcount}    = $opts{'set-playcount'}   if $opts{'set-playcount'};
 		$fh->{title}        = $opts{'set-title'}       if $opts{'set-title'};
 		$fh->{songnum}      = 1+$addcount              if $opts{'set-songnum'};
-		if(defined($IMGID)) {
+		if(defined($opts{artwork})) {
 			$fh->{has_artwork} = 1;
 			$fh->{artworkcnt}  = 1;
-			$fh->{dbid_1}      = $IMGID;
+			$fh->{dbid_1}      = $AWDB->InjectImage;
 		}
 		
 		#Set the addtime to unixtime(now)+MACTIME (the iPod uses mactime)
@@ -317,6 +323,7 @@ sub startup {
 		print "> Writing new XML File, added $addcount file(s)\n";
 		GNUpod::XMLhelper::writexml($con, {automktunes=>$opts{automktunes}});
 	}
+	$AWDB->WriteArtworkDb;
 	print "\n Done\n";
 	return $fatal_error;
 }

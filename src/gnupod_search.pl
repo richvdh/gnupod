@@ -60,7 +60,6 @@ my $connection = GNUpod::FooBar::connect(\%opts);
 usage($connection->{status}."\n") if $connection->{status};
 
 my $AWDB  = GNUpod::ArtworkDB->new(Connection=>$connection, DropUnseen=>1);
-my $IMGID = undef;
 
 main($connection);
 
@@ -79,7 +78,13 @@ sub main {
 	}
 	
 	if($opts{artwork}) {
-		$IMGID = $AWDB->IdentifyImage($opts{artwork})->{imgid};
+		if( $AWDB->PrepareImage($opts{artwork}) ) {
+			$AWDB->LoadArtworkDb;
+		}
+		else {
+			warn "$0: Could not load $opts{artwork}, skipping artwork\n";
+			delete($opts{artwork});
+		}
 	}
 	
 	pview(undef,1);
@@ -89,8 +94,6 @@ sub main {
 		GNUpod::XMLhelper::writexml($con,{automktunes=>$opts{automktunes}});
 	}
 	
-	$AWDB->LoadArtworkDb;
-	$AWDB->InjectImage($opts{artwork}) if defined $IMGID;
 	$AWDB->WriteArtworkDb;
 }
 
@@ -137,11 +140,11 @@ foreach my $opx (keys(%opts)) {
 		if($opts{delete}) {
 			$dounlink = 1; # Request deletion
 		}
-		elsif(defined($IMGID)) {
+		elsif($opts{artwork}) {
 			# -> Add/Set artwork
 			$el->{file}->{has_artwork} = 1;
 			$el->{file}->{artworkcnt}  = 1;
-			$el->{file}->{dbid_1}      = $IMGID;
+			$el->{file}->{dbid_1}      = $AWDB->InjectImage;
 			$dirty++;
 		}
 	}
@@ -154,7 +157,9 @@ foreach my $opx (keys(%opts)) {
 	else {
 		# -> Keep file: add it to XML
 		GNUpod::XMLhelper::mkfile($el);
+		# -> and keep artwork
 		$AWDB->KeepImage($el->{file}->{dbid_1});
+		# -> and playlists
 		$keeplist[$el->{file}->{id}] = 1;
 	}
 }
