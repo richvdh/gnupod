@@ -109,7 +109,7 @@ sub startup {
 		
 		if($opts{artwork}) {
 			if( $AWDB->PrepareImage($opts{artwork}) ) {
-				$AWDB->LoadArtworkDb;
+				$AWDB->LoadArtworkDb or die "Failed to load artwork database\n";
 			}
 			else {
 				warn "$0: Could not load $opts{artwork}, skipping artwork\n";

@@ -30,8 +30,9 @@ use Data::Dumper;
 use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching ~ 256 mb
 	
 	# Artwork profiles:
-	my $profiles = { 'Nano_3G' => [ { height=>320, width=>320, storage_id=>1060, bpp=>16,  },  { height=>128, width=>128, storage_id=>1055, bpp=>16,  }, ],
-	                 'Nano'    => [ { height=>100, width=>100, storage_id=>1027, bpp=>16,  },  { height=> 42, width=> 42, storage_id=>1031, bpp=>16, }, ],
+	my $profiles = { 'Nano_3G' => [ { height=>320, width=>320, storage_id=>1060, bpp=>16,  },  { height=>128, width=>128, storage_id=>1055, bpp=>16, },
+	                                { height=>56,  width=>56,  storage_id=>1061, bpp=>16, drop=>112}                                                     ],
+	                 'Nano'    => [ { height=>100, width=>100, storage_id=>1027, bpp=>16,  },  { height=> 42, width=> 42, storage_id=>1031, bpp=>16, },  ],
 	                 'Video'   => [ { height=>200, width=>200, storage_id=>1029, bpp=>16,  },  { height=>100, width=>100, storage_id=>1028, bpp=>16,  }, ],
 	               };
 
@@ -40,8 +41,8 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 	sub new {
 		my($class,%args) = @_;
 		
-		my $self = { storages     => {},  images => {},      dirty => 0, drop_unseen => $args{DropUnseen},
-		             last_id_seen => 100, ctx => undef, _mhni_buff => {},
+		my $self = { storages => {},  images => {},        fbimg => {},         _mhni_buff => {}, drop_unseen => $args{DropUnseen},
+		             db_dirty => 0,   last_id_seen => 100, last_dbid_seen => 0, ctx => undef, 
 		             artworkdb => $args{Connection}->{artworkdb}, artworkdir => $args{Connection}->{artworkdir},
 		           };
 		bless($self, $class);
@@ -76,12 +77,10 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 	
 	sub KeepImage {
 		my($self,$id) = @_;
-		my $clean_id = unpack("H16",pack("H16",$id)); # Clean up the id to get 16-chars-hex
+		my $u64 = GNUpod::Ugly64->new($id);
+		my $clean_id = $u64->GetHex;
 		if(exists($self->{images}->{$clean_id})) {
 			$self->{images}->{$clean_id}->{seen}++;
-		}
-		else {
-			warn "$0 Image '$clean_id' not in ArtworkDB, can't keep it\n";
 		}
 	}
 	
@@ -93,7 +92,8 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 			foreach my $id ($self->_GetImageIds) {
 				if($self->_GetImage($id)->{seen} == 0) {
 					$self->_DeleteImage($id) or die "Failed to delete image # $id : Did not exist in db?!\n";
-					$self->{dirty}++;
+					$self->{db_dirty}++;
+					warn "Wiped $id\n";
 				}
 			}
 		}
@@ -104,16 +104,16 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 	# Really write an image into the storage and register it
 	sub InjectImage {
 		my($self) = @_;
-		my $imgid = $self->_GenerateImageId;
-		$self->_RegisterNewImage(ref => { id=> 0, dbid=>$imgid, source_size=>12345 });
+		my $imgid = GNUpod::Ugly64->new($self->{last_dbid_seen})->Increment->GetHex;  # Get next, free id
+		$self->_RegisterNewImage(ref => { id=> 0, dbid=>$imgid, source_size=>$self->{fbimg}->{source_size} });
 		$self->KeepImage($imgid);
-		foreach my $fbimg (@{$self->{fbimgs}}) {
+		foreach my $fbimg (@{$self->{fbimg}->{cache}}) {
 			print "+ $imgid $fbimg\n";
 			$self->_StoreImage;
 			$self->_RegisterSubImage(storage_id=>$fbimg->{storage_id}, imgsize=>$fbimg->{imgsize}, path=>':'.$fbimg->{store}->{filename}, offset=>$fbimg->{store}->{start},
 			                         height=>$fbimg->{height}, width=>$fbimg->{width});
 		}
-		$self->{dirty}++;
+		$self->{db_dirty}++;
 		return $imgid;
 	}
 	
@@ -122,27 +122,27 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 	# Converts given image and caches the result
 	sub PrepareImage {
 		my($self,$file) = @_;
-		my $mode  = $profiles->{'Nano_3G'};
-		my $count = 0;
+		my $mode   = $profiles->{'Nano_3G'};
+		my $count  = 0;
+		$self->{fbimg}->{source_size} = (-s $file);
 		foreach my $mr (@$mode) {
 			my $buff = '';
 			open(IM, "-|") || exec("convert", "-resize", "$mr->{height}x$mr->{width}!",
-			                         "-filter", "sinc", "-depth", 8, "--", $file, "RGB:-");
+			                         "-filter", "sinc", "-depth", 8, $file, "RGB:-");
 			while(<IM>) { $buff .= $_  }
 			close(IM);
 			
 			my $conv = GNUpod::ArtworkDB::RGB->new;
 			   $conv->SetData(Data=>$buff, Width=>$mr->{width}, Height=>$mr->{height});
-			
-			my $rgb565  = $conv->RGB888ToRGB565;
+			my $size    = ($mr->{height}*$mr->{width}*$mr->{bpp}/8)-$mr->{drop};
+			my $rgb565  = substr($conv->RGB888ToRGB565,0,$size);
 			my $outlen  = length($rgb565);
-			my $size    = ($mr->{height}*$mr->{width}*$mr->{bpp}/8);
 			if( $size != $outlen) {
-				warn "$0: Could not convert $file to $mr->{height}x$mr->{width}: expected $size bytes but got only $outlen bytes\n";
+				warn "$0: Could not convert $file to $mr->{height}x$mr->{width}: image should be $size bytes but imagemagick provided $outlen bytes.\n";
 				next;
 			}
 			print "Cached $mr->{height} x $mr->{width} version\n";
-			push(@{$self->{fbimgs}}, { data => $rgb565, storage_id=>$mr->{storage_id}, imgsize=>$size, height=>$mr->{height}, width=>$mr->{width}, store=>undef} );
+			push(@{$self->{fbimg}->{cache}}, { data => $rgb565, storage_id=>$mr->{storage_id}, imgsize=>$size, height=>$mr->{height}, width=>$mr->{width}, store=>undef} );
 			$count++;
 		}
 		return $count;
@@ -150,17 +150,12 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 	
 	sub _StoreImage {
 		my($self) = @_;
-		foreach my $fb (@{$self->{fbimgs}}) {
+		foreach my $fb (@{$self->{fbimg}->{cache}}) {
 			my $imgstore = $self->_WriteImageToDatabase(Data=>$fb->{data}, StorageId=>$fb->{storage_id});
 			$fb->{store} = $imgstore;
 		}
 	}
 	
-	
-	sub _GenerateImageId {
-		my($self) = @_;
-		return "".unpack("H16", pack("H8",int(rand(0xFFFFFFF))).pack("H8",int(rand(0xFFFFFFF))));
-	}
 	
 	####################################################################
 	# Injects image into ithmb file
@@ -207,7 +202,7 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		
 		print "=> Writing new ArtworkDB\n";
 		$self->_WipeLostImages;
-		return undef if $self->{dirty} == 0;
+		return undef if $self->{db_dirty} == 0;
 		
 		print "About to write new database\n";
 		
@@ -278,12 +273,18 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		my %h = %{$args{ref}};
 		
 		$self->{ctx} = undef;
-		die "Duplicate registration\n" if $self->{images}->{$h{dbid}};
-		## FIXME die dbid sollten wir checkenund last_dbid_seen setzen
-		$h{id} ||= $self->{last_id_seen}+1;     # Create new id if none specified
-		$self->{images}->{$h{dbid}} = { dbid => $h{dbid}, source_size => $h{source_size}, id=>$h{id}, subimages => [], seen=>0 };
-		$self->{ctx}                = $h{dbid}; # Set context
-		$self->{last_id_seen}       = $h{id} if $self->{last_id_seen} < $h{id};       # Remember latest id we saw
+		
+		if($self->{images}->{$h{dbid}}) {
+			warn "$0: $h{dbid} is registered, looks like your ArtworkDB is corrupted?!\n";
+		}
+		else {
+			$h{id} ||= $self->{last_id_seen}+1;     # Create new id if none specified
+			$self->{images}->{$h{dbid}} = { dbid => $h{dbid}, source_size => $h{source_size}, id=>$h{id}, subimages => [], seen=>0 };
+			$self->{ctx}                = $h{dbid}; # Set context
+			$self->{last_id_seen}       = $h{id}       if     $self->{last_id_seen} < $h{id};                                       # Remember latest id we saw
+			$self->{last_dbid_seen}     = $self->{ctx} unless GNUpod::Ugly64->new($h{dbid})->ThisIsBigger($self->{last_dbid_seen}); # Remember last 64bit dbid
+		}
+		print "LAST ID SEEN: $self->{last_dbid_seen}\n";
 	}
 	
 	####################################################################
@@ -386,6 +387,66 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 	}
 
 1;
+
+####################################################################
+# Ugly pseudo-64bit hack
+package GNUpod::Ugly64;
+	use constant U64_OVERFLOW => 0xFFFFFFFF;
+	
+	sub new {
+		my($class, $num) = @_;
+		my $self = { };
+		bless($self,$class);
+		$self->{num} = $self->_voodoo($num);
+		return $self;
+	}
+	
+	sub _voodoo {
+		my($self,$hex) = @_;
+		my $hex = (pack("H16",$hex));
+		my $a = unpack("V",substr($hex,0,4));
+		my $b = unpack("V",substr($hex,4,4));
+		return([$a,$b]);
+	}
+	
+	sub GetHex {
+		my($self) = @_;
+		return unpack("H8",pack("V",$self->{num}->[0])).unpack("H8",pack("V",$self->{num}->[1]));
+	}
+	
+	sub ThisIsBigger {
+		my($self,$this) = @_;
+		my $a_this = $self->_voodoo($this);
+		for(my $i = 1; $i >= 0; $i--) {
+			return 1 if $a_this->[$i] > $self->{num}->[$i];
+			return 0 if $a_this->[$i] < $self->{num}->[$i];
+		}
+		return 0; # ==
+	}
+	
+	sub Increment {
+		my($self) = @_;
+		my $roll = 0;
+		if($self->{num}->[0] == U64_OVERFLOW) {
+			$self->{num}->[0] = 0;
+			$roll             = 1;
+		}
+		else {
+			$self->{num}->[0]++;
+		}
+		
+		if($roll && $self->{num}->[1] == U64_OVERFLOW) {
+			warn "$0: You need to buy more numbers.\n";
+			$self->{num} = [U64_OVERFLOW, U64_OVERFLOW];
+		}
+		elsif($roll) {
+			$self->{num}->[1]++;
+		}
+		return $self;
+	}
+
+1;
+
 
 package GNUpod::ArtworkDB::RGB;
 	use strict;
