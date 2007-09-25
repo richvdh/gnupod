@@ -187,10 +187,10 @@ package GNUpod::Mktunes;
 		my $seperate_hdr  = $args{SeperateHeader}; # Do not include the header in our payload but drop it into the 'header' field
 		my $buff_playlist = '';                    # Payload buffer
 		my $mhod_count    = 0;                     # Mhods we created
+		my $spl_mhod_count= 0;                     # SmartPlaylist mhods
 		my $child_count   = 0;                     # Childs we created (may be == mhod_count if no spl is there)
 		my $songs_count   = 0;                     # Number of songs
 		my $podcast_list  = 0;
-		my $spl_list      = 0;
 		
 		if($pcid) {
 			$self->SortPlaylist(Sortby=>$sort, Playlist=>$pcont) if $sort;
@@ -219,7 +219,7 @@ package GNUpod::Mktunes;
 				
 				$buff_playlist .= GNUpod::iTunesDB::mk_spldatamhod({anymatch=>$cspl->{matchany} ,data=>$self->GetSmartPlaylist($name)}) || die "Failed to create spldatamhod\n";
 				$mhod_count += 2;
-				$spl_list = 1;
+				$spl_mhod_count++;
 			}
 			
 			
@@ -234,7 +234,8 @@ package GNUpod::Mktunes;
 			}
 		}
 		
-		my $mhyp = GNUpod::iTunesDB::mk_mhyp({size=>length($buff_playlist), name=>$name, type=>$type, files=>$child_count, mhods=>$mhod_count, plid=>$plid, podcast=>$pcast});
+		my $mhyp = GNUpod::iTunesDB::mk_mhyp({size=>length($buff_playlist), name=>$name, type=>$type, files=>$child_count,
+		                                     stringmhods=>$spl_mhod_count, mhods=>$mhod_count, plid=>$plid, podcast=>$pcast});
 		if(!$seperate_hdr) {
 			# -> Merge the header into the payload
 			$buff_playlist = $mhyp.$buff_playlist;
@@ -242,7 +243,7 @@ package GNUpod::Mktunes;
 		}
 		
 		return({header=>$mhyp, payload=>$buff_playlist, childs=>$child_count, mhods=>$mhod_count, songs=>$songs_count,
-		        smartplaylist=>$spl_list, podcastplaylist=>$podcast_list});
+		        smartplaylist=>int($spl_mhod_count != 0), podcastplaylist=>$podcast_list});
 		
 	}
 	
