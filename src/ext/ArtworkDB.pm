@@ -70,11 +70,6 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		          };
 		print "-> Loading Artwork DB\n";
 		GNUpod::iTunesDB::ParseiTunesDB($obj,0);
-		
-		my $foo = delete($self->{fbimg});
-		print Data::Dumper::Dumper($self);
-		$self->{fbimg} = $foo;
-		
 		print "-> Done..\n";
 		close(AWDB);
 		return $self;
@@ -113,9 +108,8 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		$self->_RegisterNewImage(ref => { id=> 0, dbid=>$imgid, source_size=>$self->{fbimg}->{source_size} });
 		$self->KeepImage($imgid);
 		foreach my $fbimg (@{$self->{fbimg}->{cache}}) {
-			print "+ $imgid $fbimg\n";
-			$self->_StoreImage;
-			$self->_RegisterSubImage(storage_id=>$fbimg->{storage_id}, imgsize=>$fbimg->{imgsize}, path=>':'.$fbimg->{store}->{filename}, offset=>$fbimg->{store}->{start},
+			my $dbinfo = $self->_WriteImageToDatabase(Data=>$fbimg->{data}, StorageId=>$fbimg->{storage_id});
+			$self->_RegisterSubImage(storage_id=>$fbimg->{storage_id}, imgsize=>$fbimg->{imgsize}, path=>':'.$dbinfo->{filename}, offset=>$dbinfo->{start},
 			                         height=>$fbimg->{height}, width=>$fbimg->{width});
 		}
 		$self->{db_dirty}++;
@@ -153,14 +147,6 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		return $count;
 	}
 	
-	sub _StoreImage {
-		my($self) = @_;
-		foreach my $fb (@{$self->{fbimg}->{cache}}) {
-			my $imgstore = $self->_WriteImageToDatabase(Data=>$fb->{data}, StorageId=>$fb->{storage_id});
-			$fb->{store} = $imgstore;
-		}
-	}
-	
 	
 	####################################################################
 	# Injects image into ithmb file
@@ -171,15 +157,16 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		my $f_ext    = ".ithmb";            # Extension
 		my $fnam     = '';                  # Holds filename, such as F1006_1.ithmb
 		my $fpath    = '';                  # Full path
-		my $start    = 0;                   # Offset we are going to write
 		my $end      = 0;                   # End of write
-		my $i        = 1;                   # Image-Id index
+		my $start    = ($self->{storages}->{$args{StorageId}}->{last_offset_used} || 0); # Offset we are going to write
+		my $i        = ($self->{storages}->{$args{StorageId}}->{last_index_used}  || 1); # Image-Id index (F????_X.ithmb)
 		my $len      = length($args{Data}) or Carp::confess("Datalen cannot be null");
 		
-		for($start = 0 ; ; $start += $len) {
+#		print "-> $args{StorageId} ; starting at $start \@ $i\n";
+		for( ; ; $start += $len) {
 			$fnam  = $f_prefix.$i.$f_ext;
 			if($self->{storages}->{$args{StorageId}}->{ithmb}->{":".$fnam}->{$start} == 0) {
-				print "$fnam : Writing $len bytes \@ $start\n";
+#				print "$fnam : Writing $len bytes \@ $start\n";
 				last;
 			}
 			elsif($start >= MAX_ITHMB_SIZE) {
@@ -187,6 +174,10 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 				$i++;
 			}
 		}
+		
+		$self->{storages}->{$args{StorageId}}->{last_index_used}  = $i;
+		$self->{storages}->{$args{StorageId}}->{last_offset_used} = $start;
+		
 		$fpath = $self->{artworkdir}."/".$fnam;
 		
 		if(! open(ITHMB, "+<", $fpath) ) {
@@ -289,7 +280,6 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 			$self->{last_id_seen}       = $h{id}       if     $self->{last_id_seen} < $h{id};                                       # Remember latest id we saw
 			$self->{last_dbid_seen}     = $self->{ctx} unless GNUpod::Ugly64->new($h{dbid})->ThisIsBigger($self->{last_dbid_seen}); # Remember last 64bit dbid
 		}
-		print "LAST ID SEEN: $self->{last_dbid_seen}\n";
 	}
 	
 	####################################################################
