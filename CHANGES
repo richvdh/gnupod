@@ -9,6 +9,7 @@ Summary
 - Fixed iPod GUID autodetection on linux. GNUpod 0.99.4 failed if the iPod
   was the last entry of /proc/bus/usb/devices
 - The iTunesDB parsing code is now much more flexible and uses callbacks.
+- Remove UTF8-BOM (Fixes garbage if source was UTF16 encoded)
 
 
 
@@ -30,7 +31,9 @@ Summary
   
   Feel free to express your feelings about this
   issue at http://www.apple.com/feedback/ipod.html
- 
+
+
+
 GNUpod 0.99.3
 
 Summary

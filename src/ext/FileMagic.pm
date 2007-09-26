@@ -339,50 +339,51 @@ sub pss {
 #########
 # Try to 'auto-guess' charset and return utf8
 sub getutf8 {
- my($in) = @_;
-
- return undef unless $in; #Do not fsckup empty input
-
- #Get the ENCODING
- $in =~ s/^(.)//;
- my $encoding = $1;
-
- # -> UTF16 with or without BOM
- if(ord($encoding) == 1 || ord($encoding) == 2) {
-  my $bfx = Unicode::String::utf16($in); #Object is utf16
-  $bfx->byteswap if $bfx->ord == 0xFFFE;
-  $in = $bfx->utf8; #Return utf8 version
- }
- # -> UTF8
- elsif(ord($encoding) == 3) {
-  my $bfx = Unicode::String::utf8($in)->utf8; #Paranoia
-  $in = $bfx;
- }
- # -> INVALID
- elsif(ord($encoding) > 0 && ord($encoding) < 32) {
-   warn "FileMagic.pm: warning: unsupportet ID3 Encoding found: ".ord($encoding)."\n";
-   warn "                       send a bugreport to pab\@blinkenlights.ch\n";
-   return undef;
- }
- # -> 0 or nothing
- else {
-  $in = $encoding.$in;
-  #Remove all 00's
-  $in =~ tr/\0//d;
-  my $oldstderr = *STDERR; #Kill all utf8 warnings.. this is uuugly
-  *STDERR = "NULLFH";
-  my $bfx = Unicode::String::utf8($in)->utf8;
-  *STDERR = $oldstderr;    #Restore old filehandle
-   if($bfx ne $in) {
-    #Input was no valid utf8, assume latin1 input
-    $in =~  s/[\000-\037]//gm; #Kill stupid chars..
-    $in = Unicode::String::latin1($in)->utf8
-   }
-   else { #Return the unicoded input
-    $in = $bfx;
-   }
- }
- return $in;
+	my($in) = @_;
+	return undef unless $in; #Do not fsckup empty input
+	
+	#Get the ENCODING
+	$in =~ s/^(.)//;
+	my $encoding = $1;
+	
+	# -> UTF16 with or without BOM
+	if(ord($encoding) == 1 || ord($encoding) == 2) {
+		# -> UTF16 with or without BOM
+		my $bfx = Unicode::String::utf16($in); #Object is utf16
+		$bfx->byteswap if $bfx->ord == 0xFFFE;
+		$in = $bfx->utf8; #Return utf8 version
+		if(unpack("H*",substr($in,0,3)) eq 'efbbbf') {
+			# -> Remove faulty utf16-to-utf8 BOM
+			$in = substr($in,3);
+		}
+	}
+	elsif(ord($encoding) == 3) {
+		# -> UTF8
+		$in = Unicode::String::utf8($in)->utf8; #Paranoia
+	}
+	elsif(ord($encoding) > 0 && ord($encoding) < 32) {
+		warn "FileMagic.pm: warning: unsupportet ID3 Encoding found: ".ord($encoding)."\n";
+		warn "                       send a bugreport to adrian\@blinkenlights.ch\n";
+		return undef;
+	}
+	else {
+		$in = $encoding.$in;     # Restores input
+		$in =~ tr/\0//d;         # Removes evil 0's
+		my $oldstderr = *STDERR; #Kill all utf8 warnings.. this is uuugly
+		*STDERR = "NULLFH";
+		my $bfx = Unicode::String::utf8($in)->utf8;
+		*STDERR = $oldstderr;    #Restore old filehandle
+		if($bfx ne $in) {
+			#Input was no valid utf8, assume latin1 input
+			$in =~  s/[\000-\037]//gm; #Kill stupid chars..
+			$in = Unicode::String::latin1($in)->utf8
+		}
+		else { #Return the unicoded input
+			$in = $bfx;
+		}
+	}
+	
+	return $in;
 }
 
 ##############################

@@ -122,6 +122,16 @@ ffmpeg -formats 2>&1|egrep " aac" > /dev/null
  fi
 
 
+echo $ECHO_N "checking for ImageMagick..."
+convert --version > /dev/null 2>&1
+ if test $? = 0; then
+  echo "found!"
+  IMAGIC="Yes"
+ else
+  echo "not found, --artwork won't work"
+  IMAGIC="No  (ImageMagick is not installed)"
+ fi
+
 
 
 ## Whoops: We dont check for 'mac' because solaris has an /usr/bin/mac .. and that's not what we are searching
@@ -135,25 +145,25 @@ echo
 echo "Settings:"
 echo "---------"
 echo
-echo $ECHO_N "Release:        "
+echo $ECHO_N "Release         : "
  cat .gnupod_version
 echo
 
-echo $ECHO_N "Perl Version:   "
+echo $ECHO_N "Perl Version    : "
  $PERL tools/getVERSION.pl
 echo
 
 
-echo    "Prefix:         $prefix";
+echo    "Prefix          : $prefix";
 
-echo $ECHO_N "Perl INC:       "
+echo $ECHO_N "Perl INC        : "
  $PERL tools/getINC.pl
  XPINC=`$PERL tools/getINC.pl`;
 echo
 
-echo "Encoders:       $ENCS"
-echo "Decoders:       $DECS"
-
+echo "Encoders        : $ENCS"
+echo "Decoders        : $DECS"
+echo "Artwork Support : $IMAGIC";
 
 
 echo
