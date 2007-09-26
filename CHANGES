@@ -3,6 +3,8 @@ GNUpod 0.99.5
 Summary
 -------
 - Added Artwork-Support for Video, Nano and 2007-Nano iPods
+  You'll need to set the value 'model' in your configuration file.
+    See doc/gnupodrc.example for more details.
 - Fixed Video-Podcast support for late 2007 iPods
 - Fixed iPod GUID autodetection on linux. GNUpod 0.99.4 failed if the iPod
   was the last entry of /proc/bus/usb/devices

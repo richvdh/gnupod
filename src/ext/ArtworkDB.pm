@@ -30,10 +30,10 @@ use Data::Dumper;
 use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching ~ 256 mb
 	
 	# Artwork profiles:
-	my $profiles = { 'Nano_3G' => [ { height=>320, width=>320, storage_id=>1060, bpp=>16,  },  { height=>128, width=>128, storage_id=>1055, bpp=>16, },
+	my $profiles = { 'nano_3g' => [ { height=>320, width=>320, storage_id=>1060, bpp=>16,  },  { height=>128, width=>128, storage_id=>1055, bpp=>16, },
 	                                { height=>56,  width=>56,  storage_id=>1061, bpp=>16, drop=>112}                                                     ],
-	                 'Nano'    => [ { height=>100, width=>100, storage_id=>1027, bpp=>16,  },  { height=> 42, width=> 42, storage_id=>1031, bpp=>16, },  ],
-	                 'Video'   => [ { height=>200, width=>200, storage_id=>1029, bpp=>16,  },  { height=>100, width=>100, storage_id=>1028, bpp=>16,  }, ],
+	                 'nano'    => [ { height=>100, width=>100, storage_id=>1027, bpp=>16,  },  { height=> 42, width=> 42, storage_id=>1031, bpp=>16, },  ],
+	                 'video'   => [ { height=>200, width=>200, storage_id=>1029, bpp=>16,  },  { height=>100, width=>100, storage_id=>1028, bpp=>16,  }, ],
 	               };
 
 	####################################################################
@@ -114,8 +114,11 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 	####################################################################
 	# Converts given image and caches the result
 	sub PrepareImage {
-		my($self,$file) = @_;
-		my $mode   = $profiles->{'Nano_3G'};
+		my($self,%args) = @_;
+		my $file   = $args{File};
+		my $model  = lc($args{Model});
+		   $model  =~ tr/a-z0-9_//cd; # relax
+		my $mode   = $profiles->{$model} || $profiles->{video};  # select model or use the default (video)
 		my $count  = 0;
 		$self->{fbimg}->{source_size} = (-s $file);
 		foreach my $mr (@$mode) {

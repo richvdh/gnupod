@@ -1,7 +1,6 @@
 ######################################################
-# GNUpod 0.99.2 Configuration                          #
+# GNUpod 0.99.5 Configuration                        #
 #                                                    #
-# release 20040418                                   #
 # Save this file as:                                 #
 # ~/.gnupodrc or $ipod/iPod_Control/.gnupod/gnupodrc #
 ######################################################
@@ -9,14 +8,24 @@
 
 ##### GLOBAL OPTIONS #####
 
-##Set the mountpoint for the iPod
-#mount = /mnt/ipod
+## Set the mountpoint for the iPod
+# mount = /mnt/ipod
 
-##Let GNUpod call mktunes.pl itself.
-##This may cause a slow-down when dealing with
-##large databases on slow CPUs because mktunes.pl
-##may take some time to complete
-#automktunes = 1
+## Specify iPod model
+## This is only needed to get artwork working (GNUpod needs to convert
+## images into a model-specific format)
+##
+## Valid choices are:
+## * video   (default)
+## * nano    (pre-2007 nanos)
+## * nano_3g (the late 2007 nano)
+# model = video
+
+## Let GNUpod call mktunes.pl itself.
+## This may cause a slow-down when dealing with
+## large databases on slow CPUs because mktunes.pl
+## may take some time to complete
+# automktunes = 1
 
 
 
@@ -24,30 +33,30 @@
 
 # *** on the go sync (V2 Firmware) ***
 ## Uncomment this to skip 'on-the-go' sync
-#otgsync.nosync = 1
+# otgsync.nosync = 1
 
 # *** tunes2pod.pl ***
 ## Uncomment to set '--force' switch to true (DANGEROUS)
-#tunes2pod.force = 1
+# tunes2pod.force = 1
 
 
 # *** mktunes.pl ***
 ## Set --volume boost to +10 percent 
-#mktunes.volume = +10
+# mktunes.volume = +10
 ## Enforce iPod serial number:
-#mktunes.fwguid = 000ba3100310abcf
+# mktunes.fwguid = 000ba3100310abcf
 
 # *** gnupod_search.pl ***
 
 ## Always match only once
-#gnupod_search.match-once = 1
+# gnupod_search.match-once = 1
 
 
 # *** gnupod_addsong.pl ***
 
 ## Disable ID3V2 Tag reading
-#gnupod_addsong.disable-v2 = 1
+# gnupod_addsong.disable-v2 = 1
 
 ## Disable ID3V1 Tag reading
-#gnupod_addsong.disable-v1 = 1
+# gnupod_addsong.disable-v1 = 1
 

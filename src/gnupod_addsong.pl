@@ -48,7 +48,7 @@ GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode=s", "restore|r", "d
                    "set-bookmarkable", "set-shuffleskip", "artwork=s",
                    "set-songnum", "playlist|p=s@", "reencode|e=i",
                    "min-vol-adj=i", "max-vol-adj=i", "playlist-is-podcast", "set-compilation");
-GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b',
+GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b', model=>'s',
                                    'disable-v1'=>'b', 'disable-v2'=>'b', 'set-songnum'=>'b',
                                    'min-vol-adj'=>'i', 'max-vol-adj'=>'i', 'automktunes'=>'b' },
                                    "gnupod_addsong");
@@ -108,7 +108,7 @@ sub startup {
 	unless($opts{restore}) { #We parse the old file, if we are NOT restoring the iPod
 		
 		if($opts{artwork}) {
-			if( $AWDB->PrepareImage($opts{artwork}) ) {
+			if( $AWDB->PrepareImage(File=>$opts{artwork}, Model=>$opts{model}) ) {
 				$AWDB->LoadArtworkDb or die "Failed to load artwork database\n";
 			}
 			else {

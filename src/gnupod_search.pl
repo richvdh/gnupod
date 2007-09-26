@@ -46,7 +46,7 @@ GetOptions(\%opts, "version", "help|h", "mount|m=s", "artist|a=s",
                    "album|l=s", "title|t=s", "id|i=s", "rename=s@", "artwork=s",
                    "playcount|c=s", "rating|s=s", "podcastrss|R=s", "podcastguid|U=s",
                    "view=s","genre|g=s", "match-once|o", "delete");
-GNUpod::FooBar::GetConfig(\%opts, {view=>'s', mount=>'s', 'match-once'=>'b', 'automktunes'=>'b'}, "gnupod_search");
+GNUpod::FooBar::GetConfig(\%opts, {view=>'s', mount=>'s', 'match-once'=>'b', 'automktunes'=>'b', model=>'s'}, "gnupod_search");
 
 $opts{view} ||= 'ialt'; #Default view
 
@@ -78,7 +78,7 @@ sub main {
 	}
 	
 	if($opts{artwork}) {
-		if( $AWDB->PrepareImage($opts{artwork}) ) {
+		if( $AWDB->PrepareImage(File=>$opts{artwork}, Model=>$opts{model}) ) {
 			$AWDB->LoadArtworkDb or die "Failed to load artwork database\n";
 		}
 		else {

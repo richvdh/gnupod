@@ -416,6 +416,7 @@ File: gnupod.info,  Node: Using GNUpod,  Next: Problems,  Prev: Installing GNUpo
 * Edit tags::                       How to change/edit/rename
 * Creating playlists::              How to create a playlist
 * Dealing with podcasts::           How to create a podcast playlist
+* Adding cover artwork::            How to edit/add artwork.
 * Unplug the iPod::                 How to unplug the iPod (Not a joke.. read it)
 * Recovering files::                How to rebuild the Database if you lost the iTunesDB & GNUtunesDB
 * Coexistence::                     iTunes/Music Match/xtunes/Ehpod user? Read this!
@@ -620,7 +621,7 @@ will create and add the listed songs to the named playlist.
    Don't forget to run mktunes before umounting! (See 'Unplug the iPod')
 
 
-File: gnupod.info,  Node: Dealing with podcasts,  Next: Unplug the iPod,  Prev: Creating playlists,  Up: Using GNUpod
+File: gnupod.info,  Node: Dealing with podcasts,  Next: Adding cover artwork,  Prev: Creating playlists,  Up: Using GNUpod
 
 4.8 Dealing with podcasts
 =========================
@@ -646,10 +647,41 @@ playlists itself:
 add them to the 'Heute Morgen' playlist!
 
 
-File: gnupod.info,  Node: Unplug the iPod,  Next: Recovering files,  Prev: Dealing with podcasts,  Up: Using GNUpod
+File: gnupod.info,  Node: Adding cover artwork,  Next: Unplug the iPod,  Prev: Dealing with podcasts,  Up: Using GNUpod
 
-4.9 Unplug the iPod
-===================
+4.9 Adding cover artwork
+========================
+
+GNUpod can write cover artwork for video, nano and late 2007-nano
+iPods. The internal image format is model specific, so you should give
+GNUpod a hint about the image format it should use.
+
+   If you own a video (compatible) iPod, set:
+     model = video
+   in your gnupod configuration file (found at ~/.gnupodrc or
+$IPOD_MOUNTPOINT/iPod_Control/.gnupod/gnupodrc , see
+doc/gnupodrc.exmaple for more details).  For the iPod nano you should
+use:
+     model = nano
+   Late 2007-nanos need this setting:
+     model = nano_3g
+
+   To specify a cover while adding files you'd use the `--artwork'
+switch of `gnupod_addsong.pl'. Example:
+     gnupod_addsong.pl --artwork cover.jpg *.mp3
+
+   Use `gnupod_search.pl' to change/add artwork for existing files.
+Example:
+     # Set cover.jpg as artwork for all songs that match album =~ /Katamari/i
+     gnupod_search.pl --artwork cover.jpg --album Katamari
+
+   don't forget to run `mktunes.pl' afterwards.
+
+
+File: gnupod.info,  Node: Unplug the iPod,  Next: Recovering files,  Prev: Adding cover artwork,  Up: Using GNUpod
+
+4.10 Unplug the iPod
+====================
 
 Before umounting the iPod, you have to call `mktunes.pl' which will
 parse the GNUtunesDB XML file and convert it into the iTunesDB format.
@@ -678,7 +710,7 @@ and run it)
 
 File: gnupod.info,  Node: Recovering files,  Next: Coexistence,  Prev: Unplug the iPod,  Up: Using GNUpod
 
-4.10 Recovering files
+4.11 Recovering files
 =====================
 
 If your computer crashed while uploading/deleting songs, you may have
@@ -703,7 +735,7 @@ know that it's possible (Note: Of course you'll lose your Playlists)
 
 File: gnupod.info,  Node: Coexistence,  Next: Late 2007 iPods,  Prev: Recovering files,  Up: Using GNUpod
 
-4.11 Coexistence
+4.12 Coexistence
 ================
 
 GNUpod can coexist with iTunes and other programs for the iPod.
@@ -750,7 +782,7 @@ are 'lost'.
 
 File: gnupod.info,  Node: Late 2007 iPods,  Prev: Coexistence,  Up: Using GNUpod
 
-4.12 Late 2007 iPods
+4.13 Late 2007 iPods
 ====================
 
 Late 2007 iPod models (3gen Nano, Classic, Touch) refuse to work unless
@@ -1304,23 +1336,24 @@ Node: Using FireWire with GNU/Linux3535
 Node: Convert your Mac iPod7084
 Node: Firmware update11735
 Node: Using GNUpod17872
-Node: Preparation18921
-Node: Configuration19653
-Node: Add files20110
-Node: Search files21592
-Node: Remove files22078
-Node: Edit tags22379
-Node: Creating playlists22924
-Node: Dealing with podcasts25405
-Node: Unplug the iPod26306
-Node: Recovering files27218
-Node: Coexistence28115
-Node: Late 2007 iPods29609
-Node: Problems30398
-Node: GNUtunesDB30781
-Node: Get rid of '-m'32287
-Node: Known bugs and limitations32572
-Node: Reporting Bugs32863
-Node: GNU Free Documentation License33311
+Node: Preparation18982
+Node: Configuration19714
+Node: Add files20171
+Node: Search files21653
+Node: Remove files22139
+Node: Edit tags22440
+Node: Creating playlists22985
+Node: Dealing with podcasts25466
+Node: Adding cover artwork26372
+Node: Unplug the iPod27490
+Node: Recovering files28403
+Node: Coexistence29300
+Node: Late 2007 iPods30794
+Node: Problems31583
+Node: GNUtunesDB31966
+Node: Get rid of '-m'33472
+Node: Known bugs and limitations33757
+Node: Reporting Bugs34048
+Node: GNU Free Documentation License34496
 
 End Tag Table

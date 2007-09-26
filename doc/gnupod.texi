@@ -440,6 +440,7 @@ And please don't blame me if your iPod dies...
 * Edit tags::                       How to change/edit/rename
 * Creating playlists::              How to create a playlist
 * Dealing with podcasts::           How to create a podcast playlist
+* Adding cover artwork::            How to edit/add artwork.
 * Unplug the iPod::                 How to unplug the iPod (Not a joke.. read it)
 * Recovering files::                How to rebuild the Database if you lost the iTunesDB & GNUtunesDB
 * Coexistence::                     iTunes/Music Match/xtunes/Ehpod user? Read this!
@@ -664,6 +665,42 @@ gnupod_addsong.pl -p "Heute Morgen" --playlist-is-podcast http://pod.drs.ch/heut
 Running this command will create a Playlist called 'Heute Morgen' (@code{@w{-p}}) and set @code{@w{podcast="1"}} (@code{@w{--playlist-is-podcast}}).
 @code{@w{gnupod_addsong.pl}} will then fetch the podcast from @code{@w{http://pod.drs.ch/heutemorgen_mpx.xml}}, download all (new) files 
 and add them to the 'Heute Morgen' playlist!
+
+@node Adding cover artwork
+@section Adding cover artwork
+
+GNUpod can write cover artwork for video, nano and late 2007-nano iPods. The internal image format is model specific, so you should give 
+GNUpod a hint about the image format it should use.
+
+If you own a video (compatible) iPod, set:
+@example
+model = video
+@end example
+in your gnupod configuration file (found at ~/.gnupodrc or $IPOD_MOUNTPOINT/iPod_Control/.gnupod/gnupodrc , see doc/gnupodrc.exmaple for more details).
+For the iPod nano you should use:
+@example
+model = nano
+@end example
+Late 2007-nanos need this setting:
+@example
+model = nano_3g
+@end example
+
+
+To specify a cover while adding files you'd use the @code{@w{--artwork}} switch of @code{@w{gnupod_addsong.pl}}. Example:
+@example
+gnupod_addsong.pl --artwork cover.jpg *.mp3
+@end example
+
+
+Use @code{@w{gnupod_search.pl}} to change/add artwork for existing files. Example:
+@example
+# Set cover.jpg as artwork for all songs that match album =~ /Katamari/i
+gnupod_search.pl --artwork cover.jpg --album Katamari
+@end example
+
+don't forget to run @code{@w{mktunes.pl}} afterwards.
+
 
 
 @node Unplug the iPod
