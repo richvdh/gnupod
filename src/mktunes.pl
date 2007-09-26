@@ -27,6 +27,7 @@ use GNUpod::FooBar;
 use GNUpod::Mktunes;
 use GNUpod::Hash58;
 use GNUpod::SysInfo;
+use GNUpod::ArtworkDB;
 use Getopt::Long;
 
 use constant MPL_UID => 1234567890; #This is the MasterPlaylist ID
@@ -58,8 +59,10 @@ sub main {
 	my $sysinfo = GNUpod::SysInfo::GetDeviceInformation(Connection=>$con, NoDeviceSearch=>(defined($opts{fwguid}) ? 1 : 0 ) );
 	my $fwguid  = (defined($opts{fwguid}) ? $opts{fwguid} : $sysinfo->{FirewireGuid}); # Always prefer fwguid. may be 0 to disable search
 	
+	my $AWDB  = GNUpod::ArtworkDB->new(Connection=>$con, DropUnseen=>0);
+	$AWDB->LoadArtworkDb;
 	
-	$mktunes = GNUpod::Mktunes->new(Connection=>$con, iPodName=>$opts{'ipod-name'});
+	$mktunes = GNUpod::Mktunes->new(Connection=>$con, iPodName=>$opts{'ipod-name'}, Artwork=>$AWDB);
 	
 	print "> Parsing XML document...\n";
 	GNUpod::XMLhelper::doxml($con->{xml}) or usage("Could not read $con->{xml}, did you run gnupod_INIT.pl ?");

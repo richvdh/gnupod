@@ -38,7 +38,7 @@ use constant ITUNESDB_MAGIC => 'mhbd';
 use constant OLD_ITUNESDB_MHIT_HEADERSIZE => 156;
 use constant NEW_ITUNESDB_MHIT_HEADERSIZE => 244;
 
-use constant ITUNES_DUMP => 1;
+use constant ITUNES_DUMP => 0;
 
 #mk_mhod() will take care of lc() entries
 my %mhod_id = (  title=>1, path=>2, album=>3, artist=>4, genre=>5, fdesc=>6, eq=>7, comment=>8, category=>9, composer=>12, group=>13,
@@ -339,10 +339,13 @@ sub mk_mhit {
 		warn "  ---->  This may confuse other scripts...\n";
 		warn "  ----> !! YOU SHOULD FIX THIS AND RERUN mktunes.pl !!\n";
 	}
-
+	
+	my $rnd_cover_id = $hr->{artwork}->GetImage($file_hash{dbid_1});
+	$rnd_cover_id = ( ref($rnd_cover_id) eq 'HASH' ? $rnd_cover_id->{id} : 0 );
+	
 	my $ret = "mhit";
-		$ret .= pack("V", _icl(0xF4));                          #header size
-		$ret .= pack("V", _icl(int($hr->{size})+0xF4));         #len of this entry
+		$ret .= pack("V", _icl(0x184));                          #header size
+		$ret .= pack("V", _icl(int($hr->{size})+0x184));         #len of this entry
 		$ret .= pack("V", _icl($hr->{count}));                  #num of mhods in this mhit
 		$ret .= pack("V", _icl($c_id));                         #Song index number
 		$ret .= pack("V", _icl(1));                             #Visible?
@@ -371,7 +374,7 @@ sub mk_mhit {
 		$ret .= pack("V");                                      #hardcoded space ? (Apple DRM id?)
 		$ret .= pack("V", _icl($file_hash{addtime}));           #File added @
 		$ret .= pack("V", _icl($file_hash{bookmark}));          #QTFile Bookmark
-		$ret .= pack("H16", ($file_hash{dbid_1}));               # First dbid, should not be null
+		$ret .= pack("H16", ($file_hash{dbid_1}));              # First dbid, should not be null
 		$ret .= pack("v");                                      #??
 		$ret .= pack("v", _icl($file_hash{bpm},0xffff));        #BPM
 		$ret .= pack("v", _icl($file_hash{artworkcnt}));        #Artwork Count
@@ -395,7 +398,9 @@ sub mk_mhit {
 		$ret .= pack("V", _icl($file_hash{mediatype}));
 		$ret .= pack("V", _icl($file_hash{seasonnum}));
 		$ret .= pack("V", _icl($file_hash{episodenum}));
-		$ret .= pack("H47");  
+		$ret .= pack("V33",0);  
+		$ret .= pack("V", _icl($rnd_cover_id));
+		$ret .= pack("V8",0);
 
 
 return $ret;

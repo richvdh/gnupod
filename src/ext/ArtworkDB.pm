@@ -70,6 +70,11 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		          };
 		print "-> Loading Artwork DB\n";
 		GNUpod::iTunesDB::ParseiTunesDB($obj,0);
+		
+		my $foo = delete($self->{fbimg});
+		print Data::Dumper::Dumper($self);
+		$self->{fbimg} = $foo;
+		
 		print "-> Done..\n";
 		close(AWDB);
 		return $self;
@@ -90,7 +95,7 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		print "-> Wiping lost images\n";
 		if($self->{drop_unseen}) {
 			foreach my $id ($self->_GetImageIds) {
-				if($self->_GetImage($id)->{seen} == 0) {
+				if($self->GetImage($id)->{seen} == 0) {
 					$self->_DeleteImage($id) or die "Failed to delete image # $id : Did not exist in db?!\n";
 					$self->{db_dirty}++;
 					warn "Wiped $id\n";
@@ -224,7 +229,7 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		
 		print $fd GNUpod::iTunesDB::mk_mhxx({childs=>int($self->_GetImageIds), name=>'mhli'});
 		foreach my $imgid ($self->_GetImageIds) {
-			my $imgobj  = $self->_GetImage($imgid);
+			my $imgobj  = $self->GetImage($imgid);
 			my $subimgs = $self->GetSubImages($imgobj);
 			my $mhii_child_payload = '';
 			foreach my $subref (@$subimgs) {
@@ -289,7 +294,7 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 	
 	####################################################################
 	# Returns given image object
-	sub _GetImage {
+	sub GetImage {
 		my($self, $id) = @_;
 		return $self->{images}->{$id};
 	}

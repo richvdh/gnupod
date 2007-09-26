@@ -11,8 +11,8 @@ package GNUpod::Mktunes;
 	sub new {
 		my($class,%args) = @_;
 		
-		my $self = { Connection=>$args{Connection}, Mode=>MODE_ADDFILE,
-		             ArrayFiles => [], CountFiles => 0, Sequence => 0, iPodName => $args{iPodName},
+		my $self = { Connection=>$args{Connection}, Mode=>MODE_ADDFILE, Artwork=>$args{Artwork},
+		             ArrayFiles => [], CountFiles => 0, Sequence => 0,  iPodName => $args{iPodName},
 		             MasterPlaylist => [], Playlists => {}, SmartPlaylists => {},
 		             FuzzyDb_Normal => {}, FuzzyDb_Lowercase => {} };
 		bless($self,$class);
@@ -274,7 +274,7 @@ package GNUpod::Mktunes;
 			$mhod_chunks .= $new_mhod;
 			$mhod_count++;
 		}
-		$mhit = GNUpod::iTunesDB::mk_mhit({size=>length($mhod_chunks), count=>$mhod_count, fh=>$object});
+		$mhit = GNUpod::iTunesDB::mk_mhit({size=>length($mhod_chunks), count=>$mhod_count, fh=>$object, artwork=>$self->{Artwork} });
 		return $mhit.$mhod_chunks;
 	}
 	
