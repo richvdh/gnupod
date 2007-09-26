@@ -38,7 +38,7 @@ use constant ITUNESDB_MAGIC => 'mhbd';
 use constant OLD_ITUNESDB_MHIT_HEADERSIZE => 156;
 use constant NEW_ITUNESDB_MHIT_HEADERSIZE => 244;
 
-use constant ITUNES_DUMP => 0;
+use constant ITUNES_DUMP => 1;
 
 #mk_mhod() will take care of lc() entries
 my %mhod_id = (  title=>1, path=>2, album=>3, artist=>4, genre=>5, fdesc=>6, eq=>7, comment=>8, category=>9, composer=>12, group=>13,

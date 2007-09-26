@@ -569,6 +569,8 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
        --max-vol-adj=int            Maximum ditto.  The volume can be adjusted in the range
                                     -100% to +100%.  The default for these two options is 0,
                                     which effectively ignored the RVA2 tag.
+       --artwork=FILE               Use FILE as album cover
+
 
 Report bugs to <bug-gnupod\@nongnu.org>
 EOF
