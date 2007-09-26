@@ -64,7 +64,7 @@ sub main {
 	print "> Parsing XML document...\n";
 	GNUpod::XMLhelper::doxml($con->{xml}) or usage("Could not read $con->{xml}, did you run gnupod_INIT.pl ?");
 	
-	print "\r> ".$mktunes->GetFileCount." files parsed, writing new iTunesDB...";
+	print "\r> ".$mktunes->GetFileCount." files parsed, assembling iTunesDB...\n";
 	$mktunes->WriteItunesDB;
 	
 	if($fwguid) {
@@ -81,6 +81,8 @@ sub main {
 	GNUpod::FooBar::setsync_itunesdb($con);
 	GNUpod::FooBar::setvalid_otgdata($con);
 	GNUpod::FooBar::wipe_shufflestat($con);
+	print "\nYou can now umount your iPod. [Files: ".$mktunes->GetFileCount."]\n";
+	print " - May the iPod be with you!\n\n";
 
 }
 

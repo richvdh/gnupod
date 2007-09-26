@@ -1,10 +1,10 @@
 package GNUpod::Mktunes;
 	use GNUpod::iTunesDB;
-	use constant MODE_ADDFILE => 1;
-	use constant MODE_ADDPL   => 2;
-	use constant PLAYLIST_HIDDEN  => 1;
-	use constant PLAYLIST_VISIBLE => 0;
-	use constant MPL_UID          => 1234567890;
+	use constant MODE_ADDFILE      => 1;
+	use constant MODE_ADDPL        => 2;
+	use constant PLAYLIST_HIDDEN   => 1;
+	use constant PLAYLIST_VISIBLE  => 0;
+	use constant MPL_UID           => 1234567890;
 	use constant IPODNAME_FALLBACK => "GNUpod ###__VERSION__###";
 	#########################################################################
 	# Creats a new mktunes object
@@ -29,44 +29,54 @@ package GNUpod::Mktunes;
 		close(ITS);
 	}
 	
+	
+	
 	#########################################################################
 	# Create and write the iTunesDB file
 	sub WriteItunesDB {
 		my($self) = @_;
 		
-		# Step 1: Create all mhits
-		my $all_mhits = '';
-		my $i         = 0;
-		
-		print "\n";
-		foreach my $item (@{$self->GetFiles}) {
-			$all_mhits .= $self->AssembleMhit($item);
-			print "\r> $i files assembled " if ($i++ % 96 == 0);
-		}
-		print "\r> $i files assembled, creating playlists...\n";
-		
-		# Step 2: Assemble all playlists
-		my   $playlists = $self->CreateAllPlaylists;
-		
-
-		my $mhits           = GNUpod::iTunesDB::mk_mhlt({songs=>$self->GetFileCount}).$all_mhits;
-		   $mhits           = GNUpod::iTunesDB::mk_mhsd({size=>length($mhits), type=>1}).$mhits;
-		
-		my $newst_playlist  = GNUpod::iTunesDB::mk_mhlp({playlists=>$playlists->{count_newstyle}}).$playlists->{newstyle};
-		   $newst_playlist  = GNUpod::iTunesDB::mk_mhsd({type=>3, size=>length($newst_playlist)}).$newst_playlist;
-		
-		my $legacy_playlist  = GNUpod::iTunesDB::mk_mhlp({playlists=>$playlists->{count_legacy}}).$playlists->{legacy};
-		   $legacy_playlist  = GNUpod::iTunesDB::mk_mhsd({type=>2, size=>length($legacy_playlist)}).$legacy_playlist;
-		
+		my $mhbd_size = 0;
+		my $mhsd_size = 0;
+		my $mhsd_pos  = 0;
 		
 		open(ITUNES, ">", $self->GetConnection->{itunesdb}) or die "*** Unable to write the iTunesDB: $!, did you run gnupod_INIT.pl ?\n";
 		binmode(ITUNES);
-		print ITUNES GNUpod::iTunesDB::mk_mhbd({size=>length($mhits.$newst_playlist.$legacy_playlist), childs=>3}); 
-		print ITUNES $mhits;
-		print ITUNES $newst_playlist;
-		print ITUNES $legacy_playlist;
+		print ITUNES GNUpod::iTunesDB::mk_mhbd({});
+			$mhbd_size = tell(ITUNES);
+			$mhsd_pos  = tell(ITUNES);
+		print ITUNES GNUpod::iTunesDB::mk_mhsd({});
+			$mhsd_size = tell(ITUNES);
+		print ITUNES GNUpod::iTunesDB::mk_mhlt({songs=>$self->GetFileCount});
+		foreach my $item (@{$self->GetFiles}) {
+			print ITUNES $self->AssembleMhit($item);
+			print "\r> $i files assembled " if ($i++ % 96 == 0);
+		}
+			$mhsd_size = tell(ITUNES)-$mhsd_size;
+		
+		print "\r> Creating iPod playlists...\n";
+		
+		my   $playlists = $self->CreateAllPlaylists;
+		
+		print ITUNES GNUpod::iTunesDB::mk_mhsd({type=>3, size=>length(GNUpod::iTunesDB::mk_mhlp({}).$playlists->{newstyle})});
+		print ITUNES GNUpod::iTunesDB::mk_mhlp({playlists=>$playlists->{count_newstyle}});
+		print ITUNES $playlists->{newstyle};
+		
+		print ITUNES GNUpod::iTunesDB::mk_mhsd({type=>2, size=>length(GNUpod::iTunesDB::mk_mhlp({}).$playlists->{legacy})});
+		print ITUNES GNUpod::iTunesDB::mk_mhlp({playlists=>$playlists->{count_legacy}});
+		print ITUNES $playlists->{legacy};
+			$mhbd_size = tell(ITUNES)-$mhbd_size;
+		
+		# Fixup some things:
+		GNUpod::FooBar::SeekFix(*ITUNES,0        ,GNUpod::iTunesDB::mk_mhbd({size=>$mhbd_size, childs=>3}));
+		GNUpod::FooBar::SeekFix(*ITUNES,$mhsd_pos,GNUpod::iTunesDB::mk_mhsd({size=>$mhsd_size, type=>1}));
 		close(ITUNES);
 	}
+	
+	
+	
+	
+	
 	
 	
 	# Increments file counter

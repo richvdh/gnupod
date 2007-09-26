@@ -347,6 +347,15 @@ sub getmd5 {
 	return $md5;
 }
 
+####################################################################
+# Seek and destroy ;-)
+sub SeekFix {
+	my($fd,$at,$string) = @_;
+	my $now = tell($fd);
+	seek($fd,$at,0) or die "Unable to seek to $at in $fd : $!\n";
+	print $fd $string;
+	seek($fd,$now,0) or die "Unable to seek to $now in $fd : $!\n";
+}
 
 
 ########################################################################

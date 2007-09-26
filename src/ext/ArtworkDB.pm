@@ -254,9 +254,9 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		$mhsd_mhif_size = tell($fd)-$mhsd_mhif_size;
 		$mhfd_size      = tell($fd)-$mhfd_size;
 		
-		_Fixup($fd,$mhsd_mhif_fixup,GNUpod::iTunesDB::mk_mhsd({type=>0x03, size=>$mhsd_mhif_size}));
-		_Fixup($fd,$mhsd_mhii_fixup,GNUpod::iTunesDB::mk_mhsd({type=>0x01, size=>$mhsd_mhii_size}));
-		_Fixup($fd,0               ,GNUpod::iTunesDB::mk_mhfd({next_id=>$self->{last_id_seen}+1, childs=>0x03, size=>$mhfd_size}));
+		GNUpod::FooBar::SeekFix($fd,$mhsd_mhif_fixup,GNUpod::iTunesDB::mk_mhsd({type=>0x03, size=>$mhsd_mhif_size}));
+		GNUpod::FooBar::SeekFix($fd,$mhsd_mhii_fixup,GNUpod::iTunesDB::mk_mhsd({type=>0x01, size=>$mhsd_mhii_size}));
+		GNUpod::FooBar::SeekFix($fd,0               ,GNUpod::iTunesDB::mk_mhfd({next_id=>$self->{last_id_seen}+1, childs=>0x03, size=>$mhfd_size}));
 		close(AD);
 		# We rename the file because otherwise we may mess up the artworkdb.. that would be bad.
 		unlink($bak);      # may fail  -> no backup
@@ -376,15 +376,6 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		}
 	}
 
-	####################################################################
-	# Seek and destroy ;-)
-	sub _Fixup {
-		my($fd,$at,$string) = @_;
-		my $now = tell($fd);
-		seek($fd,$at,0) or die "Unable to seek to $at in $fd : $!\n";
-		print $fd $string;
-		seek($fd,$now,0) or die "Unable to seek to $now in $fd : $!\n";
-	}
 
 1;
 
