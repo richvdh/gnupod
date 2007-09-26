@@ -1469,7 +1469,10 @@ sub _Real_ParseiTunesDB {
 		$next_atom = $obj->{offset} + $r->{header_size};
 		$obj->{tree}->{$deep} = { name => $t, ref=>$r };
 		
-		if($this_child == 1) {
+		if($next_atom == $obj->{offset}) {
+			die sprintf("Failed to parse %s at %08X\n",$t,$obj->{offset}) if $next_atom == $obj->{offset};
+		}
+		elsif($this_child == 1) {
 			$ft = $t;
 			if(defined(my $cb = $obj->{callback}->{$obj->{tree}->{$deep-1}->{name}}->{start})) {
 				$obj->{callback}->{PACKAGE}->$cb(offset => $obj->{offset}, ref=>$obj->{tree}->{$deep-1}->{ref});
@@ -1477,9 +1480,6 @@ sub _Real_ParseiTunesDB {
 		}
 		elsif($ft ne $t) {
 			die sprintf("Walking error at %08X , found type $t but expected to find $ft\n",$obj->{offset});
-		}
-		elsif($next_atom == $obj->{offset}) {
-			die sprintf("Failed to parse %s at %08X\n",$t,$obj->{offset}) if $next_atom == $obj->{offset};
 		}
 		
 		if(defined(my $cb = $obj->{callback}->{$t}->{item})) {

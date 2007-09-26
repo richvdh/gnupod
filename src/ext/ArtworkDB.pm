@@ -28,7 +28,8 @@ use Digest::MD5;
 use Data::Dumper;
 
 use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching ~ 256 mb
-	
+use constant SHARED_STORAGE => 1;         # Share same offset across multiple items
+
 	# Artwork profiles:
 	my $profiles = { 'nano_3g' => [ { height=>320, width=>320, storage_id=>1060, bpp=>16,  },  { height=>128, width=>128, storage_id=>1055, bpp=>16, },
 	                                { height=>56,  width=>56,  storage_id=>1061, bpp=>16, drop=>112}                                                     ],
@@ -42,7 +43,7 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		my($class,%args) = @_;
 		
 		my $self = { storages => {},  images => {},        fbimg => {},         _mhni_buff => {}, drop_unseen => $args{DropUnseen},
-		             db_dirty => 0,   last_id_seen => 100, last_dbid_seen => 0, ctx => undef, 
+		             db_dirty => 0,   last_id_seen => 100, last_dbid_seen => 0, ctx => undef, storagecache => {},
 		             artworkdb => $args{Connection}->{artworkdb}, artworkdir => $args{Connection}->{artworkdir},
 		           };
 		bless($self, $class);
@@ -71,9 +72,9 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		
 		GNUpod::iTunesDB::ParseiTunesDB($obj,0);
 		
-		my $foo = delete($self->{fbimg});
-		print Data::Dumper::Dumper($self);
-		$self->{fbimg} = $foo;
+		#my $foo = delete($self->{fbimg});
+		#print Data::Dumper::Dumper($self);
+		#$self->{fbimg} = $foo;
 		
 		close(AWDB);
 		return $self;
@@ -108,7 +109,14 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		$self->_RegisterNewImage(ref => { id=> 0, dbid=>$imgid, source_size=>$self->{fbimg}->{source_size} });
 		$self->KeepImage($imgid);
 		foreach my $fbimg (@{$self->{fbimg}->{cache}}) {
-			my $dbinfo = $self->_WriteImageToDatabase(Data=>$fbimg->{data}, StorageId=>$fbimg->{storage_id});
+			my $dbinfo = undef;
+			if(SHARED_STORAGE && defined($self->{storagecache}->{$fbimg->{storage_id}})) {
+				$dbinfo = $self->{storagecache}->{$fbimg->{storage_id}};
+			}
+			else {
+				$dbinfo = $self->_WriteImageToDatabase(Data=>$fbimg->{data}, StorageId=>$fbimg->{storage_id});
+				$self->{storagecache}->{$fbimg->{storage_id}} = $dbinfo;
+			}
 			$self->_RegisterSubImage(storage_id=>$fbimg->{storage_id}, imgsize=>$fbimg->{imgsize}, path=>':'.$dbinfo->{filename}, offset=>$dbinfo->{start},
 			                         height=>$fbimg->{height}, width=>$fbimg->{width});
 		}
