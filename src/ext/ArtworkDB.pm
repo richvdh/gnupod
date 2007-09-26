@@ -68,9 +68,7 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		                                              mhni => { start => '_MhniStart' },
 		                            }
 		          };
-		print "-> Loading Artwork DB\n";
 		GNUpod::iTunesDB::ParseiTunesDB($obj,0);
-		print "-> Done..\n";
 		close(AWDB);
 		return $self;
 	}
@@ -86,18 +84,14 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 	
 	sub _WipeLostImages {
 		my($self) = @_;
-		
-		print "-> Wiping lost images\n";
 		if($self->{drop_unseen}) {
 			foreach my $id ($self->_GetImageIds) {
 				if($self->GetImage($id)->{seen} == 0) {
 					$self->_DeleteImage($id) or die "Failed to delete image # $id : Did not exist in db?!\n";
 					$self->{db_dirty}++;
-					warn "Wiped $id\n";
 				}
 			}
 		}
-		print "Done\n";
 	}
 	
 	####################################################################
@@ -196,11 +190,10 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		my($self) = @_;
 		
 		
-		print "=> Writing new ArtworkDB\n";
 		$self->_WipeLostImages;
 		return undef if $self->{db_dirty} == 0;
 		
-		print "About to write new database\n";
+		print "> Updating ArtworkDB\n";
 		
 		my $tmp = $self->{artworkdb}."$$";
 		my $dst = $self->{artworkdb};

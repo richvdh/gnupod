@@ -40,7 +40,10 @@ package GNUpod::Mktunes;
 		my $mhsd_size = 0;
 		my $mhsd_pos  = 0;
 		
-		open(ITUNES, ">", $self->GetConnection->{itunesdb}) or die "*** Unable to write the iTunesDB: $!, did you run gnupod_INIT.pl ?\n";
+		my $outfile = $self->GetConnection->{itunesdb};
+		my $tmpfile = $outfile.".$$";
+		
+		open(ITUNES, ">", $tmpfile) or die "*** Unable to write the iTunesDB: $!, did you run gnupod_INIT.pl ?\n";
 		binmode(ITUNES);
 		print ITUNES GNUpod::iTunesDB::mk_mhbd({});
 			$mhbd_size = tell(ITUNES);
@@ -71,6 +74,9 @@ package GNUpod::Mktunes;
 		GNUpod::FooBar::SeekFix(*ITUNES,0        ,GNUpod::iTunesDB::mk_mhbd({size=>$mhbd_size, childs=>3}));
 		GNUpod::FooBar::SeekFix(*ITUNES,$mhsd_pos,GNUpod::iTunesDB::mk_mhsd({size=>$mhsd_size, type=>1}));
 		close(ITUNES);
+		
+		unlink($outfile); # can fail
+		rename($tmpfile,$outfile) or die "*** Unable to move $tmpfile to $outfile : $!\n";
 	}
 	
 	

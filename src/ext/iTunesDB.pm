@@ -987,11 +987,11 @@ return $ret
 # Get a INT value
 sub get_int {
 	my($pos, $toread, $fd) = @_;
-	seek($fd,$pos,0) or Carp::confess("Unable to seek to $pos : $!");
+	sysseek($fd,$pos,0) or Carp::confess("Unable to seek to $pos : $!");
 	my $buff       = '';
-	my $bytes_read = read($fd, $buff, $toread);
+	my $bytes_read = sysread($fd, $buff, $toread);
 	Carp::confess("Short read: Wanted $toread bytes, got $bytes_read, syserr: $!\n") if $toread != $bytes_read;
-	return GNUpod::FooBar::shx2int($buff);
+	return int(unpack("V",pack("H16",unpack("H16",$buff)))); # inlined shx2int
 }
 
 
@@ -1003,12 +1003,12 @@ sub get_x86_int {
 	Carp::confess("No filehandle!") unless $fh;
 	# paranoia checks
 	$start = int($start);
-	$anz = int($anz);
+	$anz   = int($anz);
 	
 	#seek to the given position
-	seek($fh, $start, 0);
+	sysseek($fh, $start, 0);
 	#start reading
-	read($fh, $buffer, $anz);
+	sysread($fh, $buffer, $anz);
 	return GNUpod::FooBar::shx2_x86_int($buffer);
 }
 
@@ -1213,9 +1213,9 @@ sub get_string {
 	Carp::confess("No filehandle!") unless $fh;
 	$start = int($start);
 	$anz   = int($anz);
-	seek($fh, $start, 0);
+	sysseek($fh, $start, 0);
 	#start reading
-	read($fh, $buffer, $anz);
+	sysread($fh, $buffer, $anz);
 	return $buffer;
 }
 
@@ -1402,8 +1402,20 @@ sub get_mhyp {
 	return \%r;
 }
 
-
 sub ParseiTunesDB {
+	my($obj,$deep) = @_;
+	eval { _Real_ParseiTunesDB($obj,$deep); };
+	
+	if($@) {
+		warn "\nParser failed: $@";
+		return 0;
+	}
+	else {
+		return 1;
+	}
+}
+
+sub _Real_ParseiTunesDB {
 	my($obj,$deep) = @_;
 	
 	my $this_childs = $obj->{childs};
@@ -1416,22 +1428,23 @@ sub ParseiTunesDB {
 		$t  = get_string($obj->{offset}+0,4,$obj->{fd});
 		
 		
-		
-		if(0) {}
-		elsif($t eq 'mhit')                 { $r = get_mhit($obj->{offset},$obj->{fd}) }
-		elsif($t eq 'mhod' && $obj->{awdb}) { $r = get_awdb_mhod($obj->{offset},$obj->{fd}) }                                    # ArtworkDB mhods are different :-/
+		if($t eq 'mhod' && $obj->{awdb})    { $r = get_awdb_mhod($obj->{offset},$obj->{fd}) }                                    # ArtworkDB mhods are different :-/
 		elsif($t eq 'mhod')                 { $r = get_mhod($obj->{offset},$obj->{fd}); ($r->{header_size} = $r->{total_size}) } # Don't care about the string
+		elsif($t eq 'mhni')                 { $r = get_mhni($obj->{offset},$obj->{fd}) }
+		elsif($t eq 'mhit')                 { $r = get_mhit($obj->{offset},$obj->{fd}) }
 		elsif($t eq 'mhyp')                 { $r = get_mhyp($obj->{offset},$obj->{fd}); $obj->{xhack} = $r->{childs}; $r->{childs} += $r->{scount}; }
 		elsif($t eq 'mhbd')                 { $r = get_mhbd($obj->{offset},$obj->{fd}) }
 		elsif($t eq 'mhfd')                 { $r = get_mhfd($obj->{offset},$obj->{fd}) }
 		elsif($t eq 'mhsd')                 { $r = get_mhsd($obj->{offset},$obj->{fd}) }
 		elsif($t eq 'mhii')                 { $r = get_mhii($obj->{offset},$obj->{fd}) }
 		elsif($t eq 'mhip')                 { $r = get_mhip($obj->{offset},$obj->{fd}) }
-		elsif($t eq 'mhni')                 { $r = get_mhni($obj->{offset},$obj->{fd}) }
 		elsif($t eq 'mhif')                 { $r = get_mhif($obj->{offset},$obj->{fd}) }
 		elsif($t eq 'mhia')                 { $r = get_mhia($obj->{offset},$obj->{fd}) }
 		elsif($t =~ /^mh(lt|lp|la|lf|li)$/) { $r = get_mhxx($obj->{offset},$obj->{fd}) }
-		else { die "Unsupported atom: $t\n"; }
+		else {
+			warn "$0: Unsupported atom '$t', using generic parser\n";
+			$r = get_mhia($obj->{offset},$obj->{fd});
+		}
 		
 		
 		$next_atom = $obj->{offset} + $r->{header_size};
@@ -1458,8 +1471,6 @@ sub ParseiTunesDB {
 			print " " x ($deep * 3);
 			printf("%02d Atom=>%s, Offset=>%04X, ThisCount=>%d, TotalCount=>%d, NextAtom=>%04X, NextChilds=>%d, Type=>%d\n",
 			         $deep, $t, $obj->{offset}, $this_child, $this_childs, $next_atom,$r->{childs}, $r->{type});
-	#		print Data::Dumper::Dumper($r);
-	 #		print "-----------------------------------------------------\n";
 		}
 		
 		
@@ -1470,7 +1481,7 @@ sub ParseiTunesDB {
 		}
 		$obj->{offset} += $r->{header_size};
 		$obj->{childs}  = $r->{childs};
-		ParseiTunesDB($obj, $deep+1) if $obj->{childs} > 0;
+		_Real_ParseiTunesDB($obj, $deep+1) if $obj->{childs} > 0;
 	}
 	
 	if(defined(my $cb = $obj->{callback}->{$obj->{tree}->{$deep-1}->{name}}->{end})) {
@@ -1528,14 +1539,14 @@ sub readOTG {
 	foreach my $file (bsd_glob($glob,GLOB_NOSORT)) {
 		my @otgdb = ();
 		open(OTG, "$file") or next;
-		seek(OTG, 12, 0);
-		read(OTG, $buff, 4);
+		sysseek(OTG, 12, 0);
+		sysread(OTG, $buff, 4);
   
 		my $items = GNUpod::FooBar::shx2int($buff); 
 		my $offset = 20;
 		for(1..$items) {
-			seek(OTG, $offset, 0);
-			my $rb = read(OTG, $buff, 4);
+			sysseek(OTG, $offset, 0);
+			my $rb = sysread(OTG, $buff, 4);
 			if($rb == 0) {
 				_itBUG("readOTG($glob) i:$items / f:$file / s:$offset / fs: ".(-s $file));
 				last;
@@ -1554,8 +1565,8 @@ sub getTimezone {
 	my($prefs) = @_;
 	my $buff = 0x00;
 	open(PREFS, $prefs) or return undef;
-	seek(PREFS, (0xb10),0);
-	read(PREFS, $buff, 1);
+	sysseek(PREFS, (0xb10),0);
+	sysread(PREFS, $buff, 1);
 	close(PREFS);
 	
 	my $tzx = (GNUpod::FooBar::shx2int($buff));

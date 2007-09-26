@@ -59,8 +59,10 @@ sub main {
 	my $sysinfo = GNUpod::SysInfo::GetDeviceInformation(Connection=>$con, NoDeviceSearch=>(defined($opts{fwguid}) ? 1 : 0 ) );
 	my $fwguid  = (defined($opts{fwguid}) ? $opts{fwguid} : $sysinfo->{FirewireGuid}); # Always prefer fwguid. may be 0 to disable search
 	
+	print "> Loading ArtworkDB...";
 	my $AWDB  = GNUpod::ArtworkDB->new(Connection=>$con, DropUnseen=>0);
 	$AWDB->LoadArtworkDb;
+	print "done\n";
 	
 	$mktunes = GNUpod::Mktunes->new(Connection=>$con, iPodName=>$opts{'ipod-name'}, Artwork=>$AWDB);
 	

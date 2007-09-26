@@ -182,14 +182,7 @@ else {
 # Get int value (Network format)
 sub shx2int {
 	my($shx) = @_;
-	my $buff = undef;
 	return unpack("V",pack("H16",unpack("H16",$shx)));
-=head
-	foreach(split(//,$shx)) {
-		$buff = sprintf("%02X",ord($_)).$buff;
-	}
-	return hex($buff);
-=cut
 }
 
 ######################################################################
