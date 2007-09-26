@@ -68,7 +68,13 @@ use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching
 		                                              mhni => { start => '_MhniStart' },
 		                            }
 		          };
+		
 		GNUpod::iTunesDB::ParseiTunesDB($obj,0);
+		
+		my $foo = delete($self->{fbimg});
+		print Data::Dumper::Dumper($self);
+		$self->{fbimg} = $foo;
+		
 		close(AWDB);
 		return $self;
 	}

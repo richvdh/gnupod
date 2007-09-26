@@ -102,7 +102,7 @@ sub main {
 sub newfile {
  my($el) =  @_;
                           # 2 = mount + view (both are ALWAYS set)
-my $ntm      = keys(%opts)-2-$opts{'match-once'}-$opts{automktunes}-$opts{delete}-(defined $opts{rename})-(defined $opts{artwork});
+my $ntm      = keys(%opts)-2-$opts{'match-once'}-$opts{automktunes}-$opts{delete}-(defined $opts{rename})-(defined $opts{artwork})-(defined $opts{model});
 my $matched  = undef;
 my $dounlink = 0;
 foreach my $opx (keys(%opts)) {

@@ -37,6 +37,7 @@ use vars qw(%mhod_id @mhod_array %SPLDEF %SPLREDEF %PLDEF %PLREDEF);
 use constant ITUNESDB_MAGIC => 'mhbd';
 use constant OLD_ITUNESDB_MHIT_HEADERSIZE => 156;
 use constant NEW_ITUNESDB_MHIT_HEADERSIZE => 244;
+use constant NEW_2007_ITUNESDB_MHIT_HEADERSIZE => 356;
 
 use constant ITUNES_DUMP => 0;
 
@@ -389,16 +390,26 @@ sub mk_mhit {
 		$ret .= pack("C", _icl(($file_hash{shuffleskip} ? 1 : 0)));
 		$ret .= pack("C", _icl(($file_hash{bookmarkable} ? 1 : 0)));
 		$ret .= pack("C", _icl(($file_hash{podcast} ? 1 : 0)));
-		$ret .= pack("H16", ($file_hash{dbid_2}));              # second dbid, should not be null
+		$ret .= pack("H16", ($file_hash{dbid_2}));              # second dbid
 		$ret .= pack("C", (_icl(($file_hash{lyrics_flag} ? 1 : 0))));
 		$ret .= pack("C", (_icl(($file_hash{movie_flag} ? 1 : 0))));
 		$ret .= pack("C", (_icl(($file_hash{played_flag} ? 1 : 2))));
-		$ret .= pack("C", 0);		
-		$ret .= pack("H56");
+		$ret .= pack("C", 0);
+		$ret .= pack("V",0);
+		$ret .= pack("V", _icl($file_hash{pregap}));             # pregap data
+		$ret .= pack("H16",$file_hash{samplecount});             # pregap samplecount
+		$ret .= pack("V",0);                                     # unk 25
+		$ret .= pack("V", (_icl(($file_hash{postgap}))));        # postgap data
+		$ret .= pack("V",0);                                     # unk 27
 		$ret .= pack("V", _icl($file_hash{mediatype}));
 		$ret .= pack("V", _icl($file_hash{seasonnum}));
 		$ret .= pack("V", _icl($file_hash{episodenum}));
-		$ret .= pack("V33",0);  
+		$ret .= pack("V7",0);  
+		$ret .= pack("V", _icl($file_hash{gaplessdata}));
+		$ret .= pack("V", 0);
+		$ret .= pack("v", _icl($file_hash{has_gapless},0xff));
+		$ret .= pack("v", _icl($file_hash{nocrossfade},0xff));
+		$ret .= pack("V23",0);
 		$ret .= pack("V", _icl($rnd_cover_id));
 		$ret .= pack("V8",0);
 
@@ -1280,9 +1291,17 @@ sub get_mhit {
 		$o{movie_flag}      = get_int($offset+177,1,$fd);
 		$o{played_flag}     = ( get_int($offset+178,1,$fd) == 1 ? 1 : 0 );
 		# 179 is unknown
+		$o{pregap}          = get_int($offset+184,4,$fd);
+		$o{samplecount}     = unpack("H16",get_string($offset+188,8,$fd));
+		$o{postgap}         = get_int($offset+200,4,$fd);
 		$o{mediatype}       = get_int($offset+208,4,$fd);
 		$o{seasonnum}       = get_int($offset+212,4,$fd);
 		$o{episodenum}      = get_int($offset+216,4,$fd);
+		if($r{header_size} >= NEW_2007_ITUNESDB_MHIT_HEADERSIZE) {
+			$o{gaplessdata}   = get_int($offset+248,4,$fd);
+			$o{has_gapless}   = get_int($offset+256,2,$fd);
+			$o{nocrossfade}   = get_int($offset+258,2,$fd);
+		}
 	}
 	
 	

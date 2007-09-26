@@ -359,7 +359,7 @@ sub GetConfig {
   my($topic,$val,$optarget);
   
   foreach my $filerc ( ("$ENV{HOME}/.gnupodrc", "$getopts->{mount}/iPod_Control/.gnupod/gnupodrc") ) {
-    open(RCFILE, $filerc) or next;
+    open(RCFILE, "<", $filerc) or next;
      while (my $line = <RCFILE>) {
       chomp($line);
       next if !$line or $line =~ /^#/;
@@ -380,8 +380,6 @@ sub GetConfig {
        $optarget = undef;
       }
 
-  #    warn "### PARSE($line): *$topic* -> *$val*\n";
-  #    warn "### $topic with target $optarget\n";
       
          if ($optarget&&$name&&$name ne $optarget) { next}
       elsif ($getopts->{$topic})      { next } #this is a dup 
@@ -390,13 +388,7 @@ sub GetConfig {
       elsif ($doset->{$topic} eq "b") { $getopts->{$topic} = 1 if($val && $val ne "no") }
      }
      close(RCFILE);
- #    warn "** Parser finished $filerc\n";
   }
-  
- # foreach(keys(%$getopts)) {
- #  warn "CONF: $_ - $getopts->{$_}\n";
- # }
-  
   
   return 1;
 }

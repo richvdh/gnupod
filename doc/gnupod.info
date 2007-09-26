@@ -677,6 +677,11 @@ Example:
 
    don't forget to run `mktunes.pl' afterwards.
 
+   Note: Artwork added by GNUpod may vanish after using iTunes: GNUpod
+does not inject the artwork into the id3-header of the file.  If iTunes
+finds such a file (while scanning / changing tags) the artwork may get
+dropped.
+
 
 File: gnupod.info,  Node: Unplug the iPod,  Next: Recovering files,  Prev: Adding cover artwork,  Up: Using GNUpod
 
@@ -1345,15 +1350,15 @@ Node: Edit tags22440
 Node: Creating playlists22985
 Node: Dealing with podcasts25466
 Node: Adding cover artwork26372
-Node: Unplug the iPod27490
-Node: Recovering files28403
-Node: Coexistence29300
-Node: Late 2007 iPods30794
-Node: Problems31583
-Node: GNUtunesDB31966
-Node: Get rid of '-m'33472
-Node: Known bugs and limitations33757
-Node: Reporting Bugs34048
-Node: GNU Free Documentation License34496
+Node: Unplug the iPod27714
+Node: Recovering files28627
+Node: Coexistence29524
+Node: Late 2007 iPods31018
+Node: Problems31807
+Node: GNUtunesDB32190
+Node: Get rid of '-m'33696
+Node: Known bugs and limitations33981
+Node: Reporting Bugs34272
+Node: GNU Free Documentation License34720
 
 End Tag Table
