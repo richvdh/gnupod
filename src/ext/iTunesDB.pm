@@ -314,7 +314,6 @@ sub mk_mhit {
 	
 	#We have to fix 'volume'
 	my $vol = sprintf("%.0f",( int($file_hash{volume})*2.55 ));
-	
 	if($vol >= 0 && $vol <= 255) { } #Nothing to do
 	elsif($vol < 0 && $vol >= -255) {            #Convert value
 		$vol = ((0xFFFFFFFF) + $vol); 
@@ -324,6 +323,7 @@ sub mk_mhit {
 		$vol = 0; #We won't nuke the iPod with an ultra high volume setting..
 	}
 	
+	# Checks rating
 	foreach( ("rating", "prerating") ) {
 		if($file_hash{$_} && $file_hash{$_} !~ /^(2|4|6|8|10)0$/) {
 			warn "Warning: Song $file_hash{id} has an invalid $_: $file_hash{$_}\n";
@@ -338,9 +338,16 @@ sub mk_mhit {
 		warn "Warning: ID can't be '$c_id', has to be > 0\n";
 		warn "  ---->  This song *won't* be visible on the iPod\n";
 		warn "  ---->  This may confuse other scripts...\n";
-		warn "  ----> !! YOU SHOULD FIX THIS AND RERUN mktunes.pl !!\n";
+		warn "  ----> !! YOU SHOULD FIX THIS AND RERUN $0 !!\n";
 	}
 	
+	# Convert legacy dbid :-(
+	if(!defined($file_hash{dbid_1}) && defined($file_hash{dbid_msw}) && defined($file_hash{dbid_lsw})) {
+		$file_hash{dbid_1} = unpack("H16",pack("V",$file_hash{dbid_lsw}).pack("V",$file_hash{dbid_msw}));
+	}
+	
+	
+	# Lookup right-pane artwork id
 	my $rnd_cover_id = $hr->{artwork}->GetImage($file_hash{dbid_1});
 	$rnd_cover_id = ( ref($rnd_cover_id) eq 'HASH' ? $rnd_cover_id->{id} : 0 );
 	
@@ -1582,14 +1589,11 @@ sub readOTG {
 # Read timezone from Preferences file
 sub getTimezone {
 	my($prefs) = @_;
-	my $buff = 0x00;
-	open(PREFS, $prefs) or return undef;
-	sysseek(PREFS, (0xb10),0);
-	sysread(PREFS, $buff, 1);
-	close(PREFS);
 	
-	my $tzx = (GNUpod::FooBar::shx2int($buff));
-	my $time_offset = ($tzx - 0x19)*30*60; #Seconds
+	open(PREFS, $prefs) or return undef;
+	my $buff = get_int( 0xb10, 1, *PREFS);
+	close(PREFS);
+	my $time_offset = ($buff - 0x19)*30*60; #Seconds
 	return int($time_offset);
 }
 

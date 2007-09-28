@@ -79,28 +79,25 @@ elsif($opth->{mount}) {
 #######################################################################
 # Check if someone mounted the iPod CaseSensitive
 sub _check_casesensitive {
- my($target) = @_;
- 
- if(open(CSTEST,">$target/csTeSt")) {
-   my $inode_a = (stat("$target/csTeSt"))[1]; #Get inode of just-creaded file
-   my $inode_b = (stat("$target/CStEsT"))[1]; #Get inode of another file..
-   close(CSTEST) or die "FATAL: Could not close CSTEST FD ($target/csTeST) : $!\n";
-   unlink("$target/csTeSt"); #Boom!
-  
-   if($inode_a != $inode_b) { #Whops, different inodes? -> case sensitive fs
-     #Nerv the user
-     warn "Warning: $target seems to be mounted *CASE SENSITIVE*\n";
-     warn "         Mounting VFAT like this is a very bad idea!\n";
-     warn "         Please mount the Filesystem CASE *IN*SENSITIVE\n";
-     warn "         (use 'mount ... -o check=r' for VFAT)\n";
-     warn "         [Ignore this message if $target isn't a\n";
-     warn "          VFAT Filesystem (like HFS+) ]\n";
-   }
-  
- }
- else {
-   warn "warning: Could not write to $target, iPod mounted read-only? ($!)\n";
- }
+	my($target) = @_;
+	
+	if(open(CSTEST,">$target/csTeSt")) {
+		my $inode_a = (stat("$target/csTeSt"))[1]; #Get inode of just-creaded file
+		my $inode_b = (stat("$target/CStEsT"))[1]; #Get inode of another file..
+		close(CSTEST) or die "FATAL: Could not close CSTEST FD ($target/csTeST) : $!\n";
+		unlink("$target/csTeSt"); #Boom!
+		
+		if($inode_a != $inode_b) { #Whops, different inodes? -> case sensitive fs
+			#Nerv the user
+			warn "Warning: $target is mounted case sensitive, bad:\n";
+			warn "         FAT32-iPods should be mounted case in-sensitive!\n";
+			warn "         (try 'mount ... -o check=relaxed')\n";
+		}
+	
+	}
+	else {
+		die "Could not write to $target, iPod mounted read-only? ($!)\n";
+	}
 }
 
 #######################################################################

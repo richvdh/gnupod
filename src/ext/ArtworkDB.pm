@@ -28,7 +28,7 @@ use Digest::MD5;
 use Data::Dumper;
 
 use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching ~ 256 mb
-use constant SHARED_STORAGE => 1;         # Share same offset across multiple items
+use constant SHARED_STORAGE => 1;         # Share same offset across multiple items, this breaks iTunes but who cares?!
 
 	# Artwork profiles:
 	my $profiles = { 'nano_3g' => [ { height=>320, width=>320, storage_id=>1060, bpp=>16,  },  { height=>128, width=>128, storage_id=>1055, bpp=>16, },
@@ -134,11 +134,10 @@ use constant SHARED_STORAGE => 1;         # Share same offset across multiple it
 		   $model  =~ tr/a-z0-9_//cd; # relax
 		my $mode   = $profiles->{$model} || $profiles->{video};  # select model or use the default (video)
 		my $count  = 0;
-		$self->{fbimg}->{source_size} = (-s $file);
+		$self->{fbimg}->{source_size} = (-s $file) or return 0; # no thanks
 		foreach my $mr (@$mode) {
 			my $buff = '';
-			open(IM, "-|") || exec("convert", "-resize", "$mr->{height}x$mr->{width}!",
-			                         "-filter", "sinc", "-depth", 8, $file, "RGB:-");
+			open(IM, "-|") || exec("convert", "-resize", "$mr->{height}x$mr->{width}!", "-depth", 8, $file, "RGB:-");
 			while(<IM>) { $buff .= $_  }
 			close(IM);
 			
@@ -151,7 +150,6 @@ use constant SHARED_STORAGE => 1;         # Share same offset across multiple it
 				warn "$0: Could not convert $file to $mr->{height}x$mr->{width}: image should be $size bytes but imagemagick provided $outlen bytes.\n";
 				next;
 			}
-			print "Cached $mr->{height} x $mr->{width} version\n";
 			push(@{$self->{fbimg}->{cache}}, { data => $rgb565, storage_id=>$mr->{storage_id}, imgsize=>$size, height=>$mr->{height}, width=>$mr->{width}, store=>undef} );
 			$count++;
 		}
@@ -448,7 +446,12 @@ package GNUpod::ArtworkDB::RGB;
 	use strict;
 	
 	use constant BMP_HEADERSIZE => 54;
-	
+	use constant R565_B_R       => 5;
+	use constant R565_B_G       => 6;
+	use constant R565_B_B       => 5;
+	use constant R565_BYTE      => 8;
+	use constant R565_B_T       => R565_BYTE*2;
+
 	sub new {
 		my($class,%args) = @_;
 		my $self = { data => '', dimH => 0, dimW => 0};
@@ -474,7 +477,6 @@ package GNUpod::ArtworkDB::RGB;
 	
 	sub RGB888ToRGB565 {
 		my($self) = @_;
-		
 		my $size = length($self->{data});
 		my $pixl = $self->{dimH} * $self->{dimW};
 		my $bpp  = int($size/$pixl);
@@ -482,22 +484,26 @@ package GNUpod::ArtworkDB::RGB;
 		
 		for(my $h = 0; $h < $self->{dimH}; $h++) {
 			for(my $w = 0; $w < $self->{dimW}; $w++) {
+				
 				my $offset = (($h*$self->{dimW}) + $w)*$bpp;
-				my @A = ();
+				my @A      = ();
 				for(my $i=0; $i < $bpp; $i++) {
-					$A[$i] = substr($self->{data},$offset+$i,1);
+					$A[$i] = unpack("C",substr($self->{data},$offset+$i,1));
 				}
 				
-				my $pa = substr(unpack("B*",$A[0]),0,5);
-				my $pb = substr(unpack("B*",$A[1]),0,6);
-				my $pc = substr(unpack("B*",$A[2]),0,5);
-				
-				$out .= pack("v",unpack("n",pack("B16", $pa.$pb.$pc)));
+				$A[0] >>= R565_BYTE - R565_B_R;                        # Drop 3 bits
+				$A[1] >>= R565_BYTE - R565_B_G;                        # Drop 2 bits
+				$A[2] >>= R565_BYTE - R565_B_B;                        # Drop 3 bits
+				$A[0] <<= (R565_B_T - R565_B_R                      );
+				$A[1] <<= (R565_B_T - R565_B_R - R565_B_G           );
+				$A[2] <<= (R565_B_T - R565_B_R - R565_B_G - R565_B_B);
+				$out .= pack("v" , ($A[0] | $A[1] | $A[2] ));
 			}
 		}
 		return $out;
 	}
-	
+
+=head
 	sub RGB565ToBitmap {
 		my($self) = @_;
 		my $size = length($self->{data});
@@ -532,5 +538,6 @@ package GNUpod::ArtworkDB::RGB;
 		}
 		return $out;
 	}
+=cut
 	
 1;
