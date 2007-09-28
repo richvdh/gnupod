@@ -77,7 +77,10 @@ sub getpath {
 			$clean_filename = substr($clean_filename,0,(1+length($current_extension))*-1);
 		}
 		if($opts->{format} && $requested_ext && $current_extension !~ /$requested_ext/i) {
-			warn "Warning: $source has a wrong extension [$current_extension], changed extension to $opts->{format}\n";
+			if(length($current_extension) != 0) {
+				# Only warn if file HAD an extension before
+				warn "Warning: $source has a wrong extension [$current_extension], changed extension to $opts->{format}\n";
+			}
 			$current_extension = $opts->{format};
 		}
 		

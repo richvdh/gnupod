@@ -66,9 +66,6 @@ if($opts{restore}) {
 	print "If you use --restore, you'll *lose* your playlists\n";
 	print " Hit ENTER to continue or CTRL+C to abort\n\n";
 	<STDIN>;
-	delete($opts{decode});    #We don't decode anything
-	$opts{duplicate} = 1;     #Don't skip dups on restore
-	$opts{decode}    = undef; #Do not encode, only native files are on an iPod
 	@XFILES = bsd_glob("$opts{mount}/iPod_Control/Music/*/*", GLOB_NOSORT)
 }
 elsif($ARGV[0] eq "-" && @ARGV == 1) {
@@ -105,8 +102,14 @@ sub startup {
 	$opts{_no_sync} = $opts{restore};
 	my $fatal_error = 0;
 	
-	unless($opts{restore}) { #We parse the old file, if we are NOT restoring the iPod
-		
+	if($opts{restore}) {
+		# Some options don't mix well with --restore
+		delete($opts{artwork});
+		delete($opts{playlist});
+		delete($opts{decode});
+		$opts{duplicate} = 1;
+	}
+	else {
 		if($opts{artwork}) {
 			if( $AWDB->PrepareImage(File=>$opts{artwork}, Model=>$opts{model}) ) {
 				$AWDB->LoadArtworkDb or die "Failed to load artwork database\n";
@@ -116,7 +119,6 @@ sub startup {
 				delete($opts{artwork});
 			}
 		}
-		
 		GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
 	}
 	
@@ -222,11 +224,8 @@ sub startup {
 			}
 			elsif($fh->{mediatype} == GNUpod::FileMagic::MEDIATYPE_VIDEO) {
 				$fh->{mediatype} = MEDIATYPE_PODCAST_VIDEO;
-				
-				# Enforce M4V extension for video podcasts
-				my $enforced_ext = $file.".m4v";
-				rename($file,$enforced_ext) or die "Unable to rename $file into $enforced_ext : $!\n";
-				$file = $enforced_ext;
+				$wtf_frmt = "m4v"; # Enforce M4V as extension
+				$wtf_ext  = '';    # no multiple choices, sorry
 			}
 		}
 		
@@ -254,7 +253,7 @@ sub startup {
 			$wtf_frmt       = $conv_media_h->{format};    #Set the new format (-> container)
 			$wtf_ext        = $conv_media_h->{extension}; #Set the new possible extension, but keep ftype (=codec)
 			$file           = $path_of_converted_file;    #Point $file to new file
-			$per_file_info{$file}->{UNLINK} = 1; #Request unlink of this file after adding
+			$per_file_info{$file}->{UNLINK} = 1;          #Request unlink of this file after adding
 		}
 		elsif(defined($opts{reencode})) {
 			print "> ReEncoding '$file' with quality ".int($opts{reencode}).", please wait...\n";
@@ -283,12 +282,11 @@ sub startup {
 		my $vol = $fh->{volume} || 0;
 		$vol = $min_vol_adj if ($vol < $min_vol_adj);
 		$vol = $max_vol_adj if ($vol > $max_vol_adj);
-		# print "$file vol $fh->{volume} -> $vol\n";
 		$fh->{volume} = $vol;
 		
 		#Get a path
-		(${$fh}{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file,  {format=>$wtf_frmt, extension=>$wtf_ext, keepfile=>$opts{restore}});
-
+		($fh->{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file,  {format=>$wtf_frmt, extension=>$wtf_ext, keepfile=>$opts{restore}});
+		
 		if(!defined($target)) {
 			warn "*** FATAL *** Skipping '$file' , no target found!\n";
 			$fatal_error++;
@@ -444,7 +442,7 @@ sub resolve_podcasts {
 			
 			my $pcrss = PODCAST_fetch($cf, "/tmp/gnupodcast$i");
 			if($pcrss->{status} or (!(-f $pcrss->{file}))) {
-				warn "! [HTTP] Unable to download the file '$cf', wget exitcode: $pcrss->{status}\n";
+				warn "! [HTTP] Failed to download the file '$cf', wget exitcode: $pcrss->{status}\n";
 				next;
 			}
 			#Add the stuff to %podcast_infos and unlink the file after this.
@@ -484,7 +482,7 @@ foreach my $key (keys(%podcast_infos)) {
 		print "* [HTTP] Downloading $c_url ...\n";
 		my $rssmedia = PODCAST_fetch($c_url, "/tmp/gnupodcast_media");
 		if($rssmedia->{status} or (!(-f $rssmedia->{file}))) {
-			warn "! [HTTP] Unable to download $rssmedia->{file}\n";
+			warn "! [HTTP] Failed to download $c_url to $rssmedia->{file}\n";
 			next;
 		}
 

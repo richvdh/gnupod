@@ -400,21 +400,21 @@ sub _parse_iTunNORM {
 #########################################################
 # Start the converter
 sub kick_convert {
- my($prog, $quality, $file, $format, $con) = @_;
+	my($prog, $quality, $file, $format, $con) = @_;
 
- $prog = "$con->{bindir}/$prog";
- #Set Quality to a normal level
- $quality = 0 if $quality < 0;
- $quality = 9 if $quality > 9;
- open(KICKOMATIC, "-|") or exec($prog, $file, "GET_$format", int($quality)) or die "FileMagic::kick_convert: Could not exec $prog\n";
-  my $newP = <KICKOMATIC>;
-  chomp($newP);
- close(KICKOMATIC);
- 
- if($newP =~ /^PATH:(.+)$/) {
-  return $1;
- }
- return undef;
+	$prog = "$con->{bindir}/$prog";
+	#Set Quality to a normal level
+	$quality = 0 if $quality < 0;
+	$quality = 9 if $quality > 9;
+	open(KICKOMATIC, "-|") or exec($prog, $file, "GET_$format", int($quality)) or die "FileMagic::kick_convert: Could not exec $prog\n";
+	my $newP = <KICKOMATIC>;
+	chomp($newP);
+	close(KICKOMATIC);
+	
+	if($newP =~ /^PATH:(.+)$/) {
+		return $1;
+	}
+	return undef;
 }
 
 #########################################################
