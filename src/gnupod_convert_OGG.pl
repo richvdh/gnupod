@@ -63,7 +63,7 @@ print "_TRACKNUM:".( ($ftag->comment('tracknum'))[0] |
                      ($ftag->comment('tracknumber'))[0] )."\n";
 print "_COMMENT:".($ftag->comment('comment'))[0]."\n";
 print "_MEDIATYPE:".(GNUpod::FileMagic::MEDIATYPE_AUDIO)."\n";
-print "FORMAT: OGG\n";
+print "FORMAT:OGG\n";
 }
 elsif($gimme eq "GET_PCM") {
   my $tmpout = GNUpod::FooBar::get_u_path("/tmp/gnupod_pcm", "wav");

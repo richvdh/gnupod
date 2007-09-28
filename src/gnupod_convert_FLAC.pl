@@ -49,7 +49,7 @@ elsif($gimme eq "GET_META") {
 		warn "gnupod_convert_FLAC.pl: Could not read FLAC-Metadata from $file\n";
 		warn "gnupod_convert_FLAC.pl: Maybe Audio::FLAC is not installed?\n";
 		warn "Error: $@\n";
-	exit(1);
+		exit(1);
 	}
 	print "_ARTIST:$ftag->{ARTIST}\n";
 	print "_ALBUM:$ftag->{ALBUM}\n";
@@ -59,7 +59,7 @@ elsif($gimme eq "GET_META") {
 	print "_COMMENT:$ftag->{COMMENT}\n";
 	print "_VENDOR:$ftag->{VENDOR}\n";
 	print "_MEDIATYPE:".(GNUpod::FileMagic::MEDIATYPE_AUDIO)."\n";
-	print "FORMAT: FLAC\n";
+	print "FORMAT:FLAC\n";
 }
 elsif($gimme eq "GET_PCM") {
 	my $tmpout = GNUpod::FooBar::get_u_path("/tmp/gnupod_pcm", "wav");

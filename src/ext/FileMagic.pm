@@ -123,15 +123,15 @@ sub __is_NonNative {
 	my $cf = ((split(/\//,$file))[-1]);
 	my @songa = pss($metastuff->{_TRACKNUM});
 	
-	$rh{artist}   = getutf8($metastuff->{_ARTIST} || "Unknown Artist");
-	$rh{album}    = getutf8($metastuff->{_ALBUM}  || "Unknown Album");
-	$rh{title}    = getutf8($metastuff->{_TITLE}  || $cf || "Unknown Title");
-	$rh{genre}    = getutf8($metastuff->{_GENRE}  || "");
-	$rh{songs}    = int($songa[1]);
-	$rh{songnum}  = int($songa[0]); 
-	$rh{comment}  = getutf8($metastuff->{_COMMENT} || $metastuff->{FORMAT}." file");
-	$rh{fdesc}    = getutf8($metastuff->{_VENDOR} || "Converted using $encoder"); 
-	$rh{mediatype}= int($metastuff->{_MEDIATYPE} || MEDIATYPE_AUDIO);
+	$rh{artist}    = getutf8($metastuff->{_ARTIST} || "Unknown Artist");
+	$rh{album}     = getutf8($metastuff->{_ALBUM}  || "Unknown Album");
+	$rh{title}     = getutf8($metastuff->{_TITLE}  || $cf || "Unknown Title");
+	$rh{genre}     = getutf8($metastuff->{_GENRE}  || "");
+	$rh{songs}     = int($songa[1]);
+	$rh{songnum}   = int($songa[0]); 
+	$rh{comment}   = getutf8($metastuff->{_COMMENT} || $metastuff->{FORMAT}." file");
+	$rh{fdesc}     = getutf8($metastuff->{_VENDOR}  || "Converted using $encoder"); 
+	$rh{mediatype} = int($metastuff->{_MEDIATYPE}   || MEDIATYPE_AUDIO);
 	return {ref=>\%rh, encoder=>$encoder, codec=>$NN_HEADERS->{$magic}->{ftyp} };
 }
 
@@ -154,21 +154,21 @@ sub __is_qt {
  }
  
  my $cf = ((split(/\//,$file))[-1]);
- $rh{songs}     = int($ret->{tracks});
- $rh{songnum}   = int($ret->{tracknum});
- $rh{cds}       = int($ret->{cds});
- $rh{cdnum}     = int($ret->{cdnum});
- $rh{srate}     = int($ret->{srate});
- $rh{time}      = int($ret->{time});
- $rh{bitrate}   = int($ret->{bitrate});
- $rh{filesize}  = int($ret->{filesize});
- $rh{fdesc}     = getutf8($ret->{fdesc});
- $rh{artist}    = getutf8($ret->{artist}   || "Unknown Artist");
- $rh{album}     = getutf8($ret->{album}    || "Unknown Album");
- $rh{title}     = getutf8($ret->{title}    || $cf || "Unknown Title");
- $rh{genre}     = _get_genre( getutf8($ret->{genre} || $ret->{gnre} || "") );
- $rh{composer}  = getutf8($ret->{composer} || ""); 
- $rh{soundcheck}= _parse_iTunNORM($ret->{iTunNORM});
+ $rh{songs}      = int($ret->{tracks});
+ $rh{songnum}    = int($ret->{tracknum});
+ $rh{cds}        = int($ret->{cds});
+ $rh{cdnum}      = int($ret->{cdnum});
+ $rh{srate}      = int($ret->{srate});
+ $rh{time}       = int($ret->{time});
+ $rh{bitrate}    = int($ret->{bitrate});
+ $rh{filesize}   = int($ret->{filesize});
+ $rh{fdesc}      = getutf8($ret->{fdesc});
+ $rh{artist}     = getutf8($ret->{artist}   || "Unknown Artist");
+ $rh{album}      = getutf8($ret->{album}    || "Unknown Album");
+ $rh{title}      = getutf8($ret->{title}    || $cf || "Unknown Title");
+ $rh{genre}      = _get_genre( getutf8($ret->{genre} || $ret->{gnre} || "") );
+ $rh{composer}   = getutf8($ret->{composer} || ""); 
+ $rh{soundcheck} = _parse_iTunNORM($ret->{iTunNORM});
  $rh{mediatype}  = int($ret->{mediatype} || MEDIATYPE_AUDIO);
  return  ({codec=>$ret->{_CODEC}, ref=>\%rh});
 }
@@ -245,13 +245,13 @@ sub __is_mp3 {
 	my $cf = ((split(/\//,$file))[-1]);
 	
 	my %rh = ();
-	$rh{bitrate} = $h->{BITRATE};
+	$rh{bitrate}  = $h->{BITRATE};
 	$rh{filesize} = $h->{SIZE};
 	$rh{srate}    = int($h->{FREQUENCY}*1000);
 	$rh{time}     = int($h->{SECS}*1000);
 	$rh{fdesc}    = "MPEG ${$h}{VERSION} layer ${$h}{LAYER} file";
 	
-	$h = MP3::Info::get_mp3tag($file,1)     unless $flags->{'noIDv1'};  #Get the IDv1 tag
+	$h  = MP3::Info::get_mp3tag($file,1)    unless $flags->{'noIDv1'};  #Get the IDv1 tag
 	$hs = MP3::Info::get_mp3tag($file, 2,1) unless $flags->{'noIDv2'};  #Get the IDv2 tag
 	
 	
@@ -268,18 +268,18 @@ sub __is_mp3 {
 	my @songa = pss(getutf8($hs->{TRCK} || $hs->{TRK} || $h->{TRACKNUM}));
 	my @cda   = pss(getutf8($hs->{TPOS}));
 	
-	$rh{songs}    = int($songa[1]);
-	$rh{songnum} =  int($songa[0]);
-	$rh{cdnum}   =  int($cda[0]);
-	$rh{cds}    =   int($cda[1]);
-	$rh{year} =     getutf8($hs->{TYER} || $hs->{TYE} || $h->{YEAR}    || 0);
-	$rh{title} =    getutf8($hs->{TIT2} || $hs->{TT2} || $h->{TITLE}   || $cf || "Untitled");
-	$rh{album} =    getutf8($hs->{TALB} || $hs->{TAL} || $h->{ALBUM}   || "Unknown Album");
-	$rh{artist} =   getutf8($hs->{TPE1} || $hs->{TP1} || $hs->{TPE2} || $hs->{TP2} || $h->{ARTIST}  || "Unknown Artist");
-	$rh{genre} =    _get_genre( getutf8($hs->{TCON} || $hs->{TCO} || $h->{GENRE}   || "") );
-	$rh{comment} =  getutf8($hs->{COMM} || $hs->{COM} || $h->{COMMENT} || "");
-	$rh{composer} = getutf8($hs->{TCOM} || $hs->{TCM} || "");
-	$rh{playcount}= int(getutf8($hs->{PCNT} || $hs->{CNT})) || 0;
+	$rh{songs}      = int($songa[1]);
+	$rh{songnum}    = int($songa[0]);
+	$rh{cdnum}      = int($cda[0]);
+	$rh{cds}        = int($cda[1]);
+	$rh{year}       = getutf8($hs->{TYER} || $hs->{TYE} || $h->{YEAR}    || 0);
+	$rh{title}      = getutf8($hs->{TIT2} || $hs->{TT2} || $h->{TITLE}   || $cf || "Untitled");
+	$rh{album}      = getutf8($hs->{TALB} || $hs->{TAL} || $h->{ALBUM}   || "Unknown Album");
+	$rh{artist}     = getutf8($hs->{TPE1} || $hs->{TP1} || $hs->{TPE2} || $hs->{TP2} || $h->{ARTIST}  || "Unknown Artist");
+	$rh{genre}      = _get_genre( getutf8($hs->{TCON} || $hs->{TCO} || $h->{GENRE}   || "") );
+	$rh{comment}    = getutf8($hs->{COMM} || $hs->{COM} || $h->{COMMENT} || "");
+	$rh{composer}   = getutf8($hs->{TCOM} || $hs->{TCM} || "");
+	$rh{playcount}  = int(getutf8($hs->{PCNT} || $hs->{CNT})) || 0;
 	$rh{soundcheck} = _parse_iTunNORM(getutf8($hs->{COMM} || $hs->{COM} || $h->{COMMENT}));
 	$rh{mediatype}  = MEDIATYPE_AUDIO;
 
@@ -429,22 +429,15 @@ sub kick_reencode {
 	return undef if $quality > 9; #=Bad Quality
 	
 	#Try to get an unique name
-	my $tmpout = undef;
-	my $looppanic = 0;
-	while($tmpout = "/tmp/gnupod_re_".$$.int(rand(0xFFFF))) {
-		last unless -e $tmpout;
-		if($looppanic++ > 0xFFFF) {
-			warn "FileMagic.pm: Ouch: could not get an unique filename in /tmp .. \n";
-			return undef;
-		}
-	}
+	my $tmpout = GNUpod::FooBar::get_u_path("/tmp/gnupod_reencode", "tmp") or return undef;
 	
 	if($format eq 'm4a') {
 		#Faac is not as nice as lame: We have to decode ourself.. and fixup the $quality value
 		$quality = 140 - ($quality*10);
 		my $pcmout = $tmpout.".wav";
-		my $ret = system( ("faad", "-o", $pcmout, $file) );
+		system( ("faad", "-o", $pcmout, $file) );
 		#Ok, we've got a pcm version.. encode it!
+		
 		$tmpout .= ".m4a"; #Fixme: This breaks m4b.. well.. next time i'll fix it..
 		my $ret = system( ("faac", "-w", "-q", $quality, "-o", $tmpout, $pcmout) );
 		unlink($pcmout) or warn "FileMagic.pm: Could not unlink '$pcmout' , $!\n";
@@ -482,7 +475,7 @@ sub converter_readmeta {
 	while(<CFLAC>) {
 		chomp($_);
 		if($_ =~ /^([^:]+):(.*)$/) {
-		$metastuff{$1} = $2;
+			$metastuff{$1} = $2;
 		}
 	}
 	close(CFLAC);

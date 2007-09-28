@@ -29,7 +29,6 @@ use GNUpod::ArtworkDB;
 use Getopt::Long;
 use File::Copy;
 use File::Glob ':glob';
-use XML::Parser; #Loaded by XMLhelper, but hey..
 
 use constant MEDIATYPE_PODCAST_AUDIO => 4;
 use constant MEDIATYPE_PODCAST_VIDEO => 6;
@@ -63,7 +62,7 @@ $SIG{'INT'} = \&handle_int;
 my @XFILES  = ();
 
 if($opts{restore}) {
-	print "If you use --restore, you'll *lose* your playlists\n";
+	print "If you use --restore, you'll *lose* your playlists and cover artwork!\n";
 	print " Hit ENTER to continue or CTRL+C to abort\n\n";
 	<STDIN>;
 	@XFILES = bsd_glob("$opts{mount}/iPod_Control/Music/*/*", GLOB_NOSORT)
@@ -142,7 +141,8 @@ sub startup {
 	#We parsed the XML-Document
 	#resolve_podcasts fetches new podcasts from http:// stuff and adds them to real_files
 	my @real_files = resolve_podcasts(@argv_files);
-	my $addcount = 0;
+	my $addcount   = 0;
+	
 	#We are ready to copy each file..
 	foreach my $file (@real_files) {
 		#Skip all songs if user sent INT
@@ -459,46 +459,47 @@ sub resolve_podcasts {
 		}
 	}
 
-foreach my $key (keys(%podcast_infos)) {
-	my $cref = $podcast_infos{$key};
-	foreach my $podcast_item (@$cref) {
-		my $c_title = $podcast_item->{title}->{"\0"};
-		my $c_author = $podcast_item->{author}->{"\0"};
-		my $c_desc  = $podcast_item->{description}->{"\0"};
-		my $c_url   = $podcast_item->{enclosure}->{url};
-		#We use the URL as GUID if there isn't one...			
-		my $c_guid  = $podcast_item->{guid}->{"\0"} || $c_url;
-		my $c_podcastrss = $per_file_info{$key}->{REAL_RSS};
-		my $possible_dupdb_entry = $c_guid."\0".$c_podcastrss;
-
-		if(length($c_guid) == 0 or length($c_podcastrss) == 0 or length($c_url) == 0) {
-			warn "! [HTTP] '$c_podcastrss' is an invalid podcast item (No URL/RSS?)\n";
-			next;
+	foreach my $key (keys(%podcast_infos)) {
+		my $cref = $podcast_infos{$key};
+		foreach my $podcast_item (@$cref) {
+			my $c_title = $podcast_item->{title}->{"\0"};
+			my $c_author = $podcast_item->{author}->{"\0"};
+			my $c_desc  = $podcast_item->{description}->{"\0"};
+			my $c_url   = $podcast_item->{enclosure}->{url};
+			#We use the URL as GUID if there isn't one...			
+			my $c_guid  = $podcast_item->{guid}->{"\0"} || $c_url;
+			my $c_podcastrss = $per_file_info{$key}->{REAL_RSS};
+			my $possible_dupdb_entry = $c_guid."\0".$c_podcastrss;
+			
+			if(length($c_guid) == 0 or length($c_podcastrss) == 0 or length($c_url) == 0) {
+				warn "! [HTTP] '$c_podcastrss' is an invalid podcast item (No URL/RSS?)\n";
+				next;
+			}
+			elsif($dupdb_podcast{$possible_dupdb_entry}) {
+				warn "! [HTTP] Podcast $c_url ($c_title) exists, no need to download this file\n";
+				next;
+			}		
+			print "* [HTTP] Downloading $c_url ...\n";
+			my $rssmedia = PODCAST_fetch($c_url, "/tmp/gnupodcast_media");
+			if($rssmedia->{status} or (!(-f $rssmedia->{file}))) {
+				warn "! [HTTP] Failed to download $c_url to $rssmedia->{file}\n";
+				next;
+			}
+			
+			$per_file_info{$rssmedia->{file}}->{UNLINK}    = 1;  # Remote tempfile
+			$per_file_info{$rssmedia->{file}}->{ISPODCAST} = 1;  # Triggers mediatype fix
+			
+			# Set information/tags from XML-File
+			$per_file_info{$rssmedia->{file}}->{podcastguid} = $c_guid;
+			$per_file_info{$rssmedia->{file}}->{podcastrss}  = $c_podcastrss;
+			$per_file_info{$rssmedia->{file}}->{title}       = $c_title   if $c_title;
+			$per_file_info{$rssmedia->{file}}->{artist}      = $c_author  if $c_author;
+			$per_file_info{$rssmedia->{file}}->{desc}        = $c_desc    if $c_desc;
+			
+			push(@files,$rssmedia->{file});
 		}
-		elsif($dupdb_podcast{$possible_dupdb_entry}) {
-			warn "! [HTTP] Podcast $c_url ($c_title) exists, no need to download this file\n";
-			next;
-		}		
-		print "* [HTTP] Downloading $c_url ...\n";
-		my $rssmedia = PODCAST_fetch($c_url, "/tmp/gnupodcast_media");
-		if($rssmedia->{status} or (!(-f $rssmedia->{file}))) {
-			warn "! [HTTP] Failed to download $c_url to $rssmedia->{file}\n";
-			next;
-		}
-
-		$per_file_info{$rssmedia->{file}}->{UNLINK}    = 1;  # Remote tempfile
-		$per_file_info{$rssmedia->{file}}->{ISPODCAST} = 1;  # Triggers mediatype fix
-		
-		# Set information/tags from XML-File
-		$per_file_info{$rssmedia->{file}}->{podcastguid} = $c_guid;
-		$per_file_info{$rssmedia->{file}}->{podcastrss}  = $c_podcastrss;
-		$per_file_info{$rssmedia->{file}}->{title}       = $c_title   if $c_title;
-		$per_file_info{$rssmedia->{file}}->{artist}      = $c_author  if $c_author;
-		$per_file_info{$rssmedia->{file}}->{desc}        = $c_desc    if $c_desc;
-		
-		push(@files,$rssmedia->{file});
 	}
-}
+	
 	return @files;
 }
 
@@ -577,7 +578,7 @@ EOF
 sub version {
 die << "EOF";
 gnupod_addsong.pl (gnupod) ###__VERSION__###
-Copyright (C) Adrian Ulrich 2002-2005
+Copyright (C) Adrian Ulrich 2002-2007
 
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

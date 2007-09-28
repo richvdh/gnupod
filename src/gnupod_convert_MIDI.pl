@@ -37,7 +37,7 @@ if(!(-r $file)) {
 }
 elsif($gimme eq "GET_META") {
   print "_MEDIATYPE:".(GNUpod::FileMagic::MEDIATYPE_AUDIO)."\n";
-  print "FORMAT: MIDI\n";
+  print "FORMAT:MIDI\n";
 }
 elsif($gimme eq "GET_PCM") {
   my $tmpout = GNUpod::FooBar::get_u_path("/tmp/gnupod_pcm", "wav");

@@ -37,7 +37,7 @@ if(!(-r $file)) {
 elsif($gimme eq "GET_META") {
 	#..not much
 	print "_MEDIATYPE:".(GNUpod::FileMagic::MEDIATYPE_VIDEO)."\n";
-	print "FORMAT: MP4\n";
+	print "FORMAT:MP4\n";
 }
 elsif($gimme eq "GET_VIDEO") {
 	my $tmpout = GNUpod::FooBar::get_u_path("/tmp/gnupod_video", "mp4");
