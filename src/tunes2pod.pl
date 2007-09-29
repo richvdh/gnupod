@@ -57,7 +57,7 @@ sub convert {
 	
 	#We disabled all autosyncing (_no_sync set to 1), so we do a test
 	#ourself
-	if(!$opts{force} && !(GNUpod::FooBar::_itb_needs_sync($con))) {
+	if(!$opts{force} && !(GNUpod::FooBar::ItunesDBNeedsSync($con))) {
 		print "I don't think that you have to run tunes2pod.pl\n";
 		print "The GNUtunesDB looks up-to-date\n";
 		print "\n";
@@ -67,7 +67,7 @@ sub convert {
 	
 	open(ITUNES, $con->{itunesdb}) or usage("Could not open $con->{itunesdb}");
 	
-	while(<ITUNES>) {}; seek(ITUNES,0,0); # the iPod is a sloooow mass-storage device, slurp it into the fs-cache
+	while(<ITUNES>) {}; sysseek(ITUNES,0,0); # the iPod is a sloooow mass-storage device, slurp it into the fs-cache
 	
 	my $self = { ctx => {}, mode => 0, playlist => {}, pc_playlist => {}, count_songs_done => 0, count_songs_total => 0 };
 	bless($self,__PACKAGE__);
@@ -83,12 +83,14 @@ sub convert {
 	           };
 	GNUpod::iTunesDB::ParseiTunesDB($obj,0);    # Parses the iTunesDB
 	GNUpod::XMLhelper::writexml($con);          # Writes out the new XML file
-	GNUpod::FooBar::setsync_itunesdb($con);     # Mark as in-sync
-	GNUpod::FooBar::setvalid_otgdata($con);     # dududio
+	
+	GNUpod::FooBar::SetItunesDBAsInSync($con);     # GNUtunesDB.xml is in-sync with iTunesDB
+	GNUpod::FooBar::SetOnTheGoAsValid($con);       # ..and so is the OnTheGo data
 	
 	#The iTunes is now set to clean .. maybe we have to
 	#update the otg..
-	$opts{_no_sync} = 0;
+	$opts{_no_sync}   = 0;
+	$opts{_no_cstest} = 1;
 	GNUpod::FooBar::connect(\%opts);
 	
 	print "\n Done\n";

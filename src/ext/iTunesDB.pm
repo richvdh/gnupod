@@ -1561,16 +1561,16 @@ sub readPLC {
 # Read OnTheGo data
 sub readOTG {
 	my($glob) = @_;
- 
+	
 	my $buff = undef;
 	my @content = ();
-
+	
 	foreach my $file (bsd_glob($glob,GLOB_NOSORT)) {
 		my @otgdb = ();
 		open(OTG, "$file") or next;
 		sysseek(OTG, 12, 0);
 		sysread(OTG, $buff, 4);
-  
+		
 		my $items = GNUpod::FooBar::shx2int($buff); 
 		my $offset = 20;
 		for(1..$items) {
@@ -1586,18 +1586,6 @@ sub readOTG {
 		push(@content,\@otgdb);
 	}
 	return @content;
-}
-
-########################################################
-# Read timezone from Preferences file
-sub getTimezone {
-	my($prefs) = @_;
-	
-	open(PREFS, $prefs) or return undef;
-	my $buff = get_int( 0xb10, 1, *PREFS);
-	close(PREFS);
-	my $time_offset = ($buff - 0x19)*30*60; #Seconds
-	return int($time_offset);
 }
 
 

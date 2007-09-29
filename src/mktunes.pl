@@ -83,9 +83,9 @@ sub main {
 	$mktunes->WriteItunesSD;
 	
 	print "> Updating Sync-Status\n";
-	GNUpod::FooBar::setsync_itunesdb($con);
-	GNUpod::FooBar::setvalid_otgdata($con);
-	GNUpod::FooBar::wipe_shufflestat($con);
+	GNUpod::FooBar::SetItunesDBAsInSync($con);   # iTunesDB is in sync with GNUtunesDB.xml
+	GNUpod::FooBar::SetOnTheGoAsValid($con);     # ..and we can now, again, trust OnTheGo data
+	GNUpod::FooBar::WipeShuffleStat($con);       # Forces reshuffling of iPod-Shuffle
 	print "\nYou can now umount your iPod. [Files: ".$mktunes->GetFileCount."]\n";
 	print " - May the iPod be with you!\n\n";
 

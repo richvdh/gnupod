@@ -10,6 +10,7 @@ Summary
   was the last entry of /proc/bus/usb/devices
 - The iTunesDB parsing code is now much more flexible and uses callbacks.
 - Remove UTF8-BOM (Fixes garbage if source was UTF16 encoded)
+- Removed broken lastfm support
 
 
 

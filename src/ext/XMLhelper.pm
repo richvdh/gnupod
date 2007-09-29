@@ -350,13 +350,15 @@ sub writexml {
 		}
 		rename($tmp_out, $out) or warn "Could not move $tmp_out to $out\n";
 	}
-	GNUpod::FooBar::setINvalid_otgdata($rr);
+	
+	# Don't trust OnTheGo data now (until mktunes has run)
+	GNUpod::FooBar::SetOnTheGoAsInvalid($rr);
 	
 	if($opts->{automktunes}) {
 		print "> Creating new iTunesDB\n";
-		GNUpod::FooBar::do_automktunes($rr);
+		GNUpod::FooBar::StartAutoMkTunes($rr);
 	}
-	
+
 }
 
 1;

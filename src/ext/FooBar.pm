@@ -32,48 +32,45 @@ use constant MACTIME => 2082844800; #Mac EPOCH offset
 #####################################################################
 # Get paths / files
 sub connect {
- my($opth) = @_;
- my $rr = ();
-  
+	my($opth) = @_;
+	my $rr = ();
 
- $rr->{status} = "No mountpoint defined";
- $rr->{bindir} = ($0 =~ m%^(.+)/%)[0] || ".";
-
-if(-d $opth->{mount}) {
-  $rr->{mountpoint}     = $opth->{mount};
-  $rr->{etc}            = $opth->{mount}."/iPod_Control/.gnupod";
-
-  $rr->{xml}            = $opth->{mount}."/iPod_Control/.gnupod/GNUtunesDB";
-  #It can also be called GNUtunesDB.xml
-  $rr->{xml}            = $rr->{xml}.".xml" if !(-e $rr->{xml});
-  $rr->{artworkdir}     = $opth->{mount}."/iPod_Control/Artwork";
-  $rr->{artworkdb}      = $opth->{mount}."/iPod_Control/Artwork/ArtworkDB";
-  $rr->{itunesdb}       = $opth->{mount}."/iPod_Control/iTunes/iTunesDB";
-  $rr->{itunessd}       = $opth->{mount}."/iPod_Control/iTunes/iTunesSD";
-  $rr->{shufflestat}    = $opth->{mount}."/iPod_Control/iTunes/iTunesShuffle";
-  $rr->{sysinfo}        = $opth->{mount}."/iPod_Control/Device/SysInfo";
-  $rr->{extsysinfo}     = $opth->{mount}."/iPod_Control/Device/SysInfoExtended";
-  $rr->{playcounts}     = "$rr->{mountpoint}/iPod_Control/iTunes/Play Counts";
-  $rr->{itunesdb_md5}   = "$rr->{etc}/.itunesdb_md5";
-  $rr->{onthego_invalid}  = "$rr->{etc}/.onthego_invalid";
-  $rr->{lastfm_queue}   = "$rr->{etc}/lastfmqueue.txt";
-  $rr->{onthego}        = "$rr->{mountpoint}/iPod_Control/iTunes/OTGPlaylist*";
-  $rr->{status}         = undef;
-
-	$rr->{tzdiff} =         GNUpod::iTunesDB::getTimezone($opth->{mount}."/iPod_Control/Device/Preferences");
-  _check_casesensitive($rr->{mountpoint}); #Check if somebody mounted the iPod caseSensitive
-      
- #Do an iTunesDB Sync if not disabled and needed
-  do_itbsync($rr) if(!$opth->{_no_it_sync} && !$opth->{_no_sync} && _itb_needs_sync($rr));
- 
- #Do an OTG Sync if not disabled and needed
-  do_otgsync($rr) if(!$opth->{_no_otg_sync} && !$opth->{_no_sync} && (_otg_needs_sync($rr) || -e $rr->{lastfm_queue}))
-}
-elsif($opth->{mount}) {
- $rr->{status} = "$opth->{mount} is not a directory";
-}
-
- return $rr
+	$rr->{status} = "No mountpoint defined";
+	$rr->{bindir} = ($0 =~ m%^(.+)/%)[0] || ".";
+	
+	if(-d $opth->{mount}) {
+		$rr->{mountpoint}     = $opth->{mount};
+		$rr->{etc}            = $opth->{mount}."/iPod_Control/.gnupod";
+		$rr->{xml}            = $opth->{mount}."/iPod_Control/.gnupod/GNUtunesDB";
+		#It can also be called GNUtunesDB.xml
+		$rr->{xml}            = $rr->{xml}.".xml" if !(-e $rr->{xml});
+		$rr->{artworkdir}     = $opth->{mount}."/iPod_Control/Artwork";
+		$rr->{artworkdb}      = $opth->{mount}."/iPod_Control/Artwork/ArtworkDB";
+		$rr->{itunesdb}       = $opth->{mount}."/iPod_Control/iTunes/iTunesDB";
+		$rr->{itunessd}       = $opth->{mount}."/iPod_Control/iTunes/iTunesSD";
+		$rr->{shufflestat}    = $opth->{mount}."/iPod_Control/iTunes/iTunesShuffle";
+		$rr->{sysinfo}        = $opth->{mount}."/iPod_Control/Device/SysInfo";
+		$rr->{extsysinfo}     = $opth->{mount}."/iPod_Control/Device/SysInfoExtended";
+		$rr->{playcounts}     = "$rr->{mountpoint}/iPod_Control/iTunes/Play Counts";
+		$rr->{itunesdb_md5}   = "$rr->{etc}/.itunesdb_md5";
+		$rr->{onthego_invalid}  = "$rr->{etc}/.onthego_invalid";
+		$rr->{onthego}        = "$rr->{mountpoint}/iPod_Control/iTunes/OTGPlaylist*";
+		$rr->{status}         = undef;
+		$rr->{_no_cstest}     = $opth->{_no_cstest};
+		
+		if(!$rr->{_no_cstest}++) {
+			_check_casesensitive($rr->{mountpoint}); #Check if somebody mounted the iPod caseSensitive
+		}
+		
+		#Do an iTunesDB Sync if not disabled and needed
+		StartItunesDBSync($rr) if(!$opth->{_no_it_sync} &&  !$opth->{_no_sync} && ItunesDBNeedsSync($rr));
+		#Do an OTG Sync if not disabled and needed
+		StartOnTheGoSync($rr)  if(!$opth->{_no_otg_sync} && !$opth->{_no_sync} && OnTheGoNeedsSync($rr) );
+	}
+	elsif($opth->{mount}) {
+		$rr->{status} = "$opth->{mount} is not a directory";
+	}
+return $rr
 }
 
 #######################################################################
@@ -89,9 +86,9 @@ sub _check_casesensitive {
 		
 		if($inode_a != $inode_b) { #Whops, different inodes? -> case sensitive fs
 			#Nerv the user
-			warn "Warning: $target is mounted case sensitive, that's bad:\n";
-			warn "         FAT32-iPods should be mounted case in-sensitive!\n";
-			warn "         (try 'mount ... -o check=relaxed')\n";
+			warn "$0: Warning: $target is mounted case sensitive, that's bad:\n";
+			warn "".(" " x length($0))."  FAT32-iPods should be mounted case in-sensitive!\n";
+			warn "".(" " x length($0))."  (try 'mount ... -o check=relaxed')\n";
 		}
 	
 	}
@@ -102,7 +99,7 @@ sub _check_casesensitive {
 
 #######################################################################
 # Call mktunes.pl
-sub do_automktunes {
+sub StartAutoMkTunes {
 	my($con) = @_;
 	my $XBIN = "$con->{bindir}/mktunes.pl";
 	if(-x $XBIN) {
@@ -122,56 +119,54 @@ sub do_automktunes {
 
 #######################################################################
 # Call tunes2pod
-sub do_itbsync {
- my($con) = @_;
-
-my $XBIN = "$con->{bindir}/tunes2pod.pl";
-
-if(-x $XBIN) {
-  {
-   local  $ENV{IPOD_MOUNTPOINT} = $con->{mountpoint};
-   print "> GNUtunesDB sync needed...\n";
-    if(system("$XBIN > /dev/null")) {
-      die "Unexpected die of $XBIN\n
-      You can disable auto-sync (=autorun of $XBIN)
-      by removing '$con->{etc}/.itunesdb_md5'\n";
-    } 
-  }
-  print "> GNUtunesDB synced\n";
-}
-else {
- warn "FooBar.pm: Could not execute $XBIN, autosync SKIPPED!\n";
- warn "Looks like GNUpod isn't installed correct! did you run 'make install' ?\n";
-}
-
+sub StartItunesDBSync {
+	my($con) = @_;
+	
+	my $XBIN = "$con->{bindir}/tunes2pod.pl";
+	
+	if(-x $XBIN) {
+		{
+			local  $ENV{IPOD_MOUNTPOINT} = $con->{mountpoint};
+			print "> GNUtunesDB sync needed...\n";
+			if(system("$XBIN > /dev/null")) {
+				die "Unexpected die of $XBIN\n
+				You can disable auto-sync (=autorun of $XBIN)
+				by removing '$con->{etc}/.itunesdb_md5'\n";
+			} 
+		}
+		print "> GNUtunesDB synced\n";
+	}
+	else {
+		warn "FooBar.pm: Could not execute $XBIN, autosync SKIPPED!\n";
+		warn "Looks like GNUpod isn't installed correct! did you run 'make install' ?\n";
+	}
 }
 
 ######################################################################
 # Call gnupod_otgsync.pl
-sub do_otgsync {
- my($con) = @_;
- 
-my $XBIN = "$con->{bindir}/gnupod_otgsync.pl";
-
-if(-x $XBIN) {
-  {
-     local $ENV{IPOD_MOUNTPOINT} = $con->{mountpoint};
-     print "> On-The-Go data sync needed...\n";
-     if(system("$XBIN --top4secret")) {
-      warn "** UUUPS **: $XBIN died! On-The-Go list lost, sorry!\n";
-     }
-     else {
-      print "> On-The-Go data synced\n";
-     }
-  
-  }
-}
-else {
- warn "FooBar.pm: Could not execute $XBIN, autosync SKIPPED!\n";
- warn "Looks like GNUpod isn't installed correct! did you run 'make install?'\n";
-} 
- 
-
+sub StartOnTheGoSync {
+	my($con) = @_;
+	
+	my $XBIN = "$con->{bindir}/gnupod_otgsync.pl";
+	
+	if(-x $XBIN) {
+		{
+			local $ENV{IPOD_MOUNTPOINT} = $con->{mountpoint};
+			
+			print "> On-The-Go data sync needed...\n";
+			if(system("$XBIN --top4secret")) {
+				warn "** UUUPS **: $XBIN died! On-The-Go list lost, sorry!\n";
+			}
+			else {
+				print "> On-The-Go data synced\n";
+			}
+			
+		}
+	}
+	else {
+		warn "FooBar.pm: Could not execute $XBIN, autosync SKIPPED!\n";
+		warn "Looks like GNUpod isn't installed correct! did you run 'make install?'\n";
+	}
 }
 
 
@@ -196,24 +191,23 @@ sub shx2_x86_int {
 
 ######################################################################
 # Returns '1' if we MAY have to sync..
-sub _itb_needs_sync {
- my($rr) = @_;
-
- if(-r $rr->{itunesdb_md5} && -r $rr->{itunesdb}) {
-   my $itmd = getmd5($rr->{itunesdb});
-   my $otmd = getmd5line($rr->{itunesdb_md5});
-   return 1 if $otmd ne $itmd;
-  }
-  return undef;
+sub ItunesDBNeedsSync {
+	my($rr) = @_;
+	
+	if(-r $rr->{itunesdb_md5} && -r $rr->{itunesdb}) {
+		my $itmd = getmd5($rr->{itunesdb});
+		my $otmd = getmd5line($rr->{itunesdb_md5});
+		return 1 if $otmd ne $itmd;
+	}
+	return undef;
 }
 
 
 ######################################################################
 # Checks if we need to do an OTG-Sync
-sub _otg_needs_sync {
+sub OnTheGoNeedsSync {
 	my($rr) = @_;
-	#warn "debug: otgsync need? (request from $$)\n";
-	#OTG Sync needed
+	
 	foreach my $otgf (bsd_glob($rr->{onthego},GLOB_NOSORT)) {
 		return 1 if ( -e $otgf && -s $otgf > 0 );
 	}
@@ -228,54 +222,28 @@ sub _otg_needs_sync {
 
 
 ######################################################################
-# Check for broken onTheGo data (= GNUtunesDB <-> iTunesDB out of sync)
-sub _otgdata_broken {
+# Returns true if we can't use OnTheGoData now
+sub OnTheGoDataIsInvalid {
  my($rr) = @_;
  return (-e $rr->{onthego_invalid});
 }
 
-######################################################################
-# Set otgdata synched
-sub setvalid_otgdata {
- my($rr) = @_;
- return undef unless -e $rr->{onthego_invalid};
- unlink($rr->{onthego_invalid});
-}
-######################################################################
-# Set otgdata synched
-sub setINvalid_otgdata {
- my($rr) = @_;
- open(OTGINVALID, ">$rr->{onthego_invalid}") or die "Can't write $rr->{onthego_invalid}\n";
-  print OTGINVALID undef;
- close(OTGINVALID);
- return undef;
-}
 
 
-######################################################################
-# Getmd5line
-sub getmd5line {
-	my($file) = @_;
-	open(MDX, "$file") || warn "Could not open $file, md5 will fail!\n";
-	my $plmd = <MDX>;
-	close(MDX);
-	chomp($plmd);
-	return $plmd;
-}
 
 ######################################################################
 # Call this to set GNUtunesDB <-> iTuneDB 'in-sync'
-sub setsync {
+sub SetEverythingAsInSync {
 	my($rr) = @_;
-	setsync_itunesdb($rr);
-	setsync_playcounts($rr);
-	setsync_otg($rr);
-	setvalid_otgdata($rr);
+	SetItunesDBAsInSync($rr);
+	SetPlayCountsAsInSync($rr);
+	SetOnTheGoAsInSync($rr);
+	SetOnTheGoAsValid($rr);
 }
 
 ######################################################################
 # Remove the Shuffle Database of the iPodShuffle
-sub wipe_shufflestat {
+sub WipeShuffleStat {
 	my($rr) = @_;
 	if(-e $rr->{shufflestat}) {
 		unlink($rr->{shufflestat}) || warn "Could not unlink '$rr->{shufflestat}', $!\n";
@@ -284,21 +252,21 @@ sub wipe_shufflestat {
 
 ######################################################################
 # SetSync for onthego
-sub setsync_otg {
+sub SetOnTheGoAsInSync {
 my($rr) = @_;
-
-
- if( !(bsd_glob($rr->{onthego},GLOB_NOSORT)) || unlink(bsd_glob(($rr->{onthego},GLOB_NOSORT)) )) {
-  return undef;
- }
-
-warn "Could not setsync for onthego\n";
-return 1;
+	
+	if( !(bsd_glob($rr->{onthego},GLOB_NOSORT)) || unlink(bsd_glob(($rr->{onthego},GLOB_NOSORT)) )) {
+		return undef;
+	}
+	else {
+		warn "Could not setsync for onthego\n";
+		return 1;
+	}
 }
 
 ######################################################################
 # Set only playcounts in sync
-sub setsync_playcounts {
+sub SetPlayCountsAsInSync {
 my($rr) = @_;
 
 if( !(-e $rr->{playcounts}) || unlink($rr->{playcounts})) {
@@ -311,7 +279,7 @@ if( !(-e $rr->{playcounts}) || unlink($rr->{playcounts})) {
 
 ######################################################################
 # Set only itunesdb sync
-sub setsync_itunesdb {
+sub SetItunesDBAsInSync {
 my($rr) = @_;
 	if(-r $rr->{itunesdb}) {
 		#Write the file with md5sum content
@@ -324,6 +292,37 @@ my($rr) = @_;
 	return 1;
 }
 
+######################################################################
+# Set otgdata synched
+sub SetOnTheGoAsValid {
+ my($rr) = @_;
+ return undef unless -e $rr->{onthego_invalid};
+ unlink($rr->{onthego_invalid});
+}
+
+######################################################################
+# Set otgdata non-synched
+sub SetOnTheGoAsInvalid {
+ my($rr) = @_;
+ open(OTGINVALID, ">$rr->{onthego_invalid}") or die "Can't write $rr->{onthego_invalid}\n";
+  print OTGINVALID undef;
+ close(OTGINVALID);
+ return undef;
+}
+
+
+
+
+######################################################################
+# Getmd5line
+sub getmd5line {
+	my($file) = @_;
+	open(MDX, "$file") || warn "Could not open $file, md5 will fail!\n";
+	my $plmd = <MDX>;
+	close(MDX);
+	chomp($plmd);
+	return $plmd;
+}
 
 
 ######################################################################
