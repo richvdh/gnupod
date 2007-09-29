@@ -108,6 +108,7 @@ my $dounlink = 0;
 foreach my $opx (keys(%opts)) {
 	next if $opx =~ /mount|match-once|delete|view|rename/; #Skip this
 		
+		
 		if(substr($opts{$opx},0,1) eq ">") {
 			$matched++ if  int($el->{file}->{$opx}) > int(substr($opts{$opx},1));
 		}
@@ -119,7 +120,7 @@ foreach my $opx (keys(%opts)) {
 			if( (int($el->{file}->{$opx}) >= $s_from) && (int($el->{file}->{$opx}) <= $s_to) ) {
 				$matched++;
 			}
-		}		
+		}
 		elsif($el->{file}->{$opx} =~ /$opts{$opx}/i) {
 			$matched++;
 		}
@@ -251,7 +252,7 @@ Usage: gnupod_search.pl [-h] [-m directory] File1 File2 ...
    -c, --playcount=COUNT   search songs by Playcount
    -s, --rating=COUNT      search songs by Rating (20 is one star, 40 two, etc.)
    -R, --podcastrss=RSS    search songs by RSS
-   -G, --podcastguid=GUID  search songs by GUID
+   -U, --podcastguid=GUID  search songs by GUID
    -o, --match-once        Search doesn't need to match multiple times (eg. -a & -l)
        --delete            REMOVE (!) matched songs
        --view=ialt         Modify output, default=ialt

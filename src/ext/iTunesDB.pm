@@ -112,7 +112,8 @@ $SPLDEF{num_action}{0x40}    = "lt";
 $SPLDEF{num_action}{0x80}    = "ltoreq"; #LessThanOrEQ
 $SPLDEF{num_action}{0x0100}  = "range";
 $SPLDEF{num_action}{0x0200}  = "within";
-$SPLDEF{num_action}{0x0400}  = "bbbfixme";
+$SPLDEF{num_action}{0x0400}  = "binaryis";
+$SPLDEF{num_action}{0x0800}  = "splunk1";
 
 #Within is completly different, thx to apple :p
 $SPLDEF{within_key}{86400}   = "day";
@@ -1088,7 +1089,9 @@ sub read_spldata {
 		$SPLDEF{field}{$field} or _itBUG("Unknown SPL-Field: $field (= GNUpod doesn't understand this SmartPlaylist)");
 		push(@ret, {action=>$human_exp,field=>$human_field,string=>$rs});
 	}
-return \@ret;
+	
+	
+	return \@ret;
 }
 
 

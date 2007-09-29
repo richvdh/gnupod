@@ -89,7 +89,7 @@ sub _check_casesensitive {
 		
 		if($inode_a != $inode_b) { #Whops, different inodes? -> case sensitive fs
 			#Nerv the user
-			warn "Warning: $target is mounted case sensitive, bad:\n";
+			warn "Warning: $target is mounted case sensitive, that's bad:\n";
 			warn "         FAT32-iPods should be mounted case in-sensitive!\n";
 			warn "         (try 'mount ... -o check=relaxed')\n";
 		}
