@@ -350,7 +350,14 @@ sub mk_mhit {
 	
 	# Lookup right-pane artwork id
 	my $rnd_cover_id = $hr->{artwork}->GetImage($file_hash{dbid_1});
-	$rnd_cover_id = ( ref($rnd_cover_id) eq 'HASH' ? $rnd_cover_id->{id} : 0 );
+	if(ref($rnd_cover_id) eq "HASH") {
+		$rnd_cover_id = $rnd_cover_id->{id};
+	}
+	else {
+		$rnd_cover_id = 0;
+		$file_hash{dbid_1} = $hr->{artwork}->GetNextDbid;
+	}
+	
 	
 	my $ret = "mhit";
 		$ret .= pack("V", _icl(0x184));                          #header size
@@ -1181,7 +1188,7 @@ sub get_mhod {
 		   $r{string} = Unicode::String::utf8($tmpstring)->utf8;
 	}
 	elsif($r{type} == 17) {
-		warn "Chapter data not supported yet\n";
+	#	warn "Chapter data not supported yet\n";
 	}
 	elsif($r{type} == 32) {
 		# ?

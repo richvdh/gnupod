@@ -15,7 +15,7 @@ package GNUpod::ArtworkDB;
 #    GNU General Public License for more details.
 #
 #    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.#
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
 # iTunes and iPod are trademarks of Apple
 #
@@ -30,6 +30,10 @@ use Data::Dumper;
 use constant MAX_ITHMB_SIZE => 268435456; # Create new itumb file after reaching ~ 256 mb
 use constant SHARED_STORAGE => 1;         # Share same offset across multiple items, this breaks iTunes but who cares?!
 
+use constant MODE_UNPARSED  => 100;
+use constant MODE_PARSING   => 200;
+use constant MODE_PARSED    => 300;
+
 	# Artwork profiles:
 	my $profiles = { 'nano_3g' => [ { height=>320, width=>320, storage_id=>1060, bpp=>16,  },  { height=>128, width=>128, storage_id=>1055, bpp=>16, },
 	                                { height=>56,  width=>56,  storage_id=>1061, bpp=>16, drop=>112}                                                     ],
@@ -43,7 +47,7 @@ use constant SHARED_STORAGE => 1;         # Share same offset across multiple it
 		my($class,%args) = @_;
 		
 		my $self = { storages => {},  images => {},        fbimg => {},         _mhni_buff => {}, drop_unseen => $args{DropUnseen},
-		             db_dirty => 0,   last_id_seen => 100, last_dbid_seen => 0, ctx => undef, storagecache => {},
+		             db_dirty => 0,   last_id_seen => 100, last_dbid_seen => 0, ctx => undef, storagecache => {}, mode => MODE_UNPARSED,
 		             artworkdb => $args{Connection}->{artworkdb}, artworkdir => $args{Connection}->{artworkdir},
 		           };
 		bless($self, $class);
@@ -70,12 +74,12 @@ use constant SHARED_STORAGE => 1;         # Share same offset across multiple it
 		                            }
 		          };
 		
+		$self->{mode} = MODE_PARSING;
 		GNUpod::iTunesDB::ParseiTunesDB($obj,0);
-		
+		$self->{mode} = MODE_PARSED;
 		#my $foo = delete($self->{fbimg});
 		#print Data::Dumper::Dumper($self);
 		#$self->{fbimg} = $foo;
-		
 		close(AWDB);
 		return $self;
 	}
@@ -102,10 +106,29 @@ use constant SHARED_STORAGE => 1;         # Share same offset across multiple it
 	}
 	
 	####################################################################
+	# Returns next (unseen) dbid
+	sub GetNextDbid {
+		my($self) = @_;
+		my $dbid = GNUpod::Ugly64->new($self->{last_dbid_seen})->Increment->GetHex;
+		my $lids = $self->_RegisterDbid($dbid);
+		Carp::confess("Assert $dbid eq $lids failed") if $dbid ne $lids;
+		return $dbid;
+	}
+	
+	####################################################################
+	# Mark id as seen
+	sub _RegisterDbid {
+		my($self,$dbid) = @_;
+		$self->{last_dbid_seen} = $dbid unless GNUpod::Ugly64->new($dbid)->ThisIsBigger($self->{last_dbid_seen});
+		return $self->{last_dbid_seen};
+	}
+	
+	####################################################################
 	# Really write an image into the storage and register it
 	sub InjectImage {
 		my($self) = @_;
-		my $imgid = GNUpod::Ugly64->new($self->{last_dbid_seen})->Increment->GetHex;  # Get next, free id
+		Carp::confess("InjectImage($self) called in wrong mode: $self->{mode}") if $self->{mode} != MODE_PARSED;
+		my $imgid = $self->GetNextDbid;  # Get next, free id
 		$self->_RegisterNewImage(ref => { id=> 0, dbid=>$imgid, source_size=>$self->{fbimg}->{source_size} });
 		$self->KeepImage($imgid);
 		foreach my $fbimg (@{$self->{fbimg}->{cache}}) {
@@ -129,6 +152,7 @@ use constant SHARED_STORAGE => 1;         # Share same offset across multiple it
 	# Converts given image and caches the result
 	sub PrepareImage {
 		my($self,%args) = @_;
+		Carp::confess("PrepareImage($self) called in wrong mode: $self->{mode}") if $self->{mode} != MODE_UNPARSED;
 		my $file   = $args{File};
 		my $model  = lc($args{Model});
 		   $model  =~ tr/a-z0-9_//cd; # relax
@@ -161,7 +185,7 @@ use constant SHARED_STORAGE => 1;         # Share same offset across multiple it
 	# Injects image into ithmb file
 	sub _WriteImageToDatabase {
 		my($self, %args) = @_;
-		
+		Carp::confess("_WriteImageToDatabase($self) called in wrong mode: $self->{mode}") if $self->{mode} != MODE_PARSED;
 		my $f_prefix = "F".$args{StorageId}."_"; # Database prefix
 		my $f_ext    = ".ithmb";            # Extension
 		my $fnam     = '';                  # Holds filename, such as F1006_1.ithmb
@@ -207,6 +231,9 @@ use constant SHARED_STORAGE => 1;         # Share same offset across multiple it
 		
 		$self->_WipeLostImages;
 		return undef if $self->{db_dirty} == 0;
+		
+		# We shouldn't get here with unparsed data
+		Carp::confess("WriteArtworkDb($self) called in wrong mode: $self->{mode}") if $self->{mode} != MODE_PARSED;
 		
 		print "> Updating ArtworkDB\n";
 		
@@ -275,7 +302,7 @@ use constant SHARED_STORAGE => 1;         # Share same offset across multiple it
 	sub _RegisterNewImage {
 		my($self, %args) = @_;
 		my %h = %{$args{ref}};
-		
+		Carp::confess("_RegisterNewImage($self) called in wrong mode: $self->{mode}") if $self->{mode} == MODE_UNPARSED;
 		$self->{ctx} = undef;
 		
 		if($self->{images}->{$h{dbid}}) {
@@ -286,7 +313,7 @@ use constant SHARED_STORAGE => 1;         # Share same offset across multiple it
 			$self->{images}->{$h{dbid}} = { dbid => $h{dbid}, source_size => $h{source_size}, id=>$h{id}, subimages => [], seen=>0 };
 			$self->{ctx}                = $h{dbid}; # Set context
 			$self->{last_id_seen}       = $h{id}       if     $self->{last_id_seen} < $h{id};                                       # Remember latest id we saw
-			$self->{last_dbid_seen}     = $self->{ctx} unless GNUpod::Ugly64->new($h{dbid})->ThisIsBigger($self->{last_dbid_seen}); # Remember last 64bit dbid
+			$self->_RegisterDbid($h{dbid}); # 'Register' ID
 		}
 	}
 	
@@ -386,6 +413,7 @@ use constant SHARED_STORAGE => 1;         # Share same offset across multiple it
 # Ugly pseudo-64bit hack
 package GNUpod::Ugly64;
 	use constant U64_OVERFLOW => 0xFFFFFFFF;
+	use constant U64_LOWEST   => 0x00000000;
 	
 	sub new {
 		my($class, $num) = @_;
@@ -430,8 +458,8 @@ package GNUpod::Ugly64;
 		}
 		
 		if($roll && $self->{num}->[1] == U64_OVERFLOW) {
-			warn "$0: You need to buy more numbers.\n";
-			$self->{num} = [U64_OVERFLOW, U64_OVERFLOW];
+			warn "$0: 64-bit integer overflowed, returning zero\n";
+			$self->{num} = [U64_LOWEST, U64_LOWEST];
 		}
 		elsif($roll) {
 			$self->{num}->[1]++;
