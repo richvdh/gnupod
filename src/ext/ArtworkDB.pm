@@ -65,7 +65,11 @@ use constant MODE_PARSED    => 300;
 			return undef;
 		}
 		
-		open(AWDB, "<", $self->{artworkdb}) or return $self;
+		unless (open(AWDB, "<", $self->{artworkdb}) ) {
+			$self->{mode} = MODE_PARSED; # Fake
+			return $self;
+		}
+		
 		my $obj = { offset => 0, childs => 1, fd=>*AWDB, awdb => 1,
 		               callback => {
 		                              PACKAGE=>$self, mhod => { item  => '_MhodItem'  },
@@ -77,9 +81,11 @@ use constant MODE_PARSED    => 300;
 		$self->{mode} = MODE_PARSING;
 		GNUpod::iTunesDB::ParseiTunesDB($obj,0);
 		$self->{mode} = MODE_PARSED;
+		
 		#my $foo = delete($self->{fbimg});
 		#print Data::Dumper::Dumper($self);
 		#$self->{fbimg} = $foo;
+		
 		close(AWDB);
 		return $self;
 	}
@@ -288,7 +294,7 @@ use constant MODE_PARSED    => 300;
 		GNUpod::FooBar::SeekFix($fd,$mhsd_mhif_fixup,GNUpod::iTunesDB::mk_mhsd({type=>0x03, size=>$mhsd_mhif_size}));
 		GNUpod::FooBar::SeekFix($fd,$mhsd_mhii_fixup,GNUpod::iTunesDB::mk_mhsd({type=>0x01, size=>$mhsd_mhii_size}));
 		GNUpod::FooBar::SeekFix($fd,0               ,GNUpod::iTunesDB::mk_mhfd({next_id=>$self->{last_id_seen}+1, childs=>0x03, size=>$mhfd_size}));
-		close(AD);
+		close(AD) or die "Failed to close filehandle of $tmp : $!\n";
 		# We rename the file because otherwise we may mess up the artworkdb.. that would be bad.
 		unlink($bak);      # may fail  -> no backup
 		rename($dst,$bak); # may also fail -> no $dst

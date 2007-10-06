@@ -94,7 +94,7 @@ sub convert {
 	GNUpod::FooBar::connect(\%opts);
 	
 	print "\n Done\n";
-	close(ITUNES);
+	close(ITUNES) or die "Failed to close filehandle of $con->{itunesdb} : $!\n";
 	exit(0);
 }
 

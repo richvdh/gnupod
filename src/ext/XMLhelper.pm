@@ -342,13 +342,16 @@ sub writexml {
 	}
 
 	
-	print OUT "</gnuPod>\n";
+	print (OUT "</gnuPod>\n") or die "Unable to write to $tmp_out : $!\n"; # Hits Out-Of-Space condition
  
 	if(close(OUT)) {
 		if(-e $out) { #Backup old out file
 			rename($out, $out.".old") or warn "Could not move $out to $out.old\n";
 		}
 		rename($tmp_out, $out) or warn "Could not move $tmp_out to $out\n";
+	}
+	else {
+		die "FATAL: Unable to close filehandle for $tmp_out : $!\n";
 	}
 	
 	# Don't trust OnTheGo data now (until mktunes has run)

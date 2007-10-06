@@ -26,7 +26,7 @@ package GNUpod::Mktunes;
 		foreach my $item (@{$self->GetFiles}) {
 			print ITS GNUpod::iTunesDB::mk_itunes_sd_file($item);
 		}
-		close(ITS);
+		close(ITS) or die "Failed to close filehandle of ".$self->GetConnection->{itunessd}." : $!\n";
 	}
 	
 	
@@ -73,7 +73,7 @@ package GNUpod::Mktunes;
 		# Fixup some things:
 		GNUpod::FooBar::SeekFix(*ITUNES,0        ,GNUpod::iTunesDB::mk_mhbd({size=>$mhbd_size, childs=>3}));
 		GNUpod::FooBar::SeekFix(*ITUNES,$mhsd_pos,GNUpod::iTunesDB::mk_mhsd({size=>$mhsd_size, type=>1}));
-		close(ITUNES);
+		close(ITUNES) or die "Failed to close filehandle of $tmpfile : $!\n";
 		
 		unlink($outfile); # can fail
 		rename($tmpfile,$outfile) or die "*** Unable to move $tmpfile to $outfile : $!\n";
