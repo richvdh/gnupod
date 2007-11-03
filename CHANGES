@@ -1,3 +1,10 @@
+
+*todo*
+/dev/bus/usb/devices durchsuchen ? (suse?)
+..oder sysfs?
+
+- Fixed M4A-Genre support (for numeric values)
+
 GNUpod 0.99.5
 
 Summary

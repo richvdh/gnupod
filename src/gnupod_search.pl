@@ -73,7 +73,7 @@ sub main {
 		my($key,$val) =  split(/=/,$_,2);
 		next unless $key && defined($val);
 		#$key =~ s/^\s*-+//g; # -- is not valid for xml tags!
-		next if $key eq "id";#Dont allow something like THIS
+		next if lc($key) eq "id";#Dont allow something like THIS
 		$rename_tags{lc($key)} = $val;
 	}
 	

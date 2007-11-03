@@ -37,6 +37,8 @@ use constant MODE_PARSED    => 300;
 	# Artwork profiles:
 	my $profiles = { 'nano_3g' => [ { height=>320, width=>320, storage_id=>1060, bpp=>16,  },  { height=>128, width=>128, storage_id=>1055, bpp=>16, },
 	                                { height=>56,  width=>56,  storage_id=>1061, bpp=>16, drop=>112}                                                     ],
+	                 'classic' => [ { height=>320, width=>320, storage_id=>1060, bpp=>16,  },  { height=>128, width=>128, storage_id=>1055, bpp=>16, },
+	                                { height=>56,  width=>56,  storage_id=>1061, bpp=>16, drop=>112}                                                     ],
 	                 'nano'    => [ { height=>100, width=>100, storage_id=>1027, bpp=>16,  },  { height=> 42, width=> 42, storage_id=>1031, bpp=>16, },  ],
 	                 'video'   => [ { height=>200, width=>200, storage_id=>1029, bpp=>16,  },  { height=>100, width=>100, storage_id=>1028, bpp=>16,  }, ],
 	               };

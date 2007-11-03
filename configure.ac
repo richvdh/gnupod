@@ -1,4 +1,4 @@
-AC_INIT(GNUpod, 0.99.5, bug-gnupod@nongnu.org)
+AC_INIT(GNUpod, 1.0-rc1, bug-gnupod@nongnu.org)
 
 echo $ECHO_N $PACKAGE_VERSION > .gnupod_version
 
@@ -91,7 +91,7 @@ do
  if test $? = 1; then
   ENCS="$i $ENCS"
  else
-  ENCS="($i/Binary not found) $ENCS"
+  ENCS="(disabled $i: Binary not found) $ENCS"
  fi
 done
 echo " done"
@@ -105,7 +105,7 @@ do
  if test $? -lt 2; then
   DECS="$i $DECS"
  else
-  DECS="($i/Binary not found) $DECS"
+  DECS="(disabled $i: Binary not found) $DECS"
  fi
 done
 echo " done"

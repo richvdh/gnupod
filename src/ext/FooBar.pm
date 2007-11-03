@@ -390,11 +390,11 @@ sub GetConfig {
 }
 
 #############################################
-# Get Unique path
+# Get Unique path, this is not race-condition save
 sub get_u_path {
 	my($prefix, $ext) = @_;
 	my $dst = undef;
-	while($dst = sprintf("%s_%d_%d.$ext",$prefix, int(time()), int(rand(99999)))) {
+	while($dst = sprintf("%s_%x_%x.$ext",$prefix, int(time()), int(rand(0xFFFFFFF)))) {
 		last unless -e $dst;
 	}
 	return $dst;

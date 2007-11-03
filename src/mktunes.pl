@@ -30,7 +30,6 @@ use GNUpod::SysInfo;
 use GNUpod::ArtworkDB;
 use Getopt::Long;
 
-use constant MPL_UID => 1234567890; #This is the MasterPlaylist ID
 
 $| = 1;
 

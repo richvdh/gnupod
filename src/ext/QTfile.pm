@@ -195,8 +195,8 @@ my @METADEF = ("album",   "\xA9alb",
  }
  
  if(!$reth{genre}) {
-  my $numeric_genre = int(unpack("H*",$lx{metadat}{'::moov::udta::meta::ilst::gnre'}[$sound_index]));
-  $reth{genre} = "($numeric_genre)" if $numeric_genre;
+  my $numeric_genre = GNUpod::FooBar::shx2_x86_int($lx{metadat}{'::moov::udta::meta::ilst::gnre'}[$sound_index]);
+  $reth{genre} = "(".($numeric_genre-1).")" if $numeric_genre > 0; # Blues = 1 ; but blues == 0 on id3tags
  }
 
  $reth{filesize} = $fsize;
