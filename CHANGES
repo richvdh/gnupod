@@ -1,9 +1,10 @@
 
 *todo*
 /dev/bus/usb/devices durchsuchen ? (suse?)
-..oder sysfs?
+..oder sysfs? -> am besten einfach mit udevinfo -a -p /sys/block ?
 
 - Fixed M4A-Genre support (for numeric values)
+- Use udevinfo to find the iPods Firewire-GUID (as /proc/bus/usb/devices is depricated)
 
 GNUpod 0.99.5
 

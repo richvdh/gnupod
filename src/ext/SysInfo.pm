@@ -71,8 +71,9 @@ sub _GrabSysinfoExtended {
 # Detect operating system and dispatch the firewireguid grabber
 sub _GrabFirewireGuid {
 	my($ref) = @_;
+	
 	if($Config{'osname'} eq "linux") {
-		print "> Searching iPod on /proc/bus/usb/devices\n";
+		print "> Searching iPod via sysfs\n";
 		__GrabFWGUID_LINUX($ref);
 	}
 	elsif($Config{'osname'} eq "solaris") {
@@ -85,34 +86,26 @@ sub _GrabFirewireGuid {
 }
 
 ############################################################
-# Try to get iPods firewire guid using the proc interface
+# Try to get iPods firewire guid using udev
 sub __GrabFWGUID_LINUX {
 	my($ref) = @_;
 	
-	my $procfile = '/proc/bus/usb/devices';
-	my $hbuff    = ();
-	
-	unless( open(PROC, "<", $procfile) ) {
-		warn "$0 : Unable to open '$procfile' : $!\n";
-		return;
-	}
-	
-	foreach(<PROC>,"") {
-		if($_ =~ /^$/) {
-			if($hbuff->{Manufacturer} =~ /^Apple/ &&
-			  $hbuff->{Product}      =~ /^iPod/ &&
-			  $hbuff->{SerialNumber} =~ /^([A-Za-z0-9]{16})$/) {
-				
-				$ref->{FirewireGuid} = $hbuff->{SerialNumber};
-				return;
+	my $found = undef;
+	opendir(BLOCKDIR, "/sys/block") or return undef;
+	while (my $dirent = readdir(BLOCKDIR)) {
+		next if $dirent eq '.'; next if $dirent eq '..';
+		open(UDEV, "-|") or exec("udevinfo", "--name", $dirent, "--query", "env");
+		while(<UDEV>) {
+			if($_ =~ /^ID_SERIAL=Apple_iPod_([A-Za-z0-9]{16})/) {
+				$found = $1;
 			}
-			$hbuff = ();
+			last if $found;
 		}
-		elsif($_ =~ /^S:\s+([^=]+)=(.+)$/) {
-			$hbuff->{$1} = $2;
-		}
+		close(UDEV);
+		last if $found
 	}
-	close(PROC);
+	closedir(BLOCKDIR);
+	$ref->{FirewireGuid} = $found if $found;
 }
 
 ############################################################
