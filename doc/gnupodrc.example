@@ -31,6 +31,11 @@
 
 ##### NON GLOBAL OPTIONS ######
 
+# *** mktunes.pl ***
+## Specify the iPods name
+# mktunes.ipod-name = Wurstli
+
+
 # *** on the go sync (V2 Firmware) ***
 ## Uncomment this to skip 'on-the-go' sync
 # otgsync.nosync = 1
