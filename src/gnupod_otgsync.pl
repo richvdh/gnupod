@@ -36,7 +36,7 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "top4secret");
-GNUpod::FooBar::GetConfig(\%opts, {nosync=>'b', 'automktunes'=>'b'}, "otgsync");
+GNUpod::FooBar::GetConfig(\%opts, {nosync=>'b', 'automktunes'=>'b', model=>'s'}, "otgsync");
 #otgsync does just red nosync.. DONT add mount and such funny things!
 
 

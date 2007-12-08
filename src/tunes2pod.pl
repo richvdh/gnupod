@@ -41,7 +41,7 @@ print "tunes2pod.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
 GetOptions(\%opts, "version", "force", "help|h", "mount|m=s");
-GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', force=>'b', anapodworkaround=>'b'}, "tunes2pod");
+GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', force=>'b', model=>'s'}, "tunes2pod");
 
 
 usage() if $opts{help};

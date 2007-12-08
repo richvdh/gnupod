@@ -37,24 +37,25 @@ print "gnupod_check.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "fixit");
-GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', 'automktunes'=>'b'}, "gnupod_check");
+GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', 'automktunes'=>'b', model=>'s'}, "gnupod_check");
 
 usage() if $opts{help};
 version() if $opts{version};
 
+# Need this global :-(
+my $con = GNUpod::FooBar::connect(\%opts);
 go();
 
 ####################################################
 # Worker
 sub go {
-	my $con = GNUpod::FooBar::connect(\%opts);
 	usage($con->{status}."\n") if $con->{status};
 	
 	print "Pass 1: Checking Files in the GNUtunesDB.xml...\n";
 	GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
 
 	print "Pass 2: Checking Files on the iPod...\n";
-	checkGNUtunes();
+	checkGNUtunes($con);
 
 	print   "..finished\n\n";
 	print   "  Total Playtime : ".int($TRACKER{TIME}/1000/60/60)." h\n";
@@ -93,7 +94,8 @@ sub go {
 ############################################
 # Glob all files
 sub checkGNUtunes {
-	foreach my $file (bsd_glob($opts{mount}."/iPod_Control/Music/*/*", GLOB_NOSORT)) {
+	my($c) = @_;
+	foreach my $file (bsd_glob($c->{musicdir}."/*/*", GLOB_NOSORT)) {
 	next if -d $file;
 	$TRACKER{GLOBFILES}++;
 		unless($TRACKER{PATH}{lc($file)}) { #Hmpf.. file maybe not in the GNUtunesDB
@@ -152,7 +154,7 @@ sub newfile {
 		print "  ID $id has a long filename. Some iPods may refuse to play this file with recent firmware! Run $0 --fixit\n";
 		$TRACKER{ERR}++;
 		if($opts{fixit}) {
-			my($ipod_path, $real_path) = GNUpod::XMLhelper::getpath($opts{mount},$rp);
+			my($ipod_path, $real_path) = GNUpod::XMLhelper::getpath($con,$rp);
 			if($ipod_path) {
 				print " fixit: Renaming $rp into $real_path\n";
 				my $rename_result = rename($rp,$real_path);

@@ -66,7 +66,7 @@ if($opts{restore}) {
 	print "If you use --restore, you'll *lose* your playlists and cover artwork!\n";
 	print " Hit ENTER to continue or CTRL+C to abort\n\n";
 	<STDIN>;
-	@XFILES = bsd_glob("$opts{mount}/iPod_Control/Music/*/*", GLOB_NOSORT)
+	@XFILES = bsd_glob("$opts{mount}/i*/Music/F*/*", GLOB_NOSORT)
 }
 elsif($ARGV[0] eq "-" && @ARGV == 1) {
 	print STDERR "Reading from STDIN, hit CTRL+D (EOF) when finished\n";
@@ -286,7 +286,7 @@ sub startup {
 		$fh->{volume} = $vol;
 		
 		#Get a path
-		($fh->{path}, my $target) = GNUpod::XMLhelper::getpath($opts{mount}, $file,  {format=>$wtf_frmt, extension=>$wtf_ext, keepfile=>$opts{restore}});
+		($fh->{path}, my $target) = GNUpod::XMLhelper::getpath($connection, $file,  {format=>$wtf_frmt, extension=>$wtf_ext, keepfile=>$opts{restore}});
 		
 		if(!defined($target)) {
 			warn "*** FATAL *** Skipping '$file' , no target found!\n";

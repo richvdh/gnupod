@@ -41,7 +41,7 @@ print "mktunes.pl ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 GetOptions(\%opts, "version", "help|h", "ipod-name|n=s", "mount|m=s", "volume|v=i", "energy|e", "fwguid|g=s");
-GNUpod::FooBar::GetConfig(\%opts, {'ipod-name'=>'s', mount=>'s', volume=>'i', energy=>'b', fwguid=>'s'}, "mktunes");
+GNUpod::FooBar::GetConfig(\%opts, {'ipod-name'=>'s', mount=>'s', volume=>'i', energy=>'b', fwguid=>'s', model=>'s'}, "mktunes");
 $opts{'ipod-name'} ||= "GNUpod ###__VERSION__###";
 
 

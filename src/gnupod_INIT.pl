@@ -32,8 +32,10 @@ print "gnupod_INIT.pl ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
-GetOptions(\%opts, "version", "help|h", "mount|m=s", "disable-convert|d", "france|f", "noask");
+GetOptions(\%opts, "version", "help|h", "mount|m=s", "disable-convert|d", "france|f", "noask", "model=s");
+GNUpod::FooBar::GetConfig(\%opts, {model=>'s'}, "gnupod_INIT");
 #gnupod_INIT does not read configuration files!
+
 
 usage() if $opts{help};
 version() if $opts{version};
@@ -76,9 +78,9 @@ EOF
  print "Creating directory structure on $opts{mount}\n\n";
  print "> AppFolders:\n";
  
- foreach( ("iPod_Control", "iPod_Control/Music",
-             "iPod_Control/iTunes", "iPod_Control/.gnupod") ) {
-   my $path = "$opts{mount}/$_";
+ foreach( ($con->{rootdir}, $con->{musicdir},
+             $con->{itunesdir}, $con->{etc}) ) {
+   my $path = $_;
    next if -d $path;
    mkdir("$path") or die "Could not create $path ($!)\n";
    print "+$path\n";
@@ -86,7 +88,7 @@ EOF
  
  print "> Music folders:\n";
  for(0..19) {
-   my $path = sprintf("$opts{mount}/iPod_Control/Music/F%02d", $_);
+   my $path = sprintf($con->{musicdir}."/F%02d", $_);
    next if -d $path;
    mkdir("$path") or die "Could not create $path ($!)\n";
    print "+$path\n";
@@ -94,14 +96,14 @@ EOF
 
  if($opts{france}) {
   print "> Creating 'Limit' file (because you used --france)\n";
-  mkdir("$opts{mount}/iPod_Control/Device");
-  open(LIMIT, ">$opts{mount}/iPod_Control/Device/Limit") or die "Failed: $!\n";
+  mkdir("$con->{rootdir}/Device");
+  open(LIMIT, ">$con->{rootdir}/Device/Limit") or die "Failed: $!\n";
    print LIMIT "216\n"; #Why?
   close(LIMIT);
  }
- elsif(-e "$opts{mount}/iPod_Control/Device/Limit") {
+ elsif(-e "$con->{rootdir}/Device/Limit") {
   print "> Removing 'Limit' file (because you didn't use --france)\n";
-  unlink("$opts{mount}/iPod_Control/Device/Limit");
+  unlink("$con->{rootdir}/Device/Limit");
  }
  else {
   print "> No 'Limit' file created or deleted..\n";

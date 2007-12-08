@@ -34,27 +34,33 @@ use constant MACTIME => 2082844800; #Mac EPOCH offset
 sub connect {
 	my($opth) = @_;
 	my $rr = ();
+	my $model  = lc($opth->{model});
+	$model  =~ tr/a-z0-9_//cd; # relax
 
-	$rr->{status} = "No mountpoint defined";
-	$rr->{bindir} = ($0 =~ m%^(.+)/%)[0] || ".";
+	$rr->{status}  = "No mountpoint defined";
+	$rr->{bindir}  = ($0 =~ m%^(.+)/%)[0] || ".";
+	$rr->{iroot}   = ($model eq 'iphone' ? 'iTunes_Control' : 'iPod_Control' );
 	
 	if(-d $opth->{mount}) {
 		$rr->{mountpoint}     = $opth->{mount};
-		$rr->{etc}            = $opth->{mount}."/iPod_Control/.gnupod";
-		$rr->{xml}            = $opth->{mount}."/iPod_Control/.gnupod/GNUtunesDB";
+		$rr->{rootdir}        = $opth->{mount}."/".$rr->{iroot};
+		$rr->{etc}            = $rr->{rootdir}."/.gnupod";
+		$rr->{xml}            = $rr->{rootdir}."/.gnupod/GNUtunesDB";
 		#It can also be called GNUtunesDB.xml
 		$rr->{xml}            = $rr->{xml}.".xml" if !(-e $rr->{xml});
-		$rr->{artworkdir}     = $opth->{mount}."/iPod_Control/Artwork";
-		$rr->{artworkdb}      = $opth->{mount}."/iPod_Control/Artwork/ArtworkDB";
-		$rr->{itunesdb}       = $opth->{mount}."/iPod_Control/iTunes/iTunesDB";
-		$rr->{itunessd}       = $opth->{mount}."/iPod_Control/iTunes/iTunesSD";
-		$rr->{shufflestat}    = $opth->{mount}."/iPod_Control/iTunes/iTunesShuffle";
-		$rr->{sysinfo}        = $opth->{mount}."/iPod_Control/Device/SysInfo";
-		$rr->{extsysinfo}     = $opth->{mount}."/iPod_Control/Device/SysInfoExtended";
-		$rr->{playcounts}     = "$rr->{mountpoint}/iPod_Control/iTunes/Play Counts";
+		$rr->{artworkdir}     = $rr->{rootdir}."/Artwork";
+		$rr->{musicdir}       = $rr->{rootdir}."/Music";
+		$rr->{itunesdir}      = $rr->{rootdir}."/iTunes";
+		$rr->{artworkdb}      = $rr->{rootdir}."/Artwork/ArtworkDB";
+		$rr->{itunesdb}       = $rr->{itunesdir}."/iTunesDB";
+		$rr->{itunessd}       = $rr->{itunesdir}."/iTunesSD";
+		$rr->{shufflestat}    = $rr->{itunesdir}."/iTunesShuffle";
+		$rr->{playcounts}     = $rr->{itunesdir}."/Play Counts";
+		$rr->{onthego}        = $rr->{itunesdir}."/OTGPlaylist*";
+		$rr->{sysinfo}        = $rr->{rootdir}."/Device/SysInfo";
+		$rr->{extsysinfo}     = $rr->{rootdir}."/Device/SysInfoExtended";
 		$rr->{itunesdb_md5}   = "$rr->{etc}/.itunesdb_md5";
 		$rr->{onthego_invalid}  = "$rr->{etc}/.onthego_invalid";
-		$rr->{onthego}        = "$rr->{mountpoint}/iPod_Control/iTunes/OTGPlaylist*";
 		$rr->{status}         = undef;
 		$rr->{_no_cstest}     = $opth->{_no_cstest};
 		
@@ -354,7 +360,9 @@ sub GetConfig {
 
   my($topic,$val,$optarget);
   
-  foreach my $filerc ( ("$ENV{HOME}/.gnupodrc", "$getopts->{mount}/iPod_Control/.gnupod/gnupodrc") ) {
+  foreach my $filerc ( ("$ENV{HOME}/.gnupodrc",
+                        "$getopts->{mount}/iPod_Control/.gnupod/gnupodrc",
+                        "$getopts->{mount}/iTunes_Control/.gnupod/gnupodrc") ) {
     open(RCFILE, "<", $filerc) or next;
      while (my $line = <RCFILE>) {
       chomp($line);
