@@ -42,8 +42,8 @@ $int_count = 3; #The user has to send INT (Ctrl+C) x times until we stop
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
-GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode|D=s", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
-                   "set-title|T=s", "set-artist|A=s", "set-album|L=s", "set-genre|G=s", "set-rating|R=i", "set-playcount=i",
+GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode|x=s", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
+                   "set-title|t=s", "set-artist|a=s", "set-album|l=s", "set-genre|g=s", "set-rating=i", "set-playcount=i",
                    "set-bookmarkable|b", "set-shuffleskip", "artwork=s",
                    "set-songnum", "playlist|p=s@", "reencode|e=i",
                    "min-vol-adj=i", "max-vol-adj=i", "playlist-is-podcast", "set-compilation");
@@ -549,17 +549,17 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
        --playlist-is-podcast        Set podcast flag for playlist(s) created using '--playlist'
        --disable-v1                 Do not read ID3v1 Tags (MP3 Only)
        --disable-v2                 Do not read ID3v2 Tags (MP3 Only)
-   -D  --decode=pcm|mp3|aac|aacbm   Convert FLAC Files to WAVE/MP3 or AAC 'on-the-fly'
-   -D  --decode=video               Convert .avi Files into iPod video 'on-the-fly' (needs ffmpeg with AAC support!)
+   -x  --decode=pcm|mp3|aac|aacbm   Convert FLAC Files to WAVE/MP3 or AAC 'on-the-fly'. Use '-e' to specify a quality/bitrate
+   -x  --decode=video               Convert .avi Files into iPod video 'on-the-fly' (needs ffmpeg with AAC support)
    -e  --reencode=int               Reencode MP3/AAC files with new quality 'on-the-fly'
                                     (0 = Good .. 9 = Bad)
                                     You may be able to save some space if you do not need
                                     crystal-clear sound ;-)
-   -T  --set-title=string           Set Title  (Override ID3 Tag)
-   -A  --set-artist=string          Set Artist (Override ID3 Tag)
-   -L  --set-album=string           Set Album  (Override ID3 Tag)
-   -G  --set-genre=string           Set Genre  (Override ID3 Tag)
-   -R  --set-rating=int             Set Rating
+   -t  --set-title=string           Set Title  (Override ID3 Tag)
+   -a  --set-artist=string          Set Artist (Override ID3 Tag)
+   -l  --set-album=string           Set Album  (Override ID3 Tag)
+   -g  --set-genre=string           Set Genre  (Override ID3 Tag)
+       --set-rating=int             Set Rating
        --set-playcount=int          Set Playcount
        --set-songnum                Override 'Songnum/Tracknum' field
    -b  --set-bookmarkable           Set this song as bookmarkable (= Remember position)

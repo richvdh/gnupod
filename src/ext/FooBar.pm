@@ -51,7 +51,7 @@ sub connect {
 		$rr->{artworkdir}     = $rr->{rootdir}."/Artwork";
 		$rr->{musicdir}       = $rr->{rootdir}."/Music";
 		$rr->{itunesdir}      = $rr->{rootdir}."/iTunes";
-		$rr->{artworkdb}      = $rr->{rootdir}."/Artwork/ArtworkDB";
+		$rr->{artworkdb}      = $rr->{artworkdir}."/ArtworkDB";
 		$rr->{itunesdb}       = $rr->{itunesdir}."/iTunesDB";
 		$rr->{itunessd}       = $rr->{itunesdir}."/iTunesSD";
 		$rr->{shufflestat}    = $rr->{itunesdir}."/iTunesShuffle";
