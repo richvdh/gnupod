@@ -1,8 +1,15 @@
+GNUpod 0.99.6
 
+Summary
+-------
 
 - Fixed M4A-Genre support (for numeric values)
 - Use udevinfo to find the iPods Firewire-GUID (as /proc/bus/usb/devices is depricated)
 - Support for iPhone: Edit ~/.gnupodrc and add 'model = iphone'
+
+
+*** OLD STUFF ***
+
 
 GNUpod 0.99.5
 
@@ -18,9 +25,6 @@ Summary
 - Remove UTF8-BOM (Fixes garbage if source was UTF16 encoded)
 - Removed broken lastfm support
 
-
-
-*** OLD STUFF ***
 
 GNUpod 0.99.4
 
