@@ -377,11 +377,11 @@ sub newpl {
 #### PODCAST START ####
 
 #############################################################
-# Calls wget to get files
+# Calls curl to get files
 sub PODCAST_fetch {
 	my($url,$prefix) = @_;
 	my $tmpout = GNUpod::FooBar::get_u_path($prefix,"");
-	my $return = system("wget", "-q", "-O", $tmpout, $url);
+	my $return = system("curl", "-s", "-L", "-o", $tmpout, $url);
 	return{file=>$tmpout, status=>$return};
 }
 
@@ -432,7 +432,7 @@ sub resolve_podcasts {
 	my $env_is_okay = 1 if $opts{playlist} && $opts{'playlist-is-podcast'};
 	
 	foreach my $cf (@xfiles) {
-		if($cf =~ /^http:\/\//i) {
+		if (($cf =~ /^http:\/\//i) || ($cf =~ /^file:\/\//i)) {
 			$i++;
 			print "* [HTTP] Fetching Podcast #$i: $cf\n";
 			
@@ -443,7 +443,7 @@ sub resolve_podcasts {
 			
 			my $pcrss = PODCAST_fetch($cf, "/tmp/gnupodcast$i");
 			if($pcrss->{status} or (!(-f $pcrss->{file}))) {
-				warn "! [HTTP] Failed to download the file '$cf', wget exitcode: $pcrss->{status}\n";
+				warn "! [HTTP] Failed to download the file '$cf', curl exitcode: $pcrss->{status}\n";
 				next;
 			}
 			#Add the stuff to %podcast_infos and unlink the file after this.

@@ -6,6 +6,8 @@ Summary
 - Fixed M4A-Genre support (for numeric values)
 - Use udevinfo to find the iPods Firewire-GUID (as /proc/bus/usb/devices is depricated)
 - Support for iPhone: Edit ~/.gnupodrc and add 'model = iphone'
+- Some documentation 'fixes', thanks a lot to Toby Cabot
+- gnupod_addsong.pl: replace wget with curl
 
 
 *** OLD STUFF ***
