@@ -170,6 +170,7 @@ use constant MODE_PARSED    => 300;
 		foreach my $mr (@$mode) {
 			my $buff = '';
 			open(IM, "-|") || exec("convert", "-resize", "$mr->{height}x$mr->{width}!", "-depth", 8, $file, "RGB:-");
+			binmode(IM);
 			while(<IM>) { $buff .= $_  }
 			close(IM);
 			
@@ -224,6 +225,7 @@ use constant MODE_PARSED    => 300;
 		if(! open(ITHMB, "+<", $fpath) ) {
 			open(ITHMB, ">", $fpath) or die "Unable to write to $fpath : $!\n";
 		}
+		binmode(ITHMB);
 		seek(ITHMB,$start,0) or die "Unable to seek to $start at $fnam\n";
 		print ITHMB $args{Data};
 		$end   = tell(ITHMB);
@@ -250,6 +252,7 @@ use constant MODE_PARSED    => 300;
 		my $bak = $self->{artworkdb}.".old";
 		
 		open(AD, "+>", $tmp) or die "Unable to write $self->{artworkdb} : $!\n";
+		binmode(AD);
 		my $fd = *AD;
 		
 		my $mhfd_fixup = tell($fd);
@@ -506,6 +509,7 @@ package GNUpod::ArtworkDB::RGB;
 		my($self,%args) = @_;
 		my $buff = '';
 		open(F, "<", $args{File}) or return undef;
+		binmode(F);
 		while(<F>) { $buff .= $_; }
 		close(F);
 		$self->SetData(Data=>$buff, Width=>$args{Width}, Height=>$args{Height});

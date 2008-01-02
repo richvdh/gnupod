@@ -118,6 +118,7 @@ sub CreateHash {
 	my $phash = undef;
 	my $fkey  = undef;
 	open(ITUNES, "+<",$path) or die "FATAL: Unable to open $path : $!\n";  # Open iTunesDB for read/write
+	binmode(ITUNES);
 	my $brain = _PrepareItunes(FD=>*ITUNES);                               # Blank out some offsets in iTunesDB
 
 	Hmac($key,64,0x36);                                                    # Create HMAC for $key
