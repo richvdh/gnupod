@@ -1539,6 +1539,7 @@ sub readPLC {
 	my($file) = @_;
 	
 	open(PLC, "$file") or return ();
+	binmode(PLC);
 	my $offset    = get_int(4 ,4,*PLC); #How long is the header?
 	my $chunksize = get_int(8, 4,*PLC); #How long is one entry? (20 for iTunes 0xD / 16 for V2 Firmware, 12 for v1)
 	my $chunks    = get_int(12,4,*PLC); #How many chunks do we have?
@@ -1575,6 +1576,7 @@ sub readOTG {
 	foreach my $file (bsd_glob($glob,GLOB_NOSORT)) {
 		my @otgdb = ();
 		open(OTG, "$file") or next;
+		binmode(OTG);
 		sysseek(OTG, 12, 0);
 		sysread(OTG, $buff, 4);
 		

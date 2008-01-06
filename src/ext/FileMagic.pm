@@ -100,6 +100,7 @@ sub __is_NonNative {
 	
 	return undef if $size < 12;
 	open(TNN, $file) or return undef;
+	binmode(TNN);
 	seek(TNN,0,0);
 	read(TNN,$magic,4);
 	seek(TNN,8,0);
@@ -181,6 +182,7 @@ sub __is_pcm {
 	my $size = (-s $file);
 	return undef if $size < 32;
 	open(PCM, "$file") or return undef;
+	binmode(PCM);
 	#Get the group id and riff type
 	my ($gid, $rty, $buff,$srate,$bps) = undef;
 	

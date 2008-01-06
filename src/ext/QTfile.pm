@@ -82,7 +82,8 @@ sub parsefile {
 
 
 	open(QTFILE, $qtfile) or return undef;
-
+	binmode(QTFILE);
+	
 	my $fsize = -s "$qtfile" or return undef; #Dunno parse emtpy files
 	my $pos = 0;
 	my $level = 1;

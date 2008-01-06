@@ -72,6 +72,8 @@ use constant MODE_PARSED    => 300;
 			return $self;
 		}
 		
+		binmode(AWDB);
+		
 		my $obj = { offset => 0, childs => 1, fd=>*AWDB, awdb => 1,
 		               callback => {
 		                              PACKAGE=>$self, mhod => { item  => '_MhodItem'  },
