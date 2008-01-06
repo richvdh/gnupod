@@ -409,6 +409,7 @@ sub kick_convert {
 	$quality = 0 if $quality < 0;
 	$quality = 9 if $quality > 9;
 	open(KICKOMATIC, "-|") or exec($prog, $file, "GET_$format", int($quality)) or die "FileMagic::kick_convert: Could not exec $prog\n";
+	binmode(KICKOMATIC);
 	my $newP = <KICKOMATIC>;
 	chomp($newP);
 	close(KICKOMATIC);
@@ -474,6 +475,7 @@ sub converter_readmeta {
 	$prog = "$con->{bindir}/$prog";
 	my %metastuff = ();
 	open(CFLAC, "-|") or exec($prog, $file, "GET_META") or die "converter_readmeta: Could not exec $prog\n";
+	binmode(CFLAC);
 	while(<CFLAC>) {
 		chomp($_);
 		if($_ =~ /^([^:]+):(.*)$/) {

@@ -77,6 +77,8 @@ elsif($gimme eq "GET_MP3") {
 	my $tmpout = GNUpod::FooBar::get_u_path("/tmp/gnupod_mp3", "mp3");
 	open(FLACOUT, "-|") or exec("flac", "-d", "-s", "-c", "$file") or die "Could not exec flac: $!\n";
 	open(LAMEIN , "|-") or exec("lame", "-V", $quality, "--silent", "-", $tmpout) or die "Could not exec lame: $!\n";
+	binmode(FLACOUT);
+	binmode(LAMEIN);
 	while(<FLACOUT>) {
 		print LAMEIN $_;
 	}
@@ -91,6 +93,8 @@ elsif($gimme eq "GET_AAC" or $gimme eq "GET_AACBM") {
 	$quality = 140 - ($quality*10);
 	open(FLACOUT, "-|") or exec("flac", "-d", "-s", "-c", "$file") or die "Could not exec flac: $!\n";
 	open(FAACIN , "|-") or exec("faac", "-w", "-q", $quality, "-o", $tmpout, "-") or die "Could not exec faac: $!\n";
+	binmode(FLACOUT);
+	binmode(FAACIN);
 	while(<FLACOUT>) { #Feed faac
 		print FAACIN $_;
 	}
