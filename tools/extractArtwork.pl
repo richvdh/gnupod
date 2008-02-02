@@ -9,10 +9,11 @@ use Data::Dumper;
 
 my %opts = ();
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
-GetOptions(\%opts, "version", "help|h", "mount|m=s", "outdir|o=s");
+GetOptions(\%opts, "version", "help|h", "mount|m=s", "outdir|o=s", "match=s");
 GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "extract_artwork");
 
 usage()   if $opts{help};
+usage()   if (length($opts{outdir}) == 0 || !(-d $opts{outdir}));
 version() if $opts{version};
 
 
@@ -38,11 +39,13 @@ sub newfile {
 			my $artist    = (SaveName($el->{file}->{artist}) || 'NoArtist');
 			my $album     = (SaveName($el->{file}->{album}) || 'NoAlbum');
 			my $title     = (SaveName($el->{file}->{title}) || 'NoTitle');
-			
-			my $outfile = "/tmp/$artist - $album - $title ($awobj->{width}x$awobj->{height}).bmp";
-			
+			my $xfile     = "$artist - $album - $title ($awobj->{width}x$awobj->{height}).bmp";
+			my $outfile   = $opts{outdir}."/".$xfile;
 			my $buff      = '';
 			
+			next if $xfile !~ /$opts{match}/gi;
+			
+			print "Extracting $awobj->{width}x$awobj->{height} version of $artist - $album - $title\n";
 			open(ITHMB, "<", $awdb_path) or die "Unable to open $awdb_path: $!\n";
 			binmode(ITHMB);
 			seek(ITHMB,$awobj->{offset},0) or die "seek($awobj->{offset}) failed: $!\n";
@@ -79,6 +82,7 @@ Usage: extractArtwork.pl [-m directory] --outdir /path/to/outdir
    -h, --help              display this help and exit
        --version           output version information and exit
    -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
+       --match=regexp      Only extract if output filename matches regexp
    -o, --outdir=directory  Drop extracted images into given directory
 
 Report bugs to <bug-gnupod\@nongnu.org>

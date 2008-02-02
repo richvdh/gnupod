@@ -566,36 +566,12 @@ package GNUpod::ArtworkDB::RGB;
 		for(my $h = $self->{dimH}; $h > 0; $h--) {
 			my $line = '';
 			for(my $w = 0; $w < $self->{dimW}; $w++) {
-				my $x = substr($self->{data}, (($h*$self->{dimW})+$w)*$bpp,$bpp);
-				# We got 16 bits but need 24..
-				
-				my $b2 = pack("v",unpack("n",substr($self->{data}, (($h*$self->{dimW})+$w)*$bpp,$bpp)));
-				
-				
-				my $pa = pack("C", ( (unpack("v",$x) >> (16-5)) << (8-5) ));
-				
-				my $a = pack("B8",substr(unpack("B*",$b2),0,5));				
-				my $b = pack("B8",substr(unpack("B*",$b2),5,6));
-				my $c = pack("B8",substr(unpack("B*",$b2),11,5));
-				
-				print "PB: ".unpack("B*",$b)."\n";
-				
-				my $g = unpack("n",$x);
-				
-				$g = pack("n",$g);
-				
-				print unpack("B*",$g)."\n\n";
-				
-				$line .= $c.$b.$pa;
-				
-=head
 				my $buff = pack("v",unpack("n",substr($self->{data}, (($h*$self->{dimW})+$w)*$bpp,$bpp)));
 				my $dump = unpack("B16",$buff);
 				my $pa   = pack("B8",substr($dump,0,5));
 				my $pb   = pack("B8",substr($dump,5,6));
 				my $pc   = pack("B8",substr($dump,11,5));
 				$line .= $pc.$pb.$pa;
-=cut
 			}
 			$out .= $line;
 		}
