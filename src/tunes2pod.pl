@@ -221,7 +221,13 @@ sub MhodItem {
 	
 	if($self->{mode} == MODE_SONGS) {
 		# -> Songs mode, just add string to current context
-		$self->{ctx}->{$args{ref}->{type_string}} = $args{ref}->{string}; # Add mhod item
+		my $key = $args{ref}->{type_string};
+		if(length($key)) {
+			$self->{ctx}->{$key} = $args{ref}->{string}; # Add mhod item
+		}
+		else {
+			warn "$0: skipping unknown entry of type '$args{ref}->{type}'\n";
+		}
 	}
 	elsif($self->{mode} == MODE_OLDPL) {
 		# Legacy playlist
