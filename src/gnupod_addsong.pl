@@ -462,7 +462,7 @@ sub resolve_podcasts {
 			} elsif ($flimit < 0) {
 				splice(@pods, 0, $flimit);
 			}				
-			$podcast_infos{$pcrss->{file}} = [@pods];
+			$podcast_infos{$pcrss->{file}} = \@pods;
 
 			$per_file_info{$pcrss->{file}}->{REAL_RSS} = $cf;
 		}
