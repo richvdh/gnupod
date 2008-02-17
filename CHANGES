@@ -1,3 +1,14 @@
+GNUupod 1.00
+
+Summary
+-------
+
+- Fix DBID width in gnupod_search.pl output               (Thanks to Heinrich Langos)
+- Added --bitrate switch to gnupod_search.pl              (Thanks to Heinrich Langos)
+- Added --podcast-files-limit switch to gnupod_addsong.pl (Thanks to Heinrich Langos)
+
+*** OLD STUFF ***
+
 GNUpod 0.99.6
 
 Summary
@@ -9,9 +20,6 @@ Summary
 - Some documentation 'fixes', thanks a lot to Toby Cabot
 - gnupod_addsong.pl: replace wget with curl
 - Use binmode() more often to help Win32
-
-
-*** OLD STUFF ***
 
 
 GNUpod 0.99.5

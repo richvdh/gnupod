@@ -1,4 +1,4 @@
-AC_INIT(GNUpod, 0.99.6, bug-gnupod@nongnu.org)
+AC_INIT(GNUpod, 1.00, bug-gnupod@nongnu.org)
 
 echo $ECHO_N $PACKAGE_VERSION > .gnupod_version
 

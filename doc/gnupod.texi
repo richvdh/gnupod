@@ -7,7 +7,7 @@
 @include version.texi
 
 @copying
-Copyright @copyright{} 2002, 2003, 2004, 2005, 2006 and 2007 Adrian Ulrich
+Copyright @copyright{} 2002, 2003, 2004, 2005, 2006, 2007 and 2008 Adrian Ulrich
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or

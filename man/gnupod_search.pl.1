@@ -1,6 +1,6 @@
-.TH GNUPOD_SEARCH "23" "June 2005" "gnupod_search.pl 0.99.4" "User Commands"
+.TH GNUPOD_SEARCH "23" "June 2005" "gnupod_search.pl 1.00" "User Commands"
 .SH NAME
-gnupod_search.pl \- manual page for gnupod_search.pl 0.99.4
+gnupod_search.pl \- manual page for gnupod_search.pl 1.00
 .SH SYNOPSIS
 .B gnupod_search.pl
 [\fIOPTION\fR]...
@@ -30,6 +30,21 @@ search songs by ID
 .TP
 \fB\-g\fR, \fB\-\-genre=STRING\fR
 search songs by Genre
+.TP
+\fB\-c\fR, \fB\-\-playcount=COUNT\fR
+search songs by Playcount
+.TP
+\fB\-s\fR, \fB\-\-rating=STARS\fR
+search songs by Rating (1 star = 20, 2 stars = 40 ...)
+.TP
+\fB\-R\fR, \fB\-\-podcastrss=RSS\fR
+search songs by podcast-rss
+.TP
+\fB\-U\fR, \fB\-\-podcastguid=GUID\fR
+search songs by podcast-guid
+.TP
+\fB\-b\fR, \fB\-\-bitrate=BITRATE\fR
+search songs by Bitrate
 .TP
 \fB\-o\fR, \fB\-\-match\-once\fR
 Search does not need to match multiple times (like ($a || $b || $c))

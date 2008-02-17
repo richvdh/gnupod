@@ -45,6 +45,7 @@ print "gnupod_search.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "artist|a=s",
                    "album|l=s", "title|t=s", "id|i=s", "rename=s@", "artwork=s",
                    "playcount|c=s", "rating|s=s", "podcastrss|R=s", "podcastguid|U=s",
+                   "bitrate|b=s",
                    "view=s","genre|g=s", "match-once|o", "delete");
 GNUpod::FooBar::GetConfig(\%opts, {view=>'s', mount=>'s', 'match-once'=>'b', 'automktunes'=>'b', model=>'s'}, "gnupod_search");
 
@@ -202,7 +203,8 @@ sub pview {
  $qh{G}{k} = $orf->{podcastguid};               $qh{G}{s} = "GUID";
  $qh{c}{k} = $orf->{playcount}; $qh{c}{w} = 4;  $qh{c}{s} = "CNT";
  $qh{i}{k} = $orf->{id};        $qh{i}{w} = 4;  $qh{i}{s} = "ID";
- $qh{d}{k} = $orf->{dbid_1};    $qh{i}{w} = 16; $qh{d}{s} = "DBID";
+ $qh{d}{k} = $orf->{dbid_1};    $qh{d}{w} = 16; $qh{d}{s} = "DBID";
+ $qh{b}{k} = $orf->{bitrate};   $qh{b}{w} = 8;  $qh{b}{s} = "BITRATE";
  $qh{u}{k} = GNUpod::XMLhelper::realpath($opts{mount},$orf->{path}); $qh{u}{w} = 96; $qh{u}{s} = "UNIXPATH";
  
  #Prepare view
@@ -253,12 +255,14 @@ Usage: gnupod_search.pl [-h] [-m directory] File1 File2 ...
    -s, --rating=COUNT      search songs by Rating (20 is one star, 40 two, etc.)
    -R, --podcastrss=RSS    search songs by RSS
    -U, --podcastguid=GUID  search songs by GUID
+   -b, --bitrate=BITRATE   search songs by Bitrate
    -o, --match-once        Search doesn't need to match multiple times (eg. -a & -l)
        --delete            REMOVE (!) matched songs
        --view=ialt         Modify output, default=ialt
                             t = title    a = artist   r = rating      p = iPod Path
                             l = album    g = genre    c = playcount   i = id
                             u = UnixPath n = Songnum  G = podcastguid R = podcastrss
+                            d = dbid
        --rename=KEY=VAL    Change tags on found songs. Example: --rename="ARTIST=Foo Bar"
        --artwork=FILE      Set FILE as Cover for found files, do not forget to run mktunes.pl
 
@@ -276,7 +280,7 @@ EOF
 sub version {
 die << "EOF";
 gnupod_search.pl (gnupod) ###__VERSION__###
-Copyright (C) Adrian Ulrich 2002-2007
+Copyright (C) Adrian Ulrich 2002-2008
 
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

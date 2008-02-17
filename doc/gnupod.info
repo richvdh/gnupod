@@ -1,6 +1,7 @@
 This is gnupod.info, produced by makeinfo version 4.8 from gnupod.texi.
 
-   Copyright (C) 2002, 2003, 2004, 2005, 2006 and 2007 Adrian Ulrich
+   Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007 and 2008 Adrian
+Ulrich
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -24,8 +25,8 @@ File: gnupod.info,  Node: Top,  Next: Requirements,  Up: (dir)
 1 GNUpod
 ********
 
-This edition of the `GNUpod Manual', last updated 20. Sep. 2007,
-documents GNUpod Version 0.99.4
+This edition of the `GNUpod Manual', last updated 17. Feb. 2008,
+documents GNUpod Version 1.00
 
 * Menu:
 
@@ -1334,32 +1335,32 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top876
-Node: Requirements1467
-Node: Installing GNUpod1990
-Node: Installation of GNUpod2417
-Node: Using FireWire with GNU/Linux3536
-Node: Convert your Mac iPod7076
-Node: Firmware update11730
-Node: Using GNUpod17885
-Node: Preparation18995
-Node: Configuration19728
-Node: Add files20184
-Node: Search files21666
-Node: Remove files22148
-Node: Edit tags22449
-Node: Creating playlists22993
-Node: Dealing with podcasts25482
-Node: Adding cover artwork26388
-Node: Unplug the iPod27730
-Node: Recovering files28643
-Node: Coexistence29540
-Node: Late 2007 iPods31030
-Node: Problems31819
-Node: GNUtunesDB32202
-Node: Get rid of '-m'33709
-Node: Known bugs and limitations34000
-Node: Reporting Bugs34291
-Node: GNU Free Documentation License34739
+Node: Top882
+Node: Requirements1471
+Node: Installing GNUpod1994
+Node: Installation of GNUpod2421
+Node: Using FireWire with GNU/Linux3540
+Node: Convert your Mac iPod7080
+Node: Firmware update11734
+Node: Using GNUpod17889
+Node: Preparation18999
+Node: Configuration19732
+Node: Add files20188
+Node: Search files21670
+Node: Remove files22152
+Node: Edit tags22453
+Node: Creating playlists22997
+Node: Dealing with podcasts25486
+Node: Adding cover artwork26392
+Node: Unplug the iPod27734
+Node: Recovering files28647
+Node: Coexistence29544
+Node: Late 2007 iPods31034
+Node: Problems31823
+Node: GNUtunesDB32206
+Node: Get rid of '-m'33713
+Node: Known bugs and limitations34004
+Node: Reporting Bugs34295
+Node: GNU Free Documentation License34743
 
 End Tag Table

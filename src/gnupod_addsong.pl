@@ -46,11 +46,11 @@ GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode|x=s", "restore|r", 
                    "set-title|t=s", "set-artist|a=s", "set-album|l=s", "set-genre|g=s", "set-rating=i", "set-playcount=i",
                    "set-bookmarkable|b", "set-shuffleskip", "artwork=s",
                    "set-songnum", "playlist|p=s@", "reencode|e=i",
-                   "min-vol-adj=i", "max-vol-adj=i", "playlist-is-podcast", "set-compilation");
+                   "min-vol-adj=i", "max-vol-adj=i", "playlist-is-podcast", "podcast-files-limit=i", "set-compilation");
 
 GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b', model=>'s',
                                    'disable-v1'=>'b', 'disable-v2'=>'b', 'set-songnum'=>'b',
-                                   'min-vol-adj'=>'i', 'max-vol-adj'=>'i', 'automktunes'=>'b' },
+                                   'min-vol-adj'=>'i', 'max-vol-adj'=>'i', 'automktunes'=>'b', 'podcast-files-limit'=>'i' },
                                    "gnupod_addsong");
 
 
@@ -453,6 +453,17 @@ sub resolve_podcasts {
 			};
 			warn "! [HTTP] Error while parsing XML: $@\n" if $@;
 			unlink($pcrss->{file}) or warn "Could not unlink $pcrss->{file}, $!\n";
+
+			#Limit the number of podcasts to dowload.
+			my @pods   = @{$podcast_infos{$pcrss->{file}}};
+			my $flimit = int($opts{'podcast-files-limit'});
+			if ($flimit > 0) {
+				splice(@pods, $flimit);
+			} elsif ($flimit < 0) {
+				splice(@pods, 0, $flimit);
+			}				
+			$podcast_infos{$pcrss->{file}} = [@pods];
+
 			$per_file_info{$pcrss->{file}}->{REAL_RSS} = $cf;
 		}
 		else {
@@ -547,6 +558,8 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
    -d, --duplicate                  Allow duplicate files
    -p, --playlist=string            Add songs to this playlist, can be used multiple times
        --playlist-is-podcast        Set podcast flag for playlist(s) created using '--playlist'
+       --podcast-files-limit=int    Limit the number of files that are downloaded.
+                                    0 = download all (default), -X = download X oldest items, X = download X newest items
        --disable-v1                 Do not read ID3v1 Tags (MP3 Only)
        --disable-v2                 Do not read ID3v2 Tags (MP3 Only)
    -x  --decode=pcm|mp3|aac|aacbm   Convert FLAC Files to WAVE/MP3 or AAC 'on-the-fly'. Use '-e' to specify a quality/bitrate
@@ -579,7 +592,7 @@ EOF
 sub version {
 die << "EOF";
 gnupod_addsong.pl (gnupod) ###__VERSION__###
-Copyright (C) Adrian Ulrich 2002-2007
+Copyright (C) Adrian Ulrich 2002-2008
 
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
