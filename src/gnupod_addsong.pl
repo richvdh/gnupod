@@ -67,7 +67,7 @@ if($opts{restore}) {
 	print "If you use --restore, you'll *lose* your playlists and cover artwork!\n";
 	print " Hit ENTER to continue or CTRL+C to abort\n\n";
 	<STDIN>;
-	@XFILES = bsd_glob("$opts{mount}/i*/Music/F*/*", GLOB_NOSORT)
+	@XFILES = bsd_glob("$opts{mount}/i*/Music/[Ff]*/*", GLOB_NOSORT)
 }
 elsif($ARGV[0] eq "-" && @ARGV == 1) {
 	print STDERR "Reading from STDIN, hit CTRL+D (EOF) when finished\n";

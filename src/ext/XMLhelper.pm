@@ -115,19 +115,22 @@ sub getpath {
 # Escape chars
 sub xescaped {
 	my ($ret) = @_;
+	
 	$ret =~ s/&/&amp;/g;
 	$ret =~ s/"/&quot;/g;
+	$ret =~ s/\'/&apos;/g;
 	$ret =~ s/</&lt;/g;
 	$ret =~ s/>/&gt;/g;
-	#$ret =~ s/^\s*-+//g;
-	my $xutf = Unicode::String::utf8($ret)->utf8;
-	#Remove 0x00 - 0x1f chars (we don't need them)
-	$xutf =~ tr/\000-\037//d;
-	
-	return $xutf;
+	$ret =~ tr/\000-\037//d;
+	#convert to XML encoded unicode
+	$ret =~ s/([\xC2-\xDF])([\x80-\xBF])/"&#".( ((ord($1) & 31) <<  6) +  (ord($2) & 63) ).";"/eg;
+	$ret =~ s/([\xE0-\xEF])([\x80-\xBF])([\x80-\xBF])/"&#".( ((ord($1) & 15) << 12) + ((ord($2) & 63) <<  6) +  (ord($3) & 63) ).";"/eg;
+	$ret =~ s/([\xF0-\xF4])([\x80-\xBF])([\x80-\xBF])([\x80-\xBF])/"&#".( ((ord($1) &  7) << 18) + ((ord($2) & 63) << 12) + ((ord($3) & 63) <<  6) + (ord($4) & 63) ).";"/eg;
+	# now everything left above 0x7f is illegal
+	$ret =~ tr/\x80-\xff//d;
+	$ret =~ s/&#65534;//; # Slipped-over BOM
+	return $ret;
 }
-
-
 
 
 ###############################################################
@@ -139,7 +142,7 @@ sub mkfile {
 	my $r = undef;
 
 	foreach my $base (keys %$hr) {
-		$r .= "<".xescaped($base)." ";
+		$r .= "<$base "; # can be file/add or such things. No need to escape it
 		#Copy the hash, because we do something to it
 		my %hcopy = %{$hr->{$base}};
 
@@ -152,7 +155,7 @@ sub mkfile {
 
 		#Build $r
 		foreach (sort(keys %hcopy)) {
-			$r .= xescaped($_)."=\"".xescaped($hcopy{$_})."\" ";
+			$r .= "$_=\"".xescaped($hcopy{$_})."\" ";
 		}
 
 		if($magic->{noend}) { $r .= ">" }
@@ -291,8 +294,14 @@ sub mkh {
 sub doxml {
 	my($xmlin, %opts) = @_;
 	return undef unless (-r $xmlin);
-	my $p = new XML::Parser(Handlers=>{Start=>\&eventer});
-	   $p->parsefile($xmlin);
+	my $p;
+	my $ref = eval {
+		$p = new XML::Parser(ErrorContext => 0, Handlers=>{Start=>\&eventer});
+		$p->parsefile($xmlin);
+	};
+	if($@) {
+		die "An error occurred reading $xmlin :\n", $@ ;
+	}
 	return $p;
 }
 
