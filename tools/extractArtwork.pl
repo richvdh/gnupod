@@ -9,7 +9,7 @@ use Data::Dumper;
 
 my %opts = ();
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
-GetOptions(\%opts, "version", "help|h", "mount|m=s", "outdir|o=s", "match=s");
+GetOptions(\%opts, "version", "help|h", "mount|m=s", "outdir|o=s", "match=s", "unique|u");
 GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "extract_artwork");
 
 usage()   if $opts{help};
@@ -27,6 +27,7 @@ GNUpod::XMLhelper::doxml($connection->{xml}) or usage("Failed to parse $connecti
 print Data::Dumper::Dumper($AWDB);
 
 
+my %unique=();
 
 sub newfile {
 	my($el) = @_;
@@ -35,6 +36,11 @@ sub newfile {
 		my $awref = $AWDB->GetImage($el->{file}->{dbid_1});
 		
 		foreach my $awobj (@{$awref->{subimages}}) {
+			if ($opts{unique} && defined ($unique{$awobj->{path}.$awobj->{offset}})) { 
+				next;
+			} else {
+				$unique{$awobj->{path}.$awobj->{offset}}=1;
+			}
 			my $awdb_path = $connection->{artworkdir}.'/'.SaveName($awobj->{path});
 			my $artist    = (SaveName($el->{file}->{artist}) || 'NoArtist');
 			my $album     = (SaveName($el->{file}->{album}) || 'NoAlbum');
@@ -77,9 +83,10 @@ sub usage {
 my($rtxt) = @_;
 die << "EOF";
 $rtxt
-Usage: extractArtwork.pl [-m directory] --outdir /path/to/outdir
+Usage: extractArtwork.pl [-m directory] [-u] --outdir /path/to/outdir
 
    -h, --help              display this help and exit
+   -u, --unique            Try to avoid exporting duplicate images.
        --version           output version information and exit
    -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
        --match=regexp      Only extract if output filename matches regexp

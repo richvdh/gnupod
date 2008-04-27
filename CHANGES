@@ -1,11 +1,15 @@
-GNUupod 1.00
+GNUupod 0.99.7
 
 Summary
 -------
 
-- Fix DBID width in gnupod_search.pl output               (Thanks to Heinrich Langos)
-- Added --bitrate switch to gnupod_search.pl              (Thanks to Heinrich Langos)
-- Added --podcast-files-limit switch to gnupod_addsong.pl (Thanks to Heinrich Langos)
+This release includes mostly patches from Heinrich Langos,
+many thanks to him:
+- Fix DBID width in gnupod_search.pl output
+- Added --bitrate switch to gnupod_search.pl
+- Added --podcast-files-limit switch to gnupod_addsong.pl
+- Added Podcast-Date patch (GNUpod now depends on Date::Parse)
+- Added --unique switch to extractArtwork.pl
 
 *** OLD STUFF ***
 
