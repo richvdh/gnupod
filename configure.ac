@@ -73,7 +73,6 @@ $PERL -e "use MP3::Info; exit(1) if(\$MP3::Info::VERSION < 1.01); exit(0);"
 echo "installed version of MP3::Info looks good"
  else
   echo " ** PLEASE UPGRADE MP3::Info TO VERSION 1.01 OR NEWER ** "
-  echo " ** YOU CAN USE GNUPOD WITH YOUR CURRENT VERSION BUT  ** "
   echo " ** UTF8 SUPPORT FOR MP3 FILES WILL BE BROKEN !       **"
  fi
 

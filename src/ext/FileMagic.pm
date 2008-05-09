@@ -46,17 +46,8 @@ my $NN_HEADERS = {'MThd' => { encoder=>'gnupod_convert_MIDI.pl', ftyp=>'MIDI'},
 
 
 BEGIN {
- MP3::Info::use_winamp_genres();
- 
- if($MP3::Info::VERSION >= 1.01) { #Check for very old MP3::Info versions
-   MP3::Info::use_mp3_utf8(0);
- }
- else {
-  warn "FileMagic.pm: Warning: You are using a VERY OLD ($MP3::Info::VERSION) Version\n";
-  warn "              of MP3::Info. ** DISABLING UNICODE SUPPORT BECAUSE IT WOULD BREAK **\n";
-  warn "              PLEASE UPGRADE TO 1.01 OR NEWER (See: http://search.cpan.org)\n";
- }
- 
+ MP3::Info::use_winamp_genres(); # Import winamp genres
+ MP3::Info::use_mp3_utf8(1);     # Force-Enable UTF8 support
   open(NULLFH, "> /dev/null") or die "Could not open /dev/null, $!\n";
 }
 
