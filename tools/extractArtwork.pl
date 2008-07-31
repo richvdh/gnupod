@@ -24,7 +24,7 @@ my $AWDB = GNUpod::ArtworkDB->new(Connection=>$connection, DropUnseen=>0);
 $AWDB->LoadArtworkDb;
 GNUpod::XMLhelper::doxml($connection->{xml}) or usage("Failed to parse $connection->{xml}, did you run gnupod_INIT.pl?\n");
 
-print Data::Dumper::Dumper($AWDB);
+#print Data::Dumper::Dumper($AWDB);
 
 
 my %unique=();
@@ -60,8 +60,19 @@ sub newfile {
 			
 			my $rgb = GNUpod::ArtworkDB::RGB->new;
 			$rgb->SetData(Data=>$buff, Height=>$awobj->{height}, Width=>$awobj->{width});
+			my $bitmapdata = $rgb->RGB565ToBitmap;
+			if ($opts{unique}) {
+				use Digest::MD5;
+				my $bitmaphash = Digest::MD5::md5_hex($bitmapdata);
+				if (defined ($unique{$bitmaphash})) {
+					print "Skipping due to MD5 hash.\n";
+					next;
+				} else {
+					$unique{$bitmaphash}=1;
+				}
+			}
 			open(OUT, ">", $outfile) or die "Unable to write to $outfile : $!\n";
-			print OUT $rgb->RGB565ToBitmap;
+			print OUT $bitmapdata;
 			close(OUT);
 		}
 		
