@@ -35,7 +35,7 @@ use constant MEDIATYPE_PODCAST_AUDIO => 4;
 use constant MEDIATYPE_PODCAST_VIDEO => 6;
 
 use constant MACTIME => GNUpod::FooBar::MACTIME;
-use vars qw(%opts %dupdb_normal %dupdb_lazy %dupdb_podcast $int_count %podcast_infos %per_file_info);
+use vars qw(%opts %dupdb_normal %dupdb_lazy %dupdb_podcast $int_count %podcast_infos %podcast_channel_infos %per_file_info);
 
 print "gnupod_addsong.pl Version ###__VERSION__### (C) Adrian Ulrich\n";
 
@@ -423,6 +423,56 @@ sub podcastChar {
 }
 
 #############################################################
+#Eventer for START:
+# -> Push array if we found a new item beginning
+# -> Add '<foo bar=barz oink=yak />' stuff to the hash
+# => Fillsup %podcast_channel_infos
+sub podcastChannelStart {
+	my($hr,$el,@it) = @_;
+	my $hashref_key = $hr->{Base};
+	$hr->{cdatabuffer} = undef;
+	if($hr->{Context}[-1] eq "rss" &&
+	   $el eq "channel") {
+		push(@{$podcast_channel_infos{$hashref_key}}, {});
+	}elsif($hr->{Context}[-2] eq "rss" &&
+	   $hr->{Context}[-1] eq "channel" &&
+	   $el ne "item") {
+		if (@it) {
+			my $xref = GNUpod::XMLhelper::mkh($el,@it);
+			${$podcast_channel_infos{$hashref_key}}[-1]->{$el} ||= $xref->{$el};
+		}
+	}
+}
+
+#############################################################
+#Eventer for <foo>CONTENT</foo>
+# => Fillsup %podcast_channel_infos
+sub podcastChannelChar {
+	my($hr,$el) = @_;
+	$hr->{cdatabuffer} .= $el;
+}
+
+#############################################################
+#Eventer for END
+# => Fillsup %podcast_channel_infos
+sub podcastChannelEnd {
+	my($hr,$el) = @_;
+	my $hashref_key = $hr->{Base};
+	if(defined($hr->{cdatabuffer}) &&
+	   $hr->{Context}[-2] eq "rss" &&
+	   $hr->{Context}[-1] eq "channel" &&
+	   $el ne "item") {
+		${$podcast_channel_infos{$hashref_key}}[-1]->{$el}->{"\0"} ||= $hr->{cdatabuffer};
+	}elsif(defined($hr->{cdatabuffer}) &&
+	   $hr->{Context}[-3] eq "rss" &&
+	   $hr->{Context}[-2] eq "channel" &&
+	   $hr->{Context}[-1] ne "item") {
+		${$podcast_channel_infos{$hashref_key}}[-1]->{$hr->{Context}[-1]}->{$el}->{"\0"} ||= $hr->{cdatabuffer};
+	}
+	$hr->{cdatabuffer} = undef; # make sure it doesn't get added to the parent element as well
+}
+
+#############################################################
 # This is the heart of our podcast support
 #
 sub resolve_podcasts {
@@ -451,6 +501,8 @@ sub resolve_podcasts {
 			eval {
 				my $px = new XML::Parser(Handlers=>{Start=>\&podcastStart, Char=>\&podcastChar});
 				$px->parsefile($pcrss->{file});
+				my $py = new XML::Parser(Handlers=>{Start=>\&podcastChannelStart, Char=>\&podcastChannelChar, End=>\&podcastChannelEnd});
+				$py->parsefile($pcrss->{file});
 			};
 			warn "! [HTTP] Error while parsing XML: $@\n" if $@;
 			unlink($pcrss->{file}) or warn "Could not unlink $pcrss->{file}, $!\n";
@@ -471,6 +523,9 @@ sub resolve_podcasts {
 			push(@files, $cf);
 		}
 	}
+
+#	use Data::Dumper;
+#	print Dumper(\%podcast_channel_infos);
 
 	foreach my $key (keys(%podcast_infos)) {
 		my $cref = $podcast_infos{$key};
