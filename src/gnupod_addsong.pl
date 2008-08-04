@@ -85,7 +85,7 @@ my $connection = GNUpod::FooBar::connect(\%opts);
 usage($connection->{status}."\n") if $connection->{status} || !@XFILES;
 
 my $AWDB  = GNUpod::ArtworkDB->new(Connection=>$connection, DropUnseen=>1);
-
+my $awdb_image_prepared = 0 ;
 
 my $exit_code = startup($connection,@XFILES);
 exit($exit_code);
@@ -112,10 +112,7 @@ sub startup {
 	}
 	else {
 		if($opts{artwork}) {
-			if( $AWDB->PrepareImage(File=>$opts{artwork}, Model=>$opts{model}) ) {
-				$AWDB->LoadArtworkDb or die "Failed to load artwork database\n";
-			}
-			else {
+			if ( ! add_image_to_awdb($opts{artwork})) {
 				warn "$0: Could not load $opts{artwork}, skipping artwork\n";
 				delete($opts{artwork});
 			}
@@ -187,7 +184,7 @@ sub startup {
 		$fh->{playcount}    = $opts{'set-playcount'}   if $opts{'set-playcount'};
 		$fh->{title}        = $opts{'set-title'}       if $opts{'set-title'};
 		$fh->{songnum}      = 1+$addcount              if $opts{'set-songnum'};
-		if(defined($opts{artwork})) {
+		if($awdb_image_prepared) {
 			$fh->{has_artwork} = 1;
 			$fh->{artworkcnt}  = 1;
 			$fh->{dbid_1}      = $AWDB->InjectImage;
@@ -328,8 +325,22 @@ sub startup {
 	return $fatal_error;
 }
 
-
-
+#############################################################
+# Preapare and add image to artwork database
+sub add_image_to_awdb {
+	my ($filename) = @_;
+	if( $awdb_image_prepared ) {
+		warn "! [****] Skipping $filename because there is already one prepared.\n";
+		return 0;
+	}
+	my $count = $AWDB->PrepareImage(File=>$filename, Model=>$opts{model});
+	print "Prepare Image returned $count.\n";
+	if( $count ) {; 
+		$AWDB->LoadArtworkDb or die "Failed to load artwork database\n";
+		$awdb_image_prepared = 1;
+	}
+	return $count;
+}
 #############################################################
 # Add item to playlist
 sub create_playlist_now {
