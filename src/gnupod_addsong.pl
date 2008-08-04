@@ -394,6 +394,7 @@ sub PODCAST_fetch {
 sub podcastStart {
 	my($hr,$el,@it) = @_;
 	my $hashref_key = $hr->{Base};
+	undef($hr->{cdatabuffer});
 	if($hr->{Context}[-2] eq "rss" &&
 	   $hr->{Context}[-1] eq "channel" &&
 		 $el eq "item") {
@@ -413,13 +414,22 @@ sub podcastStart {
 # => Fillsup %podcast_infos
 sub podcastChar {
 	my($hr,$el) = @_;
+	$hr->{cdatabuffer} .= $el;
+}
+
+#############################################################
+#Eventer for END
+# => Fillsup %podcast_infos
+sub podcastEnd {
+	my($hr,$el) = @_;
 	my $hashref_key = $hr->{Base};
-	if($hr->{Context}[-4] eq "rss" &&
-	   $hr->{Context}[-3] eq "channel" &&
-	   $hr->{Context}[-2] eq "item") {
-		my $ccontext = $hr->{Context}[-1];
-		${$podcast_infos{$hashref_key}}[-1]->{$ccontext}->{"\0"} ||= $el;
+	if(defined($hr->{cdatabuffer}) &&
+	   $hr->{Context}[-3] eq "rss" &&
+	   $hr->{Context}[-2] eq "channel" &&
+	   $hr->{Context}[-1] eq "item") {
+		${$podcast_infos{$hashref_key}}[-1]->{$el}->{"\0"} ||= $hr->{cdatabuffer};
 	}
+	undef($hr->{cdatabuffer});
 }
 
 #############################################################
@@ -499,7 +509,7 @@ sub resolve_podcasts {
 			}
 			#Add the stuff to %podcast_infos and unlink the file after this.
 			eval {
-				my $px = new XML::Parser(Handlers=>{Start=>\&podcastStart, Char=>\&podcastChar});
+				my $px = new XML::Parser(Handlers=>{Start=>\&podcastStart, Char=>\&podcastChar, End=>\&podcastEnd});
 				$px->parsefile($pcrss->{file});
 				my $py = new XML::Parser(Handlers=>{Start=>\&podcastChannelStart, Char=>\&podcastChannelChar, End=>\&podcastChannelEnd});
 				$py->parsefile($pcrss->{file});
