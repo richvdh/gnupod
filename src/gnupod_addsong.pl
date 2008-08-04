@@ -47,11 +47,11 @@ GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode|x=s", "restore|r", 
                    "set-title|t=s", "set-artist|a=s", "set-album|l=s", "set-genre|g=s", "set-rating=i", "set-playcount=i",
                    "set-bookmarkable|b", "set-shuffleskip", "artwork=s",
                    "set-songnum", "playlist|p=s@", "reencode|e=i",
-                   "min-vol-adj=i", "max-vol-adj=i", "playlist-is-podcast", "podcast-files-limit=i", "set-compilation");
+                   "min-vol-adj=i", "max-vol-adj=i", "playlist-is-podcast", "podcast-files-limit=i", "podcast-cache-dir=s", "set-compilation");
 
 GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b', model=>'s',
                                    'disable-v1'=>'b', 'disable-v2'=>'b', 'set-songnum'=>'b',
-                                   'min-vol-adj'=>'i', 'max-vol-adj'=>'i', 'automktunes'=>'b', 'podcast-files-limit'=>'i' },
+                                   'min-vol-adj'=>'i', 'max-vol-adj'=>'i', 'automktunes'=>'b', 'podcast-files-limit'=>'i', 'podcast-cache-dir'=>'s' },
                                    "gnupod_addsong");
 
 
@@ -381,9 +381,67 @@ sub newpl {
 # Calls curl to get files
 sub PODCAST_fetch {
 	my($url,$prefix) = @_;
+	print "* [HTTP] Downloading $url ...\n";
 	my $tmpout = GNUpod::FooBar::get_u_path($prefix,"");
 	my $return = system("curl", "-s", "-L", "-o", $tmpout, $url);
 	return{file=>$tmpout, status=>$return};
+}
+
+sub PODCAST_fetch_media {
+	my($url,$prefix,$length) = @_;
+	if ($opts{'podcast-cache-dir'}) {
+	
+		my @cachefilecandidates = ();
+		my $deepcachefile = $opts{'podcast-cache-dir'}."/".PODCAST_get_sane_path_from_url($url , "");
+		push @cachefilecandidates, $deepcachefile  if $deepcachefile;
+		
+		my $flatcachefile = $opts{'podcast-cache-dir'}."/".PODCAST_strictly_sanitze_path_element((split(/\//, $url))[-1], "cachefile");
+		push @cachefilecandidates, $flatcachefile;
+
+		foreach my $cachefile (@cachefilecandidates) {
+			if ( -e $cachefile && -r $cachefile ) {
+				my $sizedelta = int($length) - int((stat($cachefile))[7]) ;
+				if (abs($sizedelta) > ($length * 0.05)) {
+					print "* [HTTP] Not using cached file $cachefile ... (".abs($sizedelta)." bytes too ".($sizedelta > 0 ? "small" : "big").")\n";
+				} else {
+					print "* [HTTP] Using cached file $cachefile (size:".(stat($cachefile))[7].") ...".
+						($sizedelta ? " (even though it is ".abs($sizedelta)." bytes too " . ($sizedelta>0?"small":"big") . ")" : "")."\n";
+					return {file=>$cachefile, status=>0};
+				}
+			}
+		}
+		print "* [HTTP] Downloading $url ...\n";
+		my $return = system("curl", "-s", "-L", "--create-dirs", "-o" , $deepcachefile, $url);
+		return {file=>$deepcachefile, status=>$return};
+	}
+	else {
+		return PODCAST_fetch($url,$prefix);
+	}
+}
+
+sub PODCAST_strictly_sanitze_path_element {
+	my ($name,$default) = @_;
+	$name =~ s/[^.0-9a-zA-z()_-]/_/g; # limit valid character set
+	$name =~ s/^[.]*//g; #remove leading dots
+	$name =~ s/[.]*$//g; #remove trailing dots (cause problems on windows i heard
+	$name = $default unless $name; #default if empty
+	return $name;
+}
+	
+
+sub PODCAST_get_sane_path_from_url {
+	my($uri,$default) = @_;
+	my($scheme, $authority, $path, $query, $fragment) = $uri =~ m|(?:([^:/?#]+):)?(?://([^/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?|;
+	my @pathelements = ($authority, split (/\//, $path));
+	my @cleanpathelements=();
+	foreach my $pe ( @pathelements ) {
+		push @cleanpathelements, PODCAST_strictly_sanitze_path_element($pe,'');
+	}
+	my $cleanpath =  join ("/", @cleanpathelements);
+	$cleanpath =~ s|/[/]+|/|g; # collaps multiple /
+	$cleanpath = $default  if ! $cleanpath;
+	$cleanpath = $default  if $cleanpath eq "/";
+	return $cleanpath;
 }
 
 #############################################################
@@ -559,14 +617,13 @@ sub resolve_podcasts {
 				warn "! [HTTP] Podcast $c_url ($c_title) exists, no need to download this file\n";
 				next;
 			}		
-			print "* [HTTP] Downloading $c_url ...\n";
-			my $rssmedia = PODCAST_fetch($c_url, "/tmp/gnupodcast_media");
+			my $rssmedia = PODCAST_fetch_media($c_url, "/tmp/gnupodcast_media", $podcast_item->{enclosure}->{length});
 			if($rssmedia->{status} or (!(-f $rssmedia->{file}))) {
 				warn "! [HTTP] Failed to download $c_url to $rssmedia->{file}\n";
 				next;
 			}
 			
-			$per_file_info{$rssmedia->{file}}->{UNLINK}    = 1;  # Remote tempfile
+			$per_file_info{$rssmedia->{file}}->{UNLINK}    = 1 unless $opts{'podcast-cache-dir'};  # Remove tempfile if not caching
 			$per_file_info{$rssmedia->{file}}->{ISPODCAST} = 1;  # Triggers mediatype fix
 			
 			# Set information/tags from XML-File
@@ -628,6 +685,7 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
    -d, --duplicate                  Allow duplicate files
    -p, --playlist=string            Add songs to this playlist, can be used multiple times
        --playlist-is-podcast        Set podcast flag for playlist(s) created using '--playlist'
+       --podcast-cache-dir=string   Set a directory in which podcast media files will be cached.
        --podcast-files-limit=int    Limit the number of files that are downloaded.
                                     0 = download all (default), -X = download X oldest items, X = download X newest items
        --disable-v1                 Do not read ID3v1 Tags (MP3 Only)
