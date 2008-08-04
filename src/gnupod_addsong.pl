@@ -47,11 +47,13 @@ GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode|x=s", "restore|r", 
                    "set-title|t=s", "set-artist|a=s", "set-album|l=s", "set-genre|g=s", "set-rating=i", "set-playcount=i",
                    "set-bookmarkable|b", "set-shuffleskip", "artwork=s",
                    "set-songnum", "playlist|p=s@", "reencode|e=i",
-                   "min-vol-adj=i", "max-vol-adj=i", "playlist-is-podcast", "podcast-files-limit=i", "podcast-cache-dir=s", "set-compilation");
+                   "min-vol-adj=i", "max-vol-adj=i", "playlist-is-podcast", "podcast-files-limit=i", "podcast-cache-dir=s",
+                   "podcast-artwork", "set-compilation");
 
 GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b', model=>'s',
                                    'disable-v1'=>'b', 'disable-v2'=>'b', 'set-songnum'=>'b',
-                                   'min-vol-adj'=>'i', 'max-vol-adj'=>'i', 'automktunes'=>'b', 'podcast-files-limit'=>'i', 'podcast-cache-dir'=>'s' },
+                                   'min-vol-adj'=>'i', 'max-vol-adj'=>'i', 'automktunes'=>'b', 
+                                   'podcast-files-limit'=>'i', 'podcast-cache-dir'=>'s', 'podcast-artwork'=>'b' },
                                    "gnupod_addsong");
 
 
@@ -84,7 +86,7 @@ else {
 my $connection = GNUpod::FooBar::connect(\%opts);
 usage($connection->{status}."\n") if $connection->{status} || !@XFILES;
 
-my $AWDB  = GNUpod::ArtworkDB->new(Connection=>$connection, DropUnseen=>1);
+my $AWDB  = GNUpod::ArtworkDB->new(Connection=>$connection, DropUnseen=>($opts{'podcast-artwork'}?0:1));
 my $awdb_image_prepared = 0 ;
 
 my $exit_code = startup($connection,@XFILES);
@@ -334,7 +336,6 @@ sub add_image_to_awdb {
 		return 0;
 	}
 	my $count = $AWDB->PrepareImage(File=>$filename, Model=>$opts{model});
-	print "Prepare Image returned $count.\n";
 	if( $count ) {; 
 		$AWDB->LoadArtworkDb or die "Failed to load artwork database\n";
 		$awdb_image_prepared = 1;
@@ -412,11 +413,11 @@ sub PODCAST_fetch_media {
 		foreach my $cachefile (@cachefilecandidates) {
 			if ( -e $cachefile && -r $cachefile ) {
 				my $sizedelta = int($length) - int((stat($cachefile))[7]) ;
-				if (abs($sizedelta) > ($length * 0.05)) {
+				if ( ($length != 0) && (abs($sizedelta) > ($length * 0.05)) ) {
 					print "* [HTTP] Not using cached file $cachefile ... (".abs($sizedelta)." bytes too ".($sizedelta > 0 ? "small" : "big").")\n";
 				} else {
 					print "* [HTTP] Using cached file $cachefile (size:".(stat($cachefile))[7].") ...".
-						($sizedelta ? " (even though it is ".abs($sizedelta)." bytes too " . ($sizedelta>0?"small":"big") . ")" : "")."\n";
+						(($length != 0 && $sizedelta) ? " (even though it is ".abs($sizedelta)." bytes too " . ($sizedelta>0?"small":"big") . ")" : "")."\n";
 					return {file=>$cachefile, status=>0};
 				}
 			}
@@ -608,6 +609,25 @@ sub resolve_podcasts {
 
 	foreach my $key (keys(%podcast_infos)) {
 		my $cref = $podcast_infos{$key};
+		my $channel = $podcast_channel_infos{$key}[0]; # assuming for now that there's only one channel in the feed
+		# get the artwork
+		if (defined($opts{'podcast-artwork'})) {
+			my $channel_image_url = ( $channel->{"itunes:image"}->{"href"} or
+				$channel->{"image"}->{"url"}->{"\0"} ) ;
+			if ( $channel_image_url ) {
+				my $channel_image = PODCAST_fetch_media($channel_image_url, "/tmp/gnupodcast_image", 0);
+				if($channel_image->{status} or (!(-f $channel_image->{file}))) {
+					warn "! [HTTP] Failed to download $channel_image to ".$channel_image->{file}."\n";
+				}
+				else {
+					add_image_to_awdb($channel_image->{file});
+					if ( ! $opts{'podcast-cache-dir'} ) {
+						unlink($channel_image->{file}) or warn "Could not unlink ".$channel_image->{file}.", $!\n";
+					}
+				}
+			}
+		}
+
 		foreach my $podcast_item (@$cref) {
 			my $c_title = $podcast_item->{title}->{"\0"};
 			my $c_author = $podcast_item->{author}->{"\0"};
@@ -696,6 +716,7 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
    -d, --duplicate                  Allow duplicate files
    -p, --playlist=string            Add songs to this playlist, can be used multiple times
        --playlist-is-podcast        Set podcast flag for playlist(s) created using '--playlist'
+       --podcast-artwork            Download and install artwork for podcasts from their channel.
        --podcast-cache-dir=string   Set a directory in which podcast media files will be cached.
        --podcast-files-limit=int    Limit the number of files that are downloaded.
                                     0 = download all (default), -X = download X oldest items, X = download X newest items
