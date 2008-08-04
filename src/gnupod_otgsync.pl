@@ -142,7 +142,7 @@ sub newfile {
 		$el->{file}->{playcount} += $playcount;
 		$el->{file}->{skipcount} += $plcref->{skipcount}{int(@keeper)-1};
 		$el->{file}->{bookmark}  =  $plcref->{bookmark}{int(@keeper)-1};
-		$el->{file}->{played_flag} = 1 if $el->{file}->{playcount};
+		$el->{file}->{played_flag} = 1 if ($el->{file}->{playcount} > 0 || $el->{file}->{skipcount} > 0 || $el->{file}->{bookmark} > 0);
 		
 		if($plcref->{lastplay}{int(@keeper)-1}) {
 			$el->{file}->{lastplay}  = $plcref->{lastplay}{int(@keeper)-1};
