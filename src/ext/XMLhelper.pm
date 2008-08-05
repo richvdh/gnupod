@@ -114,6 +114,7 @@ sub getpath {
 ################################################################
 # Escape chars
 sub xescaped {
+	use bytes;
 	my ($ret) = @_;
 	
 	$ret =~ s/&/&amp;/g;
@@ -127,8 +128,15 @@ sub xescaped {
 	$ret =~ s/([\xE0-\xEF])([\x80-\xBF])([\x80-\xBF])/"&#".( ((ord($1) & 15) << 12) + ((ord($2) & 63) <<  6) +  (ord($3) & 63) ).";"/eg;
 	$ret =~ s/([\xF0-\xF4])([\x80-\xBF])([\x80-\xBF])([\x80-\xBF])/"&#".( ((ord($1) &  7) << 18) + ((ord($2) & 63) << 12) + ((ord($3) & 63) <<  6) + (ord($4) & 63) ).";"/eg;
 	# now everything left above 0x7f is illegal
+	my $in = $ret;
 	$ret =~ tr/\x80-\xff//d;
 	$ret =~ s/&#65534;//; # Slipped-over BOM
+	if ($in ne $ret) {
+		use Data::Dumper;
+		print "Something fishy was removed from your XML data. Here's the before/after data:\n"
+		print Dumper($in);
+		print Dumper($ret);
+	}
 	return $ret;
 }
 
