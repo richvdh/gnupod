@@ -345,6 +345,7 @@ sub getutf8 {
 		my $bfx = Unicode::String::utf16($in); #Object is utf16
 		$bfx->byteswap if $bfx->ord == 0xFFFE;
 		$in = $bfx->utf8; #Return utf8 version
+		$in =~ s/\x00+$//;         # Removes trailing 0's
 		if(unpack("H*",substr($in,0,3)) eq 'efbbbf') {
 			# -> Remove faulty utf16-to-utf8 BOM
 			$in = substr($in,3);
@@ -352,6 +353,7 @@ sub getutf8 {
 	}
 	elsif(ord($encoding) == 3) {
 		# -> UTF8
+		$in =~ s/\x00+$//;         # Removes trailing 0's
 		$in = Unicode::String::utf8($in)->utf8; #Paranoia
 	}
 	elsif(ord($encoding) > 0 && ord($encoding) < 32) {
