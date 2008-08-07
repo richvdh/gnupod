@@ -124,13 +124,13 @@ sub xescaped {
 	$ret =~ s/>/&gt;/g;
 	$ret =~ tr/\000-\037//d;
 	#convert to XML encoded unicode
-	$ret =~ s/([\xC2-\xDF])([\x80-\xBF])/"&#".( ((ord($1) & 31) <<  6) +  (ord($2) & 63) ).";"/eg;
-	$ret =~ s/([\xE0-\xEF])([\x80-\xBF])([\x80-\xBF])/"&#".( ((ord($1) & 15) << 12) + ((ord($2) & 63) <<  6) +  (ord($3) & 63) ).";"/eg;
-	$ret =~ s/([\xF0-\xF4])([\x80-\xBF])([\x80-\xBF])([\x80-\xBF])/"&#".( ((ord($1) &  7) << 18) + ((ord($2) & 63) << 12) + ((ord($3) & 63) <<  6) + (ord($4) & 63) ).";"/eg;
+	$ret =~ s/([\xC2-\xDF])([\x80-\xBF])/"&#x".sprintf("%x", ((ord($1) & 31) <<  6) +  (ord($2) & 63) ).";"/eg;
+	$ret =~ s/([\xE0-\xEF])([\x80-\xBF])([\x80-\xBF])/"&#x".sprintf("%x", ((ord($1) & 15) << 12) + ((ord($2) & 63) <<  6) +  (ord($3) & 63) ).";"/eg;
+	$ret =~ s/([\xF0-\xF4])([\x80-\xBF])([\x80-\xBF])([\x80-\xBF])/"&#x".sprintf("%x", ((ord($1) &  7) << 18) + ((ord($2) & 63) << 12) + ((ord($3) & 63) <<  6) + (ord($4) & 63) ).";"/eg;
 	# now everything left above 0x7f is illegal
 	my $in = $ret;
 	$ret =~ tr/\x80-\xff//d;
-	$ret =~ s/&#65534;//g; # Slipped-over BOM
+	$ret =~ s/&#xfffe;//g; # inverted BOM that somehow slipped through
 	if ($in ne $ret) {
 		use Data::Dumper;
 		print "Something fishy was removed from your XML data. Here's the before/after data:\n"
