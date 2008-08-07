@@ -130,7 +130,7 @@ sub xescaped {
 	# now everything left above 0x7f is illegal
 	my $in = $ret;
 	$ret =~ tr/\x80-\xff//d;
-	$ret =~ s/&#65534;//; # Slipped-over BOM
+	$ret =~ s/&#65534;//g; # Slipped-over BOM
 	if ($in ne $ret) {
 		use Data::Dumper;
 		print "Something fishy was removed from your XML data. Here's the before/after data:\n"
