@@ -133,7 +133,7 @@ sub xescaped {
 	$ret =~ s/&#xfffe;//g; # inverted BOM that somehow slipped through
 	if ($in ne $ret) {
 		use Data::Dumper;
-		print "Something fishy was removed from your XML data. Here's the before/after data:\n"
+		print "Something fishy was removed from your XML data. Here's the before/after data:\n";
 		print Dumper($in);
 		print Dumper($ret);
 	}
