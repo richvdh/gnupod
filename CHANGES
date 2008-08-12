@@ -1,4 +1,7 @@
+GNUpod 0.99.8
 
+Summary
+-------
 
 - XMLhelper.pm: Changed xescaped to use hex instead of decimal for escaped unicode 
   characters.
@@ -13,9 +16,11 @@
   Added "--podcast-artwork" option to download and add artwork to podcasts.
   Added "--podcast-cache-dir" option allow caching of podcast media files.
   Fixed podcast XML parser handlers to merge CDATA that comes in chunks.
+- extractArwork.pl: Added MD5 hash to "--unique" check.
 
+*** OLD STUFF ***
 
-GNUupod 0.99.7
+GNUpod 0.99.7
 
 Summary
 -------
@@ -32,7 +37,6 @@ flooded me with patches, many thanks to him:
   write UTF8 into the file using a decent editor (Such as Yudit).
   xescaped is now also a lot faster, giving GNUpod a nice speedup.
 
-*** OLD STUFF ***
 
 GNUpod 0.99.6
 
