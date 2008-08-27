@@ -18,7 +18,7 @@ exit 1
 fi
 
 dnl Basic modules
-ALL_MODULES="Digest::MD5 Digest::SHA1 XML::Parser Unicode::String MP3::Info File::Copy LWP::UserAgent HTTP::Request Date::Parse Data:Dumper"
+ALL_MODULES="Digest::MD5 Digest::SHA1 XML::Parser Unicode::String MP3::Info File::Copy LWP::UserAgent HTTP::Request Date::Parse Data::Dumper"
 OPT_MODULES="Audio::FLAC::Header Ogg::Vorbis::Header::PurePerl"
 
 dnl Ugly check for modules
