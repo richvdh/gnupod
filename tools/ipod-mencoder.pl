@@ -2,6 +2,8 @@
 use strict;
 use Getopt::Long;
 
+# ffmpeg with divx:
+# ffmpeg -i input  -s 320x240 -vcodec mpeg4 -vtag XVID -b 500kb -mbd rd -flags +4mv+trell+aic -cmp 2 -subcmp 2 -g 300 -r 29.97 -acodec copy -ac 2 -async 1 out.avi
 
 my %opts = ();
 
