@@ -1,23 +1,3 @@
-GNUpod 0.99.8
-
-Summary
--------
-
-- XMLhelper.pm: Changed xescaped to use hex instead of decimal for escaped unicode 
-  characters.
-  Remove all inverted BOMs (Byte Order Markers) (not just the first) that slipped 
-  through to xescaped.
-  Fixing xescaped to always do byte matching and added some debug output of dropped 
-  illegal characters.
-- FileMagic.pm: Remove trailing zeros from MP3 tags that come in utf16 or utf8.
-- gnupod_otgsync.pl: Marking files as played even when only the skipcount or 
-  bookmark is > 0.
-- gnupod_addsong.pl: Added other sources for artist tag data from podcasts.
-  Added "--podcast-artwork" option to download and add artwork to podcasts.
-  Added "--podcast-cache-dir" option allow caching of podcast media files.
-  Fixed podcast XML parser handlers to merge CDATA that comes in chunks.
-- extractArwork.pl: Added MD5 hash to "--unique" check.
-
 *** OLD STUFF ***
 
 GNUpod 0.99.7
@@ -36,6 +16,21 @@ flooded me with patches, many thanks to him:
   non-ascii data escaped in it's GNUtunesDB.xml, however: you can still
   write UTF8 into the file using a decent editor (Such as Yudit).
   xescaped is now also a lot faster, giving GNUpod a nice speedup.
+Stuff already in GNUpod 0.99.7 but missed in the 0.99.7 CHANGES file:
+- XMLhelper.pm: Changed xescaped to use hex instead of decimal for 
+  escaped unicode characters.
+  Remove all inverted BOMs (Byte Order Markers) (not just the first) 
+  that slipped through to xescaped.
+  Fixing xescaped to always do byte matching and added some debug 
+  output of dropped illegal characters.
+- FileMagic.pm: Remove trailing zeros from MP3 tags that come in utf16 or utf8.
+- gnupod_otgsync.pl: Marking files as played even when only the 
+  skipcount or bookmark is > 0.
+- gnupod_addsong.pl: Added other sources for artist tag data from podcasts.
+  Added "--podcast-artwork" option to download and add artwork to podcasts.
+  Added "--podcast-cache-dir" option allow caching of podcast media files.
+  Fixed podcast XML parser handlers to merge CDATA that comes in chunks.
+- extractArwork.pl: Added MD5 hash to "--unique" check.
 
 
 GNUpod 0.99.6
