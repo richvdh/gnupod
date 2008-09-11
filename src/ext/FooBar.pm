@@ -68,6 +68,8 @@ sub connect {
 			_check_casesensitive($rr->{mountpoint}); #Check if somebody mounted the iPod caseSensitive
 		}
 		
+		$rr->{autotest}       = _check_autotest_mode($rr->{mountpoint});
+
 		#Do an iTunesDB Sync if not disabled and needed
 		StartItunesDBSync($rr) if(!$opth->{_no_it_sync} &&  !$opth->{_no_sync} && ItunesDBNeedsSync($rr));
 		#Do an OTG Sync if not disabled and needed
@@ -77,6 +79,19 @@ sub connect {
 		$rr->{status} = "$opth->{mount} is not a directory";
 	}
 return $rr
+}
+
+#######################################################################
+# Check if we are running autotests and act accordingly
+sub _check_autotest_mode {
+	my($target) = @_;
+
+	if (-e "$target/autotest") {
+		srand(42);
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 #######################################################################
