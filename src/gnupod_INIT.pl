@@ -32,7 +32,7 @@ print "gnupod_INIT.pl ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
-GetOptions(\%opts, "version", "help|h", "mount|m=s", "disable-convert|d", "france|f", "noask", "model=s");
+GetOptions(\%opts, "version", "help|h", "mount|m=s", "disable-convert|d", "france|f", "noask", "model=s", "fwguid|g=s");
 GNUpod::FooBar::GetConfig(\%opts, {model=>'s'}, "gnupod_INIT");
 #gnupod_INIT does not read configuration files!
 
@@ -122,7 +122,9 @@ EOF
  else {
  #No iTunesDB, run mktunes.pl
   print "No iTunesDB found, running mktunes.pl\n";
-  $t2pfail = system("$con->{bindir}/mktunes.pl", "-m" ,"$opts{mount}");
+  my @mktunescmd = ("$con->{bindir}/mktunes.pl", "-m" ,"$opts{mount}");
+  if ($opts{'fwguid'}) { push @mktunescmd, "-g", "$opts{fwguid}"; } 
+  $t2pfail = system(@mktunescmd);
  }
  
  if($t2pfail) {
@@ -148,6 +150,7 @@ Usage: gnupod_INIT.pl [-h] [-m directory]
        --version           output version information and exit
    -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
    -d, --disable-convert   Don't try to convert an existing iTunesDB
+   -g, --fwguid=HEXVAL     FirewireGuid / Serial of connected iPod (passed to mktunes.pl)
    -f, --france            Limit volume to 100dB (For French-Law/People)
                            Maximal-volume without this is ~104dB (VERY LOUD)
                            *WARNING* This works only for iPods running
