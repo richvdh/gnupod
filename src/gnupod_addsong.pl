@@ -194,7 +194,8 @@ sub startup {
 		
 		#Set the addtime to unixtime(now)+MACTIME (the iPod uses mactime)
 		#This breaks perl < 5.8 if we don't use int(time()) !
-		$fh->{addtime} = int(time())+MACTIME;
+		#Use fixed addtime for autotests
+		$fh->{addtime} = int($connection->{autotest} ? 42 : time())+MACTIME;
 		
 		#Ugly workaround to avoid a warning while running mktunes.pl:
 		#All (?) int-values returned by wtf_is won't go above 0xffffffff
