@@ -639,6 +639,7 @@ sub resolve_podcasts {
 					 $podcast_item->{author}->{"\0"} or
 					 $channel->{"itunes:author"}->{"\0"} or
 					 $channel->{"managingEditor"}->{"\0"} );
+			my $c_album = $channel->{"title"}->{"\0"};
 			my $c_rdate = $podcast_item->{pubDate}->{"\0"}; 
 			my $c_desc  = $podcast_item->{description}->{"\0"};
 			my $c_url   = $podcast_item->{enclosure}->{url};
@@ -669,6 +670,7 @@ sub resolve_podcasts {
 			$per_file_info{$rssmedia->{file}}->{podcastrss}  = $c_podcastrss;
 			$per_file_info{$rssmedia->{file}}->{title}       = $c_title   if $c_title;
 			$per_file_info{$rssmedia->{file}}->{artist}      = $c_author  if $c_author;
+			$per_file_info{$rssmedia->{file}}->{album}       = $c_album   if $c_album;
 			$per_file_info{$rssmedia->{file}}->{desc}        = $c_desc    if $c_desc;
 			$per_file_info{$rssmedia->{file}}->{releasedate} = int(Date::Parse::str2time($c_rdate))+MACTIME    if $c_rdate;
 			
