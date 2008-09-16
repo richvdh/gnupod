@@ -171,7 +171,7 @@ sub startup {
 		foreach(keys(%$c_per_file_info)) {
 			next unless lc($_) eq $_; #lc keys are there to overwrite $fh keys
 			if ($_ eq "desc") {
-				$fh->{$_} = GNUpod::FileMagic::__merge_strings("\n", $c_per_file_info->{$_}, $fh->{$_});
+				$fh->{$_} = GNUpod::FileMagic::__merge_strings({joinby => "\n", wspace => "norm", case => "ignore" }, $c_per_file_info->{$_}, $fh->{$_});
 			} else {
 				$fh->{$_} = $c_per_file_info->{$_};
 			}

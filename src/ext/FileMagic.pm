@@ -29,6 +29,20 @@ use GNUpod::QTfile;
 use constant MEDIATYPE_AUDIO => 0x01;
 use constant MEDIATYPE_VIDEO => 0x02;
 
+
+
+=pod
+
+=head1 NAME
+
+GNUpod::FileMagic - Convert media files to iPod compatible formats and/or extract technical information and meta information (tags) from media files.
+
+=head1 DESCRIPTION
+
+=over 4
+
+=cut
+
 #
 # How to add a converter:
 # 1. Define the first 4 bytes in NN_HEADERS
@@ -52,8 +66,39 @@ BEGIN {
 }
 
 ########################################################################
-#Try to discover the file format (mp3 or QT (AAC) )
-# Returns: (FILE_HASH{artist,album..}, MEDIA_HASH{ftyp,format,extension}, DECODER_SCALAR)
+
+=item wtf_is(FILE, FLAGS, CONNECTION)
+
+Tries to discover the file format (mp3 or QT (AAC)). For MP3, QT(AAC) and 
+PCM files it calls other sub routines to extracts the meta information 
+from file tags or filename. For other formats it calls external decoders
+and converters to convert the $file into something iPod compatible and to
+extract the meta/media information.
+
+FLAGS is a hash that may contain a true value for the keys 'noIDv1' and 'noIDv2' if 
+you want to skip the extraction of ID3v1 or ID3v2 tags from MP3 files.
+
+Returns:
+
+=over 8
+
+=item * a hash with information extracted from the file's meta information (aka. tags), 
+
+=item * a hash with format information
+
+=item * the name of the external decoder if any was used.
+
+=back
+
+Example:
+
+        (%metainfo, %mediainfo, $converter_used) = wtf_is($file, $flags, $con);
+	print "Title: $metainfo{'title'}\nArtist: $metainfo{'artist'}\nAlbum: $metainfo{'album'}\n";
+	print "Type: $mediainfo{'ftyp'}\nFormat: $mediainfo{'format'}\n";
+	print "Converter: $converter_used\n" if defined($converter_used);
+
+=cut
+
 sub wtf_is {
 	my($file, $flags, $con) = @_;
 	
@@ -81,6 +126,21 @@ sub wtf_is {
 
 ########################################################################
 #Handle Non-Native files :)
+
+=item __is_NonNative(FILE, FLAGS, CONNECTION)
+
+Tries to guess the filetype by extracting magic numbers from the file's beginning.
+The extracted $magic (from the first four bytes) and $magic2 (from bytes 8 to 11) 
+are used to find an ecoder in %FileMagic::NN_HEADERS.
+
+
+Returns a hash with:
+        ref     => HASHREF     containing the meta information.
+        encoder => STRING      filename of the encoder used
+        codec   => STRING      file type ("FLAC", "OGG", "RIFF" ...)
+
+=cut
+
 sub __is_NonNative {
 	my($file, $flags, $con) = @_;
 	return undef unless $flags->{decode}; #Decoder is OFF per default!
@@ -132,6 +192,17 @@ sub __is_NonNative {
 
 #######################################################################
 # Check if the QTparser thinks, it's a QT-AAC (= m4a) file
+
+=item __is_qt(FILE)
+
+Tries to extract the relevant information from FILE using GNUpod::QTfile::parsefile()
+
+Returns undef if FILE is no QT file. Otherwise returns a hash with:
+        ref     => HASHREF     containing the meta information.
+        codec   => STRING      the codec name
+
+=cut
+
 sub __is_qt {
  my($file) = @_;
  my $ret = GNUpod::QTfile::parsefile($file);
@@ -167,6 +238,19 @@ sub __is_qt {
 
 ######################################################################
 # Check if the file is an PCM (WAVE) File
+
+=item __is_pcm(FILE)
+
+Tries to extract the relevant information from FILE. For a WAVE file this 
+is usually limited to technical information like sample rate and resolution.
+If however FILE is a path that contains directory names, then the directory
+structure "[[<artist>/]<album>/]<title>.wav" is assumed.
+
+Returns a hash with:
+        ref     => HASHREF     containing the meta information.
+
+=cut
+
 sub __is_pcm {
  my($file) = @_;
 
@@ -220,26 +304,62 @@ return \%rh;
 ######################################################################
 # Flatten deep data structures
 
+=item __flatten(REF[,EXCLUDE])
+
+Tries to flatten complex data structures to a single string.
+Currently also removes null characters that may have been added to
+tags by programmers of languages that use null terminated strings.
+
+
+Strings are returned as strings.
+Arrays returned as a string with the array elements joined by " / ".
+Hashes are returned like arrays of "<key> : <value>" strings or just 
+"<key>" strings if the value is undefined or an empty string.
+
+With EXCLUDE you can pass on a regular expression to exlclude certain 
+strings from the result.
+
+Example:
+        $nonitunescomment = __flatten($comref, "^iTun");
+
+=cut
+
 sub __flatten {
-	my ($in) = @_;
+	my ($in,$exclude) = @_;
+	if (!defined($in)) { return undef; }
 	if ( (ref($in) eq "") && (ref(\$in) eq "SCALAR") ) {
 		my $out = $in;
-		$out =~ s/(\x0)+//;
+		$out =~ s/\x0//g;
+		if (defined($exclude) && ($out =~ /$exclude/)) { return undef; }
 		return $out;
 	}
 	if ( ref($in) eq "ARRAY" ) {
 		my @out=();
 		foreach (@{$in}) {
-			push  @out, __flatten($_);
+			my $flat = __flatten($_, $exclude);
+			if (!defined($flat)) { next; }
+			push  @out, $flat;
 		}
-		return join(" / ", @out);
+		if (@out) {
+			return join(" / ", @out);
+		} else {
+			return undef;
+		}
 	}
 	if ( ref($in) eq "HASH" ) {
-		my $out="";
+		my @out = ();
 		foreach (keys(%{$in})) {
-			$out .= __flatten($_)." : ".__flatten(%{$in}->{$_});
+			my $kvp = __flatten($_, $exclude); # key
+			next if !defined($kvp);
+			my $v = __flatten(%{$in}->{$_}, $exclude); # value
+			$kvp .= " : ".$v     if (defined($v) && ("$v" ne ""));
+			push @out, $kvp;
 		}
-		return $out;
+		if (@out) {
+			return __flatten(\@out,$exclude);
+		} else {
+			return undef;
+		}
 	}
 }
 
@@ -247,22 +367,95 @@ sub __flatten {
 # Join strings if their content is different. skip strings if they are 
 # completely contained in the other ones
 
+=item __merge_strings(OPTIONS,STRING1,STRING2,...)
+
+Takes strings and joins them. A string is not added if it is already 
+contained in the other(s).
+
+Joining takes place left to right.
+
+OPTIONS is a hasref with the following data:
+
+        joinby => STRING      String used in joining the others. (default:" ")
+
+        wspace => "asis"|"norm"|"kill"  This sets the way whitespace characters
+          are handled during the comparison. (default:"asis")
+          "asis"  Leave whitespace as it is. "a b" and "a  b" are seen as different.
+          "norm"  Normalize whitespaces to a single space. "a b" and "a\t\n \t b" 
+                  are seen as the same.
+          "kill"  Kill whitespace before comparing. "a b" and "ab" are seen as the same.
+
+        case => "check"|"ignore"  Sets the way case differences are handled. (default:"check")
+          "check"  Regard case differences as important. "a" and "A" are different.
+          "ignore" Discard case differences. "a" and "A" are the same.
+
+Returns the joined string. Empty string is returned if only emtpy strings or undefined values where joined.
+
+Usage example:
+        $x = __merge_strings({ joinby => "/", 
+                               whitespace => "norm", 
+                               case => "ignore"},
+                             "a  a", "a A b", "foo", "Foo", "B/F" );
+        #returns "a A b/foo"
+
+=cut
+
 sub __merge_strings {
-	my $joiner = shift(@_);
-	my $merged ="";
+	my $options = shift(@_);
+	my $joinby = " ";
+	my $wspace = "asis";
+	my $case = "check";
+
+	if (ref($options) eq "HASH") {
+		$joinby = %{$options}->{joinby}        if defined(%{$options}->{joinby});
+		$wspace = lc(%{$options}->{wspace})    if defined(%{$options}->{wspace});
+		$case   = lc(%{$options}->{case})      if defined(%{$options}->{case});
+	}
+	my $merged = "";
 
 	foreach (@_) {
-		if ($_) { # only merge non-empty strings
-			if (index($merged,$_) >= 0) {next;} # $_ already contained
-			if (index($_,$merged) >= 0) {$merged = $_; next;} # $_ is a superset
-			$merged = join ( $joiner, $merged, $_);
+		# only merge non-empty strings
+		next if (!defined($_) || ("$_" eq ""));
+
+		my $left = $merged;
+		my $right = $_;
+
+		if ($wspace eq "norm") {
+			$left  =~ s/\s+/ /g;
+			$right =~ s/\s+/ /g;
+		} elsif ($wspace eq "kill") {
+			$left  =~ s/\s+//g;
+			$right =~ s/\s+//g;
 		}
+		if ($case eq "ignore") {
+			$left  = lc($left);
+			$right = lc($right);
+		}
+		
+		if (index($left,$right) >= 0) {next;} # $_ already contained
+		if (index($right,$left) >= 0) {$merged = $_; next;} # $_ is a superset
+		$merged = join ( $joinby, $merged, $_);
 	}
 	return $merged;
 }
 
 ######################################################################
 # Read mp3 tags, return undef if file is not an mp3
+
+=item __is_mp3(FILE, FLAGS)
+
+Tries to extract the meta information from FILE using MP3::Info.
+
+FLAGS is a hash that may contain a true value for the keys 'noIDv1' and 'noIDv2' if
+you want to skip the extraction of ID3v1 or ID3v2 tags from MP3 files.
+
+Returns undef if MP3::Info::get_mp3info failes or says that the file 
+has zero frames.
+
+Otherwise returns a HASHREF containing the meta information.
+
+=cut
+
 sub __is_mp3 {
 	my($file,$flags) = @_;
 	
@@ -292,9 +485,16 @@ sub __is_mp3 {
 	$h  = MP3::Info::get_mp3tag($file,1)    unless $flags->{'noIDv1'};  #Get the IDv1 tag
 	$hs = MP3::Info::get_mp3tag($file,2,2)  unless $flags->{'noIDv2'};  #Get the IDv2 tag
 	
-	
+	my $nonitunescomment = undef;
 	#The IDv2 Hashref may return arrays.. kill them :)
 	foreach my $xkey (keys(%$hs)) {
+		if ($xkey =~ /^COM[ M]?$/) {
+			my $comref = $hs->{$xkey};
+			use Data::Dumper;
+			print Dumper($comref);
+			$nonitunescomment = __flatten($comref,"^iTun");
+			print Dumper($nonitunescomment);
+		}
 		if (($xkey ne "APIC") && ($xkey ne "PIC")) {
 			$hs->{$xkey} = __flatten($hs->{$xkey});
 		}
@@ -316,7 +516,7 @@ sub __is_mp3 {
 	$rh{artist}     = ($hs->{TPE1} || $hs->{TP1} || $hs->{TPE2}   || $hs->{TP2} || $h->{ARTIST}  || "Unknown Artist");
 	$rh{genre}      = _get_genre($hs->{TCON} || $hs->{TCO} || $h->{GENRE}   || "");
 	$rh{comment}    = ($hs->{COMM} || $hs->{COM} || $h->{COMMENT} || "");
-	$rh{desc}       = __merge_strings(" ",($hs->{USLT} || $hs->{ULT}),($hs->{COMM} || $hs->{COM} || $h->{COMMENT}));
+	$rh{desc}       = __merge_strings({joinby => " ", wspace => "norm", case => "ignore"},($hs->{USLT} || $hs->{ULT}),($nonitunescomment || $h->{COMMENT}));
 	$rh{composer}   = ($hs->{TCOM} || $hs->{TCM} || "");
 	$rh{playcount}  = int($hs->{PCNT} || $hs->{CNT}) || 0;
 	$rh{soundcheck} = _parse_iTunNORM($hs->{COMM} || $hs->{COM} || $h->{COMMENT});
@@ -354,6 +554,16 @@ sub __is_mp3 {
 
 ########
 # Guess a genre
+
+=item _get_genre(GENRE)
+
+Translates numeric GENRE into its name.
+
+Returns a genre name if GENRE is numeric. Otherwise
+GENRE is returned.
+
+=cut
+
 sub _get_genre {
 	my ($string) = @_;
 	my $num_to_txt = undef;
@@ -365,10 +575,21 @@ sub _get_genre {
 
 ########
 # Guess format
+
+=item pss(STRING)
+
+Parses song number and returns either just the song number
+or the song number and the total number.
+
+Example:
+        ($i,$n)=pss("05/12"); # returns ints "5" and "12"
+
+=cut
+
 sub pss {
 	my($string) = @_;
 	if(my($s,$n) = $string =~ /(\d+)\/(\d+)/) {
-		return($s,$n);
+		return(int($s),int($n));
 	}
 	else {
 		return int($string);
@@ -377,6 +598,14 @@ sub pss {
 
 #########
 # Try to 'auto-guess' charset and return utf8
+
+=item getutf8(STRING)
+
+Tries to convert whatever you thow at it into a UTF8 string.
+
+
+=cut
+
 sub getutf8 {
 	my($in) = @_;
 	return undef unless $in; #Do not fsckup empty input
@@ -430,8 +659,15 @@ sub getutf8 {
 ##############################
 # Parse iTunNORM string
 #
-# see http://www.id3.org/iTunes_Normalization_settings
-#
+
+=item _parse_iTunNORM(STRING)
+
+Searches STRING for a sequence of 8 hex numbers of 8 digits each 
+used by iTunes to describe the dynamic range.
+see http://www.id3.org/iTunes_Normalization_settings
+
+=cut
+
 sub _parse_iTunNORM {
 	my($string) = @_;
 	if($string =~ /\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})/) {
@@ -442,6 +678,13 @@ sub _parse_iTunNORM {
 
 #########################################################
 # Start the converter
+
+=item kick_convert(PROG, QUALITY, FILE, FORMAT, CONNECTION)
+
+Document me!
+
+=cut
+
 sub kick_convert {
 	my($prog, $quality, $file, $format, $con) = @_;
 
@@ -463,6 +706,13 @@ sub kick_convert {
 
 #########################################################
 # Start the ReEncoder
+
+=item kick_reencode(QUALITY, FILE, FORMAT, CONNECTION)
+
+Document me!
+
+=cut
+
 sub kick_reencode {
 	my($quality, $file, $format, $con) = @_;
 	
@@ -510,6 +760,13 @@ sub kick_reencode {
 
 #########################################################
 # Read metadata from converter
+
+=item converter_readmeta(PROG, FILE, CONNECTION)
+
+Document me!
+
+=cut
+
 sub converter_readmeta {
 	my($prog, $file, $con) = @_;
 	
@@ -528,5 +785,10 @@ sub converter_readmeta {
 	return \%metastuff;
 }
 
+=back
+
+=cut
+
 1;
+
 
