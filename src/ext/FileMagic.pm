@@ -216,6 +216,34 @@ sub __is_pcm {
 return \%rh;
 }
 
+
+######################################################################
+# Flatten deep data structures
+
+sub __flatten {
+	my ($in) = @_;
+	if ( (ref($in) eq "") && (ref(\$in) eq "SCALAR") ) {
+		my $out = $in;
+		$out =~ s/(\x0)+//;
+		return $out;
+	}
+	if ( ref($in) eq "ARRAY" ) {
+		my @out=();
+		foreach (@{$in}) {
+			push  @out, __flatten($_);
+		}
+		return join(" / ", @out);
+	}
+	if ( ref($in) eq "HASH" ) {
+		my $out="";
+		foreach (keys(%{$in})) {
+			$out .= __flatten($_)." : ".__flatten(%{$in}->{$_});
+		}
+		return $out;
+	}
+}
+
+
 ######################################################################
 # Read mp3 tags, return undef if file is not an mp3
 sub __is_mp3 {
@@ -245,35 +273,35 @@ sub __is_mp3 {
 	$rh{fdesc}    = "MPEG ${$h}{VERSION} layer ${$h}{LAYER} file";
 	
 	$h  = MP3::Info::get_mp3tag($file,1)    unless $flags->{'noIDv1'};  #Get the IDv1 tag
-	$hs = MP3::Info::get_mp3tag($file, 2,1) unless $flags->{'noIDv2'};  #Get the IDv2 tag
+	$hs = MP3::Info::get_mp3tag($file,2,2)  unless $flags->{'noIDv2'};  #Get the IDv2 tag
 	
 	
 	#The IDv2 Hashref may return arrays.. kill them :)
 	foreach my $xkey (keys(%$hs)) {
-		if( ref($hs->{$xkey}) eq "ARRAY" ) {
-			$hs->{$xkey} = join(":", @{$hs->{$xkey}});
+		if ($xkey ne "APIC") {
+			$hs->{$xkey} = __flatten($hs->{$xkey});
 		}
 	}
 
 
 	#IDv2 is stronger than IDv1..
 	#Try to parse things like 01/01
-	my @songa = pss(getutf8($hs->{TRCK} || $hs->{TRK} || $h->{TRACKNUM}));
-	my @cda   = pss(getutf8($hs->{TPOS}));
+	my @songa = pss($hs->{TRCK} || $hs->{TRK} || $h->{TRACKNUM});
+	my @cda   = pss($hs->{TPOS});
 	
 	$rh{songs}      = int($songa[1]);
 	$rh{songnum}    = int($songa[0]);
 	$rh{cdnum}      = int($cda[0]);
 	$rh{cds}        = int($cda[1]);
-	$rh{year}       = getutf8($hs->{TYER} || $hs->{TYE} || $h->{YEAR}    || 0);
-	$rh{title}      = getutf8($hs->{TIT2} || $hs->{TT2} || $h->{TITLE}   || $cf || "Untitled");
-	$rh{album}      = getutf8($hs->{TALB} || $hs->{TAL} || $h->{ALBUM}   || "Unknown Album");
-	$rh{artist}     = getutf8($hs->{TPE1} || $hs->{TP1} || $hs->{TPE2} || $hs->{TP2} || $h->{ARTIST}  || "Unknown Artist");
-	$rh{genre}      = _get_genre( getutf8($hs->{TCON} || $hs->{TCO} || $h->{GENRE}   || "") );
-	$rh{comment}    = getutf8($hs->{COMM} || $hs->{COM} || $h->{COMMENT} || "");
-	$rh{composer}   = getutf8($hs->{TCOM} || $hs->{TCM} || "");
-	$rh{playcount}  = int(getutf8($hs->{PCNT} || $hs->{CNT})) || 0;
-	$rh{soundcheck} = _parse_iTunNORM(getutf8($hs->{COMM} || $hs->{COM} || $h->{COMMENT}));
+	$rh{year}       = ($hs->{TYER} || $hs->{TYE} || $h->{YEAR}    || 0);
+	$rh{title}      = ($hs->{TIT2} || $hs->{TT2} || $h->{TITLE}   || $cf || "Untitled");
+	$rh{album}      = ($hs->{TALB} || $hs->{TAL} || $h->{ALBUM}   || "Unknown Album");
+	$rh{artist}     = ($hs->{TPE1} || $hs->{TP1} || $hs->{TPE2}   || $hs->{TP2} || $h->{ARTIST}  || "Unknown Artist");
+	$rh{genre}      = _get_genre($hs->{TCON} || $hs->{TCO} || $h->{GENRE}   || "");
+	$rh{comment}    = ($hs->{COMM} || $hs->{COM} || $h->{COMMENT} || "");
+	$rh{composer}   = ($hs->{TCOM} || $hs->{TCM} || "");
+	$rh{playcount}  = int($hs->{PCNT} || $hs->{CNT}) || 0;
+	$rh{soundcheck} = _parse_iTunNORM($hs->{COMM} || $hs->{COM} || $h->{COMMENT});
 	$rh{mediatype}  = MEDIATYPE_AUDIO;
 
 	# Handle volume adjustment information
@@ -383,11 +411,13 @@ sub getutf8 {
 
 ##############################
 # Parse iTunNORM string
-# FIXME: result isn't the same as iTunes sometimes..
+#
+# see http://www.id3.org/iTunes_Normalization_settings
+#
 sub _parse_iTunNORM {
 	my($string) = @_;
-	if($string =~ /^(engiTunNORM\s|\s)(\S{8})\s(\S{8})\s/) {
-		return oct("0x".$3);
+	if($string =~ /\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})/) {
+		return oct("0x".($1>$2 ? $1:$2));
 	}
 	return undef;
 }
