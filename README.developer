@@ -1,0 +1,26 @@
+
+This is a collection of notes for the gnupod developers. 
+Nothing interesting for users.
+These aren't the droids you're looking for. Move along! :-)
+
+Minimal testing:
+> gnupod_INIT.pl /mnt/empty
+> gnupod_addsong
+> mktunes.pl
+> tunes2pod.pl --force
+> mktunes.pl
+> check ifyour ipod can read the result
+
+Release checklist
+* technical
+  * Set new version in first line of configure.ac
+  * run autotests
+  * make release and sign with the gpg key
+  * upload to blinkenlights.ch and gnu.org
+* pr
+  * Update http://www.blinkenlights.ch/ccms/ipod(e).html
+  * Update http://www.gnu.org/software/gnupod/
+  * Add news item on http://savannah.gnu.org/projects/gnupod
+  * Update last release http://freshmeat.net/projects/gnupod/
+  * Announce on mailing list
+
