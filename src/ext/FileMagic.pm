@@ -55,7 +55,7 @@ my $NN_HEADERS = {'MThd' => { encoder=>'gnupod_convert_MIDI.pl', ftyp=>'MIDI'},
                   'OggS' => { encoder=>'gnupod_convert_OGG.pl',  ftyp=>'OGG' },
                   'MAC ' => { encoder=>'gnupod_convert_APE.pl',  ftyp=>'APE' },
                   'RIFF' => { encoder=>'gnupod_convert_RIFF.pl', ftyp=>'RIFF', magic2=>'AVI '}};
-               
+
 
 
 
@@ -69,20 +69,20 @@ BEGIN {
 
 =item wtf_is(FILE, FLAGS, CONNECTION)
 
-Tries to discover the file format (mp3 or QT (AAC)). For MP3, QT(AAC) and 
-PCM files it calls other sub routines to extracts the meta information 
+Tries to discover the file format (mp3 or QT (AAC)). For MP3, QT(AAC) and
+PCM files it calls other sub routines to extracts the meta information
 from file tags or filename. For other formats it calls external decoders
 and converters to convert the $file into something iPod compatible and to
 extract the meta/media information.
 
-FLAGS is a hash that may contain a true value for the keys 'noIDv1' and 'noIDv2' if 
+FLAGS is a hash that may contain a true value for the keys 'noIDv1' and 'noIDv2' if
 you want to skip the extraction of ID3v1 or ID3v2 tags from MP3 files.
 
 Returns:
 
 =over 8
 
-=item * a hash with information extracted from the file's meta information (aka. tags), 
+=item * a hash with information extracted from the file's meta information (aka. tags),
 
 =item * a hash with format information
 
@@ -130,7 +130,7 @@ sub wtf_is {
 =item __is_NonNative(FILE, FLAGS, CONNECTION)
 
 Tries to guess the filetype by extracting magic numbers from the file's beginning.
-The extracted $magic (from the first four bytes) and $magic2 (from bytes 8 to 11) 
+The extracted $magic (from the first four bytes) and $magic2 (from bytes 8 to 11)
 are used to find an ecoder in %FileMagic::NN_HEADERS.
 
 
@@ -180,9 +180,9 @@ sub __is_NonNative {
 	$rh{title}     = getutf8($metastuff->{_TITLE}  || $cf || "Unknown Title");
 	$rh{genre}     = getutf8($metastuff->{_GENRE}  || "");
 	$rh{songs}     = int($songa[1]);
-	$rh{songnum}   = int($songa[0]); 
+	$rh{songnum}   = int($songa[0]);
 	$rh{comment}   = getutf8($metastuff->{_COMMENT} || $metastuff->{FORMAT}." file");
-	$rh{fdesc}     = getutf8($metastuff->{_VENDOR}  || "Converted using $encoder"); 
+	$rh{fdesc}     = getutf8($metastuff->{_VENDOR}  || "Converted using $encoder");
 	$rh{mediatype} = int($metastuff->{_MEDIATYPE}   || MEDIATYPE_AUDIO);
 	return {ref=>\%rh, encoder=>$encoder, codec=>$NN_HEADERS->{$magic}->{ftyp} };
 }
@@ -207,7 +207,7 @@ sub __is_qt {
  my($file) = @_;
  my $ret = GNUpod::QTfile::parsefile($file);
  return undef unless $ret; #No QT file
- 
+
  my %rh = ();
  if($ret->{time} < 1) {
   warn "QTfile parsing failed, (expected \$ret->{time} >= 0)!\n";
@@ -215,7 +215,7 @@ sub __is_qt {
   warn "You found a bug - send an email to: pab\@blinkenlights.ch\n";
   return undef;
  }
- 
+
  my $cf = ((split(/\//,$file))[-1]);
  $rh{songs}      = int($ret->{tracks});
  $rh{songnum}    = int($ret->{tracknum});
@@ -230,7 +230,7 @@ sub __is_qt {
  $rh{album}      = getutf8($ret->{album}    || "Unknown Album");
  $rh{title}      = getutf8($ret->{title}    || $cf || "Unknown Title");
  $rh{genre}      = _get_genre( getutf8($ret->{genre} || $ret->{gnre} || "") );
- $rh{composer}   = getutf8($ret->{composer} || ""); 
+ $rh{composer}   = getutf8($ret->{composer} || "");
  $rh{soundcheck} = _parse_iTunNORM($ret->{iTunNORM});
  $rh{mediatype}  = int($ret->{mediatype} || MEDIATYPE_AUDIO);
  return  ({codec=>$ret->{_CODEC}, ref=>\%rh});
@@ -241,7 +241,7 @@ sub __is_qt {
 
 =item __is_pcm(FILE)
 
-Tries to extract the relevant information from FILE. For a WAVE file this 
+Tries to extract the relevant information from FILE. For a WAVE file this
 is usually limited to technical information like sample rate and resolution.
 If however FILE is a path that contains directory names, then the directory
 structure "[[<artist>/]<album>/]<title>.wav" is assumed.
@@ -291,7 +291,7 @@ sub __is_pcm {
 	$rh{time}     = int(1000*$size/$bps);
 	$rh{fdesc}    = "RIFF Audio File";
 	#No id3 tags for us.. but mmmmaybe...
-	#We use getuft8 because you could use umlauts and such things :)  
+	#We use getuft8 because you could use umlauts and such things :)
 	#Fixme: absolute versus relative paths :
 	$rh{title}    = getutf8(((split(/\//, $file))[-1]) || "Unknown Title");
 	$rh{album} =    getutf8(((split(/\//, $file))[-2]) || "Unknown Album");
@@ -313,10 +313,10 @@ tags by programmers of languages that use null terminated strings.
 
 Strings are returned as strings.
 Arrays returned as a string with the array elements joined by " / ".
-Hashes are returned like arrays of "<key> : <value>" strings or just 
+Hashes are returned like arrays of "<key> : <value>" strings or just
 "<key>" strings if the value is undefined or an empty string.
 
-With EXCLUDE you can pass on a regular expression to exlclude certain 
+With EXCLUDE you can pass on a regular expression to exlclude certain
 strings from the result.
 
 Example:
@@ -364,12 +364,12 @@ sub __flatten {
 }
 
 ######################################################################
-# Join strings if their content is different. skip strings if they are 
+# Join strings if their content is different. skip strings if they are
 # completely contained in the other ones
 
 =item __merge_strings(OPTIONS,STRING1,STRING2,...)
 
-Takes strings and joins them. A string is not added if it is already 
+Takes strings and joins them. A string is not added if it is already
 contained in the other(s).
 
 Joining takes place left to right.
@@ -381,7 +381,7 @@ OPTIONS is a hasref with the following data:
         wspace => "asis"|"norm"|"kill"  This sets the way whitespace characters
           are handled during the comparison. (default:"asis")
           "asis"  Leave whitespace as it is. "a b" and "a  b" are seen as different.
-          "norm"  Normalize whitespaces to a single space. "a b" and "a\t\n \t b" 
+          "norm"  Normalize whitespaces to a single space. "a b" and "a\t\n \t b"
                   are seen as the same.
           "kill"  Kill whitespace before comparing. "a b" and "ab" are seen as the same.
 
@@ -392,8 +392,8 @@ OPTIONS is a hasref with the following data:
 Returns the joined string. Empty string is returned if only emtpy strings or undefined values where joined.
 
 Usage example:
-        $x = __merge_strings({ joinby => "/", 
-                               whitespace => "norm", 
+        $x = __merge_strings({ joinby => "/",
+                               whitespace => "norm",
                                case => "ignore"},
                              "a  a", "a A b", "foo", "Foo", "B/F" );
         #returns "a A b/foo"
@@ -449,7 +449,7 @@ Tries to extract the meta information from FILE using MP3::Info.
 FLAGS is a hash that may contain a true value for the keys 'noIDv1' and 'noIDv2' if
 you want to skip the extraction of ID3v1 or ID3v2 tags from MP3 files.
 
-Returns undef if MP3::Info::get_mp3info failes or says that the file 
+Returns undef if MP3::Info::get_mp3info failes or says that the file
 has zero frames.
 
 Otherwise returns a HASHREF containing the meta information.
@@ -662,7 +662,7 @@ sub getutf8 {
 
 =item _parse_iTunNORM(STRING)
 
-Searches STRING for a sequence of 8 hex numbers of 8 digits each 
+Searches STRING for a sequence of 8 hex numbers of 8 digits each
 used by iTunes to describe the dynamic range.
 see http://www.id3.org/iTunes_Normalization_settings
 
