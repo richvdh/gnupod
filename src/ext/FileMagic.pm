@@ -243,6 +243,23 @@ sub __flatten {
 	}
 }
 
+######################################################################
+# Join strings if their content is different. skip strings if they are 
+# completely contained in the other ones
+
+sub __merge_strings {
+	my $joiner = shift(@_);
+	my $merged ="";
+
+	foreach (@_) {
+		if ($_) { # only merge non-empty strings
+			if (index($merged,$_) >= 0) {next;} # $_ already contained
+			if (index($_,$merged) >= 0) {$merged = $_; next;} # $_ is a superset
+			$merged = join ( $joiner, $merged, $_);
+		}
+	}
+	return $merged;
+}
 
 ######################################################################
 # Read mp3 tags, return undef if file is not an mp3
@@ -299,6 +316,7 @@ sub __is_mp3 {
 	$rh{artist}     = ($hs->{TPE1} || $hs->{TP1} || $hs->{TPE2}   || $hs->{TP2} || $h->{ARTIST}  || "Unknown Artist");
 	$rh{genre}      = _get_genre($hs->{TCON} || $hs->{TCO} || $h->{GENRE}   || "");
 	$rh{comment}    = ($hs->{COMM} || $hs->{COM} || $h->{COMMENT} || "");
+	$rh{desc}       = __merge_strings(" ",($hs->{USLT} || $hs->{ULT}),($hs->{COMM} || $hs->{COM} || $h->{COMMENT}));
 	$rh{composer}   = ($hs->{TCOM} || $hs->{TCM} || "");
 	$rh{playcount}  = int($hs->{PCNT} || $hs->{CNT}) || 0;
 	$rh{soundcheck} = _parse_iTunNORM($hs->{COMM} || $hs->{COM} || $h->{COMMENT});

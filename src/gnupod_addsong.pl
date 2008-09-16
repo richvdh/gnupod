@@ -170,7 +170,11 @@ sub startup {
 		my $c_per_file_info = $per_file_info{$file};
 		foreach(keys(%$c_per_file_info)) {
 			next unless lc($_) eq $_; #lc keys are there to overwrite $fh keys
-			$fh->{$_} = $c_per_file_info->{$_};
+			if ($_ eq "desc") {
+				$fh->{$_} = GNUpod::FileMagic::__merge_strings("\n", $c_per_file_info->{$_}, $fh->{$_});
+			} else {
+				$fh->{$_} = $c_per_file_info->{$_};
+			}
 		}
 		$c_per_file_info->{ISPODCAST} ||= $opts{'playlist-is-podcast'};  # Enforce podcast settings if we are going to create a pc-playlist
 		
