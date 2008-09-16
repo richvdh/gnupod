@@ -122,14 +122,6 @@ sub startup {
 		GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
 	}
 	
-	if($opts{playlist}) { #Create this playlist
-		foreach my $xcpl (@{$opts{playlist}}) {
-			print "> Adding songs to Playlist '$xcpl'\n";
-			GNUpod::XMLhelper::addpl($xcpl, {podcast=>$opts{'playlist-is-podcast'}}); #Fixme: this may printout a warning..
-		}
-	}
-	
-	
 	# Check volume adjustment options for sanity
 	my $min_vol_adj = int($opts{'min-vol-adj'});
 	my $max_vol_adj = int($opts{'max-vol-adj'});
@@ -143,6 +135,17 @@ sub startup {
 	#resolve_podcasts fetches new podcasts from http:// stuff and adds them to real_files
 	my @real_files = resolve_podcasts(@argv_files);
 	my $addcount   = 0;
+	
+	if($opts{playlist}) { #Create this playlist
+		foreach my $xcpl (@{$opts{playlist}}) {
+			print "> Adding songs to Playlist '$xcpl'\n";
+			GNUpod::XMLhelper::addpl($xcpl, {podcast=>$opts{'playlist-is-podcast'}}); #Fixme: this may printout a warning..
+		}
+	} elsif ($opts{'playlist-is-podcast'} && (scalar(@real_files) > 0)) {
+		print "> Adding songs to Playlist '$per_file_info{$real_files[0]}->{album}'\n";
+		push @{$opts{playlist}}, $per_file_info{$real_files[0]}->{album};
+		GNUpod::XMLhelper::addpl($per_file_info{$real_files[0]}->{album}, {podcast=>$opts{'playlist-is-podcast'}}); #Fixme: this may printout a warning..
+	}
 	
 	#We are ready to copy each file..
 	foreach my $file (@real_files) {
@@ -574,6 +577,7 @@ sub resolve_podcasts {
 			
 			unless($env_is_okay) {
 				warn "! [!!!!] WARNING: This podcast may not appear on your iPod because you did not specify a podcast-playlist to use.\n";
+				warn "! [!!!!]          I will try to use the podcast's title as a playlist name but there's no guarantee it will work out.\n";
 				warn "! [!!!!]          Please use the options '--playlist' and '--playlist-is-podcast' while fetching podcasts.\n";
 			}
 			
