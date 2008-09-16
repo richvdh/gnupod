@@ -122,6 +122,11 @@ sub xescaped {
 	$ret =~ s/\'/&apos;/g;
 	$ret =~ s/</&lt;/g;
 	$ret =~ s/>/&gt;/g;
+	# newline normalization
+	$ret =~ s/\x0D\x0A/\x0A/g;
+	$ret =~ s/\x0D/\x0A/g;
+	$ret =~ s/\x0A/&#x0a;/g; 
+	# strip other control characters
 	$ret =~ tr/\000-\037//d;
 	#convert to XML encoded unicode
 	$ret =~ s/([\xC2-\xDF])([\x80-\xBF])/"&#x".sprintf("%x", ((ord($1) & 31) <<  6) +  (ord($2) & 63) ).";"/eg;
