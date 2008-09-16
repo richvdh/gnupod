@@ -278,7 +278,7 @@ sub __is_mp3 {
 	
 	#The IDv2 Hashref may return arrays.. kill them :)
 	foreach my $xkey (keys(%$hs)) {
-		if ($xkey ne "APIC") {
+		if (($xkey ne "APIC") && ($xkey ne "PIC")) {
 			$hs->{$xkey} = __flatten($hs->{$xkey});
 		}
 	}
