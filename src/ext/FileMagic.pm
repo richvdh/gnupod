@@ -490,10 +490,10 @@ sub __is_mp3 {
 	foreach my $xkey (keys(%$hs)) {
 		if ($xkey =~ /^COM[ M]?$/) {
 			my $comref = $hs->{$xkey};
-			use Data::Dumper;
-			print Dumper($comref);
+			#use Data::Dumper;
+			#print Dumper($comref);
 			$nonitunescomment = __flatten($comref,"^iTun");
-			print Dumper($nonitunescomment);
+			#print Dumper($nonitunescomment);
 		}
 		if (($xkey ne "APIC") && ($xkey ne "PIC")) {
 			$hs->{$xkey} = __flatten($hs->{$xkey});
