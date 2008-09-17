@@ -1,5 +1,5 @@
 
-This is a collection of notes for the gnupod developers. 
+This is a collection of notes for the gnupod developers.
 Nothing interesting for users.
 These aren't the droids you're looking for. Move along! :-)
 
@@ -9,7 +9,7 @@ Minimal testing:
 > mktunes.pl
 > tunes2pod.pl --force
 > mktunes.pl
-> check ifyour ipod can read the result
+> check if your ipod can read the result
 
 Release checklist
 * technical
@@ -22,5 +22,11 @@ Release checklist
   * Update http://www.gnu.org/software/gnupod/
   * Add news item on http://savannah.gnu.org/projects/gnupod
   * Update last release http://freshmeat.net/projects/gnupod/
-  * Announce on mailing list
+  * Announce new release on mailing list
+  * Contact Debian package maintainer of "gnupod-tools"
+
+Upstream contacts
+* MP3::Info
+  * Dan Sully < daniel @ electricrain . com >
+  * http://bugs.slimdevices.com/
 
