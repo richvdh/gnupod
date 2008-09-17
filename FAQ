@@ -2,7 +2,7 @@ TOC
 
 
 1 : What is GNUpod?
-2 : Wich iPods are supported?
+2 : Which iPods are supported? Which are not?
 3 : Quick howto
 4 : How about a GUI?
 5 : Does GNUpod support feature $foobar ?
@@ -29,7 +29,7 @@ handle the iPod internals for you ;)
 [Apples Binary Filetypes..]
 
 
-2. Wich iPods are supported?
+2. Which iPods are supported? Which are not?
 ----------------------------
 GNUpod is known to work with
 
@@ -37,8 +37,15 @@ GNUpod is known to work with
 - Firmware 2.x (3. gen iPod)
 - Firmware 3.x (iPod Mini)
 - Firmware 5.x? (Photo iPod - only basic support, no pictures!)
-- Fimrware ??? (iPod Shuffle, since GNUpod 0.98)
+- Firmware ??? (iPod Shuffle, since GNUpod 0.98)
 
+GNUpod does not yet work with
+
+- iPhone/iPod touch from 2.0 firmware
+- iPod touch 2nd generation
+- iPhone 3G
+
+see http://www.bluwiki.com/go/Ipodhash
 
 3. Quick howto
 --------------
