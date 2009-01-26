@@ -101,13 +101,13 @@ sub main {
 #############################################
 # Eventhandler for FILE items
 sub newfile {
- my($el) =  @_;
+	my($el) =  @_;
                           # 2 = mount + view (both are ALWAYS set)
-my $ntm      = keys(%opts)-2-$opts{'match-once'}-$opts{automktunes}-$opts{delete}-(defined $opts{rename})-(defined $opts{artwork})-(defined $opts{model});
-my $matched  = undef;
-my $dounlink = 0;
-foreach my $opx (keys(%opts)) {
-	next if $opx =~ /mount|match-once|delete|view|rename/; #Skip this
+	my $ntm      = keys(%opts)-2-$opts{'match-once'}-$opts{automktunes}-$opts{delete}-(defined $opts{rename})-(defined $opts{artwork})-(defined $opts{model});
+	my $matched  = undef;
+	my $dounlink = 0;
+	foreach my $opx (keys(%opts)) {
+		next if $opx =~ /mount|match-once|delete|view|rename/; #Skip this
 		
 		
 		if(substr($opts{$opx},0,1) eq ">") {
@@ -125,7 +125,7 @@ foreach my $opx (keys(%opts)) {
 		elsif($el->{file}->{$opx} =~ /$opts{$opx}/i) {
 			$matched++;
 		}
-}
+	}
 
 
 	if(($opts{'match-once'} && $matched) || $ntm == $matched) {
