@@ -29,6 +29,8 @@ use GNUpod::FooBar;
 use GNUpod::ArtworkDB;
 use Getopt::Long;
 
+use Text::CharWidth;
+
 use Data::Dumper;
 $Data::Dumper::Sortkeys = 1;
 $Data::Dumper::Terse = 1;
@@ -330,18 +332,54 @@ sub newfile {
 	}
 }
 
+#############################################
+# Eventhandler for playlist items
+sub newpl {
+}
+
 ##############################################################
-# Printout 
+# print one field and return the overhang
+# gets the viewkey, the data and the current overhang
+sub printonefield {
+#  print Dumper(@_);
+  my ($viewkey, $data, $overhang) = @_;
+  my $columns=Text::CharWidth::mbswidth($data)+$overhang;
+  if ( $columns > $viewkey->{width} ) {
+    print "$data";
+    return $columns - $viewkey->{width};
+  } else {
+    #we could add some alignment stuff here
+    print "$data"." "x($viewkey->{width} - $columns);
+    return 0;
+  } 
+}
+##############################################################
+# Printout
+
 sub prettyprint {
   my ($results) = @_ ;
-    foreach my $viewkey (@viewlist) {
-      printf "%-".$GNUpod::iTunesDB::FILEATTRDEF{$viewkey}{width}."s"." | ", $GNUpod::iTunesDB::FILEATTRDEF{$viewkey}{header};
-    }
-    print "\n";
+
+  my $totalwidth=0;
+  my $firstcolumn=1;
+  my $overhang=0;
+  foreach my $viewkey (@viewlist) {
+    if ($firstcolumn) {$firstcolumn=0;} else { print " | "; $totalwidth+=3; }
+#    printf "%-".$GNUpod::iTunesDB::FILEATTRDEF{$viewkey}{width}."s", $GNUpod::iTunesDB::FILEATTRDEF{$viewkey}{header};
+    $overhang = printonefield($GNUpod::iTunesDB::FILEATTRDEF{$viewkey}, $GNUpod::iTunesDB::FILEATTRDEF{$viewkey}{header}, $overhang);
+    $totalwidth += $GNUpod::iTunesDB::FILEATTRDEF{$viewkey}{width};
+  }
+  print "\n";
+  print "=" x $totalwidth ."\n";
+  
 
   foreach my $song (@{$results}) {
+    $totalwidth=0;
+    $firstcolumn=1;
+    $overhang=0;
     foreach my $viewkey (@viewlist) {
-      printf "%-".$GNUpod::iTunesDB::FILEATTRDEF{$viewkey}{width}."s"." | ", $song->{$viewkey};
+      if ($firstcolumn) {$firstcolumn=0;} else { print " | "; $totalwidth+=3; }
+      $overhang = printonefield($GNUpod::iTunesDB::FILEATTRDEF{$viewkey}, $song->{$viewkey}, $overhang);
+#      printf "%-".$GNUpod::iTunesDB::FILEATTRDEF{$viewkey}{width}."s"." | ", $song->{$viewkey};
     }
     print "\n";
   }
