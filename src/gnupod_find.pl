@@ -23,20 +23,20 @@
 # This product is not supported/written/published by Apple!
 
 use strict;
+use warnings;
 use GNUpod::XMLhelper;
 use GNUpod::FooBar;
 use GNUpod::ArtworkDB;
 use Getopt::Long;
+
 use Data::Dumper;
+$Data::Dumper::Sortkeys = 1;
+$Data::Dumper::Terse = 1;
 
 use constant MACTIME => GNUpod::FooBar::MACTIME;
 
 
-use vars qw(%opts @keeplist);
-
-use constant DEFAULT_SPACE => 32;
-
-my $dbid     = undef;  # Artwork DB-ID
+use vars qw(%opts);
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
@@ -50,13 +50,13 @@ GetOptions(\%opts, "version", "help|h", "mount|m=s",
                    );
 GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "gnupod_search");
 
-print Dumper(\%opts);
+#print Dumper(\%opts);
 
 $opts{filter} ||= []; #Default search
 $opts{sort}   ||= ['+addtime']; #Default sort
 $opts{view}   ||= ['id,artist,album,title']; #Default view
 
-print Dumper(\%opts);
+print "Options: ".Dumper(\%opts);
 
 usage()   if $opts{help};
 version() if $opts{version};
@@ -67,13 +67,15 @@ version() if $opts{version};
 # full attribute list
 #print Dumper(\%GNUpod::iTunesDB::FILEATTRDEF);
 
-# both work:
-print %GNUpod::iTunesDB::FILEATTRDEF->{year}{help}."\n";
-print %GNUpod::iTunesDB::FILEATTRDEF->{year}->{help}."\n";
-
-# get a copy 
-#my %x = %GNUpod::iTunesDB::FILEATTRDEF;
-#print Dumper(\%x);
+## all work but 1 and 2 are deprecated
+#print "1: ".%GNUpod::iTunesDB::FILEATTRDEF->{year}{help}."\n";
+#print "2: ".%GNUpod::iTunesDB::FILEATTRDEF->{year}->{help}."\n";
+#print "3: ".$GNUpod::iTunesDB::FILEATTRDEF{year}{help}."\n";
+#print "4: ".$GNUpod::iTunesDB::FILEATTRDEF{year}->{help}."\n";
+#
+## this does not work and without "use warnings;" you woudln't even know!
+## did i mention that i hate perl?
+#print "5: ".$GNUpod::iTunesDB::FILEATTRDEF->{year}->{help}."\n";
 
 sub help_find_attribute {
   my ($input) = @_;
@@ -85,14 +87,14 @@ sub help_find_attribute {
   }
   # substring of attribute help
   for my $attr (sort(keys %GNUpod::iTunesDB::FILEATTRDEF)) {
-    $candidates{$attr} += 2 if (index(lc(%GNUpod::iTunesDB::FILEATTRDEF->{$attr}{help}), $input) != -1) ;
+    $candidates{$attr} += 2 if (index(lc($GNUpod::iTunesDB::FILEATTRDEF{$attr}{help}), $input) != -1) ;
   }
   
-  if (defined(%candidates) ) {
+  if (%candidates) {
     $output = "Did you mean: \n";
     for my $key (sort( keys( %candidates))) {
-  #    print "\t".$key.":\t".%GNUpod::iTunesDB::FILEATTRDEF->{$key}{help}."\n";
-      $output .= sprintf "\t%-15s %s\n", $key.":", %GNUpod::iTunesDB::FILEATTRDEF->{$key}{help};
+  #    print "\t".$key.":\t".$GNUpod::iTunesDB::FILEATTRDEF{$key}{help}."\n";
+      $output .= sprintf "\t%-15s %s\n", $key.":", $GNUpod::iTunesDB::FILEATTRDEF{$key}{help};
     } 
   }
   return $output;
@@ -109,13 +111,13 @@ for my $sortopt (@{$opts{sort}}) {
          (substr($sortkey,0,1) ne "-") ) {
        $sortkey = "+".$sortkey;
     }
-    if (!defined(%GNUpod::iTunesDB::FILEATTRDEF->{substr($sortkey,1)})) {
+    if (!defined($GNUpod::iTunesDB::FILEATTRDEF{substr($sortkey,1)})) {
       die ("Unknown sortkey \"".substr($sortkey,1)."\". ".help_find_attribute(substr($sortkey,1)));
     }
     push @sortlist, $sortkey;
   }
 }
-#print "Sortlist:\n".Dumper(\@sortlist);
+print "Sortlist: ".Dumper(\@sortlist);
 
 ########################
 # prepare filterlist
@@ -128,14 +130,41 @@ for my $sortopt (@{$opts{sort}}) {
 my @filterlist =();
 for my $filteropt (@{$opts{filter}}) {
   for my $filterkey (split(/\s*,\s*/, $filteropt)) {
-    print "filterkey: $filterkey\n";
+#    print "filterkey: $filterkey\n";
     if ($filterkey =~ /^([0-9a-z_]+)([!=<>~]+)(.*)$/) {
-  
-      if (!defined(%GNUpod::iTunesDB::FILEATTRDEF->{$1})) {
+
+      if (!defined($GNUpod::iTunesDB::FILEATTRDEF{$1})) {
         die ("Unknown filterkey \"".$1."\". ".help_find_attribute($1));
       }
+
+      my $value;
+      if ($GNUpod::iTunesDB::FILEATTRDEF{$1}{format} eq "numeric") {
+        if ($GNUpod::iTunesDB::FILEATTRDEF{$1}{content} eq "mactime") {   #handle content MACTIME
+          if (eval "require Date::Manip") {
+            # use Date::Manip if it is available
+            require Date::Manip;
+            import Date::Manip; 
+            $value = UnixDate(ParseDate($3),"%s");
+          } else {
+            # fall back to Date::Parse
+            $value = Date::Parse::str2time($3);
+          }
+          if (defined($value)) {
+            require Date::Format;
+            import Date::Format;
+            print "Time value \"$3\" evaluates to $value unix epoch time (".($value+MACTIME)." mactime) which is ".time2str("%C",$value)."\n";
+            $value += MACTIME; 
+          } else {
+            die ("Sorry, your time/date definition \"$3\" was not understood.");
+          }
+        } else { #not "mactime"
+          $value = $3; # DO NOT USE : $value = int($3); or you will screw up regex matches on numeric fields
+        }
+      } else { #not numeric
+        $value = $3; # not much we could check for
+      }
   
-      my $filterdef = { 'attr' => $1, 'operator' => $2, 'value' => $3 };
+      my $filterdef = { 'attr' => $1, 'operator' => $2, 'value' => $value };
       push @filterlist,  $filterdef;
     } else {
       die ("Invalid filter definition: ", $filterkey);
@@ -143,7 +172,7 @@ for my $filteropt (@{$opts{filter}}) {
   }
 }
 
-print "Filterlist:\n".Dumper(\@filterlist);
+print "Filterlist (".($opts{once}?"or":"and")."-connected): ".Dumper(\@filterlist);
 
 
 ########################
@@ -152,13 +181,14 @@ print "Filterlist:\n".Dumper(\@filterlist);
 my @viewlist =();
 for my $viewopt (@{$opts{view}}) {
   for my $viewkey (split(/\s*,\s*/,   $viewopt)) {
-    if (!defined(%GNUpod::iTunesDB::FILEATTRDEF->{$viewkey})) {
+    if (!defined($GNUpod::iTunesDB::FILEATTRDEF{$viewkey})) {
       die ("Unknown viewkey \"".$viewkey."\". ".help_find_attribute($viewkey));
     }
     push @viewlist, $viewkey;
   }
 }
-#print "Viewlist:\n".Dumper(\@viewlist);
+print "Viewlist: ".Dumper(\@viewlist);
+
 
 my @resultlist=();
 
@@ -182,8 +212,8 @@ sub compare {
       ($x, $y)=($y, $x);
     }
     
-    if (%GNUpod::iTunesDB::FILEATTRDEF->{substr($sortkey,1)}->{format} eq "numeric") {
-      $result = int($x) <=> int($y);
+    if ($GNUpod::iTunesDB::FILEATTRDEF{substr($sortkey,1)}{format} eq "numeric") {
+      $result = int($x) <=> int($y); # avoid problems of comparing NaN with NaN
     } else {
       $result = $x cmp $y;
     }
@@ -202,21 +232,9 @@ sub matcher {
 #  print "data:\n".Dumper($data);
   my $value;
   my $data;
-  if (%GNUpod::iTunesDB::FILEATTRDEF->{$filter->{attr}}->{format} eq "numeric") {
-    $data = int($testdata); # TODO: Check if $testdata is indeed numeric
-    if (%GNUpod::iTunesDB::FILEATTRDEF->{$filter->{attr}}->{content} eq "mactime") {   #handle content MACTIME 
-      if (eval "require Date::Manip") {
-        # use Date::Manip if it is available
-        require Date::Manip;
-        import Date::Manip; 
-        $value = UnixDate(ParseDate($filter->{value}),"%s")+MACTIME;
-      } else {
-        # fall back to Date::Parse
-        $value = int(Date::Parse::str2time($filter->{value}))+MACTIME;
-      }
-    } else {
-      $value = int($filter->{value}); # TODO: Check if Filter->Value is indeed numeric
-    }
+  if ($GNUpod::iTunesDB::FILEATTRDEF{$filter->{attr}}{format} eq "numeric") {
+    $data = $testdata; # TODO: Check if $testdata is indeed numeric. it should be since we get it from the database
+    $value = $filter->{value}; # TODO: Check if Filter->Value is indeed numeric OR if we do regex matching
 
     $_ = $filter->{operator};
     if ($_ eq ">")  { return ($data >  $value); }
@@ -266,13 +284,7 @@ sub main {
 # Eventhandler for FILE items
 sub newfile {
 	my($el) =  @_;
-                          # 2 = mount + view (both are ALWAYS set)
-#	my $ntm      = keys(%opts)-2-$opts{'match-once'}-$opts{automktunes}-$opts{delete}-(defined $opts{rename})-(defined $opts{artwork})-(defined $opts{model});
-
-	my $matched  = undef;
-#	use Data::Dumper;
-#	print Dumper(\%opts);
-#	print Dumper($ntm);
+	my $matched;
 
         # check for matches
 	my $filematches=1;
@@ -281,15 +293,18 @@ sub newfile {
 
                	if (matcher($filter, $el->{file}->{$filter->{attr}})) {
 			#matching
+	                $filematches = 1;
 			if ($opts{once}) {
+				#ok one match is enough.
 				last;
-			} else {
-				next;
 			}
 		} else {
 			#not matching
 			$filematches = 0;
-			last;
+			if (! $opts{once}) {
+				# one mismatch is enough 
+				last;
+			}
 		}
 		
 	}
@@ -297,41 +312,22 @@ sub newfile {
 	if ($filematches) {
 		#add to output list
 		my %hit = %{$el->{file}}; #copy the hash
-		push @resultlist, \%hit;  #add a reference to that copy to the resultlist
+		push @resultlist, \%hit;  #add a reference to that copy to @resultlist
 	}
 }
-
-#############################################
-## Eventhandler for PLAYLIST items
-#sub newpl {
-#	# Delete or rename needs to rebuild the XML file
-#	my ($el, $name, $plt) = @_;
-#	if(($plt eq "pl" or $plt eq "pcpl") && ref($el->{add}) eq "HASH") { #Add action
-#		if(defined($el->{add}->{id}) && int(keys(%{$el->{add}})) == 1) { #Only id
-#			return unless($keeplist[$el->{add}->{id}]); #ID not on keeplist. drop it
-#		}
-#	}
-#	elsif($plt eq "spl" && ref($el->{splcont}) eq "HASH") { #spl content
-#		if(defined($el->{splcont}->{id}) && int(keys(%{$el->{splcont}})) == 1) { #Only one item
-#			return unless($keeplist[$el->{splcont}->{id}]);
-#		}
-#	}
-#	GNUpod::XMLhelper::mkfile($el,{$plt."name"=>$name});
-#}
-
 
 ##############################################################
 # Printout 
 sub prettyprint {
   my ($results) = @_ ;
     foreach my $viewkey (@viewlist) {
-      printf "%-".%GNUpod::iTunesDB::FILEATTRDEF->{$viewkey}->{width}."s"." | ", %GNUpod::iTunesDB::FILEATTRDEF->{$viewkey}->{header};
+      printf "%-".$GNUpod::iTunesDB::FILEATTRDEF{$viewkey}{width}."s"." | ", $GNUpod::iTunesDB::FILEATTRDEF{$viewkey}{header};
     }
     print "\n";
 
   foreach my $song (@{$results}) {
     foreach my $viewkey (@viewlist) {
-      printf "%-".%GNUpod::iTunesDB::FILEATTRDEF->{$viewkey}->{width}."s"." | ", $song->{$viewkey};
+      printf "%-".$GNUpod::iTunesDB::FILEATTRDEF{$viewkey}{width}."s"." | ", $song->{$viewkey};
     }
     print "\n";
   }
@@ -380,8 +376,7 @@ Usage: gnupod_find.pl [-m directory] ...
    -v, --view VIEWDEF      only show song attributes listed in VIEWDEF
    -s, --sort SORTDEF      order output according to SORTDEF
    -o, --or, --once        make any filter match (think OR vs. AND)
-   -l, --limit=#           Only output # first tracks (-# for the last #)
-
+   -l, --limit=N           Only output N first tracks (-N: all but N first)
 
 VIEWDEF ::= <attribute>[,<attribute>]...
     A comma separated list of fields that you want to see in the output.
