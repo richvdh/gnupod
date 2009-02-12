@@ -56,7 +56,7 @@ $opts{filter} ||= []; #Default search
 $opts{sort}   ||= ['+addtime']; #Default sort
 $opts{view}   ||= ['id,artist,album,title']; #Default view
 
-print "Options: ".Dumper(\%opts);
+#print "Options: ".Dumper(\%opts);
 
 usage()   if $opts{help};
 version() if $opts{version};
@@ -117,7 +117,7 @@ for my $sortopt (@{$opts{sort}}) {
     push @sortlist, $sortkey;
   }
 }
-print "Sortlist: ".Dumper(\@sortlist);
+#print "Sortlist: ".Dumper(\@sortlist);
 
 ########################
 # prepare filterlist
@@ -172,7 +172,7 @@ for my $filteropt (@{$opts{filter}}) {
   }
 }
 
-print "Filterlist (".($opts{once}?"or":"and")."-connected): ".Dumper(\@filterlist);
+#print "Filterlist (".($opts{once}?"or":"and")."-connected): ".Dumper(\@filterlist);
 
 
 ########################
@@ -187,7 +187,7 @@ for my $viewopt (@{$opts{view}}) {
     push @viewlist, $viewkey;
   }
 }
-print "Viewlist: ".Dumper(\@viewlist);
+#print "Viewlist: ".Dumper(\@viewlist);
 
 
 my @resultlist=();
@@ -201,24 +201,30 @@ main($connection);
 
 ####################################################
 # sorter
-sub compare {
+sub comparesongs {
   
   my $result=0;
-  for my $sortkey (@sortlist) {
-    my ($x,$y) = ($a->{substr($sortkey,1)}, $b->{substr($sortkey,1)} );
-#    print "x: $x\ty: $y\n";
+  for my $sortkey (@sortlist) {   # go through all sortkeys
+    # take the data that needs to be comapred into $x and $y
+    my ($x,$y) = ($a->{substr($sortkey,1)}, $b->{substr($sortkey,1)} ); 
 
+    # if sort order is reversed simply switch x any y
     if (substr ($sortkey,0,1) eq "-") {
       ($x, $y)=($y, $x);
     }
-    
+
+    # now compare x and y     
     if ($GNUpod::iTunesDB::FILEATTRDEF{substr($sortkey,1)}{format} eq "numeric") {
       $result = int($x) <=> int($y); # avoid problems of comparing NaN with NaN
     } else {
       $result = $x cmp $y;
     }
+
+    # if they are equal we will go on to the next sortkey. otherwise we return the result
     if ($result != 0) { return $result; }
   }
+
+  # after comparing according to all sortkeys the songs are still equal.
   return 0;
 }
 
@@ -273,10 +279,18 @@ sub main {
 
 #        print "resultlist:\n".Dumper(\@resultlist);
 
-	my @sortedresultlist = sort compare @resultlist;
+	my @sortedresultlist = sort comparesongs @resultlist;
 
 #        print "sortedresultlist:\n".Dumper(\@sortedresultlist);
 
+	if (defined($opts{limit})) {
+		if ($opts{limit} > 0) {
+			splice @sortedresultlist, $opts{limit};
+		} else {
+			my @limitedlist = splice @sortedresultlist, -1 * $opts{limit};
+			@sortedresultlist = @limitedlist;
+		}
+	}
 	prettyprint (\@sortedresultlist);
 }
 
