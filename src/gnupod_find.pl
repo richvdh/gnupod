@@ -27,7 +27,6 @@ use GNUpod::XMLhelper;
 use GNUpod::FooBar;
 use GNUpod::ArtworkDB;
 use Getopt::Long;
-#use GNUpod::iTunesDB qw(FILEATTRDEF);
 use Data::Dumper;
 
 use constant MACTIME => GNUpod::FooBar::MACTIME;
@@ -45,7 +44,8 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 print "gnupod_find.pl Version ###__VERSION__### (C) Heinrich Langos\n";
 
 GetOptions(\%opts, "version", "help|h", "mount|m=s",
-                   "filter|f=s@","show|s=s@","sort|o=s@",
+                   "filter|f=s@","view|v=s@","sort|s=s@",
+                   "once|or|o",
                    "limit|l=s"
                    );
 GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "gnupod_search");
@@ -54,7 +54,7 @@ print Dumper(\%opts);
 
 $opts{filter} ||= []; #Default search
 $opts{sort}   ||= ['+addtime']; #Default sort
-$opts{show}   ||= ['id,artist,album,title']; #Default show
+$opts{view}   ||= ['id,artist,album,title']; #Default view
 
 print Dumper(\%opts);
 
@@ -68,8 +68,8 @@ version() if $opts{version};
 #print Dumper(\%GNUpod::iTunesDB::FILEATTRDEF);
 
 # both work:
-#print %GNUpod::iTunesDB::FILEATTRDEF->{year}{help}."\n";
-#print %GNUpod::iTunesDB::FILEATTRDEF->{year}->{help}."\n";
+print %GNUpod::iTunesDB::FILEATTRDEF->{year}{help}."\n";
+print %GNUpod::iTunesDB::FILEATTRDEF->{year}->{help}."\n";
 
 # get a copy 
 #my %x = %GNUpod::iTunesDB::FILEATTRDEF;
@@ -147,42 +147,49 @@ print "Filterlist:\n".Dumper(\@filterlist);
 
 
 ########################
-# prepare showlist
+# prepare viewlist
 
-my @showlist =();
-for my $showopt (@{$opts{show}}) {
-  for my $showkey (split(/\s*,\s*/,   $showopt)) {
-    if (!defined(%GNUpod::iTunesDB::FILEATTRDEF->{$showkey})) {
-      die ("Unknown showkey \"".$showkey."\". ".help_find_attribute($showkey));
+my @viewlist =();
+for my $viewopt (@{$opts{view}}) {
+  for my $viewkey (split(/\s*,\s*/,   $viewopt)) {
+    if (!defined(%GNUpod::iTunesDB::FILEATTRDEF->{$viewkey})) {
+      die ("Unknown viewkey \"".$viewkey."\". ".help_find_attribute($viewkey));
     }
-    push @showlist, $showkey;
+    push @viewlist, $viewkey;
   }
 }
-#print "Showlist:\n".Dumper(\@showlist);
+#print "Viewlist:\n".Dumper(\@viewlist);
+
+my @resultlist=();
 
 # -> Connect the iPod
 my $connection = GNUpod::FooBar::connect(\%opts);
 usage($connection->{status}."\n") if $connection->{status};
 
-#my $AWDB  = GNUpod::ArtworkDB->new(Connection=>$connection, DropUnseen=>1);
-
-
 main($connection);
-
 
 
 ####################################################
 # sorter
 sub compare {
+  
   my $result=0;
   for my $sortkey (@sortlist) {
-    if (substr ($sortkey,0,1) eq "+") {
-      $result = $a->{substr($sortkey,1)} <=> $b->{substr($sortkey,1)};
-    } else { #"-"
-      $result = $b->{substr($sortkey,1)} <=> $a->{substr($sortkey,1)};
+    my ($x,$y) = ($a->{substr($sortkey,1)}, $b->{substr($sortkey,1)} );
+#    print "x: $x\ty: $y\n";
+
+    if (substr ($sortkey,0,1) eq "-") {
+      ($x, $y)=($y, $x);
+    }
+    
+    if (%GNUpod::iTunesDB::FILEATTRDEF->{substr($sortkey,1)}->{format} eq "numeric") {
+      $result = int($x) <=> int($y);
+    } else {
+      $result = $x cmp $y;
     }
     if ($result != 0) { return $result; }
   }
+  return 0;
 }
 
 
@@ -210,20 +217,32 @@ sub matcher {
     } else {
       $value = int($filter->{value}); # TODO: Check if Filter->Value is indeed numeric
     }
+
+    $_ = $filter->{operator};
+    if ($_ eq ">")  { return ($data >  $value); }
+    if ($_ eq "<")  { return ($data <  $value); }
+    if ($_ eq ">=") { return ($data >= $value); }
+    if ($_ eq "<=") { return ($data <= $value); }
+    if (($_ eq "=") or ($_ eq "==")) { return ($data == $value); }
+    if ($_ eq "!=") { return ($data != $value); }
+    if (($_ eq "~") or ($_ eq "~=") or ($_ eq "=~"))  { return ($data =~ /$value/i); }
+    die ("No handler for your operator \"".$_."\" with numeric data found. Could be a bug."); 
+
   } else { # non numeric attributes
     $data = $testdata;
     $value = $filter->{value};
+
+    $_ = $filter->{operator};
+    if ($_ eq ">")  { return ($data gt $value); }
+    if ($_ eq "<")  { return ($data lt $value); }
+    if ($_ eq ">=") { return ($data ge $value); }
+    if ($_ eq "<=") { return ($data le $value); }
+    if ($_ eq "==") { return ($data eq $value); }
+    if ($_ eq "!=") { return ($data ne $value); }
+    if (($_ eq "~") or ($_ eq "=") or ($_ eq "~=") or ($_ eq "=~"))  { return ($data =~ /$value/i); }
+    die ("No handler for your operator \"".$_."\" with non-numeric data found. Could be a bug."); 
   }
-  $_= $filter->{operator};
-#    if (/^(([<>])|([<>!=]=))$/) { $op = $_; return 1 if (eval ($numdata.$op.$numvalue)) ;} # this covers < > <= >= != and ==  ... but eval is slow
-  if ($_ eq ">")  { return ($data >  $value); last SWITCH; }
-  if ($_ eq "<")  { return ($data <  $value); last SWITCH; }
-  if ($_ eq ">=") { return ($data >= $value); last SWITCH; }
-  if ($_ eq "<=") { return ($data <= $value); last SWITCH; }
-  if ($_ eq "==") { return ($data == $value); last SWITCH; }
-  if ($_ eq "!=") { return ($data != $value); last SWITCH; }
-  if (($_ eq "~=") or ($_ eq "=") or ($_ eq "=~"))  { return ($data =~ /$value/i); last SWITCH; }
-  die ("No handler for your operator \"".$_."\" found. Could be a bug."); 
+
 }
 
 ####################################################
@@ -234,6 +253,13 @@ sub main {
 	
 	GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
 
+#        print "resultlist:\n".Dumper(\@resultlist);
+
+	my @sortedresultlist = sort compare @resultlist;
+
+#        print "sortedresultlist:\n".Dumper(\@sortedresultlist);
+
+	prettyprint (\@sortedresultlist);
 }
 
 #############################################
@@ -255,7 +281,11 @@ sub newfile {
 
                	if (matcher($filter, $el->{file}->{$filter->{attr}})) {
 			#matching
-			next;
+			if ($opts{once}) {
+				last;
+			} else {
+				next;
+			}
 		} else {
 			#not matching
 			$filematches = 0;
@@ -266,76 +296,70 @@ sub newfile {
 
 	if ($filematches) {
 		#add to output list
-		print "match: ".$el->{file}->{title}."\n";
+		my %hit = %{$el->{file}}; #copy the hash
+		push @resultlist, \%hit;  #add a reference to that copy to the resultlist
 	}
 }
 
-############################################
-# Eventhandler for PLAYLIST items
-sub newpl {
-	# Delete or rename needs to rebuild the XML file
-	my ($el, $name, $plt) = @_;
-	if(($plt eq "pl" or $plt eq "pcpl") && ref($el->{add}) eq "HASH") { #Add action
-		if(defined($el->{add}->{id}) && int(keys(%{$el->{add}})) == 1) { #Only id
-			return unless($keeplist[$el->{add}->{id}]); #ID not on keeplist. drop it
-		}
-	}
-	elsif($plt eq "spl" && ref($el->{splcont}) eq "HASH") { #spl content
-		if(defined($el->{splcont}->{id}) && int(keys(%{$el->{splcont}})) == 1) { #Only one item
-			return unless($keeplist[$el->{splcont}->{id}]);
-		}
-	}
-	GNUpod::XMLhelper::mkfile($el,{$plt."name"=>$name});
-}
+#############################################
+## Eventhandler for PLAYLIST items
+#sub newpl {
+#	# Delete or rename needs to rebuild the XML file
+#	my ($el, $name, $plt) = @_;
+#	if(($plt eq "pl" or $plt eq "pcpl") && ref($el->{add}) eq "HASH") { #Add action
+#		if(defined($el->{add}->{id}) && int(keys(%{$el->{add}})) == 1) { #Only id
+#			return unless($keeplist[$el->{add}->{id}]); #ID not on keeplist. drop it
+#		}
+#	}
+#	elsif($plt eq "spl" && ref($el->{splcont}) eq "HASH") { #spl content
+#		if(defined($el->{splcont}->{id}) && int(keys(%{$el->{splcont}})) == 1) { #Only one item
+#			return unless($keeplist[$el->{splcont}->{id}]);
+#		}
+#	}
+#	GNUpod::XMLhelper::mkfile($el,{$plt."name"=>$name});
+#}
 
 
 ##############################################################
-# Printout Search output
-sub pview {
-  my ($orf,$xhead) = @_;
+# Printout 
+sub prettyprint {
+  my ($results) = @_ ;
+    foreach my $viewkey (@viewlist) {
+      printf "%-".%GNUpod::iTunesDB::FILEATTRDEF->{$viewkey}->{width}."s"." | ", %GNUpod::iTunesDB::FILEATTRDEF->{$viewkey}->{header};
+    }
+    print "\n";
 
-  for my $showkey (@showlist) {
-    
+  foreach my $song (@{$results}) {
+    foreach my $viewkey (@viewlist) {
+      printf "%-".%GNUpod::iTunesDB::FILEATTRDEF->{$viewkey}->{width}."s"." | ", $song->{$viewkey};
+    }
+    print "\n";
   }
 
- #Build refs
- my %qh = ();
- $qh{n}{k} = $orf->{songnum};   $qh{n}{w} = 4;  $qh{n}{n} = "SNUM";
- $qh{t}{k} = $orf->{title};                     $qh{t}{s} = "TITLE";
- $qh{a}{k} = $orf->{artist};                    $qh{a}{s} = "ARTIST";
- $qh{r}{k} = $orf->{rating};    $qh{r}{w} = 4;  $qh{r}{s} = "RTNG";
- $qh{p}{k} = $orf->{path};      $qh{p}{w} = 96; $qh{p}{s} = "PATH";
- $qh{l}{k} = $orf->{album};                     $qh{l}{s} = "ALBUM";
- $qh{g}{k} = $orf->{genre};                     $qh{g}{s} = "GENRE";
- $qh{R}{k} = $orf->{podcastrss};                $qh{R}{s} = "RSS";
- $qh{G}{k} = $orf->{podcastguid};               $qh{G}{s} = "GUID";
- $qh{c}{k} = $orf->{playcount}; $qh{c}{w} = 4;  $qh{c}{s} = "CNT";
- $qh{i}{k} = $orf->{id};        $qh{i}{w} = 4;  $qh{i}{s} = "ID";
- $qh{d}{k} = $orf->{dbid_1};    $qh{d}{w} = 16; $qh{d}{s} = "DBID";
- $qh{b}{k} = $orf->{bitrate};   $qh{b}{w} = 8;  $qh{b}{s} = "BITRATE";
- $qh{u}{k} = GNUpod::XMLhelper::realpath($opts{mount},$orf->{path}); $qh{u}{w} = 96; $qh{u}{s} = "UNIXPATH";
+
+# $qh{u}{k} = GNUpod::XMLhelper::realpath($opts{mount},$orf->{path}); $qh{u}{w} = 96; $qh{u}{s} = "UNIXPATH";
  
  #Prepare view
  
- my $ll = 0; #LineLength
-  foreach(split(//,$opts{view})) {
-      print "|" if $ll;
-      my $cs = $qh{$_}{k};           #CurrentString
-         $cs = $qh{$_}{s} if $xhead; #Replace it if HEAD is needed
- 
-      my $cl = $qh{$_}{w}||DEFAULT_SPACE;       #Current length
-         $ll += $cl+1;               #Incrase LineLength
-     printf("%-*s",$cl,$cs);
-  }
+# my $ll = 0; #LineLength
+#  foreach(split(//,$opts{view})) {
+#      print "|" if $ll;
+#      my $cs = $qh{$_}{k};           #CurrentString
+#         $cs = $qh{$_}{s} if $xhead; #Replace it if HEAD is needed
+# 
+#      my $cl = $qh{$_}{w}||DEFAULT_SPACE;       #Current length
+#         $ll += $cl+1;               #Incrase LineLength
+#     printf("%-*s",$cl,$cs);
+#  }
   
-  if($xhead) {
-   print "\n";
-   print "=" x $ll;
-   print "\n";
-  }
-  else {
-   print "\n";
-  }
+#  if($xhead) {
+#   print "\n";
+#   print "=" x $ll;
+#   print "\n";
+#  }
+#  else {
+#   print "\n";
+#  }
 
 }
 
@@ -349,19 +373,34 @@ $rtxt
 Usage: gnupod_find.pl [-m directory] ...
 
    -h, --help              display this help and exit
-       --list-attributes   display all attributes for filter/show/sort
+       --list-attributes   display all attributes for filter/view/sort
        --version           output version information and exit
    -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
-   -f, --filter FILTERDEF  only show tracks that match FILTERDEF
-   -s, --show SHOWDEF      only show track attributes listed in SHOWDEF
-   -o, --sort SORTDEF      order output according to SORTDEF
+   -f, --filter FILTERDEF  only show songss that match FILTERDEF
+   -v, --view VIEWDEF      only show song attributes listed in VIEWDEF
+   -s, --sort SORTDEF      order output according to SORTDEF
+   -o, --or, --once        make any filter match (think OR vs. AND)
    -l, --limit=#           Only output # first tracks (-# for the last #)
 
+
+VIEWDEF ::= <attribute>[,<attribute>]...
+    A comma separated list of fields that you want to see in the output.
+    Example: "album,songnum,artist,title"
+    Default: "id,artist,album,title"
+
+SORTDEF ::= ["+"|"-"]<attribute>,[["+"|"-"]<attribute>] ...
+    Is a comma separated list of fields to order the output by. 
+    A "-" (minus) reverses the sort order.
+    Example "-year,+artist,+album,+songnum"
+    Default "+addtime"
+
+FILTERDEF ::= <attribute>["<"|">"|"="|"<="|">="|"=="|"!="|"~"|"~="|"=~"]<value>
+   The operators "<", ">", "<=", ">=", "==", and "!=" work as you might expect.
+   The operators "~", "~=", and "=~" symbolize regex match (no need for // though).
+   The operator "=" checks equality on numeric fields and does regex match on strings.
+   TODO: document value for boolean and time fields
+   
 Note: * String arguments (title/artist/album/etc) have to be UTF8 encoded!
-      * Use '>3' to search all values above 3, use '<3' to search for values below 3
-      * Use '-10-30' to search all values between (and including) 10 to 30.
-      * Everything else is handled as regular expressions! If you want to search for
-        eg. ID '3' (excluding 13,63,32..), you would have to write: --id="^3\$"
 
 Report bugs to <bug-gnupod\@nongnu.org>
 EOF
