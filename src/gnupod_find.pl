@@ -27,8 +27,13 @@ use GNUpod::XMLhelper;
 use GNUpod::FooBar;
 use GNUpod::ArtworkDB;
 use Getopt::Long;
+#use GNUpod::iTunesDB qw(FILEATTRDEF);
+use Data::Dumper;
 
-use vars qw(%opts @keeplist %rename_tags %FILEATTRDEF);
+use constant MACTIME => GNUpod::FooBar::MACTIME;
+
+
+use vars qw(%opts @keeplist);
 
 use constant DEFAULT_SPACE => 32;
 
@@ -40,14 +45,18 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 print "gnupod_find.pl Version ###__VERSION__### (C) Heinrich Langos\n";
 
 GetOptions(\%opts, "version", "help|h", "mount|m=s",
-                   "filter=s@","show=s@","sort=s@",
+                   "filter|f=s@","show|s=s@","sort|o=s@",
                    "limit|l=s"
                    );
 GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "gnupod_search");
 
-$opts{filter} ||= ''; #Default search
-$opts{sort}   ||= '+addtime'; #Default sort
-$opts{show}   ||= 'id,artist,album,title'; #Default show
+print Dumper(\%opts);
+
+$opts{filter} ||= []; #Default search
+$opts{sort}   ||= ['+addtime']; #Default sort
+$opts{show}   ||= ['id,artist,album,title']; #Default show
+
+print Dumper(\%opts);
 
 usage()   if $opts{help};
 version() if $opts{version};
@@ -55,21 +64,58 @@ version() if $opts{version};
 #Check if input makes sense:
 
 
+# full attribute list
+#print Dumper(\%GNUpod::iTunesDB::FILEATTRDEF);
+
+# both work:
+#print %GNUpod::iTunesDB::FILEATTRDEF->{year}{help}."\n";
+#print %GNUpod::iTunesDB::FILEATTRDEF->{year}->{help}."\n";
+
+# get a copy 
+#my %x = %GNUpod::iTunesDB::FILEATTRDEF;
+#print Dumper(\%x);
+
+sub help_find_attribute {
+  my ($input) = @_;
+  my %candidates =();
+  my $output;
+  # substring of attribute name 
+  for my $attr (sort(keys %GNUpod::iTunesDB::FILEATTRDEF)) {
+    $candidates{$attr} = 1 if (index($attr, $input) != -1) ;
+  }
+  # substring of attribute help
+  for my $attr (sort(keys %GNUpod::iTunesDB::FILEATTRDEF)) {
+    $candidates{$attr} += 2 if (index(lc(%GNUpod::iTunesDB::FILEATTRDEF->{$attr}{help}), $input) != -1) ;
+  }
+  
+  if (defined(%candidates) ) {
+    $output = "Did you mean: \n";
+    for my $key (sort( keys( %candidates))) {
+  #    print "\t".$key.":\t".%GNUpod::iTunesDB::FILEATTRDEF->{$key}{help}."\n";
+      $output .= sprintf "\t%-15s %s\n", $key.":", %GNUpod::iTunesDB::FILEATTRDEF->{$key}{help};
+    } 
+  }
+  return $output;
+}
 
 ########################
 # prepare sortlist
 
 my @sortlist = ();
-for my $sortkey (split(/\s*,\s*/,   $opts{sort})) {
-  if ( (substr($sortkey,0,1) ne "+") && 
-       (substr($sortkey,0,1) ne "-") ) {
-     $sortkey = "+".$sortkey;
+for my $sortopt (@{$opts{sort}}) {
+  
+  for my $sortkey (split(/\s*,\s*/, $sortopt )) {
+    if ( (substr($sortkey,0,1) ne "+") && 
+         (substr($sortkey,0,1) ne "-") ) {
+       $sortkey = "+".$sortkey;
+    }
+    if (!defined(%GNUpod::iTunesDB::FILEATTRDEF->{substr($sortkey,1)})) {
+      die ("Unknown sortkey \"".substr($sortkey,1)."\". ".help_find_attribute(substr($sortkey,1)));
+    }
+    push @sortlist, $sortkey;
   }
-  if (!defined($FILEATTRDEF{substr($sortkey,1)})) {
-    die ("Unknown sortkey ".substr($sortkey,1));
-  }
-  push @sortlist, $sortkey;
 }
+#print "Sortlist:\n".Dumper(\@sortlist);
 
 ########################
 # prepare filterlist
@@ -80,31 +126,39 @@ for my $sortkey (split(/\s*,\s*/,   $opts{sort})) {
 #and --filter releasedate=<"last week" will find podcast entries that are older than a week.
 
 my @filterlist =();
-for my $filterkey ( split(/\s*,\s*/, $opts{filter}) ) {
-  if ($filterkey =~ /^([0-9a-z_]+)([=<>~]+)(.*)$/) {
-
-    if (!defined($FILEATTRDEF{$1})) {
-      die ("Unknown filterkey $1");
+for my $filteropt (@{$opts{filter}}) {
+  for my $filterkey (split(/\s*,\s*/, $filteropt)) {
+    print "filterkey: $filterkey\n";
+    if ($filterkey =~ /^([0-9a-z_]+)([!=<>~]+)(.*)$/) {
+  
+      if (!defined(%GNUpod::iTunesDB::FILEATTRDEF->{$1})) {
+        die ("Unknown filterkey \"".$1."\". ".help_find_attribute($1));
+      }
+  
+      my $filterdef = { 'attr' => $1, 'operator' => $2, 'value' => $3 };
+      push @filterlist,  $filterdef;
+    } else {
+      die ("Invalid filter definition: ", $filterkey);
     }
-
-    my %filterdef = ( 'attr' => $1, 'operand' => $2, 'value' => $3 );
-    push @filterlist,  %filterdef;
-  } else {
-    die ("Invalid filter definition: ", $filterkey);
   }
 }
+
+print "Filterlist:\n".Dumper(\@filterlist);
+
 
 ########################
 # prepare showlist
 
 my @showlist =();
-for my $showkey (split(/\s*,\s*/,   $opts{show})) {
-  if (!defined($FILEATTRDEF{$showkey})) {
-    die ("Unknown showkey $showkey");
+for my $showopt (@{$opts{show}}) {
+  for my $showkey (split(/\s*,\s*/,   $showopt)) {
+    if (!defined(%GNUpod::iTunesDB::FILEATTRDEF->{$showkey})) {
+      die ("Unknown showkey \"".$showkey."\". ".help_find_attribute($showkey));
+    }
+    push @showlist, $showkey;
   }
-  push @showlist, $showkey;
 }
-
+#print "Showlist:\n".Dumper(\@showlist);
 
 # -> Connect the iPod
 my $connection = GNUpod::FooBar::connect(\%opts);
@@ -135,10 +189,41 @@ sub compare {
 ###################################################
 # matcher
 
-sub matcher_numeric {
-  
-
-
+sub matcher {
+  my ($filter, $testdata) = @_;
+#  print "filter:\n".Dumper($filter);
+#  print "data:\n".Dumper($data);
+  my $value;
+  my $data;
+  if (%GNUpod::iTunesDB::FILEATTRDEF->{$filter->{attr}}->{format} eq "numeric") {
+    $data = int($testdata); # TODO: Check if $testdata is indeed numeric
+    if (%GNUpod::iTunesDB::FILEATTRDEF->{$filter->{attr}}->{content} eq "mactime") {   #handle content MACTIME 
+      if (eval "require Date::Manip") {
+        # use Date::Manip if it is available
+        require Date::Manip;
+        import Date::Manip; 
+        $value = UnixDate(ParseDate($filter->{value}),"%s")+MACTIME;
+      } else {
+        # fall back to Date::Parse
+        $value = int(Date::Parse::str2time($filter->{value}))+MACTIME;
+      }
+    } else {
+      $value = int($filter->{value}); # TODO: Check if Filter->Value is indeed numeric
+    }
+  } else { # non numeric attributes
+    $data = $testdata;
+    $value = $filter->{value};
+  }
+  $_= $filter->{operator};
+#    if (/^(([<>])|([<>!=]=))$/) { $op = $_; return 1 if (eval ($numdata.$op.$numvalue)) ;} # this covers < > <= >= != and ==  ... but eval is slow
+  if ($_ eq ">")  { return ($data >  $value); last SWITCH; }
+  if ($_ eq "<")  { return ($data <  $value); last SWITCH; }
+  if ($_ eq ">=") { return ($data >= $value); last SWITCH; }
+  if ($_ eq "<=") { return ($data <= $value); last SWITCH; }
+  if ($_ eq "==") { return ($data == $value); last SWITCH; }
+  if ($_ eq "!=") { return ($data != $value); last SWITCH; }
+  if (($_ eq "~=") or ($_ eq "=") or ($_ eq "=~"))  { return ($data =~ /$value/i); last SWITCH; }
+  die ("No handler for your operator \"".$_."\" found. Could be a bug."); 
 }
 
 ####################################################
@@ -156,31 +241,32 @@ sub main {
 sub newfile {
 	my($el) =  @_;
                           # 2 = mount + view (both are ALWAYS set)
-	my $ntm      = keys(%opts)-2-$opts{'match-once'}-$opts{automktunes}-$opts{delete}-(defined $opts{rename})-(defined $opts{artwork})-(defined $opts{model});
+#	my $ntm      = keys(%opts)-2-$opts{'match-once'}-$opts{automktunes}-$opts{delete}-(defined $opts{rename})-(defined $opts{artwork})-(defined $opts{model});
 
 	my $matched  = undef;
 #	use Data::Dumper;
 #	print Dumper(\%opts);
 #	print Dumper($ntm);
 
-
         # check for matches
 	my $filematches=1;
 	foreach my $filter (@filterlist) {
-		if ($filter->{attr} eq "numeric") {
-                	if (matcher_numeric($filter, $el->{file}->{$filter}->{attr})) {
-				#matching
-				
-				next;
-			} else {
-				$filematches = 0;
-			}
+#                print "Testing for filter:\n".Dumper($filter);
+
+               	if (matcher($filter, $el->{file}->{$filter->{attr}})) {
+			#matching
+			next;
+		} else {
+			#not matching
+			$filematches = 0;
+			last;
 		}
 		
 	}
 
 	if ($filematches) {
-	#add to output list
+		#add to output list
+		print "match: ".$el->{file}->{title}."\n";
 	}
 }
 
