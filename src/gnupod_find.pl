@@ -281,19 +281,19 @@ sub main {
 
 #        print "resultlist:\n".Dumper(\@resultlist);
 
-	my @sortedresultlist = sort comparesongs @resultlist;
+	@resultlist = sort comparesongs @resultlist;
 
 #        print "sortedresultlist:\n".Dumper(\@sortedresultlist);
 
 	if (defined($opts{limit})) {
 		if ($opts{limit} > 0) {
-			splice @sortedresultlist, $opts{limit};
+			splice @resultlist, $opts{limit};
 		} else {
-			my @limitedlist = splice @sortedresultlist, -1 * $opts{limit};
-			@sortedresultlist = @limitedlist;
+			my @limitedlist = splice @resultlist, -1 * $opts{limit};
+			@resultlist = @limitedlist;
 		}
 	}
-	prettyprint (\@sortedresultlist);
+	prettyprint (\@resultlist);
 }
 
 #############################################
