@@ -83,7 +83,7 @@ sub help_find_attribute {
   my ($input) = @_;
   my %candidates =();
   my $output;
-  # substring of attribute name 
+  # substring of attribute name
   for my $attr (sort(keys %GNUpod::iTunesDB::FILEATTRDEF)) {
     $candidates{$attr} = 1 if (index($attr, $input) != -1) ;
   }
@@ -91,13 +91,13 @@ sub help_find_attribute {
   for my $attr (sort(keys %GNUpod::iTunesDB::FILEATTRDEF)) {
     $candidates{$attr} += 2 if (index(lc($GNUpod::iTunesDB::FILEATTRDEF{$attr}{help}), $input) != -1) ;
   }
-  
+
   if (%candidates) {
     $output = "Did you mean: \n";
     for my $key (sort( keys( %candidates))) {
   #    print "\t".$key.":\t".$GNUpod::iTunesDB::FILEATTRDEF{$key}{help}."\n";
       $output .= sprintf "\t%-15s %s\n", $key.":", $GNUpod::iTunesDB::FILEATTRDEF{$key}{help};
-    } 
+    }
   }
   return $output;
 }
@@ -107,9 +107,9 @@ sub help_find_attribute {
 
 my @sortlist = ();
 for my $sortopt (@{$opts{sort}}) {
-  
+
   for my $sortkey (split(/\s*,\s*/, $sortopt )) {
-    if ( (substr($sortkey,0,1) ne "+") && 
+    if ( (substr($sortkey,0,1) ne "+") &&
          (substr($sortkey,0,1) ne "-") ) {
        $sortkey = "+".$sortkey;
     }
@@ -145,7 +145,7 @@ for my $filteropt (@{$opts{filter}}) {
           if (eval "require Date::Manip") {
             # use Date::Manip if it is available
             require Date::Manip;
-            import Date::Manip; 
+            import Date::Manip;
             $value = UnixDate(ParseDate($3),"%s");
           } else {
             # fall back to Date::Parse
@@ -155,7 +155,7 @@ for my $filteropt (@{$opts{filter}}) {
             require Date::Format;
             import Date::Format;
             print "Time value \"$3\" evaluates to $value unix epoch time (".($value+MACTIME)." mactime) which is ".time2str("%C",$value)."\n";
-            $value += MACTIME; 
+            $value += MACTIME;
           } else {
             die ("Sorry, your time/date definition \"$3\" was not understood.");
           }
@@ -165,7 +165,7 @@ for my $filteropt (@{$opts{filter}}) {
       } else { #not numeric
         $value = $3; # not much we could check for
       }
-  
+
       my $filterdef = { 'attr' => $1, 'operator' => $2, 'value' => $value };
       push @filterlist,  $filterdef;
     } else {
@@ -204,18 +204,18 @@ main($connection);
 ####################################################
 # sorter
 sub comparesongs {
-  
+
   my $result=0;
   for my $sortkey (@sortlist) {   # go through all sortkeys
     # take the data that needs to be comapred into $x and $y
-    my ($x,$y) = ($a->{substr($sortkey,1)}, $b->{substr($sortkey,1)} ); 
+    my ($x,$y) = ($a->{substr($sortkey,1)}, $b->{substr($sortkey,1)} );
 
     # if sort order is reversed simply switch x any y
     if (substr ($sortkey,0,1) eq "-") {
       ($x, $y)=($y, $x);
     }
 
-    # now compare x and y     
+    # now compare x and y
     if ($GNUpod::iTunesDB::FILEATTRDEF{substr($sortkey,1)}{format} eq "numeric") {
       $result = int($x) <=> int($y); # avoid problems of comparing NaN with NaN
     } else {
@@ -252,7 +252,7 @@ sub matcher {
     if (($_ eq "=") or ($_ eq "==")) { return ($data == $value); }
     if ($_ eq "!=") { return ($data != $value); }
     if (($_ eq "~") or ($_ eq "~=") or ($_ eq "=~"))  { return ($data =~ /$value/i); }
-    die ("No handler for your operator \"".$_."\" with numeric data found. Could be a bug."); 
+    die ("No handler for your operator \"".$_."\" with numeric data found. Could be a bug.");
 
   } else { # non numeric attributes
     $data = $testdata;
@@ -266,7 +266,7 @@ sub matcher {
     if ($_ eq "==") { return ($data eq $value); }
     if ($_ eq "!=") { return ($data ne $value); }
     if (($_ eq "~") or ($_ eq "=") or ($_ eq "~=") or ($_ eq "=~"))  { return ($data =~ /$value/i); }
-    die ("No handler for your operator \"".$_."\" with non-numeric data found. Could be a bug."); 
+    die ("No handler for your operator \"".$_."\" with non-numeric data found. Could be a bug.");
   }
 
 }
@@ -276,7 +276,7 @@ sub matcher {
 sub main {
 
 	my($con) = @_;
-	
+
 	GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
 
 #        print "resultlist:\n".Dumper(\@resultlist);
@@ -318,11 +318,11 @@ sub newfile {
 			#not matching
 			$filematches = 0;
 			if (! $opts{once}) {
-				# one mismatch is enough 
+				# one mismatch is enough
 				last;
 			}
 		}
-		
+
 	}
 
 	if ($filematches) {
@@ -351,7 +351,7 @@ sub printonefield {
     #we could add some alignment stuff here
     print "$data"." "x($viewkey->{width} - $columns);
     return 0;
-  } 
+  }
 }
 ##############################################################
 # Printout
@@ -370,7 +370,7 @@ sub prettyprint {
   }
   print "\n";
   print "=" x $totalwidth ."\n";
-  
+
 
   foreach my $song (@{$results}) {
     $totalwidth=0;
@@ -386,20 +386,20 @@ sub prettyprint {
 
 
 # $qh{u}{k} = GNUpod::XMLhelper::realpath($opts{mount},$orf->{path}); $qh{u}{w} = 96; $qh{u}{s} = "UNIXPATH";
- 
+
  #Prepare view
- 
+
 # my $ll = 0; #LineLength
 #  foreach(split(//,$opts{view})) {
 #      print "|" if $ll;
 #      my $cs = $qh{$_}{k};           #CurrentString
 #         $cs = $qh{$_}{s} if $xhead; #Replace it if HEAD is needed
-# 
+#
 #      my $cl = $qh{$_}{w}||DEFAULT_SPACE;       #Current length
 #         $ll += $cl+1;               #Incrase LineLength
 #     printf("%-*s",$cl,$cs);
 #  }
-  
+
 #  if($xhead) {
 #   print "\n";
 #   print "=" x $ll;
@@ -436,7 +436,7 @@ VIEWDEF ::= <attribute>[,<attribute>]...
     Default: "id,artist,album,title"
 
 SORTDEF ::= ["+"|"-"]<attribute>,[["+"|"-"]<attribute>] ...
-    Is a comma separated list of fields to order the output by. 
+    Is a comma separated list of fields to order the output by.
     A "-" (minus) reverses the sort order.
     Example "-year,+artist,+album,+songnum"
     Default "+addtime"
@@ -446,7 +446,7 @@ FILTERDEF ::= <attribute>["<"|">"|"="|"<="|">="|"=="|"!="|"~"|"~="|"=~"]<value>
    The operators "~", "~=", and "=~" symbolize regex match (no need for // though).
    The operator "=" checks equality on numeric fields and does regex match on strings.
    TODO: document value for boolean and time fields
-   
+
 Note: * String arguments (title/artist/album/etc) have to be UTF8 encoded!
 
 Report bugs to <bug-gnupod\@nongnu.org>
