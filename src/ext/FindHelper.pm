@@ -274,7 +274,9 @@ sub comparesongs ($$) {
 
 		# now compare x and y
 		if ($GNUpod::iTunesDB::FILEATTRDEF{substr($sortkey,1)}{format} eq "numeric") {
-			$result = int($x) <=> int($y); # avoid problems of comparing NaN with NaN
+			$x = ($x =~ /^-?\d+(\.\d+)?$/)?$x:0;
+			$y = ($y =~ /^-?\d+(\.\d+)?$/)?$y:0;
+			$result = $x <=> $y;
 		} else {
 			$result = $x cmp $y;
 		}
@@ -328,17 +330,22 @@ sub matcher {
 	my $value;
 	my $data;
 	if ($GNUpod::iTunesDB::FILEATTRDEF{$filter->{attr}}{format} eq "numeric") {
-		$data = $testdata; # TODO: Check if $testdata is indeed numeric. it should be since we get it from the database
-		$value = $filter->{value}; # TODO: Check if Filter->Value is indeed numeric OR if we do regex matching
 
 		$_ = $filter->{operator};
+
+		if (($_ eq "~") or ($_ eq "~=") or ($_ eq "=~")) { return ($data =~ /$value/i); }
+
+		# makes sure the $data is numeric it should be since we get it from the database
+		$data = ($testdata =~ /^-?\d+(\.\d+)?$/)?$testdata:0;
+		# make sure Filter->Value is indeed numeric now that we do numeric
+		$value = ($filter->{value} =~ /^-?\d+(\.\d+)?$/)?$filter->{value}:0;
+
 		if ($_ eq ">")	{ return ($data > $value); }
 		if ($_ eq "<")	{ return ($data < $value); }
 		if ($_ eq ">=") { return ($data >= $value); }
 		if ($_ eq "<=") { return ($data <= $value); }
 		if (($_ eq "=") or ($_ eq "==")) { return ($data == $value); }
 		if ($_ eq "!=") { return ($data != $value); }
-		if (($_ eq "~") or ($_ eq "~=") or ($_ eq "=~")) { return ($data =~ /$value/i); }
 		die ("No handler for your operator \"".$_."\" with numeric data found. Could be a bug.");
 
 	} else { # non numeric attributes
