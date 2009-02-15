@@ -406,26 +406,23 @@ list of fields passed in the array ref $view.
 
 =cut
 
-sub prettyprint {
-
-	##############################################################
-	# print one field and return the overhang
-	# gets the viewkey, the data and the current overhang
-	sub printonefield {
-		my ($viewkey, $data, $overhang) = @_;
-		my $columns=Text::CharWidth::mbswidth($data)+$overhang;
-		if ( $columns > $viewkey->{width} ) {
-			print "$data";
-			return $columns - $viewkey->{width};
-		} else {
-			#we could add some alignment (left,cener,right) stuff here
-			print "$data"." "x($viewkey->{width} - $columns);
-			return 0;
-		}
+##############################################################
+# print one field and return the overhang
+# gets the viewkey, the data and the current overhang
+sub printonefield {
+	my ($viewkey, $data, $overhang) = @_;
+	my $columns=Text::CharWidth::mbswidth($data)+$overhang;
+	if ( $columns > $viewkey->{width} ) {
+		print "$data";
+		return $columns - $viewkey->{width};
+	} else {
+		#we could add some alignment (left,cener,right) stuff here
+		print "$data"." "x($viewkey->{width} - $columns);
+		return 0;
 	}
+}
 
-	my ($results, ) = @_ ;
-
+sub printheader {
 	my $totalwidth=0;
 	my $firstcolumn=1;
 	my $overhang=0;
@@ -436,16 +433,27 @@ sub prettyprint {
 	}
 	print "\n";
 	print "=" x $totalwidth ."\n";
+}
 
+sub printoneline {
+	my ($song) = @_;
+	my $totalwidth=0;
+	my $firstcolumn=1;
+	my $overhang=0;
+	foreach my $viewkey (@viewlist) {
+		if ($firstcolumn) {$firstcolumn=0;} else { print " | "; $totalwidth+=3; }
+		$overhang = printonefield($GNUpod::iTunesDB::FILEATTRDEF{$viewkey}, $song->{$viewkey}, $overhang);
+	}
+}
+
+
+sub prettyprint {
+	my ($results) = @_ ;
+
+	printheader();
 
 	foreach my $song (@{$results}) {
-		$totalwidth=0;
-		$firstcolumn=1;
-		$overhang=0;
-		foreach my $viewkey (@viewlist) {
-			if ($firstcolumn) {$firstcolumn=0;} else { print " | "; $totalwidth+=3; }
-			$overhang = printonefield($GNUpod::iTunesDB::FILEATTRDEF{$viewkey}, $song->{$viewkey}, $overhang);
-		}
+		printoneline($song);
 		print "\n";
 	}
 
