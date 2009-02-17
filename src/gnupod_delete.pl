@@ -79,26 +79,26 @@ sub main {
 
 	@resultlist = GNUpod::FindHelper::croplist($opts{limit}, @resultlist);
 
-	if ($#resultlist) {
+	if (@resultlist) {
 		GNUpod::FindHelper::prettyprint (\@resultlist);
-	}
 
-	if ($opts{interactive}) {
-		print "Delete ? (y/n) ";# request confirmation
-		my $answer = "n";
-		chomp ( $answer = <> );
-		$deletionconfirmed = 1 if ($answer eq "y");
-	} else {
-		$deletionconfirmed = 1;
-	}
+		if ($opts{interactive}) {
+			print "Delete ? (y/n) ";# request confirmation
+			my $answer = "n";
+			chomp ( $answer = <> );
+			$deletionconfirmed = 1 if ($answer eq "y");
+		} else {
+			$deletionconfirmed = 1;
+		}
 
-	if ($deletionconfirmed) {
-		foreach my $res (@resultlist) { $resultids{$res->{id}}=1; }
-		$firstrun = 0;
-		$AWDB = GNUpod::ArtworkDB->new(Connection=>$connection, DropUnseen=>1);
-		GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
-		GNUpod::XMLhelper::writexml($con,{automktunes=>$opts{automktunes}});
-		$AWDB->WriteArtworkDb;
+		if ($deletionconfirmed) {
+			foreach my $res (@resultlist) { $resultids{$res->{id}}=1; }
+			$firstrun = 0;
+			$AWDB = GNUpod::ArtworkDB->new(Connection=>$connection, DropUnseen=>1);
+			GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
+			GNUpod::XMLhelper::writexml($con,{automktunes=>$opts{automktunes}});
+			$AWDB->WriteArtworkDb;
+		}
 	}
 }
 
