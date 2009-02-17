@@ -261,6 +261,23 @@ sub help_find_attribute {
 
 ####################################################
 # sorter
+
+=item comparesong($$)
+
+Sort routine that uses @GNUpod::FindHelper::sortlist to compare the songs.
+If data in numeric fields (see %GNUpod::iTunesDB::FILEATTRDEF) is
+found to be undefined/non-numeric, it is replaced by 0 for the comparison.
+
+If data in non-numeric fields is found to be undefined, it is replaced
+by "" (empty string) for comparison.
+
+Example:
+
+  @resultlist = sort GNUpod::FindHelper::comparesongs @resultlist;
+
+
+=cut
+
 sub comparesongs ($$) {
 	my $result=0;
 	for my $sortkey (@sortlist) {	 # go through all sortkeys
@@ -274,10 +291,12 @@ sub comparesongs ($$) {
 
 		# now compare x and y
 		if ($GNUpod::iTunesDB::FILEATTRDEF{substr($sortkey,1)}{format} eq "numeric") {
-			$x = ($x =~ /^-?\d+(\.\d+)?$/)?$x:0;
-			$y = ($y =~ /^-?\d+(\.\d+)?$/)?$y:0;
+			$x = (defined($x) && ($x =~ /^-?\d+(\.\d+)?$/))?$x:0;
+			$y = (defined($y) && ($y =~ /^-?\d+(\.\d+)?$/))?$y:0;
 			$result = $x <=> $y;
 		} else {
+			$x = "" if !defined($x);
+			$y = "" if !defined($y);
 			$result = $x cmp $y;
 		}
 
@@ -418,6 +437,7 @@ list of fields passed in the array ref $view.
 # gets the viewkey, the data and the current overhang
 sub printonefield {
 	my ($viewkey, $data, $overhang) = @_;
+	$data = "" if !defined($data); #empty string for undefined. could be made configurable if needed.
 	my $columns=Text::CharWidth::mbswidth($data)+$overhang;
 	if ( $columns > $viewkey->{width} ) {
 		print "$data";
