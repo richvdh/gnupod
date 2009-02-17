@@ -101,7 +101,7 @@ sub main {
 
 	@resultlist = GNUpod::FindHelper::croplist($opts{limit}, @resultlist);
 	#print "sortedresultlist:\n".Dumper(\@resultlist);
-	GNUpod::FindHelper::prettyprint (\@resultlist);
+	GNUpod::FindHelper::prettyprint (\@resultlist) if (@resultlist);
 }
 
 
