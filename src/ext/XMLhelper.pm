@@ -312,6 +312,7 @@ sub doxml {
 	@idpub = ();
 	@plorder = ();
 	$xid = 1;
+	$XDAT = undef;
 	###
 	my $p;
 	my $ref = eval {
