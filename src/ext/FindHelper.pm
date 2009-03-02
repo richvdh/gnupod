@@ -73,6 +73,19 @@ our @findoptions = (
 );
 
 
+=item $defaultviewlist
+
+String containing the default viewlist. The special attribute "default" can be used to
+refer to it in the --view argument.
+
+Example:
+  --view "filesize,default"
+
+=cut
+
+our $defaultviewlist = 'id,artist,album,title';
+
+
 =item $findhelp
 
 String to include in your help text if you use the FindHelper module.
@@ -95,7 +108,7 @@ FILTERDEF ::= <attribute>["<"|">"|"="|"<="|">="|"=="|"!="|"~"|"~="|"=~"]<value>
 VIEWDEF ::= <attribute>[,<attribute>]...
   A comma separated list of fields that you want to see in the output.
   Example: "album,songnum,artist,title"
-  Default: "id,artist,album,title"
+  Default: "'.$defaultviewlist.'"
 
 SORTDEF ::= ["+"|"-"]<attribute>,[["+"|"-"]<attribute>] ...
   Is a comma separated list of fields to order the output by.
@@ -159,7 +172,7 @@ sub process_options {
 
 	$options{filter} ||= []; #Default search
 	$options{sort}   ||= ['+addtime']; #Default sort
-	$options{view}   ||= ['id,artist,album,title']; #Default view
+	$options{view}   ||= [$defaultviewlist]; #Default view
 
 
 	for my $filteropt (@{$options{filter}}) {
@@ -227,10 +240,15 @@ sub process_options {
 	# prepare viewlist
 	for my $viewopt (@{$options{view}}) {
 		for my $viewkey (split(/\s*,\s*/,   $viewopt)) {
-			if (!defined($GNUpod::iTunesDB::FILEATTRDEF{$viewkey})) {
+			if ($viewkey eq "default") {
+				for my $dk (split(/\s*,\s*/, $defaultviewlist)) {
+					push @viewlist, $dk;
+				}
+			} elsif (!defined($GNUpod::iTunesDB::FILEATTRDEF{$viewkey})) {
 				return ("Unknown viewkey \"".$viewkey."\". ".help_find_attribute($viewkey));
+			} else {
+				push @viewlist, $viewkey;
 			}
-			push @viewlist, $viewkey;
 		}
 	}
 	#print "Viewlist: ".Dumper(\@viewlist);
