@@ -32,7 +32,7 @@ use GNUpod::FooBar;
 use File::Glob ':glob';
 use Carp;
 
-use vars qw(%mhod_id @mhod_array %SPLDEF %SPLREDEF %PLDEF %PLREDEF %FILEATTRDEF %FILEATTRDEF_COMPUTE);
+use vars qw(%mhod_id @mhod_array %SPLDEF %SPLREDEF %PLDEF %PLREDEF %FILEATTRDEF %FILEATTRDEF_SHORT %FILEATTRDEF_COMPUTE);
 
 use constant ITUNESDB_MAGIC => 'mhbd';
 use constant OLD_ITUNESDB_MHIT_HEADERSIZE => 156;
@@ -53,6 +53,17 @@ my %mhod_id = (  title=>1, path=>2, album=>3, artist=>4, genre=>5, fdesc=>6, eq=
 
 
 ############ FILE ATTRIBUTE INFO ##########################
+
+%FILEATTRDEF_SHORT = (
+#                            t = title    a = artist   r = rating      p = iPod Path
+#                            l = album    g = genre    c = playcount   i = id
+#                            u = UnixPath n = Songnum  G = podcastguid R = podcastrss
+#                            d = dbid
+'t' => 'title',    'a' => 'artist',   'r' => 'rating',      'p' => 'path',
+'l' => 'album',    'g' => 'genre',    'c' => 'playcount',   'i' => 'id',
+'u' => 'unixpath', 'n' => 'songnum',  'G' => 'podcastguid', 'R' => 'podcastrss',
+'d' => 'dbid_1',
+);
 
 %FILEATTRDEF_COMPUTE = (
 	'unixpath' => sub {
