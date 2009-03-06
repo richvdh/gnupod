@@ -496,7 +496,7 @@ sub filematches {
 
 =item computeresults ($connection, $el, $field)
 
-Computes result song data passed in the array ref $results 
+Computes result song data passed in the array ref $results
 according to the list of fields passed in the array ref $view.
 
 =cut
