@@ -441,6 +441,29 @@ sub filematches {
 }
 
 ##############################################################
+# computed attributes
+
+=item computeresults ($connection, $el, $field)
+
+Computes result song data passed in the array ref $results 
+according to the list of fields passed in the array ref $view.
+
+=cut
+
+
+sub computeresults {
+	my ($song, $fieldname) = @_;
+	if (defined ($GNUpod::iTunesDB::FILEATTRDEF_COMPUTE{$fieldname})) {
+		#print "Found code for $fieldname \n";
+		my $coderef = $GNUpod::iTunesDB::FILEATTRDEF_COMPUTE{$fieldname};
+		return &$coderef($song);
+	} else {
+		return $song->{$fieldname};
+	}
+}
+
+
+##############################################################
 # Printout
 
 =item prettyprint ($results, $view)
@@ -487,7 +510,7 @@ sub printoneline {
 	my $overhang=0;
 	foreach my $viewkey (@viewlist) {
 		if ($firstcolumn) {$firstcolumn=0;} else { print " | "; $totalwidth+=3; }
-		$overhang = printonefield($GNUpod::iTunesDB::FILEATTRDEF{$viewkey}, $song->{$viewkey}, $overhang);
+		$overhang = printonefield($GNUpod::iTunesDB::FILEATTRDEF{$viewkey}, computeresults($song,$viewkey), $overhang);
 	}
 }
 

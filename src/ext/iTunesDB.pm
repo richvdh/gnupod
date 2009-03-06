@@ -32,7 +32,7 @@ use GNUpod::FooBar;
 use File::Glob ':glob';
 use Carp;
 
-use vars qw(%mhod_id @mhod_array %SPLDEF %SPLREDEF %PLDEF %PLREDEF %FILEATTRDEF);
+use vars qw(%mhod_id @mhod_array %SPLDEF %SPLREDEF %PLDEF %PLREDEF %FILEATTRDEF %FILEATTRDEF_COMPUTE);
 
 use constant ITUNESDB_MAGIC => 'mhbd';
 use constant OLD_ITUNESDB_MHIT_HEADERSIZE => 156;
@@ -53,6 +53,27 @@ my %mhod_id = (  title=>1, path=>2, album=>3, artist=>4, genre=>5, fdesc=>6, eq=
 
 
 ############ FILE ATTRIBUTE INFO ##########################
+
+%FILEATTRDEF_COMPUTE = (
+	'unixpath' => sub {
+			my ($song) = @_;
+			return GNUpod::XMLhelper::realpath('',$song->{path});
+		},
+	'addtime' => sub {
+			use Date::Format;
+			my ($song) = @_;
+			return time2str( "%Y-%m-%d %T" , $song->{addtime} - 2082844800);
+		},
+	'releasedate' => sub {
+			use Date::Format;
+			my ($song) = @_;
+			if (defined($song->{releasedate})) {
+				return time2str( "%Y-%m-%d %T" , $song->{releasedate} - 2082844800);
+			} else {
+				return undef;
+			}
+		},
+);
 
 %FILEATTRDEF= (
 	'compilation' => {
