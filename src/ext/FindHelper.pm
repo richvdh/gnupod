@@ -119,6 +119,54 @@ SORTDEF ::= ["+"|"-"]<attribute>,[["+"|"-"]<attribute>] ...
 Note: * String arguments (title/artist/album/etc) have to be UTF8 encoded!
 ';
 
+=item resolve_attribute ( $input )
+
+Examines $input and returns the attribute name that was ment.
+
+
+If $input equals a known attribute than $input is returned.
+
+If $input is a single character, a translation table will be consulted
+that should translate the same attributes that gnupod_search.pl understood.
+
+If $input is a unique prefix of an existing attribute, that attribute's name
+is returned.
+
+If $input can't be resolved to a single attribute then undef is returned.
+
+Example
+
+  resolve_attribute("played") returns "played_flag"
+
+=cut
+
+sub resolve_attribute {
+	my ($input) = @_;
+
+	#direct hit
+	return $input if defined($GNUpod::iTunesDB::FILEATTRDEF{$input});
+
+	#short cuts
+	if (length($input) == 1) {
+		my $out = undef;
+		if (defined($out = $GNUpod::iTunesDB::FILEATTRDEF_SHORT{$input})) {
+			return $out;
+		}
+	}
+
+	#prefix match
+	my @candidates=();
+	for my $attr (sort(keys %GNUpod::iTunesDB::FILEATTRDEF)) {
+		push @candidates,$attr if (index($attr, $input) == 0) ;
+	}
+	if (@candidates == 1) {
+		return $candidates[0];
+	}
+
+	#default
+	return undef;
+}
+
 =item process_options ( %options )
 
 Examines the "filter" "sort" and "view" options and returns an array with
@@ -180,13 +228,14 @@ sub process_options {
 			#print "filterkey: $filterkey\n";
 			if ($filterkey =~ /^([0-9a-z_]+)([!=<>~]+)(.*)$/) {
 
-				if (!defined($GNUpod::iTunesDB::FILEATTRDEF{$1})) {
+				my $attr;
+				if (!defined($attr = resolve_attribute($1))) {
 					return ("Unknown filterkey \"".$1."\". ".help_find_attribute($1));
 				}
 
 				my $value;
-				if ($GNUpod::iTunesDB::FILEATTRDEF{$1}{format} eq "numeric") {
-					if ($GNUpod::iTunesDB::FILEATTRDEF{$1}{content} eq "mactime") {   #handle content MACTIME
+				if ($GNUpod::iTunesDB::FILEATTRDEF{$attr}{format} eq "numeric") {
+					if ($GNUpod::iTunesDB::FILEATTRDEF{$attr}{content} eq "mactime") {   #handle content MACTIME
 						if (eval "require Date::Manip") {
 							# use Date::Manip if it is available
 							require Date::Manip;
@@ -211,7 +260,7 @@ sub process_options {
 					$value = $3; # not much we could check for
 				}
 
-				my $filterdef = { 'attr' => $1, 'operator' => $2, 'value' => $value };
+				my $filterdef = { 'attr' => $attr, 'operator' => $2, 'value' => $value };
 				push @filterlist,  $filterdef;
 			} else {
 				return ("Invalid filter definition: ". $filterkey);
@@ -228,10 +277,11 @@ sub process_options {
 				(substr($sortkey,0,1) ne "-") ) {
 				$sortkey = "+".$sortkey;
 			}
-			if (!defined($GNUpod::iTunesDB::FILEATTRDEF{substr($sortkey,1)})) {
+			my $attr;
+			if (!defined($attr = resolve_attribute (substr($sortkey,1)))) {
 				return ("Unknown sortkey \"".substr($sortkey,1)."\". ".help_find_attribute(substr($sortkey,1)));
 			}
-			push @sortlist, $sortkey;
+			push @sortlist, substr($sortkey,0,1).$attr;
 		}
 	}
 	#print "Sortlist: ".Dumper(\@sortlist);
@@ -240,14 +290,15 @@ sub process_options {
 	# prepare viewlist
 	for my $viewopt (@{$options{view}}) {
 		for my $viewkey (split(/\s*,\s*/,   $viewopt)) {
+			my $attr;
 			if ($viewkey eq "default") {
 				for my $dk (split(/\s*,\s*/, $defaultviewlist)) {
 					push @viewlist, $dk;
 				}
-			} elsif (!defined($GNUpod::iTunesDB::FILEATTRDEF{$viewkey})) {
+			} elsif (!defined($attr = resolve_attribute($viewkey))) {
 				return ("Unknown viewkey \"".$viewkey."\". ".help_find_attribute($viewkey));
 			} else {
-				push @viewlist, $viewkey;
+				push @viewlist, $attr;
 			}
 		}
 	}
