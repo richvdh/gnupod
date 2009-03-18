@@ -151,11 +151,16 @@ EOF
 }
 
 sub fullattributes {
+	my %long2short=();
+	foreach my $key (keys (%GNUpod::iTunesDB::FILEATTRDEF_SHORT)) {
+		$long2short{$GNUpod::iTunesDB::FILEATTRDEF_SHORT{$key}} = $key;
+	}
 	print $fullversionstring."\n\n";
-	printf "\t%-15s | %s\n", "Attribute name" , "Description";
-	print "\t================|=========================\n";
+	print " Short | Attribute name | Description\n";
+	print "=======|================|=========================\n";
 	foreach my $key (sort ( keys (%GNUpod::iTunesDB::FILEATTRDEF))) {
-		printf "\t%-15s | %s\n", $key, $GNUpod::iTunesDB::FILEATTRDEF{$key}{help};
+		print (defined($long2short{$key})?"     ".$long2short{$key}." |":"       |");
+		printf " %-14s | %s\n", $key, $GNUpod::iTunesDB::FILEATTRDEF{$key}{help};
 	}
 	exit;
 }
