@@ -159,8 +159,7 @@ sub fullattributes {
 	print " Short | Attribute name | Description\n";
 	print "=======|================|=========================\n";
 	foreach my $key (sort ( keys (%GNUpod::iTunesDB::FILEATTRDEF))) {
-		print (defined($long2short{$key})?"     ".$long2short{$key}." |":"       |");
-		printf " %-14s | %s\n", $key, $GNUpod::iTunesDB::FILEATTRDEF{$key}{help};
+		printf "     %s | %-14s | %s\n", ($long2short{$key} or " "), $key, $GNUpod::iTunesDB::FILEATTRDEF{$key}{help};
 	}
 	exit;
 }
