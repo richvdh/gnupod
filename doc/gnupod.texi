@@ -646,7 +646,22 @@ Don't forget to run mktunes before umounting! (See 'Unplug the iPod')
 @node Dealing with podcasts
 @section Dealing with podcasts
 
-To create a podcast playlist you just need to set the podcast flag to '1':
+Do not add podcast files in the same way as you add regular songs.  In order for
+your iPod to distinguish between podcasts and songs, we need to make sure the
+media type is set correctly. To add a single podcast do the following:
+
+@example
+gnupod_addsong.pl -p "Podcast Title" --playlist-is-podcast podcast.mp3
+@end example
+You can add multiple podcasts to the same title as well:
+@example
+gnupod_addsong.pl -p "Podcast Title" --playlist-is-podcast podcasts/*
+@end example
+This also tells the iPod to skip this file when shuffling files.  See
+gnupod_addsong.pl -h for more options.
+
+If you want to change existing playlists to
+podcast playlists you just need to set the podcast flag to '1':
 
 @example
  <playlist name="Test Podcast" podcast="1">
