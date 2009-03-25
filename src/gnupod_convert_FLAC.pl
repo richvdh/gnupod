@@ -103,9 +103,27 @@ elsif($gimme eq "GET_AAC" or $gimme eq "GET_AACBM") {
 	close(FAACIN);
 	print "PATH:$tmpout\n";
 }
+elsif($gimme eq "GET_ALAC") {
+	check_ffmpeg_alac() or die "ffmpeg not found or ffmpeg does not support ALAC encoding\n";
+	my $tmpout = GNUpod::FooBar::get_u_path("/tmp/gnupod_alac", "m4a");
+	my $status = system("ffmpeg", "-i", "$file", "-acodec", "alac", "-v", "0", $tmpout);
+	if($status) {
+		warn "ffmpeg exited with $status, $!\n";
+		exit(1);
+	}
+	print "PATH:$tmpout\n";
+
+}
 else {
 	warn "$0 can't encode into $gimme\n";
 	exit(1);
+}
+
+# Check if ffmpeg knows how to encode 'alac'
+sub check_ffmpeg_alac {
+	my @alac_support = grep(/\s+DEA\s+alac/,split(/\n/,
+		`ffmpeg -formats 2> /dev/null`));
+	return (defined(@alac_support));
 }
 
 exit(0);

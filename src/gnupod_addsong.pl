@@ -58,7 +58,7 @@ GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b', mo
 
 
 
-usage("\n--decode needs 'pcm' 'mp3' 'aac' 'video' or 'aacbm' -> '--decode=mp3'\n") if $opts{decode} && $opts{decode} !~ /^(mp3|video|aac|aacbm|pcm|crashme)$/;
+usage("\n--decode needs 'pcm' 'mp3' 'aac' 'video' 'aacbm' or 'alac' -> '--decode=mp3'\n") if $opts{decode} && $opts{decode} !~ /^(mp3|video|aac|aacbm|pcm|alac|crashme)$/;
 usage()   if $opts{help};
 version() if $opts{version};
 
@@ -736,6 +736,7 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
        --disable-v2                 Do not read ID3v2 Tags (MP3 Only)
    -x  --decode=pcm|mp3|aac|aacbm   Convert FLAC Files to WAVE/MP3 or AAC 'on-the-fly'. Use '-e' to specify a quality/bitrate
    -x  --decode=video               Convert .avi Files into iPod video 'on-the-fly' (needs ffmpeg with AAC support)
+   -x  --decode=alac                Convert FLAC Files into Apple Lossless 'on-the-fly' (needs ffmpeg with ALAC support)
    -e  --reencode=int               Reencode MP3/AAC files with new quality 'on-the-fly'
                                     (0 = Good .. 9 = Bad)
                                     You may be able to save some space if you do not need
