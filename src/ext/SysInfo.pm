@@ -94,6 +94,7 @@ sub __GrabFWGUID_LINUX {
 	opendir(BLOCKDIR, "/sys/block") or return undef;
 	while (my $dirent = readdir(BLOCKDIR)) {
 		next if $dirent eq '.'; next if $dirent eq '..';
+		next unless $dirent =~ /^sd/;
 		open(UDEV, "-|") or exec("udevinfo", "--name", $dirent, "--query", "env");
 		while(<UDEV>) {
 			if($_ =~ /^ID_SERIAL=Apple_iPod_([A-Za-z0-9]{16})/) {
