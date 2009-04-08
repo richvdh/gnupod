@@ -359,11 +359,15 @@ sub writexml {
 			print OUT " </smartplaylist>\n";
 		}
 		elsif(my $phr = get_plpref($current_plname)) { #plprefs found..
-			print OUT "\n ".mkfile({playlist=>$phr}, {return=>1,noend=>1})."\n";
-			foreach(@{$XDAT->{playlists}->{data}->{$current_plname}}) {
-				print OUT "   $_\n";
+			if (defined(@{$XDAT->{playlists}->{data}->{$current_plname}})) { #the playlist is not empty
+				print OUT "\n ".mkfile({playlist=>$phr}, {return=>1,noend=>1})."\n";
+				foreach(@{$XDAT->{playlists}->{data}->{$current_plname}}) {
+					print OUT "   $_\n";
+				}
+				print OUT " </playlist>\n";
+			} else {
+				warn "XMLhelper.pm: Dropping empty playlist '$current_plname'!\n";
 			}
-			print OUT " </playlist>\n";
 		}
 		else {
 			warn "XMLhelper.pm: bug found: unhandled plitem $_ inside $current_plname\n";
