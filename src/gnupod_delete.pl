@@ -37,6 +37,7 @@ use vars qw(%opts @keeplist);
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "interactive|i",
+	"playlist|p=s",
 	@GNUpod::FindHelper::findoptions
 );
 GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "gnupod_search");
@@ -45,6 +46,9 @@ GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "gnupod_search");
 usage()   if $opts{help};
 version() if $opts{version};
 fullattributes() if $opts{'list-attributes'};
+
+my %playlist_names=(); # names of the playlists to be deleted
+my %playlist_resultids=(); #ids of the songs to be deleted because they are part of a deleted playlist
 
 my @resultlist=();
 my %resultids=(); #only used for second pass to skip searching the resultlist
@@ -60,7 +64,7 @@ usage($connection->{status}."\n") if $connection->{status};
 
 my $AWDB;
 
-my $firstrun = 1; #first run will look for the songs to delete. the second run will delete them.
+my $firstrun = 1; #first run will look for the songs and playlists to delete. the second run will delete them.
 my $deletionconfirmed = 0;
 
 main($connection);
@@ -75,13 +79,30 @@ sub main {
 
 	#print "resultlist:\n".Dumper(\@resultlist);
 
-	@resultlist = sort GNUpod::FindHelper::comparesongs @resultlist;
+	if ($opts{playlist}) {
 
-	@resultlist = GNUpod::FindHelper::croplist($opts{limit}, @resultlist);
+		#consolidate playlist results
 
-	if (@resultlist) {
-		GNUpod::FindHelper::prettyprint (\@resultlist);
+	} else {
 
+		@resultlist = sort GNUpod::FindHelper::comparesongs @resultlist;
+
+		@resultlist = GNUpod::FindHelper::croplist($opts{limit}, @resultlist);
+
+	}
+
+	if (@resultlist or %playlist_names) {
+		#output results
+		GNUpod::FindHelper::prettyprint (\@resultlist) if @resultlist;
+		if (%playlist_names) {
+			print "             PLAYLIST | #ELEMENTS \n";
+			print "======================|===========\n";
+			foreach my $name (keys(%playlist_names)) {
+				printf " %20s | %d\n",$name,$playlist_names{$name};
+			}
+		}
+
+		#ask confirmation
 		if ($opts{interactive}) {
 			print "Delete ? (y/n) ";# request confirmation
 			my $answer = "n";
@@ -91,6 +112,7 @@ sub main {
 			$deletionconfirmed = 1;
 		}
 
+		#start second run to delete selected files/playlists
 		if ($deletionconfirmed) {
 			foreach my $res (@resultlist) { $resultids{$res->{id}}=1; }
 			$firstrun = 0;
@@ -108,6 +130,7 @@ sub main {
 sub newfile {
 	my($el) =  @_;
 	if ($firstrun) {
+		return if ($opts{playlist});
 		if (GNUpod::FindHelper::filematches($el,$opts{once})) {
 			push @resultlist, \%{$el->{file}};  #add a reference to @resultlist
 		}
@@ -129,22 +152,36 @@ sub newfile {
 #############################################
 # Eventhandler for playlist items
 sub newpl {
-
-	return if ($firstrun);
-
-	# Delete or rename needs to rebuild the XML file
 	my ($el, $name, $plt) = @_;
-	if(($plt eq "pl" or $plt eq "pcpl") && ref($el->{add}) eq "HASH") { #Add action
-		if(defined($el->{add}->{id}) && int(keys(%{$el->{add}})) == 1) { #Only id
-			return unless($keeplist[$el->{add}->{id}]); #ID not on keeplist. drop it
+	if ($firstrun) {
+		if ($opts{'playlist'} && ( $name =~ /$opts{'playlist'}/)) {
+			# adding $name to delete list;
+			$playlist_names{$name}++;
+			#adding $id to droplist for --with-files option
+			if(($plt eq "pl" or $plt eq "pcpl") && ref($el->{add}) eq "HASH") { #Add action
+				if(defined($el->{add}->{id})) { #Only id
+					$playlist_resultids{$el->{add}->{id}} = 1;
+				}
+			}
 		}
-	}
-	elsif($plt eq "spl" && ref($el->{splcont}) eq "HASH") { #spl content
-		if(defined($el->{splcont}->{id}) && int(keys(%{$el->{splcont}})) == 1) { #Only one item
-			return unless($keeplist[$el->{splcont}->{id}]);
+	} else {
+		if ($opts{playlist} && ( $name =~ /$opts{'playlist'}/)) {
+			#print "skipping playlist element:\n".Dumper(\@_);
+			return;
 		}
+		# Delete or rename needs to rebuild the XML file
+		if(($plt eq "pl" or $plt eq "pcpl") && ref($el->{add}) eq "HASH") { #Add action
+			if(defined($el->{add}->{id}) && int(keys(%{$el->{add}})) == 1) { #Only id
+				return unless($keeplist[$el->{add}->{id}]); #ID not on keeplist. drop it
+			}
+		}
+		elsif($plt eq "spl" && ref($el->{splcont}) eq "HASH") { #spl content
+			if(defined($el->{splcont}->{id}) && int(keys(%{$el->{splcont}})) == 1) { #Only one item
+				return unless($keeplist[$el->{splcont}->{id}]);
+			}
+		}
+		GNUpod::XMLhelper::mkfile($el,{$plt."name"=>$name});
 	}
-	GNUpod::XMLhelper::mkfile($el,{$plt."name"=>$name});
 }
 
 ###############################################################
@@ -162,6 +199,7 @@ Usage: gnupod_find.pl [-m directory] ...
        --version           output version information and exit
    -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
    -i, --interactive       ask before deleting
+   -p, --playlist=regex    delete playlists that match regex
 $GNUpod::FindHelper::findhelp
 Report bugs to <bug-gnupod\@nongnu.org>
 EOF
