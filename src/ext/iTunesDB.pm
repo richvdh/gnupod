@@ -70,19 +70,35 @@ my %mhod_id = (  title=>1, path=>2, album=>3, artist=>4, genre=>5, fdesc=>6, eq=
 			my ($song) = @_;
 			return GNUpod::XMLhelper::realpath('',$song->{path});
 		},
+	'changetime' => sub {
+			use Date::Format;
+			my ($song) = @_;
+			return undef unless defined($song->{changetime});
+			return time2str( "%Y-%m-%d %T" , $song->{changetime} - 2082844800);
+		},
 	'addtime' => sub {
 			use Date::Format;
 			my ($song) = @_;
+			return undef unless defined($song->{addtime});
 			return time2str( "%Y-%m-%d %T" , $song->{addtime} - 2082844800);
 		},
 	'releasedate' => sub {
 			use Date::Format;
 			my ($song) = @_;
-			if (defined($song->{releasedate})) {
-				return time2str( "%Y-%m-%d %T" , $song->{releasedate} - 2082844800);
-			} else {
-				return undef;
-			}
+			return undef unless defined($song->{releasedate});
+			return time2str( "%Y-%m-%d %T" , $song->{releasedate} - 2082844800);
+		},
+	'lastplay' => sub {
+			use Date::Format;
+			my ($song) = @_;
+			return undef unless defined($song->{lastplay});
+			return time2str( "%Y-%m-%d %T" , $song->{lastplay} - 2082844800);
+		},
+	'lastskip' => sub {
+			use Date::Format;
+			my ($song) = @_;
+			return undef unless defined($song->{lastskip});
+			return time2str( "%Y-%m-%d %T" , $song->{lastskip} - 2082844800);
 		},
 );
 
@@ -106,7 +122,7 @@ my %mhod_id = (  title=>1, path=>2, album=>3, artist=>4, genre=>5, fdesc=>6, eq=
 		'content' => 'mactime',
 		'help' => 'last modified time of the track',
 		'header' => 'CHANGED',
-		'width' => 10,
+		'width' => 19,
 		},
 	'filesize' => {
 		'format' => 'numeric',
@@ -190,7 +206,7 @@ my %mhod_id = (  title=>1, path=>2, album=>3, artist=>4, genre=>5, fdesc=>6, eq=
 		'content' => 'mactime',
 		'help' => 'time the song was last played',
 		'header' => 'LASTPLAY',
-		'width' => 10,
+		'width' => 19,
 		},
 	'cdnum' => {
 		'format' => 'numeric',
@@ -211,7 +227,7 @@ my %mhod_id = (  title=>1, path=>2, album=>3, artist=>4, genre=>5, fdesc=>6, eq=
 		'content' => 'mactime',
 		'help' => 'time the song was added',
 		'header' => 'ADDTIME',
-		'width' => 8,
+		'width' => 19,
 		},
 	'bookmark' => {
 		'format' => 'numeric',
@@ -253,7 +269,7 @@ my %mhod_id = (  title=>1, path=>2, album=>3, artist=>4, genre=>5, fdesc=>6, eq=
 		'content' => 'mactime',
 		'help' => 'time the song was released. podcasts are usually sorted by this',
 		'header' => 'RELEASEDATE',
-		'width' => 8,
+		'width' => 19,
 		},
 	'skipcount' => {
 		'format' => 'numeric',
@@ -267,12 +283,12 @@ my %mhod_id = (  title=>1, path=>2, album=>3, artist=>4, genre=>5, fdesc=>6, eq=
 		'content' => 'mactime',
 		'help' => 'time the song was last skipped',
 		'header' => 'LASTSKIP',
-		'width' => 10,
+		'width' => 19,
 		},
 	'has_artwork' => {
 		'format' => 'numeric',
 		'content' => 'boolean',
-		'help' => '',
+		'help' => 'has arwork',
 		'header' => 'HAS_ARTWORK',
 		'width' => 1,
 		},
@@ -342,7 +358,7 @@ my %mhod_id = (  title=>1, path=>2, album=>3, artist=>4, genre=>5, fdesc=>6, eq=
 	'mediatype' => {
 		'format' => 'numeric',
 		'content' => 'boolean',
-		'help' => '00-Audio/Video  01-Audio  02-Video  04-Podcast  06-Video Podcast  08-Audiobook  20-Music Video  40-TV Show (shows up ONLY in TV Shows  60-TV Show (shows up in the Music lists as well)',
+		'help' => '00-Audio/Video  01-Audio  02-Video  04-Podcast  06-Video Podcast  08-Audiobook  20-Music Video  40-TV Show (shows up ONLY in TV Shows)  60-TV Show (shows up in the Music lists as well)',
 		'header' => 'MEDIATYPE',
 		'width' => 2,
 		},
@@ -472,14 +488,6 @@ my %mhod_id = (  title=>1, path=>2, album=>3, artist=>4, genre=>5, fdesc=>6, eq=
 		'help' => 'Item Description',
 		'header' => 'DESCRIPTION',
 		'width' => 40,
-		},
-
-	'releasedate' => {
-		'format' => 'numeric',
-		'content' => 'mactime',
-		'help' => 'Release date',
-		'header' => 'RELEASEDATE',
-		'width' => 12,
 		},
 
 	'soundcheck' => {
