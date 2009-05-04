@@ -36,7 +36,7 @@ use vars qw(%opts @keeplist);
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
-GetOptions(\%opts, "version", "help|h", "mount|m=s", "interactive|i",
+GetOptions(\%opts, "version", "help|h", "mount|m=s", "interactive|i", "force",
 	"playlist|p=s",
 	@GNUpod::FindHelper::findoptions
 );
@@ -46,12 +46,15 @@ GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "gnupod_search");
 usage()   if $opts{help};
 version() if $opts{version};
 fullattributes() if $opts{'list-attributes'};
+if ($opts{'interactive'} && $opts{'force'}) { usage("Can't use --force and --interactive together.") };
 
 my %playlist_names=(); # names of the playlists to be deleted
 my %playlist_resultids=(); #ids of the songs to be deleted because they are part of a deleted playlist
 
 my @resultlist=();
 my %resultids=(); #only used for second pass to skip searching the resultlist
+
+my $max_non_interactive_delete = 20; #how many files get deleted without asking (if not forced)
 
 my $foo = GNUpod::FindHelper::process_options(\%opts);
 
@@ -103,7 +106,9 @@ sub main {
 		}
 
 		#ask confirmation
-		if ($opts{interactive}) {
+		if ($opts{force}) {
+			$deletionconfirmed = 1;
+		} elsif ($opts{interactive} or (scalar(@resultlist) > $max_non_interactive_delete)) {
 			print "Delete ? (y/n) ";# request confirmation
 			my $answer = "n";
 			chomp ( $answer = <> );
@@ -198,7 +203,8 @@ Usage: gnupod_find.pl [-m directory] ...
        --list-attributes   display all attributes for filter/view/sort
        --version           output version information and exit
    -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
-   -i, --interactive       ask before deleting
+   -i, --interactive       always ask before deleting
+       --force             never ask before deleting
    -p, --playlist=regex    delete playlists that match regex
 $GNUpod::FindHelper::findhelp
 Report bugs to <bug-gnupod\@nongnu.org>
