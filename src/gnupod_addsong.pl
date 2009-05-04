@@ -593,7 +593,10 @@ sub resolve_podcasts {
 				my $py = new XML::Parser(Handlers=>{Start=>\&podcastChannelStart, Char=>\&podcastChannelChar, End=>\&podcastChannelEnd});
 				$py->parsefile($pcrss->{file});
 			};
-			warn "! [HTTP] Error while parsing XML: $@\n" if $@;
+			if ($@) {
+				warn "! [HTTP] Error while parsing XML file. ".$pcrss->{file}.". File kept for examination. : $@\n";
+				next;
+			}
 			unlink($pcrss->{file}) or warn "Could not unlink $pcrss->{file}, $!\n";
 
 			#Limit the number of podcasts to dowload.
@@ -603,7 +606,7 @@ sub resolve_podcasts {
 				splice(@pods, $flimit);
 			} elsif ($flimit < 0) {
 				splice(@pods, 0, $flimit);
-			}				
+			}
 			$podcast_infos{$pcrss->{file}} = \@pods;
 
 			$per_file_info{$pcrss->{file}}->{REAL_RSS} = $cf;
