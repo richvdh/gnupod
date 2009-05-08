@@ -523,7 +523,9 @@ sub __is_mp3 {
 	$rh{mediatype}  = MEDIATYPE_AUDIO;
 
 	# Handle volume adjustment information
-	if ($hs->{RVA2}) {
+	if ($hs->{RVA2} or $hs->{XRVA}) {
+		# if XRVA is present, handle it like RVA2 (http://www.id3.org/Experimental_RVA2)
+		$hs{RVA2} = $hs->{XRVA} if (!defined($hs->{RVA2}) && defined($hs->{XRVA}));
 		# Very limited RVA2 parsing, only handle master volume changes.
 		# See http://www.id3.org/id3v2.4.0-frames for format spec
 		my ($app, $channel, $adj) = unpack("Z* C n", $hs->{RVA2});
