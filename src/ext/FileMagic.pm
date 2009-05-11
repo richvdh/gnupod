@@ -180,6 +180,10 @@ sub __is_NonNative {
 	my $cf = ((split(/\//,$file))[-1]);
 	my @songa = pss($metastuff->{_TRACKNUM});
 	
+	# Use track ReplayGain by default, use album ReplayGain if requested
+	my $rgtag = "_REPLAYGAIN_TRACK_GAIN";
+	$rgtag = "_REPLAYGAIN_ALBUM_GAIN" if($flags->{'rgalbum'});
+
 	$rh{artist}    = getutf8($metastuff->{_ARTIST} || "Unknown Artist");
 	$rh{album}     = getutf8($metastuff->{_ALBUM}  || "Unknown Album");
 	$rh{title}     = getutf8($metastuff->{_TITLE}  || $cf || "Unknown Title");
@@ -188,6 +192,7 @@ sub __is_NonNative {
 	$rh{songnum}   = int($songa[0]);
 	$rh{comment}   = getutf8($metastuff->{_COMMENT} || $metastuff->{FORMAT}." file");
 	$rh{fdesc}     = getutf8($metastuff->{_VENDOR}  || "Converted using $encoder");
+	$rh{soundcheck} = _parse_ReplayGain($metastuff->{$rgtag}) || "";
 	$rh{mediatype} = int($metastuff->{_MEDIATYPE}   || MEDIATYPE_AUDIO);
 	return {ref=>\%rh, encoder=>$encoder, codec=>$NN_HEADERS->{$magic}->{ftyp} };
 }

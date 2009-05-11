@@ -62,6 +62,8 @@ print "_GENRE:".($ftag->comment('genre'))[0]."\n";
 print "_TRACKNUM:".( ($ftag->comment('tracknum'))[0] |
                      ($ftag->comment('tracknumber'))[0] )."\n";
 print "_COMMENT:".($ftag->comment('comment'))[0]."\n";
+print "_REPLAYGAIN_TRACK_GAIN:".($ftag->comment('REPLAYGAIN_TRACK_GAIN'))[0]."\n";
+print "_REPLAYGAIN_ALBUM_GAIN:".($ftag->comment('REPLAYGAIN_ABLUM_GAIN'))[0]."\n";
 print "_MEDIATYPE:".(GNUpod::FileMagic::MEDIATYPE_AUDIO)."\n";
 print "FORMAT:OGG\n";
 }
