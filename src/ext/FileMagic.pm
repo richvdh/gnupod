@@ -75,8 +75,13 @@ from file tags or filename. For other formats it calls external decoders
 and converters to convert the $file into something iPod compatible and to
 extract the meta/media information.
 
-FLAGS is a hash that may contain a true value for the keys 'noIDv1' and 'noIDv2' if
-you want to skip the extraction of ID3v1 or ID3v2 tags from MP3 files.
+FLAGS is a hash that may contain a true value for the keys 'noIDv1', 'noIDv2'
+and 'noAPE' if you want to skip the extraction of ID3v1, ID3v2 or APE tags
+from MP3 files. APE tags are always read in conjunction with ID3 tags.
+Disabling the use of both ID3v1 and ID3v2 tags also disables the reading
+of APE tags from MP3 files. Set a true value for the key 'rgalbum' if you
+want to use the album ReplayGain value instead of the track ReplayGain
+value (default).
 
 Returns:
 
@@ -482,8 +487,8 @@ sub __is_mp3 {
 	$rh{time}     = int($h->{SECS}*1000);
 	$rh{fdesc}    = "MPEG ${$h}{VERSION} layer ${$h}{LAYER} file";
 	
-	$h  = MP3::Info::get_mp3tag($file,1)    unless $flags->{'noIDv1'};  #Get the IDv1 tag
-	$hs = MP3::Info::get_mp3tag($file,2,2)  unless $flags->{'noIDv2'};  #Get the IDv2 tag
+	$h  = MP3::Info::get_mp3tag($file,1,0,$flags->{'noAPE'}?0:1) unless $flags->{'noIDv1'};  #Get the IDv1 tag
+	$hs = MP3::Info::get_mp3tag($file,2,2,$flags->{'noAPE'}?0:1) unless $flags->{'noIDv2'};  #Get the IDv2 tag
 	
 	my $nonitunescomment = undef;
 	#The IDv2 Hashref may return arrays.. kill them :)
@@ -505,6 +510,10 @@ sub __is_mp3 {
 	#Try to parse things like 01/01
 	my @songa = pss($hs->{TRCK} || $hs->{TRK} || $h->{TRACKNUM});
 	my @cda   = pss($hs->{TPOS});
+
+	# Use track ReplayGain by default, use album ReplayGain if requested
+	my $rgtag = "REPLAYGAIN_TRACK_GAIN";
+	$rgtag = "REPLAYGAIN_ALBUM_GAIN" if($flags->{'rgalbum'});
 	
 	$rh{songs}      = int($songa[1]);
 	$rh{songnum}    = int($songa[0]);
@@ -519,7 +528,7 @@ sub __is_mp3 {
 	$rh{desc}       = __merge_strings({joinby => " ", wspace => "norm", case => "ignore"},($hs->{USLT} || $hs->{ULT}),($nonitunescomment || $h->{COMMENT}));
 	$rh{composer}   = ($hs->{TCOM} || $hs->{TCM} || "");
 	$rh{playcount}  = int($hs->{PCNT} || $hs->{CNT}) || 0;
-	$rh{soundcheck} = _parse_iTunNORM($hs->{COMM} || $hs->{COM} || $h->{COMMENT});
+	$rh{soundcheck} = _parse_iTunNORM($hs->{COMM} || $hs->{COM} || $h->{COMMENT}) unless defined($rh{soundcheck} = _parse_ReplayGain($hs->{$rgtag} || $h->{$rgtag}));
 	$rh{mediatype}  = MEDIATYPE_AUDIO;
 
 	# Handle volume adjustment information
@@ -790,6 +799,32 @@ sub converter_readmeta {
 =back
 
 =cut
+
+#########################################################
+# Convert ReplayGain to SoundCheck
+# Code adapted from http://projects.robinbowes.com/flac2mp3/trac/ticket/30
+
+=item _parse_ReplayGain(VALUE)
+
+Converts ReplayGain VALUE in dB to iTunes Sound Check value. Anything
+outside the range of -18.16 dB to 33.01 dB will be rounded to those values.
+For more information on ReplayGain see http://replaygain.hydrogenaudio.org/
+
+=cut
+
+sub _parse_ReplayGain {
+	my ($gain) = @_;
+	return undef unless defined($gain);
+	if($gain =~ /(.*)\s+dB$/) {
+		$gain = $1
+	}
+	return undef unless ($gain =~ /^\s*-?\d+\.?\d*\s*$/);
+	my $result = int((10 ** (-$gain / 10)) * 1000 + .5);
+	if ($result > 65534) {
+		$result = 65534;
+	}
+	return oct(sprintf("0x%08X",$result));
+}
 
 1;
 

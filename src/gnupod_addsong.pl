@@ -44,14 +44,14 @@ $int_count = 3; #The user has to send INT (Ctrl+C) x times until we stop
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 #Don't add xml and itunes opts.. we *NEED* the mount opt to be set..
 GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode|x=s", "restore|r", "duplicate|d", "disable-v2", "disable-v1",
-                   "set-title|t=s", "set-artist|a=s", "set-album|l=s", "set-genre|g=s", "set-rating=i", "set-playcount=i",
-                   "set-bookmarkable|b", "set-shuffleskip", "artwork=s",
+                   "disable-ape-tag", "set-title|t=s", "set-artist|a=s", "set-album|l=s", "set-genre|g=s", "set-rating=i",
+                   "set-playcount=i", "set-bookmarkable|b", "set-shuffleskip", "artwork=s", "replaygain-album",
                    "set-songnum", "playlist|p=s@", "reencode|e=i",
                    "min-vol-adj=i", "max-vol-adj=i", "playlist-is-podcast", "podcast-files-limit=i", "podcast-cache-dir=s",
                    "podcast-artwork", "set-compilation");
 
-GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b', model=>'s',
-                                   'disable-v1'=>'b', 'disable-v2'=>'b', 'set-songnum'=>'b',
+GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b', model=>'s', 'replaygain-album'=>'b',
+                                   'disable-v1'=>'b', 'disable-v2'=>'b', 'disable-ape-tag'=>'b', 'set-songnum'=>'b',
                                    'min-vol-adj'=>'i', 'max-vol-adj'=>'i', 'automktunes'=>'b', 
                                    'podcast-files-limit'=>'i', 'podcast-cache-dir'=>'s', 'podcast-artwork'=>'b' },
                                    "gnupod_addsong");
@@ -157,6 +157,8 @@ sub startup {
 		#Get the filetype
 		my ($fh,$media_h,$converter) =  GNUpod::FileMagic::wtf_is($file, {noIDv1=>$opts{'disable-v1'}, 
 		                                                                  noIDv2=>$opts{'disable-v2'},
+		                                                                  noAPE=>$opts{'disable-ape-tag'},
+		                                                                  rgalbum=>$opts{'replaygain-album'},
 		                                                                  decode=>$opts{'decode'}},$con);
 		
 		unless($fh) {
@@ -737,6 +739,8 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
                                     0 = download all (default), -X = download X oldest items, X = download X newest items
        --disable-v1                 Do not read ID3v1 Tags (MP3 Only)
        --disable-v2                 Do not read ID3v2 Tags (MP3 Only)
+       --disable-ape-tag            Do not read APE Tags (MP3 Only) --disable-v1 with --disable-v2 implies --disable-ape-tag
+       --replaygain-album           Use the ReplayGain album value instead of the ReplayGain track value (default)
    -x  --decode=pcm|mp3|aac|aacbm   Convert FLAC Files to WAVE/MP3 or AAC 'on-the-fly'. Use '-e' to specify a quality/bitrate
    -x  --decode=video               Convert .avi Files into iPod video 'on-the-fly' (needs ffmpeg with AAC support)
    -x  --decode=alac                Convert FLAC Files into Apple Lossless 'on-the-fly' (needs ffmpeg with ALAC support)
