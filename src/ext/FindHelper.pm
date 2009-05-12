@@ -54,6 +54,12 @@ use vars qw(%FILEATTRDEF %FILEATTRDEF_SHORT %FILEATTRDEF_COMPUTE);
 
 ############ FILE ATTRIBUTE INFO ##########################
 
+=item %FILEATTRDEF_SHORT
+
+DOCUMENT ME!
+
+=cut
+
 %FILEATTRDEF_SHORT = (
 #                            t = title    a = artist   r = rating      p = iPod Path
 #                            l = album    g = genre    c = playcount   i = id
@@ -64,6 +70,12 @@ use vars qw(%FILEATTRDEF %FILEATTRDEF_SHORT %FILEATTRDEF_COMPUTE);
 'u' => 'unixpath', 'n' => 'songnum',  'G' => 'podcastguid', 'R' => 'podcastrss',
 'd' => 'dbid_1',
 );
+
+=item %FILEATTRDEF_COMPUTE
+
+DOCUMENT ME!
+
+=cut
 
 %FILEATTRDEF_COMPUTE = (
 	'unixpath' => sub {
@@ -101,6 +113,12 @@ use vars qw(%FILEATTRDEF %FILEATTRDEF_SHORT %FILEATTRDEF_COMPUTE);
 			return time2str( "%Y-%m-%d %T" , $song->{lastskip} - 2082844800);
 		},
 );
+
+=item %FILEATTRDEF
+
+DOCUMENT ME!
+
+=cut
 
 %FILEATTRDEF= (
 	'compilation' => {
@@ -566,8 +584,7 @@ String to include in your help text if you use the FindHelper module.
 
 =cut
 
-our $findhelp = '
-   -f, --filter FILTERDEF  only show songss that match FILTERDEF
+our $findhelp = '   -f, --filter FILTERDEF  only show songss that match FILTERDEF
    -s, --sort SORTDEF      order output according to SORTDEF
    -v, --view VIEWDEF      only show song attributes listed in VIEWDEF
    -o, --or, --once        make any filter match (think OR vs. AND)
@@ -592,6 +609,27 @@ SORTDEF ::= ["+"|"-"]<attribute>,[["+"|"-"]<attribute>] ...
 
 Note: * String arguments (title/artist/album/etc) have to be UTF8 encoded!
 ';
+
+=item fullattributes ()
+
+Print a list of all known attributes, their shortcut and their 
+description and calls exit.
+
+=cut
+
+sub fullattributes {
+	my %long2short=();
+	foreach my $key (keys (%FILEATTRDEF_SHORT)) {
+		$long2short{$FILEATTRDEF_SHORT{$key}} = $key;
+	}
+#	print $fullversionstring."\n\n";
+	print " Short | Attribute name | Description\n";
+	print "=======|================|=========================\n";
+	foreach my $key (sort ( keys (%FILEATTRDEF))) {
+		printf "     %s | %-14s | %s\n", ($long2short{$key} or " "), $key, $GNUpod::FindHelper::FILEATTRDEF{$key}{help};
+	}
+	exit;
+}
 
 =item resolve_attribute ( $input )
 

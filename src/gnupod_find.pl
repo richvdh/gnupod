@@ -55,7 +55,7 @@ GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "gnupod_search");
 
 usage()   if ($opts{help} || !$getoptres );
 version() if $opts{version};
-fullattributes() if $opts{'list-attributes'};
+GNUpod::FindHelper::fullattributes() if $opts{'list-attributes'};
 
 ## all work but 1 and 2 are deprecated
 #print "1: ".%GNUpod::FindHelper::FILEATTRDEF->{year}{help}."\n";
@@ -128,7 +128,7 @@ $rtxt = "" if (! defined($rtxt));
 die << "EOF";
 $fullversionstring
 $rtxt
-Usage: gnupod_find.pl [-m directory] ...
+Usage: gnupod_find.pl ...
 
    -h, --help              display this help and exit
        --list-attributes   display all attributes for filter/view/sort
@@ -149,19 +149,4 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EOF
 }
-
-sub fullattributes {
-	my %long2short=();
-	foreach my $key (keys (%GNUpod::FindHelper::FILEATTRDEF_SHORT)) {
-		$long2short{$GNUpod::FindHelper::FILEATTRDEF_SHORT{$key}} = $key;
-	}
-	print $fullversionstring."\n\n";
-	print " Short | Attribute name | Description\n";
-	print "=======|================|=========================\n";
-	foreach my $key (sort ( keys (%GNUpod::FindHelper::FILEATTRDEF))) {
-		printf "     %s | %-14s | %s\n", ($long2short{$key} or " "), $key, $GNUpod::FindHelper::FILEATTRDEF{$key}{help};
-	}
-	exit;
-}
-
 

@@ -36,7 +36,7 @@ use vars qw(%opts @keeplist);
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
-my $getoptres = GetOptions(\%opts, "version", "help|h", "mount|m=s", "interactive|i", "force",
+my $getoptres = GetOptions(\%opts, "version", "help|h", "list-attributes", "mount|m=s", "interactive|i", "force",
 	"playlist|p=s",
 	@GNUpod::FindHelper::findoptions
 );
@@ -45,7 +45,7 @@ GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "gnupod_search");
 
 usage()   if ($opts{help} || !$getoptres );
 version() if $opts{version};
-fullattributes() if $opts{'list-attributes'};
+GNUpod::FindHelper::fullattributes() if $opts{'list-attributes'};
 if ($opts{'interactive'} && $opts{'force'}) { usage("Can't use --force and --interactive together.") };
 
 my %playlist_names=(); # names of the playlists to be deleted
@@ -197,7 +197,7 @@ $rtxt = "" if (! defined($rtxt));
 die << "EOF";
 $fullversionstring
 $rtxt
-Usage: gnupod_find.pl [-m directory] ...
+Usage: gnupod_delete.pl ...
 
    -h, --help              display this help and exit
        --list-attributes   display all attributes for filter/view/sort
@@ -220,15 +220,5 @@ This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EOF
-}
-
-sub fullattributes {
-	print $fullversionstring."\n\n";
-	printf "\t%-15s | %s\n", "Attribute name" , "Description";
-	print "\t================|=========================\n";
-	foreach my $key (sort ( keys (%GNUpod::FindHelper::FILEATTRDEF))) {
-		printf "\t%-15s | %s\n", $key, $GNUpod::FindHelper::FILEATTRDEF{$key}{help};
-	}
-	exit;
 }
 
