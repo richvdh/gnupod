@@ -44,7 +44,7 @@ use vars qw(%opts);
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
 
-GetOptions(\%opts, "version", "help|h", "list-attributes", "mount|m=s",
+my $getoptres = GetOptions(\%opts, "version", "help|h", "list-attributes", "mount|m=s",
 	@GNUpod::FindHelper::findoptions
 );
 GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "gnupod_search");
@@ -53,7 +53,7 @@ GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "gnupod_search");
 #print Dumper(\%opts);
 #print "Options: ".Dumper(\%opts);
 
-usage()   if $opts{help};
+usage()   if ($opts{help} || !$getoptres );
 version() if $opts{version};
 fullattributes() if $opts{'list-attributes'};
 

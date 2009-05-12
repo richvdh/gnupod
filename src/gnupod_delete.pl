@@ -36,14 +36,14 @@ use vars qw(%opts @keeplist);
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
-GetOptions(\%opts, "version", "help|h", "mount|m=s", "interactive|i", "force",
+my $getoptres = GetOptions(\%opts, "version", "help|h", "mount|m=s", "interactive|i", "force",
 	"playlist|p=s",
 	@GNUpod::FindHelper::findoptions
 );
 GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "gnupod_search");
 
 
-usage()   if $opts{help};
+usage()   if ($opts{help} || !$getoptres );
 version() if $opts{version};
 fullattributes() if $opts{'list-attributes'};
 if ($opts{'interactive'} && $opts{'force'}) { usage("Can't use --force and --interactive together.") };
