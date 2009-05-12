@@ -58,14 +58,14 @@ version() if $opts{version};
 fullattributes() if $opts{'list-attributes'};
 
 ## all work but 1 and 2 are deprecated
-#print "1: ".%GNUpod::iTunesDB::FILEATTRDEF->{year}{help}."\n";
-#print "2: ".%GNUpod::iTunesDB::FILEATTRDEF->{year}->{help}."\n";
-#print "3: ".$GNUpod::iTunesDB::FILEATTRDEF{year}{help}."\n";
-#print "4: ".$GNUpod::iTunesDB::FILEATTRDEF{year}->{help}."\n";
+#print "1: ".%GNUpod::FindHelper::FILEATTRDEF->{year}{help}."\n";
+#print "2: ".%GNUpod::FindHelper::FILEATTRDEF->{year}->{help}."\n";
+#print "3: ".$GNUpod::FindHelper::FILEATTRDEF{year}{help}."\n";
+#print "4: ".$GNUpod::FindHelper::FILEATTRDEF{year}->{help}."\n";
 #
 ## this does not work and without "use warnings;" you woudln't even know!
 ## did i mention that i hate perl?
-#print "5: ".$GNUpod::iTunesDB::FILEATTRDEF->{year}->{help}."\n";
+#print "5: ".$GNUpod::FindHelper::FILEATTRDEF->{year}->{help}."\n";
 
 my @resultlist=();
 
@@ -152,14 +152,14 @@ EOF
 
 sub fullattributes {
 	my %long2short=();
-	foreach my $key (keys (%GNUpod::iTunesDB::FILEATTRDEF_SHORT)) {
-		$long2short{$GNUpod::iTunesDB::FILEATTRDEF_SHORT{$key}} = $key;
+	foreach my $key (keys (%GNUpod::FindHelper::FILEATTRDEF_SHORT)) {
+		$long2short{$GNUpod::FindHelper::FILEATTRDEF_SHORT{$key}} = $key;
 	}
 	print $fullversionstring."\n\n";
 	print " Short | Attribute name | Description\n";
 	print "=======|================|=========================\n";
-	foreach my $key (sort ( keys (%GNUpod::iTunesDB::FILEATTRDEF))) {
-		printf "     %s | %-14s | %s\n", ($long2short{$key} or " "), $key, $GNUpod::iTunesDB::FILEATTRDEF{$key}{help};
+	foreach my $key (sort ( keys (%GNUpod::FindHelper::FILEATTRDEF))) {
+		printf "     %s | %-14s | %s\n", ($long2short{$key} or " "), $key, $GNUpod::FindHelper::FILEATTRDEF{$key}{help};
 	}
 	exit;
 }

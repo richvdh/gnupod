@@ -226,8 +226,8 @@ sub fullattributes {
 	print $fullversionstring."\n\n";
 	printf "\t%-15s | %s\n", "Attribute name" , "Description";
 	print "\t================|=========================\n";
-	foreach my $key (sort ( keys (%GNUpod::iTunesDB::FILEATTRDEF))) {
-		printf "\t%-15s | %s\n", $key, $GNUpod::iTunesDB::FILEATTRDEF{$key}{help};
+	foreach my $key (sort ( keys (%GNUpod::FindHelper::FILEATTRDEF))) {
+		printf "\t%-15s | %s\n", $key, $GNUpod::FindHelper::FILEATTRDEF{$key}{help};
 	}
 	exit;
 }
