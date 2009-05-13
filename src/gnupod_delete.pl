@@ -36,7 +36,7 @@ use vars qw(%opts @keeplist);
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
-my $getoptres = GetOptions(\%opts, "version", "help|h", "list-attributes", "mount|m=s", "interactive|i", "force",
+my $getoptres = GetOptions(\%opts, "version", "help|h", "list-attributes", "mount|m=s", "interactive|i", "force", "noheader",
 	"playlist|p=s",
 	@GNUpod::FindHelper::findoptions
 );
@@ -96,7 +96,7 @@ sub main {
 
 	if (@resultlist or %playlist_names) {
 		#output results
-		GNUpod::FindHelper::prettyprint (\@resultlist) if @resultlist;
+		GNUpod::FindHelper::prettyprint ({ results => \@resultlist, noheader => $opts{noheader} }) if @resultlist;
 		if (%playlist_names) {
 			print "             PLAYLIST | #ELEMENTS \n";
 			print "======================|===========\n";
@@ -205,6 +205,7 @@ Usage: gnupod_delete.pl ...
    -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
    -i, --interactive       always ask before deleting
        --force             never ask before deleting
+       --noheader          don't print headers for result list
    -p, --playlist=regex    delete playlists that match regex
 $GNUpod::FindHelper::findhelp
 Report bugs to <bug-gnupod\@nongnu.org>

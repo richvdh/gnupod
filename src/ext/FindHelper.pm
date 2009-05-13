@@ -1021,10 +1021,16 @@ sub computeresults {
 ##############################################################
 # Printout
 
-=item prettyprint ($results, $view)
+=item prettyprint ({ results => \@resultlist[, view => \@viewlist][, noheader => 1])
 
-Prints the song data passed in the array ref $results according to the
-list of fields passed in the array ref $view.
+Prints the song data passed in resultlist. 
+All options are passed as one hashref. 
+The key "results" should point to an array ref with the results.
+View can be changed according to the array ref indicated ny the "view" key. 
+The output of headers is skipped with a non zero value for the "noheader" key.
+
+Example:
+  prettyprint ( { results => \@songs, noheader => 1 } );
 
 =cut
 
@@ -1046,10 +1052,11 @@ sub printonefield {
 }
 
 sub printheader {
+	my @headviewlist = @_;
 	my $totalwidth=0;
 	my $firstcolumn=1;
 	my $overhang=0;
-	foreach my $viewkey (@viewlist) {
+	foreach my $viewkey (@headviewlist) {
 		if ($firstcolumn) {$firstcolumn=0;} else { print " | "; $totalwidth+=3; }
 		$overhang = printonefield($FILEATTRDEF{$viewkey}, $FILEATTRDEF{$viewkey}{header}, $overhang);
 		$totalwidth += $FILEATTRDEF{$viewkey}{width};
@@ -1059,11 +1066,11 @@ sub printheader {
 }
 
 sub printoneline {
-	my ($song) = @_;
+	my ($song,@view) = @_;
 	my $totalwidth=0;
 	my $firstcolumn=1;
 	my $overhang=0;
-	foreach my $viewkey (@viewlist) {
+	foreach my $viewkey (@view) {
 		if ($firstcolumn) {$firstcolumn=0;} else { print " | "; $totalwidth+=3; }
 		$overhang = printonefield($FILEATTRDEF{$viewkey}, computeresults($song,$viewkey), $overhang);
 	}
@@ -1071,12 +1078,15 @@ sub printoneline {
 
 
 sub prettyprint {
-	my ($results) = @_ ;
+	my ($options) = (@_);
+#	print "prettypriting \n".Dumper($options);
+	my @view = @viewlist;
+	@view = @{$options->{view}} if defined($options->{view});
 
-	printheader();
+	printheader(@view) unless $options->{noheader};
 
-	foreach my $song (@{$results}) {
-		printoneline($song);
+	foreach my $song (@{$options->{results}}) {
+		printoneline($song,@view);
 		print "\n";
 	}
 
