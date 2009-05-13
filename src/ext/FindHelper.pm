@@ -208,9 +208,9 @@ DOCUMENT ME!
 	'soundcheck' => {
 		'format' => 'numeric',
 		'content' => 'int',
-		'help' => 'Soundcheck from iTunesNorm',
+		'help' => 'Soundcheck value for volume normalization',
 		'header' => 'SOUNDCHECK',
-		'width' => 8,
+		'width' => 6,
 		},
 	'playcount' => {
 		'format' => 'numeric',
@@ -506,14 +506,6 @@ DOCUMENT ME!
 		'help' => 'Item Description',
 		'header' => 'DESCRIPTION',
 		'width' => 40,
-		},
-
-	'soundcheck' => {
-		'format' => 'numeric',
-		'content' => 'int',
-		'help' => 'Volume normalization',
-		'header' => 'NORM',
-		'width' => 8,
 		},
 
 	'title' => {
