@@ -1023,10 +1023,10 @@ sub computeresults {
 
 =item prettyprint ({ results => \@resultlist[, view => \@viewlist][, noheader => 1])
 
-Prints the song data passed in resultlist. 
-All options are passed as one hashref. 
+Prints the song data passed in resultlist.
+All options are passed as one hashref.
 The key "results" should point to an array ref with the results.
-View can be changed according to the array ref indicated ny the "view" key. 
+View can be changed according to the array ref indicated ny the "view" key.
 The output of headers is skipped with a non zero value for the "noheader" key.
 
 Example:
