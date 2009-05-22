@@ -29,6 +29,8 @@ use GNUpod::FooBar;
 use GNUpod::ArtworkDB;
 use Getopt::Long;
 
+use Date::Format;
+
 use Text::CharWidth;
 
 use Data::Dumper;
@@ -83,31 +85,26 @@ DOCUMENT ME!
 			return GNUpod::XMLhelper::realpath('',$song->{path});
 		},
 	'changetime' => sub {
-			use Date::Format;
 			my ($song) = @_;
 			return undef unless defined($song->{changetime});
 			return time2str( "%Y-%m-%d %T" , $song->{changetime} - 2082844800);
 		},
 	'addtime' => sub {
-			use Date::Format;
 			my ($song) = @_;
 			return undef unless defined($song->{addtime});
 			return time2str( "%Y-%m-%d %T" , $song->{addtime} - 2082844800);
 		},
 	'releasedate' => sub {
-			use Date::Format;
 			my ($song) = @_;
 			return undef unless defined($song->{releasedate});
 			return time2str( "%Y-%m-%d %T" , $song->{releasedate} - 2082844800);
 		},
 	'lastplay' => sub {
-			use Date::Format;
 			my ($song) = @_;
 			return undef unless defined($song->{lastplay});
 			return time2str( "%Y-%m-%d %T" , $song->{lastplay} - 2082844800);
 		},
 	'lastskip' => sub {
-			use Date::Format;
 			my ($song) = @_;
 			return undef unless defined($song->{lastskip});
 			return time2str( "%Y-%m-%d %T" , $song->{lastskip} - 2082844800);
@@ -750,8 +747,6 @@ sub process_options {
 							$value = Date::Parse::str2time($3);
 						}
 						if (defined($value)) {
-							require Date::Format;
-							import Date::Format;
 							#print "Time value \"$3\" evaluates to $value unix epoch time (".($value+MACTIME)." mactime) which is ".time2str("%C",$value)."\n";
 							$value += MACTIME;
 						} else {
