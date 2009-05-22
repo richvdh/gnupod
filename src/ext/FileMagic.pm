@@ -21,6 +21,7 @@ package GNUpod::FileMagic;
 #
 # This product is not supported/written/published by Apple!
 use strict;
+#use warnings;
 use Unicode::String;
 use MP3::Info qw(:all);
 use GNUpod::FooBar;
@@ -192,7 +193,7 @@ sub __is_NonNative {
 	$rh{songnum}   = int($songa[0]);
 	$rh{comment}   = getutf8($metastuff->{_COMMENT} || $metastuff->{FORMAT}." file");
 	$rh{fdesc}     = getutf8($metastuff->{_VENDOR}  || "Converted using $encoder");
-	$rh{soundcheck} = _parse_ReplayGain($metastuff->{$rgtag}) || "";
+	$rh{soundcheck} = _parse_db_to_soundcheck($metastuff->{$rgtag}) || "";
 	$rh{mediatype} = int($metastuff->{_MEDIATYPE}   || MEDIATYPE_AUDIO);
 	return {ref=>\%rh, encoder=>$encoder, codec=>$NN_HEADERS->{$magic}->{ftyp} };
 }
@@ -471,6 +472,7 @@ sub __is_mp3 {
 	
 	my $h  = MP3::Info::get_mp3info($file);
 	my $hs = undef;
+	my $hs_raw = undef;
 	if(ref($h) ne 'HASH') {
 		return undef; # Not an mp3 file
 	}
@@ -494,6 +496,7 @@ sub __is_mp3 {
 	
 	$h  = MP3::Info::get_mp3tag($file,1,0,$flags->{'noAPE'}?0:1) unless $flags->{'noIDv1'};  #Get the IDv1 tag
 	$hs = MP3::Info::get_mp3tag($file,2,2,$flags->{'noAPE'}?0:1) unless $flags->{'noIDv2'};  #Get the IDv2 tag
+	$hs_raw = MP3::Info::get_mp3tag($file,2,1) unless $flags->{'noIDv2'};  #Get the raw IDv2 tag without APE
 	
 	my $nonitunescomment = undef;
 	#The IDv2 Hashref may return arrays.. kill them :)
@@ -533,38 +536,52 @@ sub __is_mp3 {
 	$rh{desc}       = __merge_strings({joinby => " ", wspace => "norm", case => "ignore"},($hs->{USLT} || $hs->{ULT}),($nonitunescomment || $h->{COMMENT}));
 	$rh{composer}   = ($hs->{TCOM} || $hs->{TCM} || "");
 	$rh{playcount}  = int($hs->{PCNT} || $hs->{CNT}) || 0;
-	$rh{soundcheck} = _parse_iTunNORM($hs->{COMM} || $hs->{COM} || $h->{COMMENT}) unless defined($rh{soundcheck} = _parse_ReplayGain($hs->{$rgtag} || $h->{$rgtag}));
 	$rh{mediatype}  = MEDIATYPE_AUDIO;
 
-	# Handle volume adjustment information
-	if ($hs->{RVA2} or $hs->{XRVA}) {
-		# if XRVA is present, handle it like RVA2 (http://www.id3.org/Experimental_RVA2)
-		$hs->{RVA2} = $hs->{XRVA} if (!defined($hs->{RVA2}) && defined($hs->{XRVA}));
-		# Very limited RVA2 parsing, only handle master volume changes.
-		# See http://www.id3.org/id3v2.4.0-frames for format spec
-		my ($app, $channel, $adj) = unpack("Z* C n", $hs->{RVA2});
-		if ($channel == 1) {
-			
-			$adj -= 0x10000 if ($adj > 0x8000);
-			my $adjdb = $adj / 512.0;
-			# Translate decibel volume adjustment into relative percentage
-			# adjustment.  As far as I understand this, +6dB is perceived
-			# as the double volume, i.e. +100%, while -6dB is
-			# perceived as the half volume, i.e. -50%.
-			# The dB volume adjustment adjdb correlates to the absolute
-			# adjustment adjabs like this:
-			#     adjdb = 20 * log10(1 + adjabs)
-			# =>  adjabs = 10 ** (adjdb / 20) - 1
-			
-			my $vol = int(100 * (10 ** ($adjdb / 20) - 1));
-			$vol = 100 if ($vol > 100);
-			$vol = -100 if ($vol < -100);
-			
-			# print "$file: adjusting volume by $vol% ($adjdb dB)\n";
-			$rh{volume} = $vol;
-		}
+	# RVA2/XRVA trumps all.
+	if (defined($hs_raw->{RVA2}) or defined($hs_raw->{XRVA})) {
+		$rh{soundcheck} = _parse_db_to_soundcheck( _parse_RVA2_to_db(($hs_raw->{RVA2} || $hs_raw->{XRVA}), $flags->{'rgalbum'}) );
 	}
-	
+	# REPLAY_x_GAIN from APE tag or TXXX is second in line
+	elsif (defined($hs->{$rgtag}) or defined($h->{$rgtag})) {
+		$rh{soundcheck} = _parse_db_to_soundcheck($hs->{$rgtag} || $h->{$rgtag});
+	}
+	# the itunes way only if nothing else works.
+	if (!defined($rh{soundcheck})) {
+		$rh{soundcheck} = _parse_iTunNORM($hs->{COMM} || $hs->{COM} || $h->{COMMENT});
+		$rh{volume}     = _parse_RVAD_to_iTunesVolume( $hs_raw->{RVAD} || $hs_raw->{RVA} );
+	}
+
+
+	# Handle volume adjustment information
+#	if ($hs->{RVA2} or $hs->{XRVA}) {
+#		# if XRVA is present, handle it like RVA2 (http://www.id3.org/Experimental_RVA2)
+#		$hs->{RVA2} = $hs->{XRVA} if (!defined($hs->{RVA2}) && defined($hs->{XRVA}));
+#		# Very limited RVA2 parsing, only handle master volume changes.
+#		# See http://www.id3.org/id3v2.4.0-frames for format spec
+#		my ($app, $channel, $adj) = unpack("Z* C n", $hs->{RVA2});
+#		if ($channel == 1) {
+#			
+#			$adj -= 0x10000 if ($adj > 0x8000);
+#			my $adjdb = $adj / 512.0;
+#			# Translate decibel volume adjustment into relative percentage
+#			# adjustment.  As far as I understand this, +6dB is perceived
+#			# as the double volume, i.e. +100%, while -6dB is
+#			# perceived as the half volume, i.e. -50%.
+#			# The dB volume adjustment adjdb correlates to the absolute
+#			# adjustment adjabs like this:
+#			#     adjdb = 20 * log10(1 + adjabs)
+#			# =>  adjabs = 10 ** (adjdb / 20) - 1
+#			
+#			my $vol = int(100 * (10 ** ($adjdb / 20) - 1));
+#			$vol = 100 if ($vol > 100);
+#			$vol = -100 if ($vol < -100);
+#			
+#			# print "$file: adjusting volume by $vol% ($adjdb dB)\n";
+#			$rh{volume} = $vol;
+#		}
+#	}
+
 	return \%rh;
 }
 
@@ -801,15 +818,12 @@ sub converter_readmeta {
 	return \%metastuff;
 }
 
-=back
-
-=cut
 
 #########################################################
 # Convert ReplayGain to SoundCheck
 # Code adapted from http://projects.robinbowes.com/flac2mp3/trac/ticket/30
 
-=item _parse_ReplayGain(VALUE)
+=item _parse_db_to_soundcheck(VALUE)
 
 Converts ReplayGain VALUE in dB to iTunes Sound Check value. Anything
 outside the range of -18.16 dB to 33.01 dB will be rounded to those values.
@@ -817,13 +831,13 @@ For more information on ReplayGain see http://replaygain.hydrogenaudio.org/
 
 =cut
 
-sub _parse_ReplayGain {
+sub _parse_db_to_soundcheck {
 	my ($gain) = @_;
 	return undef unless defined($gain);
 	if($gain =~ /(.*)\s+dB$/) {
 		$gain = $1
 	}
-	return undef unless ($gain =~ /^\s*-?\d+\.?\d*\s*$/);
+	return undef unless ($gain =~ /^\s*[+-]?\d+\.?\d*\s*$/);
 	my $result = int((10 ** (-$gain / 10)) * 1000 + .5);
 	if ($result > 65534) {
 		$result = 65534;
@@ -831,6 +845,112 @@ sub _parse_ReplayGain {
 	return oct(sprintf("0x%08X",$result));
 }
 
-1;
 
+
+#########################################################
+# Convert RVA2/XRVA to SoundCheck
+
+=item _parse_RVA2_to_db(VALUE, ALBUM)
+
+Reads RVA2/XRVA and returns a string describing the 
+relative volume adjustment in db. 
+
+If ALBUM is true it will only read the RVA2 tag 
+if the identification string is "album".
+
+For more information on RVA2/XRVA see http://www.id3.org/id3v2.4.0-frames 
+and http://www.id3.org/Experimental_RVA2
+
+=cut
+
+sub _parse_RVA2_to_db {
+	my ($rawdata, $album) = @_;
+	my ($app, $channel, $adj) = unpack("Z* C n", $rawdata);
+	if ($album && ($app ne "album")) { return undef; }
+
+	if ($channel == 1) { # we only look for the Master
+		$adj -= 0x10000 if ($adj > 0x8000);
+		my $adjdb = $adj / 512.0;
+		return "$adjdb dB";
+	}
+	warn "Unknown RVA2/XRVA tag found: Identification: $app, Channel: $channel, adj: $adj\n";
+	warn "Please send us the raw tag value to help us improve gnupod.\n";
+	warn "raw value: \"".unpack("H*", $rawdata)."\"\n";
+	return undef;
+}
+
+#########################################################
+=item _parse_RVAD_to_iTunesVolume ($rawdata) {
+
+Converts RVA/RVAD tag as written by iTunes to an integer
+in the -100 .. +100 range. Representing the manual volume
+adjustment (-100% .. +100%) made in iTunes to that song.
+
+If you see any other program writing RVA/RVAD tags please let me know.
+RVAD can handle 6 channels (5.1) while RVA is limited to 2 channels.
+Up to that point however it is bit for bit compatible with RVAD, so
+we can read it just the same way.
+
+Accepts binary data from the RVA/RVAD tag.
+
+Returns an integer from -100 to 100 or undef;
+
+=cut
+
+sub _parse_RVAD_to_iTunesVolume {
+	my ($rawdata) = @_;
+	return undef if (!defined($rawdata));
+	my ($incdec, $bitperchannel, $rightadj, $leftadj); # reading
+	my $volpercent; # writing
+	my ($rightsign, $leftsign);
+
+	# i know there is a smarter way to unpack this, but I don't trust my unpack-foo just yet.
+	my @rawbytes = unpack ("C*", $rawdata);
+#	print Dumper(\@rawbytes);
+
+	$incdec = shift @rawbytes;
+	$rightsign = ($incdec & 1)?1:-1;
+	$leftsign  = ($incdec & 2)?1:-1;
+	warn "RVA/RVAD tag has one channel increment and one decrement. Not an iTunes tag?\n" if (($rightsign * $leftsign) == -1);
+
+	$bitperchannel = shift @rawbytes;
+	warn "RVA/RVAD tag is not 16 bit. Not an iTunes tag?\n" if ($bitperchannel != 16);
+	my $bytesperchannel = int(($bitperchannel+7)/8);
+
+	$rightadj=0;
+	for ( my $i = 0 ; $i < $bytesperchannel ; $i++) {
+		$rightadj = $rightadj << 8;
+		$rightadj += shift @rawbytes;
+	}
+	$leftadj=0;
+	for ( my $i = 0 ; $i < $bytesperchannel ; $i++) {
+		$leftadj = $leftadj << 8;
+		$leftadj += shift @rawbytes;
+	}
+	warn "RVA/RVAD tag left and right channel differ. Not an iTunes tag?\n" if ($leftadj != $rightadj);
+
+	# up until now the handling is somewhat generic but
+	# now we are entering iTunes land ... abandon all hope 
+
+	$volpercent = int( ($leftadj + $rightadj)/2 / ((1<<$bitperchannel) -1) * 100 ) * $rightsign;
+
+	if ($volpercent < -100 ) {
+		warn "RVA/RVAD tag adjustment: $volpercent < -100. Setting to -100\n" ;
+		$volpercent = -100;
+	}
+
+	if ($volpercent >  100 ) {
+		warn "RVA/RVAD tag adjustment: $volpercent >  100. Setting to  100\n" ;
+		$volpercent = 100;
+	} #fdfg dfg
+
+#	print "foo: $volpercent \n";
+
+	return $volpercent;
+}
+
+=back
+=cut
+
+1;
 
