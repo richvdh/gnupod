@@ -596,7 +596,11 @@ sub resolve_podcasts {
 				$py->parsefile($pcrss->{file});
 			};
 			if ($@) {
-				warn "! [HTTP] Error while parsing XML file. ".$pcrss->{file}.". File kept for examination. : $@\n";
+				warn "! [HTTP] Error while parsing XML file ".$pcrss->{file}.". File kept for examination. : $@\n";
+				next;
+			}
+			if (!defined($podcast_infos{$pcrss->{file}})) {
+				warn "! [HTTP] No item found while parsing XML file ".$pcrss->{file}.". File kept for examination.\n";
 				next;
 			}
 			unlink($pcrss->{file}) or warn "Could not unlink $pcrss->{file}, $!\n";
