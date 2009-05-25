@@ -762,10 +762,10 @@ Usage: gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
    -b  --set-bookmarkable           Set this song as bookmarkable (= Remember position)
        --set-shuffleskip            Exclude this file in shuffle-mode
        --set-compilation            Mark songs as being part of a compilation
-       --min-vol-adj=int            Minimum volume adjustment allowed by ID3v2.4 RVA2 tag
-       --max-vol-adj=int            Maximum ditto.  The volume can be adjusted in the range
-                                    -100% to +100%.  The default for these two options is 0,
-                                    which effectively ignored the RVA2 tag.
+       --min-vol-adj=int            Minimum volume adjustment allowed by ID3 RVA/RVAD tag
+       --max-vol-adj=int            Maximum ditto. The volume can be adjusted manually in iTunes in
+                                    the range -100% to +100%. The default for these two options is 0,
+                                    which effectively ignores the RVA/RVAD tag.
        --artwork=FILE               Use FILE as album cover
 
 
