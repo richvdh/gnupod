@@ -44,7 +44,7 @@ use vars qw(%opts);
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
 
-my $getoptres = GetOptions(\%opts, "version", "help|h", "list-attributes", "mount|m=s", "noheader",
+my $getoptres = GetOptions(\%opts, "version", "help|h", "list-attributes", "mount|m=s",
 	@GNUpod::FindHelper::findoptions
 );
 GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "gnupod_search");
@@ -101,7 +101,7 @@ sub main {
 
 	@resultlist = GNUpod::FindHelper::croplist($opts{limit}, @resultlist);
 	#print "sortedresultlist:\n".Dumper(\@resultlist);
-	GNUpod::FindHelper::prettyprint ({ results => \@resultlist, noheader => $opts{noheader} }) if (@resultlist);
+	GNUpod::FindHelper::prettyprint ({ results => \@resultlist }) if (@resultlist);
 }
 
 
@@ -134,7 +134,6 @@ Usage: gnupod_find.pl ...
        --list-attributes   display all attributes for filter/view/sort
        --version           output version information and exit
    -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
-       --noheader          don't print headers for result list
 $GNUpod::FindHelper::findhelp
 Report bugs to <bug-gnupod\@nongnu.org>
 EOF

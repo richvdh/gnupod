@@ -558,6 +558,7 @@ our @findoptions = (
 "view|v=s@",
 "sort|s=s@",
 "once|or|o",
+"noheader",
 "rawprint",
 "limit|l=s"
 );
@@ -586,8 +587,9 @@ our $findhelp = '   -f, --filter FILTERDEF  only show songss that match FILTERDE
    -s, --sort SORTDEF      order output according to SORTDEF
    -v, --view VIEWDEF      only show song attributes listed in VIEWDEF
    -o, --or, --once        make any filter match (think OR vs. AND)
-   -l, --limit=N           Only output N first tracks (-N: all but N first)
-       --rawprint          Output of raw values instead of human readable
+   -l, --limit=N           only output N first tracks (-N: all but N first)
+       --noheader          don\'t print headers for result list
+       --rawprint          output of raw values instead of human readable
 
 FILTERDEF ::= <attribute>["<"|">"|"="|"<="|">="|"=="|"!="|"~"|"~="|"=~"]<value>
   The operators "<", ">", "<=", ">=", "==", and "!=" work as you might expect.
@@ -611,7 +613,7 @@ Note: * String arguments (title/artist/album/etc) have to be UTF8 encoded!
 
 =item fullattributes ()
 
-Print a list of all known attributes, their shortcut and their 
+Print a list of all known attributes, their shortcut and their
 description and calls exit.
 
 =cut
@@ -815,6 +817,7 @@ sub process_options {
 	}
 	#print "Viewlist: ".Dumper(\@viewlist);
 	$rawprint = $options{rawprint};
+	$noheader = $options{noheader};
 	return [ \@filterlist, \@sortlist, \@viewlist ];
 }
 
