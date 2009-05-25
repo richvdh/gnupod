@@ -75,7 +75,9 @@ DOCUMENT ME!
 
 =item %FILEATTRDEF_COMPUTE
 
-DOCUMENT ME!
+This hash contains functions to convert/compute attribute values to
+human readable forms. E.g. it contains conversions from MACTIME based
+dates to something human readable.
 
 =cut
 
@@ -207,7 +209,7 @@ DOCUMENT ME!
 		'content' => 'int',
 		'help' => 'Soundcheck value for volume normalization',
 		'header' => 'SOUNDCHECK',
-		'width' => 6,
+		'width' => 8,
 		},
 	'playcount' => {
 		'format' => 'numeric',
@@ -518,7 +520,7 @@ DOCUMENT ME!
 		'content' => 'string',
 		'help' => 'Volume in +/- percent',
 		'header' => 'VOLUME',
-		'width' => 10,
+		'width' => 5,
 		},
 
 	'id' => {
@@ -550,6 +552,7 @@ our @findoptions = (
 "view|v=s@",
 "sort|s=s@",
 "once|or|o",
+"rawprint",
 "limit|l=s"
 );
 
@@ -578,6 +581,7 @@ our $findhelp = '   -f, --filter FILTERDEF  only show songss that match FILTERDE
    -v, --view VIEWDEF      only show song attributes listed in VIEWDEF
    -o, --or, --once        make any filter match (think OR vs. AND)
    -l, --limit=N           Only output N first tracks (-N: all but N first)
+       --rawprint          Output of raw values instead of human readable
 
 FILTERDEF ::= <attribute>["<"|">"|"="|"<="|">="|"=="|"!="|"~"|"~="|"=~"]<value>
   The operators "<", ">", "<=", ">=", "==", and "!=" work as you might expect.
@@ -712,6 +716,8 @@ Example:
 our @filterlist = ();
 our @sortlist = ();
 our @viewlist = ();
+our $rawprint = 0;
+our $noheader = 0;
 
 sub process_options {
 	my %options;
@@ -802,6 +808,7 @@ sub process_options {
 		}
 	}
 	#print "Viewlist: ".Dumper(\@viewlist);
+	$rawprint = $options{rawprint};
 	return [ \@filterlist, \@sortlist, \@viewlist ];
 }
 
@@ -993,17 +1000,18 @@ sub filematches {
 ##############################################################
 # computed attributes
 
-=item computeresults ($connection, $el, $field)
+=item computeresults ($song, $raw, $field)
 
-Computes result song data passed in the array ref $results
-according to the list of fields passed in the array ref $view.
+Computes the output of $field from $song according to
+$FILEATTRDEF_COMPUTE{field}. If $raw is true, the raw
+value (if any) wil be returned.
 
 =cut
 
 
 sub computeresults {
-	my ($song, $fieldname) = @_;
-	if (defined ($FILEATTRDEF_COMPUTE{$fieldname})) {
+	my ($song, $raw, $fieldname) = @_;
+	if ((!$raw) && defined ($FILEATTRDEF_COMPUTE{$fieldname})) {
 		#print "Found code for $fieldname \n";
 		my $coderef = $FILEATTRDEF_COMPUTE{$fieldname};
 		return &$coderef($song);
@@ -1016,13 +1024,14 @@ sub computeresults {
 ##############################################################
 # Printout
 
-=item prettyprint ({ results => \@resultlist[, view => \@viewlist][, noheader => 1])
+=item prettyprint ({ results => \@resultlist[, view => \@viewlist][, noheader => 1][, rawprint => 1])
 
 Prints the song data passed in resultlist.
 All options are passed as one hashref.
 The key "results" should point to an array ref with the results.
 View can be changed according to the array ref indicated ny the "view" key.
-The output of headers is skipped with a non zero value for the "noheader" key.
+The "noheader" option will skip the output of headers.
+The "rawprint" option will skip the computed value conversion/generation.
 
 Example:
   prettyprint ( { results => \@songs, noheader => 1 } );
@@ -1061,13 +1070,13 @@ sub printheader {
 }
 
 sub printoneline {
-	my ($song,@view) = @_;
+	my ($song,$raw,@view) = @_;
 	my $totalwidth=0;
 	my $firstcolumn=1;
 	my $overhang=0;
 	foreach my $viewkey (@view) {
 		if ($firstcolumn) {$firstcolumn=0;} else { print " | "; $totalwidth+=3; }
-		$overhang = printonefield($FILEATTRDEF{$viewkey}, computeresults($song,$viewkey), $overhang);
+		$overhang = printonefield($FILEATTRDEF{$viewkey}, computeresults($song,$raw,$viewkey), $overhang);
 	}
 }
 
@@ -1076,12 +1085,17 @@ sub prettyprint {
 	my ($options) = (@_);
 #	print "prettypriting \n".Dumper($options);
 	my @view = @viewlist;
-	@view = @{$options->{view}} if defined($options->{view});
+	my $raw = $rawprint;
+	my $nohead = $noheader;
 
-	printheader(@view) unless $options->{noheader};
+	@view = @{$options->{view}} if defined($options->{view});
+	$raw = $options->{rawprint} if defined($options->{rawprint});
+	$nohead = $options->{noheader} if defined($options->{noheader});
+
+	printheader(@view) unless $nohead;
 
 	foreach my $song (@{$options->{results}}) {
-		printoneline($song,@view);
+		printoneline($song,$raw,@view);
 		print "\n";
 	}
 
