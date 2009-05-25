@@ -111,6 +111,12 @@ dates to something human readable.
 			return undef unless defined($song->{lastskip});
 			return time2str( "%Y-%m-%d %T" , $song->{lastskip} - 2082844800);
 		},
+	'soundcheck' => sub {
+			my ($song) = @_;
+			return undef unless defined($song->{soundcheck});
+			return undef if ($song->{soundcheck} eq "");
+			return sprintf("%+.2f",log($song->{soundcheck}/1000)/log(10)/-0.1) ." dB";
+		},
 );
 
 =item %FILEATTRDEF
