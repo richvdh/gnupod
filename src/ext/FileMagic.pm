@@ -537,6 +537,7 @@ sub __is_mp3 {
 	$rh{composer}   = ($hs->{TCOM} || $hs->{TCM} || "");
 	$rh{playcount}  = int($hs->{PCNT} || $hs->{CNT}) || 0;
 	$rh{mediatype}  = MEDIATYPE_AUDIO;
+	$rh{lyrics_flag}= 1 if($hs->{USLT} || $hs->{ULT});
 
 	# RVA2/XRVA trumps all.
 	if (defined($hs_raw->{RVA2}) or defined($hs_raw->{XRVA})) {
