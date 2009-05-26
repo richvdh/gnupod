@@ -728,6 +728,7 @@ our @viewlist   = ();
 our $once       = 0;
 our $rawprint   = 0;
 our $noheader   = 0;
+our $limit      = undef;
 
 sub process_options {
 	my %options;
@@ -821,12 +822,14 @@ sub process_options {
 	$rawprint = $options{rawprint};
 	$noheader = $options{noheader};
 	$once = $options{once};
+	$limit = $options{limit};
 	return { filterlist => \@filterlist,
 			sortlist => \@sortlist,
 			viewlist => \@viewlist,
 			once => $once,
 			rawprint => $rawprint,
 			noheader => $noheader,
+			limit => $limit,
 			};
 }
 
@@ -902,11 +905,13 @@ sub comparesongs ($$) {
 }
 
 
-=item croplist ($limit, @list)
+=item croplist ({ results => \@resultlist[, limit => $limit]})
 
 Crop a list to contain the right amount of elements.
 
-If passed a positive integer in $limit, the first $limit elements of @list are returned.
+The limit can be passed as parameter. Otherwise it will be taken from $FindHelper::limit
+
+If passed a positive integer in $limit, only the first $limit elements of @list are returned.
 
 If passed a negative integer in $limit, ALL BUT the first $limit elements of @list are returned.
 
@@ -915,15 +920,22 @@ If a non-numeric variable is passed in $limit, the whole @list is returned.
 =cut
 
 sub croplist {
-	my ($limit, @resultlist) = @_;
-	if (defined($limit) and ($limit =~ /^-?\d+/)) {
-		if ($limit >= 0) {
-			splice @resultlist, $limit if ($#resultlist >= $limit);
+	my ($options) = @_;
+
+	my @resultlist = ();
+	my $reslimit = $limit;
+
+	@resultlist = @{$options->{results}} if defined($options->{results});
+	$reslimit = $options->{limit} if defined($options->{limit});
+
+	if (defined($reslimit) and ($reslimit =~ /^-?\d+/)) {
+		if ($reslimit >= 0) {
+			splice @resultlist, $reslimit if ($#resultlist >= $reslimit);
 		} else {
-			if (-1 * $limit > $#resultlist) {
+			if (-1 * $reslimit > $#resultlist) {
 				@resultlist = ();
 			} else {
-				my @limitedlist = splice @resultlist, -1 * $limit;
+				my @limitedlist = splice @resultlist, -1 * $reslimit;
 				@resultlist = @limitedlist;
 			}
 		}

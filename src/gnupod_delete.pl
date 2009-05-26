@@ -90,7 +90,7 @@ sub main {
 
 		@resultlist = sort GNUpod::FindHelper::comparesongs @resultlist;
 
-		@resultlist = GNUpod::FindHelper::croplist($opts{limit}, @resultlist);
+		@resultlist = GNUpod::FindHelper::croplist({results => \@resultlist});
 
 	}
 
