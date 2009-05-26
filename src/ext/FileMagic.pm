@@ -700,12 +700,28 @@ Searches STRING for a sequence of 10 hex numbers of 8 digits each
 used by iTunes to describe the dynamic range.
 see http://www.id3.org/iTunes_Normalization_settings
 
+   soundcheck vs. dB
+  ===================
+      100   +10.000 dB
+      500    +3.010 dB
+      900    +0.969 dB
+     1000     0.000 dB
+     1200    -0.791 dB
+     5000    -6.989 dB
+    10000   -10.000 dB
+
 =cut
 
 sub _parse_iTunNORM {
 	my($string) = @_;
 	if($string =~ /\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})/) {
-		return oct("0x".($1>$2 ? $1:$2)); #NOTE to myself: oct() does not produce an octal value. It parses octal, hex and binary to decimal.
+		#NOTE to myself: oct() does not produce an octal value.
+		#It parses octal, hex and binary and returns decimal.
+		my $left = oct("0x".$1);
+		my $right = oct("0x".$2);
+		#NOTE to myself: Choosing the bigger value chooses the smaller gain!
+		#Maybe choosing the one closer to 1000 (+0dB) would be better?
+		return ($left>$right ? $left:$right);
 	}
 	return undef;
 }
