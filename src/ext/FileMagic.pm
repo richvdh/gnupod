@@ -853,13 +853,13 @@ sub _parse_db_to_soundcheck {
 
 =item _parse_RVA2_to_db(VALUE, ALBUM)
 
-Reads RVA2/XRVA and returns a string describing the 
-relative volume adjustment in db. 
+Reads RVA2/XRVA and returns a string describing the
+relative volume adjustment in db.
 
-If ALBUM is true it will only read the RVA2 tag 
+If ALBUM is true it will only read the RVA2 tag
 if the identification string is "album".
 
-For more information on RVA2/XRVA see http://www.id3.org/id3v2.4.0-frames 
+For more information on RVA2/XRVA see http://www.id3.org/id3v2.4.0-frames
 and http://www.id3.org/Experimental_RVA2
 
 =cut
@@ -931,7 +931,7 @@ sub _parse_RVAD_to_iTunesVolume {
 	warn "RVA/RVAD tag left and right channel differ. Not an iTunes tag?\n" if ($leftadj != $rightadj);
 
 	# up until now the handling is somewhat generic but
-	# now we are entering iTunes land ... abandon all hope 
+	# now we are entering iTunes land ... abandon all hope
 
 	$volpercent = int( ($leftadj + $rightadj)/2 / ((1<<$bitperchannel) -1) * 100 ) * $rightsign;
 
