@@ -136,7 +136,7 @@ sub newfile {
 	my($el) =  @_;
 	if ($firstrun) {
 		return if ($opts{playlist});
-		if (GNUpod::FindHelper::filematches($el,$opts{once})) {
+		if (GNUpod::FindHelper::filematches($el)) {
 			push @resultlist, \%{$el->{file}};  #add a reference to @resultlist
 		}
 	} else {

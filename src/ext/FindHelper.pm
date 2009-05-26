@@ -682,20 +682,21 @@ sub resolve_attribute {
 
 =item process_options ( %options )
 
-Examines the "filter" "sort" and "view" options and returns an array with
-three hashrefs containing the filterlist sortlist and viewlist.
+Examines the "filter" "sort" and "view" options and returns a hash ref
+containing the filterlist sortlist and viewlist and the other options
+that processes_options will set.
 If an error is encountered either undef or a string containing an error
 description is returned.
 
-It also prepares three lists that other FindHelper functions will need
-to work properly:
+In particular it prepares three lists that other FindHelper functions
+will need to work properly:
 
   @filterlist
   @sortlist
   @viewlist
 
 Those are also exported by this module. So it's up to you if you want to
-use them directly, from the returned references, via the exported array
+use them directly from the returned references, via the exported array
 variables or not at all. For most purposes you probably don't need to.
 
 Examples of filter options:
@@ -722,10 +723,11 @@ Example:
 =cut
 
 our @filterlist = ();
-our @sortlist = ();
-our @viewlist = ();
-our $rawprint = 0;
-our $noheader = 0;
+our @sortlist   = ();
+our @viewlist   = ();
+our $once       = 0;
+our $rawprint   = 0;
+our $noheader   = 0;
 
 sub process_options {
 	my %options;
@@ -818,7 +820,14 @@ sub process_options {
 	#print "Viewlist: ".Dumper(\@viewlist);
 	$rawprint = $options{rawprint};
 	$noheader = $options{noheader};
-	return [ \@filterlist, \@sortlist, \@viewlist ];
+	$once = $options{once};
+	return { filterlist => \@filterlist,
+			sortlist => \@sortlist,
+			viewlist => \@viewlist,
+			once => $once,
+			rawprint => $rawprint,
+			noheader => $noheader,
+			};
 }
 
 sub help_find_attribute {
@@ -967,13 +976,16 @@ sub matcher {
 	}
 }
 
-=item filematches ($el, $once)
+=item filematches ($el, [{filterlist => \@filterlist, once => $once}])
 
 Returns 1 if the hasref $el->{file} matches the @FindHelper::filterlist and 0 if it doesn't match.
 
 If $once evaluates to the boolean value True than a single match on any
-condition specified in the @FindHelper::filterlist is enough. Otherwise
+condition specified in the @filterlist is enough. Otherwise
 all conditions have to match.
+
+Both, @filterlist and $once can be passed as parameter in a hashref, otherwise
+the values set by process_options will be used.
 
 NOTE: If an attribute is not present (like releasedate in non-podcast items)
 than a match on those elements will always fail.
@@ -981,23 +993,34 @@ than a match on those elements will always fail.
 =cut
 
 sub filematches {
-	my ($el,$once) =  @_;
+	my ($el,$options) =  @_;
+
+	# get current module values
+	my $matchonce = $once;
+	my @filters = @filterlist;
+
+	# override by parameters
+	if (defined($options)) {
+		$matchonce = $options->{once} if defined($options->{once});
+		@filters = @{$options->{filterlist}} if defined($options->{filterlist});
+	}
+
 	# check for matches
 	my $matches=1;
-	foreach my $filter (@filterlist) {
+	foreach my $filter (@filters) {
 		#print "Testing for filter:\n".Dumper($filter);
 
 		if (matcher($filter, $el->{file}->{$filter->{attr}})) {
 			#matching
 			$matches = 1;
-			if ($once) {
+			if ($matchonce) {
 				#ok one match is enough.
 				last;
 			}
 		} else {
 			#not matching
 			$matches = 0;
-			if (! $once) {
+			if (! $matchonce) {
 				# one mismatch is enough
 				last;
 			}
@@ -1033,7 +1056,7 @@ sub computeresults {
 ##############################################################
 # Printout
 
-=item prettyprint ({ results => \@resultlist[, view => \@viewlist][, noheader => 1][, rawprint => 1])
+=item prettyprint ({ results => \@resultlist[, view => \@viewlist][, noheader => 1][, rawprint => 1]})
 
 Prints the song data passed in resultlist.
 All options are passed as one hashref.

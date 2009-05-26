@@ -110,7 +110,7 @@ sub main {
 sub newfile {
 	my($el) =  @_;
 
-	if (GNUpod::FindHelper::filematches($el,$opts{once})) {
+	if (GNUpod::FindHelper::filematches($el)) {
 		push @resultlist, \%{$el->{file}};  #add a reference to @resultlist
 	}
 }
