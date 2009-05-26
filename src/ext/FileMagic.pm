@@ -696,7 +696,7 @@ sub getutf8 {
 
 =item _parse_iTunNORM(STRING)
 
-Searches STRING for a sequence of 8 hex numbers of 8 digits each
+Searches STRING for a sequence of 10 hex numbers of 8 digits each
 used by iTunes to describe the dynamic range.
 see http://www.id3.org/iTunes_Normalization_settings
 
@@ -705,7 +705,7 @@ see http://www.id3.org/iTunes_Normalization_settings
 sub _parse_iTunNORM {
 	my($string) = @_;
 	if($string =~ /\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})\s([0-9A-Fa-f]{8})/) {
-		return oct("0x".($1>$2 ? $1:$2));
+		return oct("0x".($1>$2 ? $1:$2)); #NOTE to myself: oct() does not produce an octal value. It parses octal, hex and binary to decimal.
 	}
 	return undef;
 }
@@ -835,15 +835,17 @@ For more information on ReplayGain see http://replaygain.hydrogenaudio.org/
 sub _parse_db_to_soundcheck {
 	my ($gain) = @_;
 	return undef unless defined($gain);
-	if($gain =~ /(.*)\s+dB$/) {
+	if($gain =~ /(.*?)\s*dB$/) {
 		$gain = $1
 	}
-	return undef unless ($gain =~ /^\s*[+-]?\d+\.?\d*\s*$/);
+	if (!defined($gain =~ /^\s*[+-]?\d+(\.\d+)?\s*$/)) {
+		warn "Unknown replay gain value \"$gain\". Please report this error and help us to improve gnupod!\n";
+	}
 	my $result = int((10 ** (-$gain / 10)) * 1000 + .5);
 	if ($result > 65534) {
 		$result = 65534;
 	}
-	return oct(sprintf("0x%08X",$result));
+	return $result;
 }
 
 
