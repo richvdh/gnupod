@@ -117,6 +117,13 @@ dates to something human readable.
 			return undef if ($song->{soundcheck} eq "");
 			return sprintf("%+.2f",log($song->{soundcheck}/1000)/log(10)/-0.1) ." dB";
 		},
+	'volume' => sub {
+			my ($song) = @_;
+			return undef unless defined($song->{volume});
+			return "" if ($song->{volume} == 0);
+			return "-100% (silence)" if ($song->{volume} == -100);
+			return sprintf("%+d%% (%+.2fdB)",$song->{volume},20*log($song->{volume}/100.0 + 1.0)/log(10));
+		},
 );
 
 =item %FILEATTRDEF
