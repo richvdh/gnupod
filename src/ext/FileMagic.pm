@@ -541,7 +541,14 @@ sub __is_mp3 {
 
 	# RVA2/XRVA trumps all.
 	if (defined($hs_raw->{RVA2}) or defined($hs_raw->{XRVA})) {
-		$rh{soundcheck} = _parse_db_to_soundcheck( _parse_RVA2_to_db(($hs_raw->{RVA2} || $hs_raw->{XRVA}), $flags->{'rgalbum'}) );
+		my $rva2tag = ($hs_raw->{RVA2} || $hs_raw->{XRVA});
+		if (ref(\$rva2tag) eq "SCALAR") {
+			$rh{soundcheck} = _parse_db_to_soundcheck( _parse_RVA2_to_db(($hs_raw->{RVA2} || $hs_raw->{XRVA}), $flags->{'rgalbum'}) );
+		} else {
+			use Data::Dumper;
+			$Data::Dumper::Useqq = 1;
+			warn "[RVA2] Currently gnupod does not support more than one RVA2 tag! Your file \"$cf\" seems to have more.\n[RVA2] Please report this as a bug along with the following information:\n====\n".Dumper($rva2tag)."====\n";
+		}
 	}
 	# REPLAY_x_GAIN from APE tag or TXXX is second in line
 	elsif (defined($hs->{$rgtag}) or defined($h->{$rgtag})) {
