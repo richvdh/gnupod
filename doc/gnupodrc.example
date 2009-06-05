@@ -19,6 +19,7 @@
 ## * video   (default)
 ## * nano    (pre-2007 nanos)
 ## * nano_3g (the late 2007 nano)
+## * nano_4g (the late 2008 nano)
 # model = video
 
 ## Let GNUpod call mktunes.pl itself.

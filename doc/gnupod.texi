@@ -684,7 +684,7 @@ and add them to the 'Heute Morgen' playlist!
 @node Adding cover artwork
 @section Adding cover artwork
 
-GNUpod can write cover artwork for video, nano and late 2007-nano iPods. The internal image format is model specific, so you should give 
+GNUpod can write cover artwork for video and nano iPods. The internal image format is model specific, so you should give 
 GNUpod a hint about the image format it should use.
 
 If you own a video (compatible) iPod, set:
@@ -699,6 +699,10 @@ model = nano
 Late 2007-nanos need this setting:
 @example
 model = nano_3g
+@end example
+Late 2008-nanos need this setting:
+@example
+model = nano_4g
 @end example
 
 

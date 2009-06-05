@@ -35,7 +35,10 @@ use constant MODE_PARSING   => 200;
 use constant MODE_PARSED    => 300;
 
 	# Artwork profiles:
-	my $profiles = { 'nano_3g' => [ { height=>320, width=>320, storage_id=>1060, bpp=>16,  },  { height=>128, width=>128, storage_id=>1055, bpp=>16, },
+	my $profiles = { 'nano_4g' => [ { height=>128, width=>128, storage_id=>1055, bpp=>16,  }, { height=>128, width=>128, storage_id=>1068, bpp=>16,  },
+	                                { height=>240, width=>240, storage_id=>1071, bpp=>16,  }, { height=>50,  width=>50,  storage_id=>1074, bpp=>16,  },
+	                                { height=>80,  width=>80,  storage_id=>1078, bpp=>16,  }, { height=>240, width=>240, storage_id=>1084, bpp=>16,  },  ],
+	                 'nano_3g' => [ { height=>320, width=>320, storage_id=>1060, bpp=>16,  }, { height=>128, width=>128, storage_id=>1055, bpp=>16,  },
 	                                { height=>56,  width=>56,  storage_id=>1061, bpp=>16, drop=>112}                                                     ],
 	                 'classic' => [ { height=>320, width=>320, storage_id=>1060, bpp=>16,  },  { height=>128, width=>128, storage_id=>1055, bpp=>16, },
 	                                { height=>56,  width=>56,  storage_id=>1061, bpp=>16, drop=>112}                                                     ],

@@ -667,6 +667,8 @@ use:
      model = nano
    Late 2007-nanos need this setting:
      model = nano_3g
+   Late 2008-nanos need this setting:
+     model = nano_4g
 
    To specify a cover while adding files you'd use the `--artwork'
 switch of `gnupod_addsong.pl'. Example:
