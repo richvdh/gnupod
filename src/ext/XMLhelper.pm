@@ -66,7 +66,7 @@ sub getpath {
 		my ($current_extension) = $clean_filename =~ /\.([^.]*)$/;         # Current file extension
 		   $clean_filename      =~ tr/a-zA-Z0-9/_/c;                     # Remove bad chars
 		my $requested_ext       = ($opts->{extension} || $opts->{format}); # Checks if existing extension matches regexp
-		my @aviable_targets     = bsd_glob($xconn->{musicdir}."/*", GLOB_NOSORT);
+		my @aviable_targets     = bsd_glob($xconn->{musicdir}."/*", $xconn->{autotest}?GLOB_NOCASE:GLOB_NOSORT);
 		
 		unless(int(@aviable_targets)) {
 			warn "No iPod folders found at $xconn->{mountpoint}, did you run gnupod_INIT.pl ?\n";
@@ -86,7 +86,7 @@ sub getpath {
 		
 		for(my $i = 0; $i < MAX_PATHLOOP; $i++) {
 			my $dp_prefix  = sprintf("g%x_",$i);
-			my $dp_target  = $aviable_targets[int(rand(@aviable_targets))];
+			my $dp_target  = $aviable_targets[$xconn->{autotest}?0:int(rand(@aviable_targets))];
 			my $dp_path    = $dp_target."/".$dp_prefix;
 			my $dp_chrleft = MAX_PATHLENGTH - length($dp_path) + length($xconn->{mountpoint});
 			my $dp_ext     = ".$current_extension";
