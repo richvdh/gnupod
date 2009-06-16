@@ -534,6 +534,7 @@ sub __is_mp3 {
 	$rh{genre}      = _get_genre($hs->{TCON} || $hs->{TCO} || $h->{GENRE}   || "");
 	$rh{comment}    = ($hs->{COMM} || $hs->{COM} || $h->{COMMENT} || "");
 	$rh{desc}       = __merge_strings({joinby => " ", wspace => "norm", case => "ignore"},($hs->{USLT} || $hs->{ULT}),($nonitunescomment || $h->{COMMENT}));
+	delete $rh{desc} if (!defined($rh{desc}) || $rh{desc} eq "");
 	$rh{composer}   = ($hs->{TCOM} || $hs->{TCM} || "");
 	$rh{playcount}  = int($hs->{PCNT} || $hs->{CNT}) || 0;
 	$rh{mediatype}  = MEDIATYPE_AUDIO;
