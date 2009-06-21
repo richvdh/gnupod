@@ -33,24 +33,38 @@
 ##### NON GLOBAL OPTIONS ######
 
 # *** mktunes.pl ***
+
 ## Specify the iPods name
 # mktunes.ipod-name = Wurstli
 
+## Set --volume boost to +10 percent 
+# mktunes.volume = +10
+
+## Enforce iPod serial number:
+# mktunes.fwguid = 000ba3100310abcf
+
+## Only keep some attributes to make the iTunesDB fit inside small RAM
+## The minimum attributes needed by the iPod are path and title
+## Valid attributes are:
+## title path album artist genre fdesc eq comment category composer group
+## desc podcastguid podcastrss chapterdata subtitle tvshow tvepisode
+## tvnetwork albumartist artistthe keywords sorttitle sortalbum
+## sortalbumartist sortcomposer sorttvshow
+# low_ram_attr = path title artist album
 
 # *** on the go sync (V2 Firmware) ***
+
 ## Uncomment this to skip 'on-the-go' sync
 # otgsync.nosync = 1
 
 # *** tunes2pod.pl ***
+
 ## Uncomment to set '--force' switch to true (DANGEROUS)
 # tunes2pod.force = 1
 
-
-# *** mktunes.pl ***
-## Set --volume boost to +10 percent 
-# mktunes.volume = +10
-## Enforce iPod serial number:
-# mktunes.fwguid = 000ba3100310abcf
+## Setting the low_ram_attr option above causes tunes2pod.pl to sync
+## the attibutes in iTunesDB with those in GNUtunesDB.xml to make sure
+## attributes not present in iTunesDB will be lost
 
 # *** gnupod_search.pl ***
 

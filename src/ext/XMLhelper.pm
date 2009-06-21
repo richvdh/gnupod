@@ -301,19 +301,23 @@ sub mkh {
 }
 
 
+#############################################################
+# Reset some stuff if we do a second run
+sub resetxml {
+	$cpn = undef; #Current PlaylistName
+	@idpub = ();
+	@plorder = ();
+	$xid = 1;
+	$XDAT = undef;
+}
+
 
 #############################################################
 # Parses the XML File and do events
 sub doxml {
 	my($xmlin, %opts) = @_;
 	return undef unless (-r $xmlin);
-	### reset some stuff if we do a second run
-	$cpn = undef; #Current PlaylistName
-	@idpub = ();
-	@plorder = ();
-	$xid = 1;
-	$XDAT = undef;
-	###
+	&resetxml;
 	my $p;
 	my $ref = eval {
 		$p = new XML::Parser(ErrorContext => 0, Handlers=>{Start=>\&eventer});
