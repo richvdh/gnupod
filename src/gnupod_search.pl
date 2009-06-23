@@ -295,53 +295,7 @@ gnupod_search.pl  - Search, list, edit, delete songs from your iPod
 
 =head1 SYNOPSIS
 
-	# Mount the iPod
-	mount /mnt/ipod
-
-	# Sync changes made by other tools (such as iTunes)
-	# only necessary if you are using other tools in addition to these
-	tunes2pod.pl -m /mnt/ipod
-
-	# search for all songs by the artist called 'Schlummiguch'
-	gnupod_search.pl -m /mnt/ipod --artist="Schlummiguch"
-
-	# search for all songs in the album 'Seiken Densetsu'
-	gnupod_search.pl -m /mnt/ipod --album="Seiken Densetsu"
-
-	# search for all songs whose ids contain the number 4
-	gnupod_search.pl -m /mnt/ipod --id=4
-
-	# search for the songs with id 4 (it's a regular expression)
-	gnupod_search.pl -m /mnt/ipod --id="^4$"
-
-	# search for all the songs whose rating is 3 - 5 stars and whose
-	# Artist contains "Amos"
-	gnupod_search.pl -m /mnt/ipod --rating="60-100" --artist="Amos"
-
-	# search for all the songs whose play count is less than 3
-	gnupod_search.pl -m /mnt/ipod --playcount<3
-
-	# Change artist and rating for all songs by Alfred Neumann
-	# Sets artist to "John Doe" and rating to 5 stars (5 x 20 = 100)
-	gnupod_search.pl --artist="Alfred Neumann" --rename="artist=John Doe" --rename="rating=100"
-
-	# Set cover-artwork for all songs by "Amos" to be "amos.jpg"
-	gnupod_search.pl --artist="Amos" --artwork="amos.jpg"
-
-	# Boost the volume for all the songs on album by 50%
-	gnupod_search --album="Seiken Densetsu" --rename="volume=50"
-
-	# Cut the volume for all the songs on album by -10%
-	gnupod_search --album="Seiken Densetsu" --rename="volume=-10"
-
-	# Delete all songs by the artist called 'Schlumminguch'
-	gnupod_search.pl -m /mnt/ipod --artist="Schlummiguch" --delete
-
-	# Record the changes to the iTunes database (this is essential)
-	mktunes.pl -m /mnt/ipod
-
-	# Unmount and go
-	umount /mnt/ipod
+	gnupod_search.pl [-h] [-m directory] File1 File2 ...
 
 =head1 DESCRIPTION
 
@@ -493,6 +447,56 @@ intend to do this, that you take a backup of the file first.
 B<IMPORTANT>: After making any changes to the F<GNUtunesDB.xml> (whether
 directly) or vial C<gnupod_search.pl> you must call C<mktunes.pl> to ensure
 those changes are also reflected in the iTunes database.
+
+=head1 EXAMPLES
+
+	# Mount the iPod
+	mount /mnt/ipod
+
+	# Sync changes made by other tools (such as iTunes)
+	# only necessary if you are using other tools in addition to these
+	tunes2pod.pl -m /mnt/ipod
+
+	# search for all songs by the artist called 'Schlummiguch'
+	gnupod_search.pl -m /mnt/ipod --artist="Schlummiguch"
+
+	# search for all songs in the album 'Seiken Densetsu'
+	gnupod_search.pl -m /mnt/ipod --album="Seiken Densetsu"
+
+	# search for all songs whose ids contain the number 4
+	gnupod_search.pl -m /mnt/ipod --id=4
+
+	# search for the songs with id 4 (it's a regular expression)
+	gnupod_search.pl -m /mnt/ipod --id="^4$"
+
+	# search for all the songs whose rating is 3 - 5 stars and whose
+	# Artist contains "Amos"
+	gnupod_search.pl -m /mnt/ipod --rating="60-100" --artist="Amos"
+
+	# search for all the songs whose play count is less than 3
+	gnupod_search.pl -m /mnt/ipod --playcount<3
+
+	# Change artist and rating for all songs by Alfred Neumann
+	# Sets artist to "John Doe" and rating to 5 stars (5 x 20 = 100)
+	gnupod_search.pl --artist="Alfred Neumann" --rename="artist=John Doe" --rename="rating=100"
+
+	# Set cover-artwork for all songs by "Amos" to be "amos.jpg"
+	gnupod_search.pl --artist="Amos" --artwork="amos.jpg"
+
+	# Boost the volume for all the songs on album by 50%
+	gnupod_search --album="Seiken Densetsu" --rename="volume=50"
+
+	# Cut the volume for all the songs on album by -10%
+	gnupod_search --album="Seiken Densetsu" --rename="volume=-10"
+
+	# Delete all songs by the artist called 'Schlumminguch'
+	gnupod_search.pl -m /mnt/ipod --artist="Schlummiguch" --delete
+
+	# Record the changes to the iTunes database (this is essential)
+	mktunes.pl -m /mnt/ipod
+
+	# Unmount and go
+	umount /mnt/ipod
 
 ###___PODINSERT man/general-tools.pod___###
 

@@ -790,42 +790,7 @@ gnupod_addsong.pl  - Adds files to the iPod
 
 =head1 SYNOPSIS
 
-	# Mount the iPod
-	mount /mnt/ipod
-
-	# Sync changes made by other tools (such as iTunes)
-	# only necessary if you are using other tools in addition to these
-	tunes2pod.pl -m /mnt/ipod
-
-	# Add a song 
-	gnupod_addsong.pl -m /mnt/ipod /tmp/foo.mp3
-
-	# You can also use wild cards and add more than one song at a time
-	gnupod_addsong.pl -m /mnt/ipod /mnt/mp3/seiken_densetsu2_ost/* /mnt/mp3/xenogears/ost?/*
-
-	# Convert to mp3 on the fly
-	gnupod_addsong.pl -m /mnt/ipod myfile.flac myfile.ogg --decode=mp3
-
-	# Add songs with artwork
-	gnupod_addsong.pl -m /mnt/ipod /mnt/mp3/amos/* --artwork=amos.jpg
-
-	# Add songs into playlists
-	gnupod_addsong.pl -m /mnt/ipod --playlist=Party --playlist=Driving /tmp/*.mp3
-
-	# Add a podcast (not the same as a regular song)
-	gnupod_addsong.pl -m /mnt/ipod -p "Podcast Title" --playlist-is-podcast podcast.mp3
-
-	# Add more than one podcast
-	gnupod_addsong.pl -m /mnt/ipod -p "Podcast Title" --playlist-is-podcast podcasts/*
-
-	# Fetch podcasts online and add to iPod
-	gnupod_addsong.pl -m /mnt/ipod -p "Heute Morgen" --playlist-is-podcast http://pod.drs.ch/heutemorgen_mpx.xml
-
-	# Record the changes to the iTunes database (this is essential)
-	mktunes.pl -m /mnt/ipod
-
-	# Unmount and go
-	umount /mnt/ipod
+	gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
 
 =head1 DESCRIPTION
 
@@ -1231,6 +1196,46 @@ For podcasts you can download the artwork from the rss feed. Example:
 
 Use L<gnupod_search.pl> to change/add artwork for existing files.
 Don't forget to run L<mktunes.pl> afterwards.
+
+
+=head1 EXAMPLES
+
+	# Mount the iPod
+	mount /mnt/ipod
+
+	# Sync changes made by other tools (such as iTunes)
+	# only necessary if you are using other tools in addition to these
+	tunes2pod.pl -m /mnt/ipod
+
+	# Add a song 
+	gnupod_addsong.pl -m /mnt/ipod /tmp/foo.mp3
+
+	# You can also use wild cards and add more than one song at a time
+	gnupod_addsong.pl -m /mnt/ipod /mnt/mp3/seiken_densetsu2_ost/* /mnt/mp3/xenogears/ost?/*
+
+	# Convert to mp3 on the fly
+	gnupod_addsong.pl -m /mnt/ipod myfile.flac myfile.ogg --decode=mp3
+
+	# Add songs with artwork
+	gnupod_addsong.pl -m /mnt/ipod /mnt/mp3/amos/* --artwork=amos.jpg
+
+	# Add songs into playlists
+	gnupod_addsong.pl -m /mnt/ipod --playlist=Party --playlist=Driving /tmp/*.mp3
+
+	# Add a podcast (not the same as a regular song)
+	gnupod_addsong.pl -m /mnt/ipod -p "Podcast Title" --playlist-is-podcast podcast.mp3
+
+	# Add more than one podcast
+	gnupod_addsong.pl -m /mnt/ipod -p "Podcast Title" --playlist-is-podcast podcasts/*
+
+	# Fetch podcasts online and add to iPod
+	gnupod_addsong.pl -m /mnt/ipod -p "Heute Morgen" --playlist-is-podcast http://pod.drs.ch/heutemorgen_mpx.xml
+
+	# Record the changes to the iTunes database (this is essential)
+	mktunes.pl -m /mnt/ipod
+
+	# Unmount and go
+	umount /mnt/ipod
 
 ###___PODINSERT man/general-tools.pod___###
 
