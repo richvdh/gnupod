@@ -1,0 +1,358 @@
+=head1 NAME
+
+GNUtunesDB.xml
+
+=head1 DESCRIPTION
+
+Detailed description of the F<GNUtunesDB.xml> file format.
+
+=head1 FILE STRUCTURE
+
+This is an XML file, containing a single list of all the songs/media (files)
+and a number of playlists.
+
+	<?xml version='1.0' standalone='yes'?>
+	<gnuPod>
+	 <files>
+	   ...
+	 </files>
+	 <playlist .... >
+	   ...
+	 </playlist>
+	 <playlist .... >
+	   ...
+	 </playlist>
+	</gnuPod>
+
+=head1 SAMPLE SONG
+
+A sample entry for a song added with C<gnupod_addsong.pl> should look much
+like the below.
+
+	<file addtime="3320718442" album="Jagged Little Pill" artist="Alanis Morissette" 
+	artworkcnt="0" artworksize="0" bitrate="128" bookmark="0" bpm="0" cdnum="0" 
+	cds="0" changetime="0" compilation="" dbid_1="0100000000000000" 
+	dbid_2="0100000000000000" episodenum="0" fdesc="MPEG 1 layer 3 file" 
+	filesize="4554789" gaplessdata="0" genre="New Age" has_gapless="0" id="52" 
+	lastplay="3326375095" lastskip="0" lyrics_flag="0" mediatype="1" movie_flag="0"
+	nocrossfade="0" path=":iPod_Control:Music:f15:g0__All_I_Really_Want.mp3" 
+	playcount="3" played_flag="1" postgap="0" pregap="0" rating="0" releasedate="0"
+	samplecount="0000000000000000" seasonnum="0" skipcount="0" songnum="1"
+	songs="0" soundcheck="0" srate="44100" starttime="0" stoptime="0"
+	time="284674" title="All I Really Want" volume="0" year="0" />
+
+These fields are determined by the fields used in the iTunes database. Most of
+what we know about them comes from L<http://ipodlinux.org/wiki/ITunesDB>,
+although these are in a different order and may have different names.
+
+=over 4
+
+=item addtime
+
+Timestamp of when the song was added to the iPod.  Number of seconds since
+1/1/1904.
+
+=item album
+
+Name of album, either found from the MP3 header information or set by the
+user.
+
+=item artist
+
+Name of the artist, either found from the MP3 header information or set by
+the user.
+
+=item artworkcnt
+
+The number of album artwork items put into the tags of this song. Even if
+you don't put any artwork items into the tags of the song, this value must
+at least be 1 for the iPod to display any artwork stored in the ithmb
+files.
+
+=item artworksize
+
+The total size of artwork (in bytes) attached to this song (i.e. put into
+the song as tags).
+
+=item bitrate="128"
+
+MP3 bitrate.  The lower the bitrate, the smaller the file size, but the
+larger the chance of compression artifacts.
+
+=item bookmark="0"
+
+The point, in milliseconds, that the track will start playing back at. Since
+this file isn't bookmarkable this will always be zero.
+
+=item bpm="0"
+
+Beats per minute of the track. If available, zero otherwise.
+
+=item cdnum="0" 
+
+CD number for multi-CD sets.
+
+=item cds="0"
+
+Total number of CDs for multi-CD sets.
+
+=item changetime="0" 
+
+??  TODO
+
+=item compilation=""
+
+Name of the compilation.
+
+=item dbid_1="0100000000000000" 
+
+Unique 64 bit value that identifies this song across the databases on the
+iPod.
+
+=item dbid_2="0100000000000000"
+
+Unique 64 bit value that identifies this song across the databases on the
+iPod.
+
+=item episodenum="0"
+
+The episode number of the track, for TV shows only - although not displayed on
+the iPod, the episodes are sorted by episode number.
+
+=item fdesc="MPEG 1 layer 3 file" 
+
+Full description?  TODO
+
+=item filesize="4554789" 
+
+File size in bits.
+
+=item gaplessdata="0" 
+
+The size in bytes from first Synch Frame (which is usually the XING frame that
+includes the LAME tag) until the 8th before the last frame. The gapless
+playback does not work for MP3 files if this is set to zero
+
+=item genre="New Age"
+
+Song genre.  Either from MP3 header information or set by user.
+
+=item has_gapless="0"
+
+Whether or not the track has gapless data.
+
+=item id="52" 
+
+Insertion id (unique number).
+
+=item lastplay="3326375095"
+
+Timestamp for when song was last played.
+
+=item lastskip="0"
+
+Timestamp for when song was last skipped.
+
+=item lyrics_flag="0"
+
+Whether lyrics are stored in the MP3 header information.
+
+=item mediatype="1"
+
+The media type for this file.  In this case a regular mp3.
+
+=item movie_flag="0"
+
+Whether this file is a movie.
+
+=item nocrossfade="0"
+
+Whether the track uses cross-fade in iTunes.
+
+=item path=":iPod_Control:Music:f15:g0__All_I_Really_Want.mp3" 
+
+iPod local path to the song location.
+
+=item playcount="3"
+
+How many times the song has been played.
+
+=item played_flag="1" 
+
+Whether this song has been played.
+
+=item postgap="0" 
+
+Number of samples of silence at the end of the song (for gapless playback).
+
+=item pregap="0" 
+
+Number of samples of silence before the songs starts (for gapless playback).
+
+=item rating="0"
+
+User provided rating.  20 = 1 star, 40 = 2 stars, ... 100 = 5 stars.
+
+=item releasedate="0"
+
+Song release date, probably of time released to music store, timestamp.
+
+=item samplecount="0000000000000000" 
+
+Number of samples in the song (for gapless playback).
+
+=item seasonnum="0" 
+
+The season number of the track, for TV shows only.
+
+=item skipcount="0"
+
+How many times this song has been skipped.
+
+=item songnum="1"
+
+Track number for song on its CD.  In this example this was the first song
+on the CD.  This information is taken from the MP3 header information and
+thus may be set as zero if that information is left empty.  In such as
+case, the iPod will play the songs ordered alphabetically.
+
+=item songs="0" 
+
+Total number of songs on CD.
+
+=item soundcheck="0" 
+
+The SoundCheck value to apply to the song, when SoundCheck is switched on in the iPod settings.
+
+=item srate="44100" 
+
+The sample rate of the song expressed as an IEEE 32 bit floating point number.
+
+=item starttime="0" 
+
+time, in milliseconds, that the song will start playing at.
+
+=item stoptime="0"
+
+time, in milliseconds, that the song will stop playing at.
+
+=item time="284674" 
+
+??? TODO
+
+=item title="All I Really Want" 
+
+Song title.  Either from the MP3 header information or set by the user.
+
+=item volume="0" 
+
+Volume modification.  Zero means no change to the volume.  A positive value
+boosts the song, a negative value decreases it.  Must be between -255 and +255.
+
+=item year="0"
+
+Year of track release if known, else 0.
+
+=back
+
+=head1 SAMPLE PODCAST
+
+A sample entry for a podcast correctly added with C<gnupod_addsong.pl>
+should look much like the below.
+
+	<file addtime="3320746257" album="dancarlin.com" artist="Dan
+	Carlin" artworkcnt="0" artworksize="0" bitrate="96" bookmark="0"
+	bookmarkable="1" bpm="0" cdnum="0" cds="0" changetime="0"
+	comment="englibertarian, Independent, Constitution, Freedom,
+	Non-Partisan Rights, Dan Carlin, politics" compilation=""
+	dbid_1="6205000000000000" dbid_2="7a05000000000000" episodenum="0"
+	fdesc="MPEG 1 layer 3 file" filesize="48214100" gaplessdata="0"
+	genre="Podcast" has_gapless="0" id="1429" lastplay="3321687707"
+	lastskip="0" lyrics_flag="0" mediatype="4" movie_flag="0"
+	nocrossfade="0"
+	path=":iPod_Control:Music:f15:g0_sewithDanCarlin147.mp3"
+	playcount="1" played_flag="1" podcast="1"
+	podcastguid="GNUpodG3DE42" podcastrss="GNUpodR7652E" postgap="0"
+	pregap="0" rating="0" releasedate="0"
+	samplecount="0000000000000000" seasonnum="0" shuffleskip="1"
+	skipcount="0" songnum="0" songs="0" soundcheck="0" srate="44100"
+	starttime="0" stoptime="0" time="4017841" title="cswdcb47 A Little
+	Less Evil" volume="0" year="2009" />
+
+Most of the elements here are the same as the former, but there are some
+differences.
+
+=over 4
+
+=item bookmarkable="1"
+
+As a podcast, we want to be able to come back to where we were up to if we
+exit for some reason.
+
+=item comment="englibertarian, Independent, Constitution, ..." 
+
+Free-style comment field used to describe podcast content
+
+=item mediatype="4"
+
+Regular mp3s have mediatype 1, podcasts are mediatype 4.
+
+=item podcast="1"
+
+This is a podcast.
+
+=item podcastguid="GNUpodG3DE42"
+
+A unique ID for the track. It appears it is made sure that this ID does not
+correspond to any real track ID.
+
+=item podcastrss="GNUpodR7652E" 
+
+?? TODO
+
+=item shuffleskip="1"
+
+When the iPod is on shuffle mode, this file should be skipped (so you only
+get music).
+
+=back
+
+=head2 Podcast playlists
+
+	<playlist name="dancarlin.com" plid="24217" podcast="1" >
+		<add id="1428" />
+		<add id="1429" />
+	</playlist>
+
+Podcast playlists must include the flag C<podcast=1> so that they'll show
+up in the podcast menu on the iPod.
+
+=head1 MEDIA TYPES
+
+These media types are those used by iTunes.
+
+	0 - Audio/Video (include in music lists and video lists)
+	1 - Audio
+	2 - Video
+	4 - Podcast
+	6 - Video Podcast
+	8 - Audiobook
+	20 - Music Video
+	40 - TV Show (shows up ONLY in TV Shows)
+	60 - TV Show (shows up in the Music lists as well)
+
+=head1 SEE ALSO
+
+=over 4
+
+=item *
+
+L<http://ipodlinux.org/wiki/ITunesDB> - More information on the underlying file format.
+
+=item *
+
+L<gnupod_search.pod> - Commandline tool that correctly manipulates this file for you.
+
+=back
+
+###___PODINSERT man/footer.pod___###
