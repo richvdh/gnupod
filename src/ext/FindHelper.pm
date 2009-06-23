@@ -814,7 +814,9 @@ sub process_options {
 	for my $viewopt (@{$options{view}}) {
 		for my $viewkey (split(/\s*,\s*/,   $viewopt)) {
 			my $attr;
-			if ($viewkey eq "default") {
+			if ($viewkey eq "all") {
+				push @viewlist, sort(keys(%FILEATTRDEF));
+			} elsif ($viewkey eq "default") {
 				for my $dk (split(/\s*,\s*/, $defaultviewlist)) {
 					push @viewlist, $dk;
 				}
