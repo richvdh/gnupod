@@ -92,7 +92,7 @@ package GNUpod::Mktunes;
 	# Increments Sequence counter
 	sub GetNextId           { my($self) = @_; return ++$self->{Sequence};    }
 	# Decrements PlSequence counter
-	sub GetPrevId           { my($self) = @_; return --$self->{PlSequence};  }
+	sub GetPrevId           { my($self) = @_; return $self->{PlSequence}--;  }
 	# Dispatch connector
 	sub GetConnection       { my($self) = @_; return $self->{Connection}     }
 	# Returns array to files
