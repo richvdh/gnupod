@@ -1239,5 +1239,15 @@ Don't forget to run L<mktunes.pl> afterwards.
 
 ###___PODINSERT man/general-tools.pod___###
 
+=head1 AUTHORS
+
+Adrian Ulrich <pab at blinkenlights dot ch>  - Main author of GNUpod
+
+Heinrich Langos <henrik-gnupod at prak dot org> - Many patches. Mostly to podcast features.
+
+=head1 COPYRIGHT
+
+Copyright (C) Adrian Ulrich
+
 ###___PODINSERT man/footer.pod___###
 

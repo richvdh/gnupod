@@ -1,4 +1,4 @@
-=head1 LICENCE AND COPYRIGHT
+=head1 LICENSE
 
 This module is free software; you can redistribute it and/or modify it
 under the terms of the GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007.
@@ -22,14 +22,6 @@ If for whatever reason you are stuck with CVS, there is some basic CVS
 support that allows to checkout the latest sources.
 
 	cvs -d:pserver:anonymous@pserver.git.sv.gnu.org:/gnupod.git co -d gnupod master
-
-=head1 AUTHORS
-
-Adrian Ulrich <pab at blinkenlights.ch>  - Main author of GNUpod
-
-Eric C. Cooper <ecc at cmu.edu> - Contributed to the 'old' GNUpod (< 0.9)
-
-Heinrich Langos <henrik-gnupod at prak dot org> - Many patches
 
 =head1 DISCLAIMER OF WARRANTY
 

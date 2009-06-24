@@ -500,4 +500,12 @@ those changes are also reflected in the iTunes database.
 
 ###___PODINSERT man/general-tools.pod___###
 
+=head1 AUTHORS
+
+Written by Eric C. Cooper <ecc at cmu dot edu> - Contributed to the 'old' GNUpod (< 0.9)
+
+Adrian Ulrich <pab at blinkenlights dot ch> - Main author of GNUpod
+
+Heinrich Langos <henrik-gnupod at prak dot org> - Some patches
+
 ###___PODINSERT man/footer.pod___###
