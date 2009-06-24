@@ -169,3 +169,27 @@ sub usage {
  die "died: $_[0]\n";
 }
 
+=head1 NAME
+
+gnupod_otgsync.pl - Helper script for On-The-Go data
+
+=head1 SYNOPSIS
+
+B<gnupod_otgsync.pl>
+
+=head1 DESCRIPTION
+
+This script is not for humans. It is called by GNUpod when On-The-Go data (e.g. playlists, playcounts) needs
+to be synched with the GNUtunesDB.xlm.
+
+###___PODINSERT man/general-tools.pod___###
+
+=head1 AUTHORS
+
+Adrian Ulrich <pab at blinkenlights dot ch>  - Main author of GNUpod
+
+=head1 COPYRIGHT
+
+Copyright (C) Adrian Ulrich
+
+###___PODINSERT man/footer.pod___###

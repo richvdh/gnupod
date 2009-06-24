@@ -784,13 +784,13 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 EOF
 }
 
-=head1 Name
+=head1 NAME
 
 gnupod_addsong.pl  - Adds files to the iPod
 
 =head1 SYNOPSIS
 
-	gnupod_addsong.pl [-h] [-m directory] File1 File2 ...
+	gnupod_addsong.pl [OPTION]... File1 File2 ...
 
 =head1 DESCRIPTION
 
@@ -1241,7 +1241,7 @@ Don't forget to run L<mktunes.pl> afterwards.
 
 =head1 AUTHORS
 
-Adrian Ulrich <pab at blinkenlights dot ch>  - Main author of GNUpod
+Adrian Ulrich <pab at blinkenlights dot ch> - Main author of GNUpod
 
 Heinrich Langos <henrik-gnupod at prak dot org> - Many patches. Mostly to podcast features.
 

@@ -289,13 +289,13 @@ EOF
 }
 
 
-=head1 Name
+=head1 NAME
 
 gnupod_search.pl  - Search, list, edit, delete songs from your iPod
 
 =head1 SYNOPSIS
 
-	gnupod_search.pl [-h] [-m directory] File1 File2 ...
+	gnupod_search.pl [OPTION] File1 File2 ...
 
 =head1 DESCRIPTION
 
