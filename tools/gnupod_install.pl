@@ -31,6 +31,7 @@ if($opts{MODE} eq "INSTALL") {
  install_pm("src/ext", "GNUpod", $opts{perlbin}, $DST);
  install_info("doc/gnupod.info", $DST.$opts{infodir});
  install_man("man/*.gz", $DST.$opts{mandir}."/man1");
+ killold("$DST$opts{bindir}/gnupod_delete.pl") if -e "$DST$opts{bindir}/gnupod_delete.pl"; #Kill legacy apps.. ;)
  print "done!\n";
 }
 elsif($opts{MODE} eq "REMOVE") {
