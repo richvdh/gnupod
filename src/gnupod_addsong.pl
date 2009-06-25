@@ -52,7 +52,7 @@ GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode|x=s", "restore|r", 
 
 GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b', model=>'s', 'replaygain-album'=>'b',
                                    'disable-v1'=>'b', 'disable-v2'=>'b', 'disable-ape-tag'=>'b', 'set-songnum'=>'b',
-                                   'min-vol-adj'=>'i', 'max-vol-adj'=>'i', 'automktunes'=>'b', 
+                                   'min-vol-adj'=>'i', 'max-vol-adj'=>'i', 'automktunes'=>'b', 'bgcolor'=>'s',
                                    'podcast-files-limit'=>'i', 'podcast-cache-dir'=>'s', 'podcast-artwork'=>'b' },
                                    "gnupod_addsong");
 
@@ -345,7 +345,7 @@ sub add_image_to_awdb {
 		warn "! [****] Skipping $filename because there is already one prepared.\n";
 		return 0;
 	}
-	my $count = $AWDB->PrepareImage(File=>$filename, Model=>$opts{model});
+	my $count = $AWDB->PrepareImage(File=>$filename, Model=>$opts{model}, bgcolor=>$opts{bgcolor});
 	if( $count ) {; 
 		$AWDB->LoadArtworkDb or die "Failed to load artwork database\n";
 		$awdb_image_prepared = 1;

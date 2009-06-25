@@ -166,6 +166,7 @@ use constant MODE_PARSED    => 300;
 	sub PrepareImage {
 		my($self,%args) = @_;
 		Carp::confess("PrepareImage($self) called in wrong mode: $self->{mode}") if $self->{mode} != MODE_UNPARSED;
+		$args{bgcolor} = "white" unless($args{bgcolor});
 		my $file   = $args{File};
 		my $model  = lc($args{Model});
 		   $model  =~ tr/a-z0-9_//cd; # relax
@@ -174,7 +175,7 @@ use constant MODE_PARSED    => 300;
 		$self->{fbimg}->{source_size} = (-s $file) or return 0; # no thanks
 		foreach my $mr (@$mode) {
 			my $buff = '';
-			open(IM, "-|") || exec("convert", "-resize", "$mr->{height}x$mr->{width}", "-background","white","-gravity","center","-extent","$mr->{height}x$mr->{width}", "-depth", "8", $file, "RGB:-");
+			open(IM, "-|") || exec("convert", "-resize", "$mr->{height}x$mr->{width}", "-background", $args{bgcolor}, "-gravity", "center", "-extent", "$mr->{height}x$mr->{width}", "-depth", "8", $file, "RGB:-");
 			binmode(IM);
 			while(<IM>) { $buff .= $_  }
 			close(IM);
