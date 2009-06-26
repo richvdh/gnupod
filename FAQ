@@ -41,11 +41,14 @@ GNUpod is known to work with
 
 GNUpod does not yet work with
 
+- iPod shuffle 3rd generation (the talking shuffle)
+  Apple changed the iTunesSD format for that device.
+
 - iPhone/iPod touch from 2.0 firmware
 - iPod touch 2nd generation
 - iPhone 3G
-
 see http://www.bluwiki.com/go/Ipodhash
+
 
 3. Quick howto
 --------------
