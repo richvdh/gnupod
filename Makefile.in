@@ -29,5 +29,5 @@ install:
 	$(perlbinary) tools/gnupod_install.pl INSTALL "$(perlbinary)" "$(podmanbin)" "$(bindir)" "$(infodir)" "$(mandir)" "$(DESTDIR)"
 uninstall:
 	$(perlbinary) tools/gnupod_install.pl REMOVE  "$(perlbinary)" "$(podmanbin)" "$(bindir)" "$(infodir)" "$(mandir)"
-release:
-	mkdir ../GNUPOD_R && find . | grep -v CVS | grep -v \.\#| cpio -pvmd ../GNUPOD_R && cd ../GNUPOD_R && autoconf && rm Makefile && rm config.log config.status && rm -rf autom4te.cache testcases && cd man && gzip *.1 && echo DONE
+release: clean
+	mkdir ../GNUPOD_R && find . | grep -v .git | grep -v \.\#| cpio -pvmd ../GNUPOD_R && cd ../GNUPOD_R && autoconf && rm Makefile && rm config.log config.status && rm -rf autom4te.cache testcases && echo DONE
