@@ -15,9 +15,8 @@ pkgdir       = gnupod-@PACKAGE_VERSION@-noarch-1au
 
 
 build:
-	$(SHELL) $(top_srcdir)/mkinstalldirs build/bin
+	$(SHELL) $(top_srcdir)/mkinstalldirs build/bin/GNUpod
 	$(SHELL) $(top_srcdir)/mkinstalldirs build/man
-	$(SHELL) $(top_srcdir)/mkinstalldirs build/mod
 	$(SHELL) $(top_srcdir)/mkinstalldirs build/info
 	$(perlbinary) tools/gnupod_install.pl BUILD "$(perlbinary)" "$(podmanbin)" "$(bindir)" "$(infodir)" "$(mandir)" "$(DESTDIR)"
 	cd build/man && gzip *.1

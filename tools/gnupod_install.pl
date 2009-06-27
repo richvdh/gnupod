@@ -29,7 +29,7 @@ if($opts{MODE} eq "INSTALL") {
  #ok, we are still alive, let's blow up the system ;)
  print "Installing GNUpod $VINSTALL using gnupod_install 0.26\n";
  install_scripts("build/bin/*.pl", $DST.$opts{bindir});
- install_pm("build/mod", "GNUpod", $opts{perlbin}, $DST);
+ install_pm("build/bin/GNUpod", "GNUpod", $opts{perlbin}, $DST);
  install_man("build/man/*.gz", $DST.$opts{mandir}."/man1");
  install_info("build/info/gnupod.info", $DST.$opts{infodir});
  print "done!\n";
@@ -37,14 +37,14 @@ if($opts{MODE} eq "INSTALL") {
 elsif($opts{MODE} eq "BUILD") {
  print "Building GNUpod $VINSTALL...\n";
  install_scripts("src/*.pl", "build/bin");
- install_scripts("src/ext/*.pm", "build/mod");
+ install_scripts("src/ext/*.pm", "build/bin/GNUpod");
  extract_man("build/bin/*.pl", "build/man");
  install_scripts("doc/gnupod.info", "build/info");
 }
 elsif($opts{MODE} eq "REMOVE") {
  print "Removing GNUpod $VINSTALL...\n";
  remove_scripts("build/bin/*.pl", $opts{bindir});
- remove_pm("build/mod/*.pm", "GNUpod");
+ remove_pm("build/bin/GNUpod/*.pm", "GNUpod");
  remove_mandocs("build/man/*.gz", $opts{mandir}."/man1");
  remove_docs("gnupod", $opts{infodir});
 }
