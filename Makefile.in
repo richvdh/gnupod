@@ -22,7 +22,7 @@ build:
 	cd build/man && gzip *.1
 clean:
 	rm -rf build
-install:
+install: build
 	$(SHELL) $(top_srcdir)/mkinstalldirs $(DESTDIR)$(bindir)
 	$(SHELL) $(top_srcdir)/mkinstalldirs $(DESTDIR)$(mandir)/man1
 	$(perlbinary) tools/gnupod_install.pl INSTALL "$(perlbinary)" "$(podmanbin)" "$(bindir)" "$(infodir)" "$(mandir)" "$(DESTDIR)"
