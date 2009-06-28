@@ -233,7 +233,12 @@ sub mk_itunes_sd_file {
 	$ret .= tnp();					#StopTime
 	$ret .= tnp();					#unk4
 	$ret .= tnp();					#unk5
-	$ret .= tnp(0x64-($ref->{volume}));			#Volume (64=+-0)
+	# the next three bytes used to be volume adjustment +/-100% shifted by +100
+	# $ret .= tnp(0x64-($ref->{volume}));			#Volume (64=+-0)
+	# but have long been replaced by a crude signed integer for ReplayGain
+	# strangely enough it is not expressed in soundcheck scale but rather
+	# in dB. So we need to transform it back:
+	$ret .= tnp(int(log($ref->{soundcheck}/1000)/log(10)/-0.1));
 	
 	## This is ugly!
 	my $fixmetype = 1; #MP3
