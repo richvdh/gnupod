@@ -12,7 +12,7 @@ package GNUpod::Mktunes;
 		my($class,%args) = @_;
 		
 		my $self = { Connection=>$args{Connection}, Mode=>MODE_ADDFILE, Artwork=>$args{Artwork},
-		             ArrayFiles => [], CountFiles => 0, Sequence => 0,  iPodName => $args{iPodName},
+		             ArrayFiles => [], CountFiles => 0, Sequence => 0, SequenceJumped => 0, iPodName => $args{iPodName},
 		             MasterPlaylist => [], Playlists => {}, SmartPlaylists => {},
 		             FuzzyDb_Normal => {}, FuzzyDb_Lowercase => {} };
 		bless($self,$class);
@@ -240,6 +240,7 @@ package GNUpod::Mktunes;
 			
 			
 			foreach my $fqid (@{$cont}) {
+				if (! $self->{SequenceJumped} ) { my $i=1<<15; while ($i < $self->{Sequence}) { $i<<=1;};  $self->{Sequence} = $i; $self->{SequenceJumped}=1; };
 				my $current_id = $self->GetNextId;
 				my $current_mhod = GNUpod::iTunesDB::mk_mhod({fqid=>$fqid});
 				my $current_mhip = GNUpod::iTunesDB::mk_mhip({childs => 1, plid => $current_id, sid=>$fqid, size=>length($current_mhod)});
