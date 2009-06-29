@@ -1,24 +1,5 @@
+* Add option to delete empty playlists
+* Multicore support for re-encoding?
 * Fixing bugs ;)
-* Move manpages into the sources (so when adding a new cli
-  switch, you can easily update the man page, too.)
-* Support for 2nd/3rd generation shuffle replay gain
-* Add gapless playback information when found in the tags. It is
-  added by encoders like lame to eliminate gaps due to encoding 
-  artifacts and block size mismatch (CD 75/s, MP3 40/s)
-  AFAIK gtkpod already does it, so a look at their code and 
-  asking on their list might reduce the amount of work.
-* Prop every file with "use warnings;"
-* Unify coding style in regard to
-** Indentation
-** Whitespaces
-** Passing of parameters to subs. All but the most basic sub calls
-   should use named parameters (i.e. one hashref) instead of
-   positional parameter guesswork)
-** Using explicit { } blocks vs statement modifiers
-   "if (condition) { statement; }" vs. "statement if condition;"
-** Add missing (developer) documentation to the code
-* Support for 4th generation (speaking) shuffle iTunesSD
-* Parallel re-encoding with several child processes
-  for faster re-encoding on multi-core systems.
 * Add Audible.com support
 * Add LiveUpdate support for old Firmware and Clock-Bug on iPod-Mini

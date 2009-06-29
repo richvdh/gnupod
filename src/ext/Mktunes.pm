@@ -12,7 +12,7 @@ package GNUpod::Mktunes;
 		my($class,%args) = @_;
 		
 		my $self = { Connection=>$args{Connection}, Mode=>MODE_ADDFILE, Artwork=>$args{Artwork},
-		             ArrayFiles => [], CountFiles => 0, Sequence => 0, PlSequence => 1<<15, iPodName => $args{iPodName},
+		             ArrayFiles => [], CountFiles => 0, Sequence => 0,  iPodName => $args{iPodName},
 		             MasterPlaylist => [], Playlists => {}, SmartPlaylists => {},
 		             FuzzyDb_Normal => {}, FuzzyDb_Lowercase => {} };
 		bless($self,$class);
@@ -91,8 +91,6 @@ package GNUpod::Mktunes;
 	sub GetFileCount        { my($self) = @_; return $self->{CountFiles};    }
 	# Increments Sequence counter
 	sub GetNextId           { my($self) = @_; return ++$self->{Sequence};    }
-	# Increments PlSequence counter
-	sub GetNextPlid         { my($self) = @_; while($self->{Sequence} > $self->{PlSequence}) {$self->{PlSequence} *= 2}; return ++$self->{PlSequence}; }
 	# Dispatch connector
 	sub GetConnection       { my($self) = @_; return $self->{Connection}     }
 	# Returns array to files
@@ -242,7 +240,7 @@ package GNUpod::Mktunes;
 			
 			
 			foreach my $fqid (@{$cont}) {
-				my $current_id = $self->GetNextPlid;
+				my $current_id = $self->GetNextId;
 				my $current_mhod = GNUpod::iTunesDB::mk_mhod({fqid=>$fqid});
 				my $current_mhip = GNUpod::iTunesDB::mk_mhip({childs => 1, plid => $current_id, sid=>$fqid, size=>length($current_mhod)});
 				next unless (defined($current_mhod) && defined($current_mhip));
