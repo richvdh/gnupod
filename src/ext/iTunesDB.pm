@@ -238,7 +238,7 @@ sub mk_itunes_sd_file {
 	# but have long been replaced by a crude signed integer for ReplayGain
 	# strangely enough it is not expressed in soundcheck scale but rather
 	# in dB. So we need to transform it back:
-	$ret .= tnp(int(log($ref->{soundcheck}/1000)/log(10)/-0.1));
+	$ret .= tnp($ref->{soundcheck}==0?0:int(log($ref->{soundcheck}/1000)/log(10)/-0.1));
 	
 	## This is ugly!
 	my $fixmetype = 1; #MP3
