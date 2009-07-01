@@ -115,14 +115,14 @@ dates to something human readable.
 			my ($song) = @_;
 			return undef unless defined($song->{soundcheck});
 			return undef if ($song->{soundcheck} eq "");
-			return sprintf("%+.2f",log($song->{soundcheck}/1000)/log(10)/-0.1) ." dB";
+			return sprintf("%+.2f",($song->{soundcheck}==0?0:log($song->{soundcheck}/1000)/log(10)/-0.1)) ." dB";
 		},
 	'volume' => sub {
 			my ($song) = @_;
 			return undef unless defined($song->{volume});
 			return "" if ($song->{volume} == 0);
 			return "-100% (silence)" if ($song->{volume} == -100);
-			return sprintf("%+d%% (%+.2fdB)",$song->{volume},20*log($song->{volume}/100.0 + 1.0)/log(10));
+			return sprintf("%+d%% (%+.2fdB)",$song->{volume},($song->{volume}==0?0:20*log($song->{volume}/100.0 + 1.0)/log(10)));
 		},
 );
 
@@ -410,8 +410,8 @@ DOCUMENT ME!
 		'format' => 'numeric',
 		'content' => 'int',
 		'help' => 'The size in bytes from first Synch Frame until the 8th before the last frame.',
-		'header' => '',
-		'width' => 1,
+		'header' => 'GAPLESS',
+		'width' => 8,
 		},
 	'has_gapless' => {
 		'format' => 'numeric',
