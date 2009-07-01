@@ -1,10 +1,11 @@
-AC_INIT(GNUpod, 0.99.8, bug-gnupod@nongnu.org)
+AC_INIT(GNUpod, 0.99.9, bug-gnupod@nongnu.org)
 
 echo $ECHO_N $PACKAGE_VERSION > .gnupod_version
 
-if test -d CVS; then
- echo " *** THIS IS A CVS VERSION OF GNUPOD ***"
- echo $ECHO_N "-CVS" >> .gnupod_version
+if test -d .git -o -d CVS; then
+ echo " *** THIS IS A DEVELOPMENT VERSION OF GNUPOD ***"
+ echo " *** REMEMBER TO ALWAYS BACKUP YOUR DATA :-) ***"
+ echo $ECHO_N "-DEVEL" >> .gnupod_version
 fi
 
 AC_PATH_PROGS(PERL, perl-5.8 perl-5.6 perl)
