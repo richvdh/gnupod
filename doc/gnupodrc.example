@@ -53,10 +53,11 @@
 ## Only keep some attributes to make the iTunesDB fit inside small RAM
 ## The minimum attributes needed by the iPod are path and title
 ## Valid attributes are:
-## title path album artist genre fdesc eq comment category composer group
-## desc podcastguid podcastrss chapterdata subtitle tvshow tvepisode
-## tvnetwork albumartist artistthe keywords sorttitle sortalbum
-## sortalbumartist sortcomposer sorttvshow
+##   title path album artist genre fdesc eq comment category composer group
+##   desc podcastguid podcastrss chapterdata subtitle tvshow tvepisode
+##   tvnetwork albumartist artistthe keywords sorttitle sortalbum
+##   sortalbumartist sortcomposer sorttvshow
+## NOTE: This a global option because it is read by mktunes and tunes2pod.
 # low_ram_attr = path title artist album
 
 # *** on the go sync (V2 Firmware) ***
@@ -71,7 +72,7 @@
 
 ## Setting the low_ram_attr option above causes tunes2pod.pl to sync
 ## the attibutes in iTunesDB with those in GNUtunesDB.xml to make sure
-## attributes not present in iTunesDB will be lost
+## attributes not present in iTunesDB will not be lost
 
 # *** gnupod_search.pl ***
 
