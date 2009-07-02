@@ -8,18 +8,25 @@ mandir       = @mandir@
 SHELL        = @SHELL@
 top_srcdir   = @top_srcdir@
 perlbinary   = @PERL@
+podmanbin    = @PODMAN@
 pkgver       = @PACKAGE_VERSION@
 pkgfname     = gnupod-@PACKAGE_VERSION@
 pkgdir       = gnupod-@PACKAGE_VERSION@-noarch-1au
 
 
-all:
-	# Use 'make install' to install GNUpod
-install:
+build:
+	$(SHELL) $(top_srcdir)/mkinstalldirs build/bin/GNUpod
+	$(SHELL) $(top_srcdir)/mkinstalldirs build/man
+	$(SHELL) $(top_srcdir)/mkinstalldirs build/info
+	$(perlbinary) tools/gnupod_install.pl BUILD "$(perlbinary)" "$(podmanbin)" "$(bindir)" "$(infodir)" "$(mandir)" "$(DESTDIR)"
+	cd build/man && gzip *.1
+clean:
+	rm -rf build
+install: build
 	$(SHELL) $(top_srcdir)/mkinstalldirs $(DESTDIR)$(bindir)
 	$(SHELL) $(top_srcdir)/mkinstalldirs $(DESTDIR)$(mandir)/man1
-	$(perlbinary) tools/gnupod_install.pl INSTALL "$(perlbinary)" "$(bindir)" "$(infodir)" "$(mandir)" "$(DESTDIR)"
+	$(perlbinary) tools/gnupod_install.pl INSTALL "$(perlbinary)" "$(podmanbin)" "$(bindir)" "$(infodir)" "$(mandir)" "$(DESTDIR)"
 uninstall:
-	$(perlbinary) tools/gnupod_install.pl REMOVE  "$(perlbinary)" "$(bindir)" "$(infodir)" "$(mandir)"
-release:
-	mkdir ../GNUPOD_R && find . | grep -v CVS | grep -v \.\#| cpio -pvmd ../GNUPOD_R && cd ../GNUPOD_R && autoconf && rm Makefile && rm config.log config.status && rm -rf autom4te.cache testcases && cd man && gzip *.1 && echo DONE
+	$(perlbinary) tools/gnupod_install.pl REMOVE  "$(perlbinary)" "$(podmanbin)" "$(bindir)" "$(infodir)" "$(mandir)"
+release: clean
+	mkdir ../GNUPOD_R && find . | grep -v .git | grep -v \.\#| cpio -pvmd ../GNUPOD_R && cd ../GNUPOD_R && autoconf && rm Makefile && rm config.log config.status && rm -rf autom4te.cache testcases && echo DONE

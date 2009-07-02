@@ -173,3 +173,70 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EOF
 }
+
+=head1 NAME
+
+gnupod_INIT.pl - Initialize iPod for the usage with gnupod.
+
+=head1 SYNOPSIS
+
+B<gnupod_INIT.pl> [OPTION]...
+
+=head1 DESCRIPTION
+
+gnupod_INIT.pl prepares a 'virgin' iPod for GNUpod by creating missing
+directories that your iPod needs, translating an existing
+iTunesDB (via L<tunes2pod.pl>) to a L<GNUtunes.xml> and/or creating
+a missing iTunesDB (via L<mktunes.pl>).
+
+=head1 OPTIONS
+
+=over 4
+
+=item -h, --help
+
+Display usage help and exit
+
+=item     --version
+
+Output version information and exit
+
+=item -m, --mount=directory
+
+iPod mountpoint, default is C<$IPOD_MOUNTPOINT>
+
+=item -d, --disable-convert
+
+Don't try to convert an existing iTunesDB
+
+=item -g, --fwguid=HEXVAL
+
+FirewireGuid of connected iPod (passed to mktunes.pl).
+See L<mktunes.pl> for details.
+
+=item -f, --france
+
+Limit volume to 100dB (For French-Law/People)
+
+Maximal-volume without this is ~104dB (VERY LOUD)
+
+B<WARNING> This works only for iPods running Firmware 1.x (1st & 2nd generation).
+You can also use mktunes.pl '--volume PERCENT' to adjust the volume (Works with Firmware 1.x AND 2.x)
+
+=item     --noask
+
+Do not wait for any user input. Assume YES.
+
+=back
+
+###___PODINSERT man/general-tools.pod___###
+
+=head1 AUTHORS
+
+Adrian Ulrich <pab at blinkenlights dot ch> - Main author of GNUpod
+
+=head1 COPYRIGHT
+
+Copyright (C) Adrian Ulrich
+
+###___PODINSERT man/footer.pod___###

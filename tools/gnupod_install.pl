@@ -9,36 +9,44 @@ use strict; #of course :)
 
 my %opts = ();
 
-my $DST             = $ARGV[5] || "/";  #DESTDIR
+my $DST             = $ARGV[6] || "/";  #DESTDIR
 $opts{MODE}         = $ARGV[0];  #INSTALL MKPGK or REMOVE
 $opts{perlbin}      = $ARGV[1];  #Path to perl
-$opts{bindir}       = $ARGV[2];  #Bindir
-$opts{infodir}      = $ARGV[3];  #Infodir
-$opts{mandir}       = $ARGV[4];  #Mandir
+$opts{podmanbin}    = $ARGV[2];  #Path to perldoc
+$opts{bindir}       = $ARGV[3];  #Bindir
+$opts{infodir}      = $ARGV[4];  #Infodir
+$opts{mandir}       = $ARGV[5];  #Mandir
 
 
 my $VINSTALL = `cat .gnupod_version`; #Version of this release
 
 #Check if everything looks okay..
 die "File .gnupod_version does not exist, did you run configure?\n" unless $VINSTALL;
-die "Expected 5 arguments, got ".int(@ARGV)."\n make will run me, not you! stupid human!" if !$opts{mandir} || $ARGV[6];
+die "Expected 5 arguments, got ".int(@ARGV)."\n make will run me, not you! stupid human!" if !$opts{mandir} || $ARGV[7];
 die "Strange Perl installation, no \@INC! Can't install Perl-Module(s), killing myself..\n" if !$INC[0];
 
 if($opts{MODE} eq "INSTALL") {
  #ok, we are still alive, let's blow up the system ;)
- print "Installing GNUpod $VINSTALL using gnupod_install 0.25\n";
- install_scripts("src/*.pl", $DST.$opts{bindir});
- install_pm("src/ext", "GNUpod", $opts{perlbin}, $DST);
- install_info("doc/gnupod.info", $DST.$opts{infodir});
- install_man("man/*.gz", $DST.$opts{mandir}."/man1");
+ print "Installing GNUpod $VINSTALL using gnupod_install 0.26\n";
+ install_scripts("build/bin/*.pl", $DST.$opts{bindir});
+ install_pm("build/bin/GNUpod", "GNUpod", $opts{perlbin}, $DST);
+ install_man("build/man/*.gz", $DST.$opts{mandir}."/man1");
+ install_info("build/info/gnupod.info", $DST.$opts{infodir});
  print "done!\n";
+}
+elsif($opts{MODE} eq "BUILD") {
+ print "Building GNUpod $VINSTALL...\n";
+ install_scripts("src/*.pl", "build/bin");
+ install_scripts("src/ext/*.pm", "build/bin/GNUpod");
+ extract_man("build/bin/*.pl", "build/man");
+ install_scripts("doc/gnupod.info", "build/info");
 }
 elsif($opts{MODE} eq "REMOVE") {
  print "Removing GNUpod $VINSTALL...\n";
- remove_scripts("src/*.pl", $opts{bindir});
- remove_pm("src/ext/*.pm", "GNUpod");
+ remove_scripts("build/bin/*.pl", $opts{bindir});
+ remove_pm("build/bin/GNUpod/*.pm", "GNUpod");
+ remove_mandocs("build/man/*.gz", $opts{mandir}."/man1");
  remove_docs("gnupod", $opts{infodir});
- remove_mandocs("man/*.gz", $opts{mandir}."/man1");
 }
 else {
  die "Unknown mode: $opts{MODE}\n";
@@ -80,6 +88,22 @@ else {
  ncp($file, $infodir."/".fof($file));
  print " Installed info file, use 'info gnupod' to read the documentation.\n";
 }
+
+}
+
+###################################
+# extract man pages from perldoc
+sub extract_man {
+ my($glob, $dest) = @_;
+ foreach(glob($glob)) 
+ {
+  my $file = fof($_);
+  print " > $_ --> $dest/$file.1\n";
+   # here and now generate man pages from the ncp'ed scripts
+   # and put them into our own man dir so they get copied later
+   system($opts{podmanbin}, "--center", "User commands" , "$_", "$dest/$file.1");
+   #or die("Failed to create man pages from script $file."); 
+ }
 
 }
 
@@ -162,7 +186,14 @@ open(TARGET, ">$dest") or die "Could not write $dest: $!\n";
  while(<SOURCE>) {
   $_ =~ s/###__PERLBIN__###/#!$opts{perlbin}/;
   $_ =~ s/###__VERSION__###/$VINSTALL/;
-  print TARGET $_;
+  if (/^###___PODINSERT (.*?)___###/) {
+   open(INSERT, "$1") or die "Could not read podinsert $1: $!\n";
+   while (<INSERT>) {
+    print TARGET $_;
+   }
+  } else {
+   print TARGET $_;
+  }
  }
 close(SOURCE); close(TARGET);
 return undef;

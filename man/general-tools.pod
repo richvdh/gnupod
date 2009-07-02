@@ -1,0 +1,96 @@
+=head1 COEXISTENCE
+
+GNUpod can coexist with iTunes and other programs for the iPod.
+
+If you want to use an iPod with GNUpod and used something other than
+GNUpod (maybe iTunes) to perform the last update (adding songs,
+editing playlists.. doing something..), you'll have to use
+C<tunes2pod.pl> to update the (outdated) GNUtunesDB.
+
+	tunes2pod.pl -m /mnt/ipod
+
+The iPod is now ready again for GNUpod.
+
+You have to do this because GNUpod stores its information in the
+GNUtunesDB, but other programs access the iTunesDB directly. After you
+did something with eg. iTunes, the GNUtunesDB would be 'outdated' and
+you would lose any changes you made with iTunes. Running C<tunes2pod.pl>
+will write a new GNUtunesDB which reflects the content of the current
+iTunesDB.
+
+=head1 DISASTER RECOVERY
+
+It is recommended that before editing your
+F<iPod_Control/.gnupod/GNUtunesDB.xml> file yourself, that you make a
+back-up of it.  Most of the gnupod tools also make a backup of it before
+making any changes and store that backup in
+F<iPod_Control/.gnupod/GNUtunesDB.xml.old>.
+
+=head2 Not running mktunes.pl
+
+If you unmount your iPod without running C<mktunes.pl> then you'll find
+that none of the changes you made (including adding songs) will appear to
+have taken effect.  You should be able to remount your iPod, run
+C<mktunes.pl> and unmount to recover from this.
+
+=head2 After a crash (or a failure to unmount)
+
+If your computer crashed while uploading/deleting songs, you may have
+some 'zombie' files.  This can also occur if you forget to unmount your
+iPod before you unplug it from the computer.
+
+In this case, you can use C<gnupod_check.pl> to search 'lost' files.
+gnupod_check.pl will tell you what you could do to fix it.
+
+If gnupod_check.pl found many errors (or you lost your
+F<GNUtunesDB.xml>), you can 'rebuild' an GNUtunesDB using:
+
+     gnupod_addsong.pl --restore -m /mnt/ipod
+
+This won't delete any songs on the iPod but will attempt to recreate the
+F<GNUtunesDB.xml> file including the Songs which are on the iPod and their
+mp3 header information.  Playlists, and any additional information you've
+added may be lost.
+
+If you have a recent copy of your F<GNUtunesDB.xml>, you may find it useful
+to back-up the new, restored F<GNUtunesDB.xml> file and overwrite it with
+yours.  Then run C<mktunes.pl>.  This might be sufficient to return your
+iPod to the previous state (although if you've added or removed songs etc;
+then it might not work).
+
+=head1 BUGS
+
+Email bug reports to C<< <bug-gnupod@nongnu.org> >>, a mailing
+list whose archives can be found at
+C<< <http://lists.gnu.org/archive/html/bug-gnupod/> >>.
+
+=head1 SEE ALSO
+
+The full documentation for gnupod is maintained as a Texinfo manual.  If the info program and GNUpod are properly installed at your site, the command
+
+    info gnupod
+
+should give you access to the complete manual.
+Individual programms have their own man page.
+
+=over 4
+
+=item *
+
+L<gnupod_addsong> - Add songs, podcasts and books to your iPod.
+
+=item *
+
+L<gnupod_search> - Search, edit, delete files on your iPod.
+
+=item *
+
+L<GNUtunesDB> - More information on file format.
+
+=item *
+
+L<http://www.ipodlinux.org/wiki/ITunesDB> - More information on the ITunesDB
+format.
+
+=back
+

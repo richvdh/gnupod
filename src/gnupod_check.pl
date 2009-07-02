@@ -229,6 +229,7 @@ gnupod_check.pl checks for 'lost' files
        --version           output version information and exit
    -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
        --fixit             Try to fixup some errors (may delete 'lost' files)
+
 Report bugs to <bug-gnupod\@nongnu.org>
 EOF
 }
@@ -246,4 +247,48 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 EOF
 }
 
+=head1 NAME
 
+gnupod_check.pl - Check for lost/zombie files on the iPod
+
+=head1 SYNOPSIS
+
+B<gnupod_check.pl> [OPTION]...
+
+=head1 DESCRIPTION
+
+Use this tool if your OS crashed while uploading songs to the iPod or if you have too much time ;)
+
+=head1 OPTIONS
+
+=over 4
+
+=item -h, --help
+
+Display usage help and exit
+
+=item     --version
+
+Output version information and exit
+
+=item -m, --mount=directory
+
+iPod mountpoint, default is C<$IPOD_MOUNTPOINT>
+
+=item     --fixit
+
+Try to fixup some errors (may delete 'lost' files)
+
+=back
+
+###___PODINSERT man/general-tools.pod___###
+
+=head1 AUTHORS
+
+Adrian Ulrich <pab at blinkenlights dot ch> - Main author of GNUpod
+
+=head1 COPYRIGHT
+
+Copyright (C) Adrian Ulrich
+
+###___PODINSERT man/footer.pod___###

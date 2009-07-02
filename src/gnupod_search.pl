@@ -288,3 +288,224 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 EOF
 }
 
+
+=head1 NAME
+
+gnupod_search.pl  - Search, list, edit, delete songs from your iPod
+
+=head1 SYNOPSIS
+
+	gnupod_search.pl [OPTION] File1 File2 ...
+
+=head1 DESCRIPTION
+
+C<gnupod_search.pl> searches the F<GNUtunesDB.xml> file for matches to its
+arguments.  These search results can then be changed (via C<--rename>) or
+deleted (via C<--delete>).  For these changes to be visible to the iPod,
+C<mktunes> must be run.
+
+=head1 OPTIONS
+
+=head2 Generic Program Information
+
+=over 4
+
+=item -h, --help
+
+Lists out all the options.
+
+=item --version
+
+Output version information and exit.
+
+=item -m, --mount=directory
+
+iPod mount point, default is C<$IPOD_MOUNTPOINT>.
+
+=back
+
+=head2 Search fields
+
+By default, search arguments are treated as regular expressions.  The
+exception to this are numerical comparisons (C<< --id<4 >> and 
+C<< bitrate>255 >>) and numerical ranges (C< --rating=20-40 >).
+
+The argument for title/artist/album/etc has to be UTF8 encoded, B<not> latin1!
+
+=over 4
+
+=item -t, --title=TITLE
+
+search songs by Title.
+
+=item -a, --artist=ARTIST
+
+search songs by Artist.
+
+=item -l, --album=ALBUM
+
+search songs by Album.
+
+=item -i, --id=ID
+
+search songs by ID.
+
+=item -g, --genre=GENRE
+
+search songs by Genre.
+
+=item -c, --playcount=COUNT
+
+search songs by Playcount.
+
+=item -s, --rating=COUNT
+
+search songs by Rating (20 is one star, 40 two, etc.)
+
+=item -R, --podcastrss=RSS
+
+search songs by RSS.
+
+=item -U, --podcastguid=GUID
+
+search songs by podcast group id.
+
+=item -b, --bitrate=BITRATE
+
+search songs by Bitrate.
+
+=item -o, --match-once
+
+Search doesn't need to match multiple times, even though there is more than
+one match criteria.  Essentially changes the search from using I<and> to
+I<or>.  For example:
+
+	gnupod_search.pl -m /mnt/ipod --rating="60-100" --artist="Amos"
+
+matches all songs by "Amos" which have a rating of 3-5 stars.  Whereas
+
+	gnupod_search.pl -m /mnt/ipod --rating="60-100" --artist="Amos" --match-once
+
+matches all songs by "Amos" and all songs which have a rating of 3-5 stars.
+
+=item --view=ialt
+
+Modify how the search results are displayed.  default=ialt  Options are:
+
+	t = title    a = artist   r = rating      p = iPod Path
+	l = album    g = genre    c = playcount   i = id
+	u = UnixPath n = Songnum  G = podcastguid R = podcastrss
+	d = dbid
+
+=back
+
+=head2 Changing song information
+
+After you have finished making changes, you must remember to call C<mktunes.pl>
+to ensure those changes are written to the iTunes database and are visible to
+your iPod.
+
+=over 4
+
+=item --rename=KEY=VAL
+
+Change tags on found songs. Example: --rename="ARTIST=Foo Bar"
+
+=item --artwork=FILE
+
+Set FILE as Cover for found files.  
+
+The internal image format is model specific, so you should give GNUpod a
+hint about the image format it should use in your GNUpod configuration file
+(found at F<~/.gnupodrc> or
+F<$IPOD_MOUNTPOINT/iPod_Control/.gnupod/gnupodrc>).  For example C<model =
+video> for video-capable iPods, C<model = nano> for first and second
+generation nanos, C<model = nano_3g> for late 2007 nanos and 
+C<model = nano_4g> for late 2008 nano models.
+
+=back
+
+=head2 Deleting songs
+
+=over 4
+
+=item --delete
+
+REMOVE (!) matched songs.  This removes the songs immediately, but you'll
+still have to call C<mktunes.pl> to make the appropriate changes to the
+iTunes database.
+
+=back
+
+=head1 EDITING GNUtunesDB.xml DIRECTLY
+
+It is possible to perform most of the changes you might perform with
+C<gnupod_search.pl> directly into the
+F<iPod_Control/.gnupod/GNUtunesDB.xml> file.  It is recommended that if you
+intend to do this, that you take a backup of the file first.
+
+B<IMPORTANT>: After making any changes to the F<GNUtunesDB.xml> (whether
+directly) or vial C<gnupod_search.pl> you must call C<mktunes.pl> to ensure
+those changes are also reflected in the iTunes database.
+
+=head1 EXAMPLES
+
+	# Mount the iPod
+	mount /mnt/ipod
+
+	# Sync changes made by other tools (such as iTunes)
+	# only necessary if you are using other tools in addition to these
+	tunes2pod.pl -m /mnt/ipod
+
+	# search for all songs by the artist called 'Schlummiguch'
+	gnupod_search.pl -m /mnt/ipod --artist="Schlummiguch"
+
+	# search for all songs in the album 'Seiken Densetsu'
+	gnupod_search.pl -m /mnt/ipod --album="Seiken Densetsu"
+
+	# search for all songs whose ids contain the number 4
+	gnupod_search.pl -m /mnt/ipod --id=4
+
+	# search for the songs with id 4 (it's a regular expression)
+	gnupod_search.pl -m /mnt/ipod --id="^4$"
+
+	# search for all the songs whose rating is 3 - 5 stars and whose
+	# Artist contains "Amos"
+	gnupod_search.pl -m /mnt/ipod --rating="60-100" --artist="Amos"
+
+	# search for all the songs whose play count is less than 3
+	gnupod_search.pl -m /mnt/ipod --playcount<3
+
+	# Change artist and rating for all songs by Alfred Neumann
+	# Sets artist to "John Doe" and rating to 5 stars (5 x 20 = 100)
+	gnupod_search.pl --artist="Alfred Neumann" --rename="artist=John Doe" --rename="rating=100"
+
+	# Set cover-artwork for all songs by "Amos" to be "amos.jpg"
+	gnupod_search.pl --artist="Amos" --artwork="amos.jpg"
+
+	# Boost the volume for all the songs on album by 50%
+	gnupod_search --album="Seiken Densetsu" --rename="volume=50"
+
+	# Cut the volume for all the songs on album by -10%
+	gnupod_search --album="Seiken Densetsu" --rename="volume=-10"
+
+	# Delete all songs by the artist called 'Schlumminguch'
+	gnupod_search.pl -m /mnt/ipod --artist="Schlummiguch" --delete
+
+	# Record the changes to the iTunes database (this is essential)
+	mktunes.pl -m /mnt/ipod
+
+	# Unmount and go
+	umount /mnt/ipod
+
+###___PODINSERT man/general-tools.pod___###
+
+=head1 AUTHORS
+
+Written by Eric C. Cooper <ecc at cmu dot edu> - Contributed to the 'old' GNUpod (< 0.9)
+
+Adrian Ulrich <pab at blinkenlights dot ch> - Main author of GNUpod
+
+Heinrich Langos <henrik-gnupod at prak dot org> - Some patches
+
+###___PODINSERT man/footer.pod___###
