@@ -41,7 +41,7 @@ print "mktunes.pl ###__VERSION__### (C) Adrian Ulrich\n";
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 GetOptions(\%opts, "version", "help|h", "ipod-name|n=s", "mount|m=s", "volume|v=i", "energy|e", "fwguid|g=s");
-GNUpod::FooBar::GetConfig(\%opts, {'ipod-name'=>'s', mount=>'s', volume=>'i', energy=>'b', fwguid=>'s', model=>'s'}, "mktunes");
+GNUpod::FooBar::GetConfig(\%opts, {'ipod-name'=>'s', mount=>'s', volume=>'i', energy=>'b', fwguid=>'s', model=>'s', low_ram_attr=>'s'}, "mktunes");
 $opts{'ipod-name'} ||= "GNUpod ###__VERSION__###";
 
 
@@ -69,7 +69,17 @@ sub main {
 	GNUpod::XMLhelper::doxml($con->{xml}) or usage("Could not read $con->{xml}, did you run gnupod_INIT.pl ?");
 	
 	print "\r> ".$mktunes->GetFileCount." files parsed, assembling iTunesDB...\n";
-	$mktunes->WriteItunesDB;
+
+	my $keep = {};
+	if ($opts{'low_ram_attr'}) {
+		foreach(split(/[ ,]+/,$opts{'low_ram_attr'})) {
+			$keep->{$_}++;
+		}
+		print "> Low ram option active. GNUpod will only add a limited\n";
+		print "> number of attributes to preserve RAM on the iPod:\n";
+		print "> ".join(" ", sort(keys(%{$keep})))."\n";
+	}
+	$mktunes->WriteItunesDB(keep=>$keep);
 	
 	if($fwguid) {
 		my $k = GNUpod::Hash58::HashItunesDB(FirewireId=>$fwguid, iTunesDB=>$con->{itunesdb});
