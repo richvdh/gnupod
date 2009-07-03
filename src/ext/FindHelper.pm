@@ -270,8 +270,15 @@ DOCUMENT ME!
 		'format' => 'numeric',
 		'content' => 'int',
 		'help' => 'iPod database id',
-		'header' => 'ID',
-		'width' => 4,
+		'header' => 'DBID_1',
+		'width' => 8,
+		},
+	'dbid_2' => {
+		'format' => 'numeric',
+		'content' => 'int',
+		'help' => 'iPod database id2',
+		'header' => 'DBID_2',
+		'width' => 8,
 		},
 	'bpm' => {
 		'format' => 'numeric',
