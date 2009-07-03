@@ -125,7 +125,9 @@ sub xescaped {
 	# newline normalization
 	$ret =~ s/\x0D\x0A/\x0A/g;
 	$ret =~ s/\x0D/\x0A/g;
-	$ret =~ s/\x0A/&#x0a;/g; 
+	$ret =~ s/\x0A/&#x0a;/g;
+	# BOM removal
+	$ret =~ s/\xEF\xBB\xBF//g; # real BOM got converted to a "utf8.BOM" and isn't needed anymore
 	# strip other control characters
 	$ret =~ tr/\000-\037//d;
 	#convert to XML encoded unicode
