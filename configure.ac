@@ -1,29 +1,29 @@
 AC_INIT(GNUpod, 0.99.9, bug-gnupod@nongnu.org)
 
-echo $ECHO_N $PACKAGE_VERSION > .gnupod_version
+$as_echo_n $PACKAGE_VERSION > .gnupod_version
 
 if test -d .git -o -d CVS; then
- echo " *** THIS IS A DEVELOPMENT VERSION OF GNUPOD ***"
- echo " *** REMEMBER TO ALWAYS BACKUP YOUR DATA :-) ***"
- echo $ECHO_N "-DEVEL" >> .gnupod_version
+ $as_echo " *** THIS IS A DEVELOPMENT VERSION OF GNUPOD ***"
+ $as_echo " *** REMEMBER TO ALWAYS BACKUP YOUR DATA :-) ***"
+ $as_echo_n "-DEVEL" >> .gnupod_version
 fi
 
 AC_PATH_PROGS(PERL, perl-5.8 perl-5.6 perl)
 AC_PATH_PROGS(PODMAN, pod2man)
 
 if test $PERL; then
-echo "GNUpod will use $PERL"
+$as_echo "GNUpod will use $PERL"
 else
-echo "** Unable to find an usable Perl binary"
-echo "** Please install Perl 5.6 or a newer version"
+$as_echo "** Unable to find an usable Perl binary"
+$as_echo "** Please install Perl 5.6 or a newer version"
 exit 1
 fi
 
 if test $PODMAN; then
-echo "man page will be generated using $PODMAN"
+$as_echo "man page will be generated using $PODMAN"
 else
-echo "** Unable to find a usable pod2man binary"
-echo "** Please install perldoc"
+$as_echo "** Unable to find a usable pod2man binary"
+$as_echo "** Please install perldoc"
 exit 1
 fi
 
@@ -36,16 +36,16 @@ dnl Ugly check for modules
 for i in $ALL_MODULES
 do
 
- echo -n "checking for $i..."
+ $as_echo_n "checking for $i..."
  $PERL -e "use $i" 2> /dev/null
  if test $? = 0; then
-  echo " ok"
+  $as_echo " ok"
  else
-  echo " failed!"
-  echo "** You need to install $i"
-  echo "** Visit <http://search.cpan.org> to get the module"
-  echo "** Or try this:"
-  echo "# perl -MCPAN -e 'install $i'"
+  $as_echo " failed!"
+  $as_echo "** You need to install $i"
+  $as_echo "** Visit <http://search.cpan.org> to get the module"
+  $as_echo "** Or try this:"
+  $as_echo "# perl -MCPAN -e 'install $i'"
   exit 1
  fi
 done
@@ -53,15 +53,15 @@ done
 for i in $OPT_MODULES
 do
 
- echo -n "checking for optional $i..."
+ $as_echo_n "checking for optional $i..."
  $PERL -e "use $i" 2> /dev/null
  if test $? = 0; then
-  echo " ok"
+  $as_echo " ok"
  else
-  echo " failed!"
-  echo "** $i not found. You can install it using this command:"
-  echo "** # perl -MCPAN -e 'install $i'"
-  echo "** ..but GNUpod will also work without $i"
+  $as_echo " failed!"
+  $as_echo "** $i not found. You can install it using this command:"
+  $as_echo "** # perl -MCPAN -e 'install $i'"
+  $as_echo "** ..but GNUpod will also work without $i"
   echo
  fi
 done
@@ -69,30 +69,30 @@ done
 #Test if user installed both
  $PERL -e "use Audio::FLAC" 2> /dev/null
  if test $? = 0; then
-   echo "NOTE: 'Audio::FLAC' is installed, looks like this module is"
-   echo "      depricated and got renamed into 'Audio::FLAC::Header'"
-   echo "      GNUpod still works with 'Audio::FLAC' but maybe it would"
-   echo "      be a good idea to replace the 'Audio::FLAC' installation"
-   echo "      with 'Audio::FLAC::Header'"
+   $as_echo "NOTE: 'Audio::FLAC' is installed, looks like this module is"
+   $as_echo "      depricated and got renamed into 'Audio::FLAC::Header'"
+   $as_echo "      GNUpod still works with 'Audio::FLAC' but maybe it would"
+   $as_echo "      be a good idea to replace the 'Audio::FLAC' installation"
+   $as_echo "      with 'Audio::FLAC::Header'"
  fi
 
 
 
 $PERL -e "use MP3::Info; exit(1) if(\$MP3::Info::VERSION < 1.01); exit(0);"
  if test $? = 0; then
-echo "installed version of MP3::Info looks good for utf8 support"
+$as_echo "installed version of MP3::Info looks good for utf8 support"
  else
-  echo " ** PLEASE UPGRADE MP3::Info TO VERSION 1.01 OR NEWER **"
-  echo " ** UTF8 SUPPORT FOR MP3 FILES WILL BE BROKEN !       **"
+  $as_echo " ** PLEASE UPGRADE MP3::Info TO VERSION 1.01 OR NEWER **"
+  $as_echo " ** UTF8 SUPPORT FOR MP3 FILES WILL BE BROKEN !       **"
  fi
 
 
 $PERL -e "use MP3::Info; exit(1) if(\$MP3::Info::VERSION < 1.20); exit(0);"
  if test $? = 0; then
-echo "installed version of MP3::Info looks good for APE tag and RVA2 support"
+$as_echo "installed version of MP3::Info looks good for APE tag and RVA2 support"
  else
-  echo " ** PLEASE UPGRADE MP3::Info TO VERSION 1.20 OR NEWER       **"
-  echo " ** APE TAG AND RVA2 SUPPORT FOR MP3 FILES WILL BE BROKEN ! **"
+  $as_echo " ** PLEASE UPGRADE MP3::Info TO VERSION 1.20 OR NEWER       **"
+  $as_echo " ** APE TAG AND RVA2 SUPPORT FOR MP3 FILES WILL BE BROKEN ! **"
  fi
 
 
@@ -101,7 +101,7 @@ echo "installed version of MP3::Info looks good for APE tag and RVA2 support"
 #with something different in /usr/bin/mac
 
 ENCS="wav" #aka pcm
-echo $ECHO_N "checking installed encoders..."
+$as_echo_n "checking installed encoders..."
 ALLENCODERS="lame faac"
 for i in $ALLENCODERS
 do
@@ -112,10 +112,10 @@ do
   ENCS="(disabled $i: Binary not found) $ENCS"
  fi
 done
-echo " done"
+$as_echo " done"
 
 DECS=""
-echo $ECHO_N "checking installed decoders..."
+$as_echo_n "checking installed decoders..."
 ALLDECODERS="oggdec flac timidity"
 for i in $ALLDECODERS
 do
@@ -126,27 +126,27 @@ do
   DECS="(disabled $i: Binary not found) $DECS"
  fi
 done
-echo " done"
+$as_echo " done"
 
 
-echo $ECHO_N "checking for ffmpeg with AAC support... "
+$as_echo_n "checking for ffmpeg with AAC support... "
 ffmpeg -formats 2>&1|egrep " aac" > /dev/null
  if test $? = 0; then
-  echo "found!"
+  $as_echo "found!"
   ENCS="mpeg4 $ENCS"
  else
-  echo "not found, --decode=video won't work"
+  $as_echo "not found, --decode=video won't work"
   ENCS="(mpeg4/no ffmpeg with aac support found) $ENCS"
  fi
 
 
-echo $ECHO_N "checking for ImageMagick..."
+$as_echo_n "checking for ImageMagick..."
 convert --version > /dev/null 2>&1
  if test $? = 0; then
-  echo "found!"
+  $as_echo "found!"
   IMAGIC="Yes"
  else
-  echo "not found, --artwork won't work"
+  $as_echo "not found, --artwork won't work"
   IMAGIC="No  (ImageMagick is not installed)"
  fi
 
@@ -158,33 +158,33 @@ convert --version > /dev/null 2>&1
 AC_SUBST(PERL)
 AC_OUTPUT(Makefile)
 
-echo
-echo
-echo "Settings:"
-echo "---------"
-echo
-echo $ECHO_N "Release         : "
+$as_echo
+$as_echo
+$as_echo "Settings:"
+$as_echo "---------"
+$as_echo
+$as_echo_n "Release         : "
  cat .gnupod_version
-echo
+$as_echo
 
-echo $ECHO_N "Perl Version    : "
+$as_echo_n "Perl Version    : "
  $PERL tools/getVERSION.pl
-echo
+$as_echo
 
 
-echo    "Prefix          : $prefix";
+$as_echo    "Prefix          : $prefix";
 
-echo $ECHO_N "Perl INC        : "
+$as_echo_n "Perl INC        : "
  $PERL tools/getINC.pl
  XPINC=`$PERL tools/getINC.pl`;
-echo
+$as_echo
 
-echo "Encoders        : $ENCS"
-echo "Decoders        : $DECS"
-echo "Artwork Support : $IMAGIC";
+$as_echo "Encoders        : $ENCS"
+$as_echo "Decoders        : $DECS"
+$as_echo "Artwork Support : $IMAGIC";
 
 
-echo
-echo "-> use 'make install' to install $PACKAGE_NAME"
-echo "-> use 'info $PACKAGE_NAME' to read the documentation after you installed $PACKAGE_NAME"
-echo "-> use 'make uninstall' to remove $PACKAGE_NAME from $prefix"
+$as_echo
+$as_echo "-> use 'make install' to install $PACKAGE_NAME"
+$as_echo "-> use 'info $PACKAGE_NAME' to read the documentation after you installed $PACKAGE_NAME"
+$as_echo "-> use 'make uninstall' to remove $PACKAGE_NAME from $prefix"
