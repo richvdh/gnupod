@@ -22,6 +22,7 @@
 # This product is not supported/written/published by Apple!
 
 use strict;
+use warnings;
 use GNUpod::FooBar;
 use GNUpod::XMLhelper;
 use Getopt::Long;

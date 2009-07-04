@@ -22,6 +22,7 @@
 # This product is not supported/written/published by Apple!
 
 use strict;
+use warnings;
 use GNUpod::XMLhelper;
 use GNUpod::FooBar;
 use GNUpod::iTunesDB;
