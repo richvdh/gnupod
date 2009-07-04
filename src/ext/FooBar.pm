@@ -105,7 +105,7 @@ sub _check_casesensitive {
 		close(CSTEST) or die "FATAL: Could not close CSTEST FD ($target/csTeST) : $!\n";
 		unlink("$target/csTeSt"); #Boom!
 		
-		if($inode_a != $inode_b) { #Whops, different inodes? -> case sensitive fs
+		if(!defined($inode_b) || ($inode_a != $inode_b)) { #Whops, different inodes? -> case sensitive fs
 			#Nerv the user
 			warn "$0: Warning: $target is mounted case sensitive, that's bad:\n";
 			warn "".(" " x length($0))."  FAT32-iPods should be mounted case in-sensitive!\n";
