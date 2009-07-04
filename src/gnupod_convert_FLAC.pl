@@ -128,3 +128,62 @@ sub check_ffmpeg_alac {
 
 exit(0);
 
+
+=head1 NAME
+
+gnupod_convert_FLAC.pl - Convert a file to an iPod supported format.
+
+=head1 SYNOPSIS
+
+B<gnupod_convert_FLAC.pl> SOURCEFILE FORMATSELECTOR QUALITY
+
+=head1 DESCRIPTION
+
+gnupod_convert_FLAC.pl converts a media file to one of the formats
+that are supported by the iPod. This tool is not supposed to be called
+by the user directly but rather by gnupod_addsong.pl. Therefore this
+documentation is rudimentary and will remain so.
+
+=head1 OPTIONS
+
+=over 4
+
+=item SOURCEFILE
+
+Source file.
+
+=item FORMATSELECTOR
+
+Target format selector.
+
+=item QUALITY
+
+Encoding quality setting.
+
+=back
+
+=head1 BUGS
+
+Email bug reports to C<< <bug-gnupod@nongnu.org> >>, a mailing
+list whose archives can be found at
+C<< <http://lists.gnu.org/archive/html/bug-gnupod/> >>.
+
+=head1 SEE ALSO
+
+=over 4
+
+=item *
+
+L<gnupod_addsong.pl> - Add songs, podcasts and books to your iPod.
+
+=back
+
+=head1 AUTHORS
+
+Adrian Ulrich <pab at blinkenlights dot ch> - Main author of GNUpod
+
+=head1 COPYRIGHT
+
+Copyright (C) Adrian Ulrich
+
+###___PODINSERT man/footer.pod___###
