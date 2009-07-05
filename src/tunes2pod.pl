@@ -167,8 +167,6 @@ sub SetPodcastName {
 # Append item to podcast playlist
 sub AppendPodcastItem {
 	my($self,$index,$item) = @_;
-	my $index = $self->{pc_playlist}->{index};
-	return if $index == 0;
 	push(@{$self->{pc_playlist}->{lists}->{$index}->{content}},$item);
 }
 
