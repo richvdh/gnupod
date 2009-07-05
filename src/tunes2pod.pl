@@ -243,7 +243,7 @@ sub MhodItem {
 	}
 	elsif($self->{mode} == MODE_OLDPL) {
 		# Legacy playlist
-		if($args{ref}->{type_string} eq 'title') {
+		if(defined($args{ref}->{type_string}) && ($args{ref}->{type_string} eq 'title')) {
 			# -> Set title of playlist following
 			$self->SetPlaylistName($args{ref}->{string});
 		}
@@ -259,7 +259,7 @@ sub MhodItem {
 	}
 	elsif($self->{mode} == MODE_NEWPL) {
 		# -> Newstyle playlist
-		if($args{ref}->{type_string} eq 'title' && $self->{playlist}->{podcast}) {
+		if(defined($args{ref}->{type_string}) && ($args{ref}->{type_string} eq 'title' && $self->{playlist}->{podcast})) {
 			# Title of playlist: create it
 			$self->SetPodcastName($args{ref}->{string});
 		}
