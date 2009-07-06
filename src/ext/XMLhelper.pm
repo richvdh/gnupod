@@ -124,8 +124,8 @@ sub xescaped {
 	$ret =~ s/>/&gt;/g;
 	return $ret unless ($ret =~ /[^\x20-\x7F]/); #early return if nothing outside plain ascii range
 	# newline normalization
-	$ret =~ s/\x0D\x0A/\x0A/g;
-	$ret =~ s/\x0D/\x0A/g;
+	$ret =~ s/\x0D\x0A/&#x0a;/g;
+	$ret =~ s/\x0D/&#x0a;/g;
 	$ret =~ s/\x0A/&#x0a;/g;
 	# BOM removal
 	$ret =~ s/\xEF\xBB\xBF//g; # real BOM got converted to a "utf8.BOM" and isn't needed anymore
