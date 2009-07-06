@@ -122,6 +122,7 @@ sub xescaped {
 	$ret =~ s/\'/&apos;/g;
 	$ret =~ s/</&lt;/g;
 	$ret =~ s/>/&gt;/g;
+	return $ret unless ($ret =~ /[^\x20-\x7F]/); #early return if nothing outside plain ascii range
 	# newline normalization
 	$ret =~ s/\x0D\x0A/\x0A/g;
 	$ret =~ s/\x0D/\x0A/g;
