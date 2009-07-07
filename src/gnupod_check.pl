@@ -52,6 +52,7 @@ go();
 sub go {
 	usage($con->{status}."\n") if $con->{status};
 	
+	%TRACKER=( GLOBFILES => 0, ITFILES => 0, TIME => 0, SIZE => 0, ERR => 0, FIXED => 0 );
 	print "Pass 1: Checking Files in the GNUtunesDB.xml...\n";
 	GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
 
@@ -59,8 +60,8 @@ sub go {
 	checkGNUtunes($con);
 
 	print   "..finished\n\n";
-	print   "  Total Playtime : ".int($TRACKER{TIME}/1000/60/60)." h\n";
-	printf ("  Space used     : %.2f GB\n",( $TRACKER{SIZE}/1024/1024/1024 ) );
+	print   "  Total playtime : ".int($TRACKER{TIME}/1000/60/60)." h\n";
+	printf ("  Total filesize : %.2f GB",( $TRACKER{SIZE}/1024/1024/1024 )); print " ($TRACKER{SIZE} Bytes) \n";
 	print   "  iPod files     : $TRACKER{GLOBFILES}\n";
 	print   "  GNUpod files   : $TRACKER{ITFILES}\n";
 
