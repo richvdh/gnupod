@@ -104,26 +104,26 @@ sub main {
 sub newfile {
 	my($el) =  @_;
                           # 2 = mount + view (both are ALWAYS set)
-	my $ntm      = keys(%opts)-2-$opts{'match-once'}-$opts{automktunes}-$opts{delete}-(defined $opts{rename})-(defined $opts{artwork})-(defined $opts{model});
-	my $matched  = undef;
+	my $ntm      = keys(%opts)-2-(defined $opts{'match-once'})-(defined $opts{'automktunes'})-(defined $opts{'delete'})-(defined $opts{'rename'})-(defined $opts{'artwork'})-(defined $opts{'model'});
+	my $matched  = 0;
 	my $dounlink = 0;
 	foreach my $opx (keys(%opts)) {
-		next if $opx =~ /mount|match-once|delete|view|rename/; #Skip this
+		next if $opx =~ /mount|match-once|delete|view|rename|artwork|model/; #Skip this
 		
 		
-		if(substr($opts{$opx},0,1) eq ">") {
+		if(substr($opts{$opx},0,1) eq '>') {
 			$matched++ if  int($el->{file}->{$opx}) > int(substr($opts{$opx},1));
 		}
-		elsif(substr($opts{$opx},0,1) eq "<") {
+		elsif(substr($opts{$opx},0,1) eq '<') {
 			$matched++ if  int($el->{file}->{$opx}) < int(substr($opts{$opx},1));
 		}
-		elsif(substr($opts{$opx},0,1) eq "-") {
+		elsif(substr($opts{$opx},0,1) eq '-') {
 			my($s_from, $s_to) = substr($opts{$opx},1) =~ /^(\d+)-(\d+)$/;
 			if( (int($el->{file}->{$opx}) >= $s_from) && (int($el->{file}->{$opx}) <= $s_to) ) {
 				$matched++;
 			}
 		}
-		elsif($el->{file}->{$opx} =~ /$opts{$opx}/i) {
+		elsif(defined($el->{file}->{$opx}) && $el->{file}->{$opx} =~ /$opts{$opx}/i) {
 			$matched++;
 		}
 	}
@@ -193,7 +193,7 @@ sub pview {
  
  #Build refs
  my %qh = ();
- $qh{n}{k} = $orf->{songnum};   $qh{n}{w} = 4;  $qh{n}{n} = "SNUM";
+ $qh{n}{k} = $orf->{songnum};   $qh{n}{w} = 4;  $qh{n}{s} = "SNUM";
  $qh{t}{k} = $orf->{title};                     $qh{t}{s} = "TITLE";
  $qh{a}{k} = $orf->{artist};                    $qh{a}{s} = "ARTIST";
  $qh{r}{k} = $orf->{rating};    $qh{r}{w} = 4;  $qh{r}{s} = "RTNG";
@@ -213,7 +213,7 @@ sub pview {
  my $ll = 0; #LineLength
   foreach(split(//,$opts{view})) {
       print "|" if $ll;
-      my $cs = $qh{$_}{k};           #CurrentString
+      my $cs = defined($qh{$_}{k}) ? $qh{$_}{k} : '' ;  #CurrentString
          $cs = $qh{$_}{s} if $xhead; #Replace it if HEAD is needed
  
       my $cl = $qh{$_}{w}||DEFAULT_SPACE;       #Current length
