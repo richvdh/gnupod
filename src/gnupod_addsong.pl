@@ -124,8 +124,8 @@ sub startup {
 	}
 	
 	# Check volume adjustment options for sanity
-	my $min_vol_adj = int($opts{'min-vol-adj'});
-	my $max_vol_adj = int($opts{'max-vol-adj'});
+	my $min_vol_adj = defined($opts{'min-vol-adj'})?int($opts{'min-vol-adj'}):0;
+	my $max_vol_adj = defined($opts{'max-vol-adj'})?int($opts{'max-vol-adj'}):0;
 	
 	usage("Invalid settings: --min-vol-adj=$min_vol_adj > --max-vol-adj=$max_vol_adj\n") if ($min_vol_adj > $max_vol_adj);
 	usage("Invalid settings: --min-vol-adj=$min_vol_adj < -100\n")                       if ($min_vol_adj < -100);
@@ -212,8 +212,8 @@ sub startup {
 		#Thats fine because almost everything inside an mhit can handle this.
 		#But bpm and srate are limited to 0xffff
 		# -> We fix this silently to avoid ugly warnings while running mktunes.pl
-		$fh->{bpm}   = 0xFFFF if $fh->{bpm}   > 0xFFFF;
-		$fh->{srate} = 0xFFFF if $fh->{srate} > 0xFFFF;
+		$fh->{bpm}   = 0xFFFF if (defined($fh->{bpm})   && $fh->{bpm}   > 0xFFFF);
+		$fh->{srate} = 0xFFFF if (defined($fh->{srate}) && $fh->{srate} > 0xFFFF);
 
 
 		#Check for duplicates
@@ -324,7 +324,7 @@ sub startup {
 		}
 		#Is it a tempfile? Remove it.
 		#This is the case for 'converter' files and 'rss'
-		unlink($file) if $per_file_info{$file}->{UNLINK} == 1;
+		unlink($file) if $per_file_info{$file}->{UNLINK};
 	}
 
  
@@ -473,6 +473,7 @@ sub PODCAST_get_sane_path_from_url {
 # -> Add '<foo bar=barz oink=yak />' stuff to the hash
 # => Fillsup %podcast_infos
 sub podcastStart {
+	no warnings; #disable warnings for this scope
 	my($hr,$el,@it) = @_;
 	my $hashref_key = $hr->{Base};
 	undef($hr->{cdatabuffer});
@@ -494,6 +495,7 @@ sub podcastStart {
 #Eventer for <foo>CONTENT</foo>
 # => Fillsup %podcast_infos
 sub podcastChar {
+	no warnings; #disable warnings for this scope
 	my($hr,$el) = @_;
 	$hr->{cdatabuffer} .= $el;
 }
@@ -502,6 +504,7 @@ sub podcastChar {
 #Eventer for END
 # => Fillsup %podcast_infos
 sub podcastEnd {
+	no warnings; #disable warnings for this scope
 	my($hr,$el) = @_;
 	my $hashref_key = $hr->{Base};
 	if(defined($hr->{cdatabuffer}) &&
@@ -519,6 +522,7 @@ sub podcastEnd {
 # -> Add '<foo bar=barz oink=yak />' stuff to the hash
 # => Fillsup %podcast_channel_infos
 sub podcastChannelStart {
+	no warnings; #disable warnings for this scope
 	my($hr,$el,@it) = @_;
 	my $hashref_key = $hr->{Base};
 	$hr->{cdatabuffer} = undef;
@@ -539,6 +543,7 @@ sub podcastChannelStart {
 #Eventer for <foo>CONTENT</foo>
 # => Fillsup %podcast_channel_infos
 sub podcastChannelChar {
+	no warnings; #disable warnings for this scope
 	my($hr,$el) = @_;
 	$hr->{cdatabuffer} .= $el;
 }
@@ -547,6 +552,7 @@ sub podcastChannelChar {
 #Eventer for END
 # => Fillsup %podcast_channel_infos
 sub podcastChannelEnd {
+	no warnings; #disable warnings for this scope
 	my($hr,$el) = @_;
 	my $hashref_key = $hr->{Base};
 	if(defined($hr->{cdatabuffer}) &&
@@ -608,8 +614,8 @@ sub resolve_podcasts {
 
 			#Limit the number of podcasts to dowload.
 			my @pods   = @{$podcast_infos{$pcrss->{file}}};
-			my $flimit = int($opts{'podcast-files-limit'});
-			if ($flimit > 0) {
+			my $flimit = defined(($opts{'podcast-files-limit'})) ? int($opts{'podcast-files-limit'}) : 0;
+			if (($flimit > 0) && ($flimit < $#pods+1)) {
 				splice(@pods, $flimit);
 			} elsif ($flimit < 0) {
 				splice(@pods, 0, $flimit);
