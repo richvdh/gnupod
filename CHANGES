@@ -24,6 +24,7 @@ Scott Talbert and Heinrich Langos.
       IF RVA2/XRVA are present use those,
       ELSE check for replay_gain tags in APE or TXXX tags.
       ELSE parse iTunNORM comments AND RVA/RVAD tags.
+  NEW: Replay gain information written in iTunesSD (1gen/2gen shuffle)
   FIX: Changed iTunNORM parsing take the maximum value of left/right channel.
   NEW: Setting lyrics_flag if ULT/USLT tag found
   NEW: Added description of mp3 files with the content of lyrics and comment tags.
