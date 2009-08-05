@@ -1,3 +1,54 @@
+GNUpod 0.99.8 - codename 'Bluntschli verbaselt'
+
+Summary
+-------
+
+This release is mostly a bugfix release. There are only a few
+new features. Most notably the Replay Gain has been reworked.
+Main contributors to 0.99.8 were Richard van den Berg,
+Scott Talbert and Heinrich Langos.
+- Infrastructure
+  CHANGE: Finally we switched from CVS to git.
+  FIX: Updated autoconf checks for Date::Manip Date::Format MP3::Info.
+  FIX: Removed dependency of long gone lastfm module.
+- Documentation
+  CHANGE: Updated TODO file.
+  CHANGE: Expanded podcast section.
+  NEW: Added README.developer with some development notes.
+  NEW: Updated documentation to reflect unsupported new hashing methods.
+- "gnupod_addsong"
+  NEW: ALAC support via ffmpeg to FLAC converter.
+  NEW: Added replay gain for ogg files.
+  NEW: Volume adjustment/replay gain handling for MP3 reworked.
+    Here's gnupods way to handle it for mp3 files:
+      IF RVA2/XRVA are present use those,
+      ELSE check for replay_gain tags in APE or TXXX tags.
+      ELSE parse iTunNORM comments AND RVA/RVAD tags.
+  NEW: Replay gain information written in iTunesSD (1gen/2gen shuffle)
+  FIX: Changed iTunNORM parsing take the maximum value of left/right channel.
+  NEW: Setting lyrics_flag if ULT/USLT tag found
+  NEW: Added description of mp3 files with the content of lyrics and comment tags.
+  FIX: Newline characters in mp3 tags and other attributes are not stripped anymore.
+  FIX: Removing zero termination from tag strings.
+  NEW: Added album information to podcast items from channel title.
+  NEW: playlist name guessing for podcasts.
+  FIX: Skip podcasts without any items and warn user (instead of crashing).
+  FIX: Fixed behavior for unparsable podcast xml files.
+- "mktunes"
+  FIX: Changed "udevinfo" to "udevadm info" in linux fwguid detection.
+  FIX: fwguid scan code now only looks for sd* block devices.
+  CHANGE: XMLhelper now drops empty playlists on writing.
+- Artwork
+  CHANGE: Do not stretch artwork (use white bars to fill the square)
+  NEW: Added artwork support for 4g nano.
+- Autotests
+  NEW: Removed path randomization for autotests.
+  NEW: Set addtime to a fixed value when doing autotests.
+  NEW: Added check for "autotest" file at the ipod mountpoint.
+  NEW: The connection hash was expanded by a "autotest" key.
+  NEW: Added "--fwguid" option to gnupod_INIT.pl to be passed on to mktunes.pl.
+
+
 *** OLD STUFF ***
 
 GNUpod 0.99.7
