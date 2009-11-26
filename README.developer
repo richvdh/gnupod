@@ -14,16 +14,24 @@ Minimal testing:
 Release checklist
 * technical
   * Set new version in first line of configure.ac
+    (actually this should happen after the release so that
+     already during development the new versions are tagged
+     as <VERSION>-DEVEL)
   * run autotests
   * make release and sign with the gpg key
-  * upload to blinkenlights.ch and gnu.org
+  * upload to blinkenlights.ch and ftp.gnu.org
+    (see http://www.gnu.org/prep/maintain/maintain.html#Automated-Upload-Procedure )
 * pr
   * Update http://www.blinkenlights.ch/ccms/ipod(e).html
   * Update http://www.gnu.org/software/gnupod/
   * Add news item on http://savannah.gnu.org/projects/gnupod
-  * Update last release http://freshmeat.net/projects/gnupod/
-  * Announce new release on mailing list
+    ( this will also show up on http://planet.gnu.org/ )
+  * Update latest release http://freshmeat.net/projects/gnupod/
+  * Announce new release on bug-gnupod mailing list
+  * Announce new release on info-gnu@gnu.org
+    ( http://www.gnu.org/prep/maintain/maintain.html#Announcements )
   * Contact Debian package maintainer of "gnupod-tools"
+    (currently Raphael Bossek <bossekr at debian.org> )
 
 Upstream contacts
 * MP3::Info
