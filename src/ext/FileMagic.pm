@@ -845,7 +845,7 @@ sub converter_readmeta {
 
 
 #########################################################
-# Convert ReplayGain to SoundCheck
+# Convert ReplayGain(dB) to SoundCheck
 # Code adapted from http://projects.robinbowes.com/flac2mp3/trac/ticket/30
 
 =item _parse_db_to_soundcheck(VALUE)
@@ -875,7 +875,7 @@ sub _parse_db_to_soundcheck {
 
 
 #########################################################
-# Convert RVA2/XRVA to SoundCheck
+# Convert RVA2/XRVA to ReplayGain(dB)
 
 =item _parse_RVA2_to_db(VALUE, ALBUM)
 
