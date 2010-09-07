@@ -64,9 +64,13 @@ if (ref(\$foo) eq "SCALAR") { usage($foo)};
 my %changingAttributes = ();
 for (@{$opts{set}}) {
 	if (/^(.+?)=(.*)$/) {
-		if (defined(my $attr=GNUpod::FindHelper::resolve_attribute($1))) {
-			$changingAttributes{$attr}=$2;
+		if (defined(GNUpod::FindHelper::resolve_attribute($1))) {
+			$changingAttributes{$1}=$2;
+		} else {
+			usage("Unknown attribute \"".$1."\". ".GNUpod::FindHelper::help_find_attribute($1));
 		}
+	} else {
+		usage("Trouble parsing set option (\"$_\").");
 	}
 }
 
