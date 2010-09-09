@@ -493,6 +493,7 @@ DOCUMENT ME!
 		'help' => 'Unix path',
 		'header' => 'UNIXPATH',
 		'width' => 40,
+		'always-cooked' => 1,
 		},
 
 	'podcastguid' => {
@@ -568,6 +569,7 @@ Example:
 
 
 our @findoptions = (
+"list-attributes",
 "filter|f=s@",
 "view|v=s@",
 "sort|s=s@",
@@ -597,10 +599,11 @@ String to include in your help text if you use the FindHelper module.
 
 =cut
 
-our $findhelp = '   -f, --filter FILTERDEF  only show songss that match FILTERDEF
+our $findhelp = '       --list-attributes   display all attributes for filter/view/sort and exit
+   -f, --filter FILTERDEF  only show songs that match FILTERDEF
    -s, --sort SORTDEF      order output according to SORTDEF
    -v, --view VIEWDEF      only show song attributes listed in VIEWDEF
-   -o, --or, --once        make any filter match (think OR vs. AND)
+   -o, --or, --once        make any filter rule match (think OR vs. AND)
    -l, --limit=N           only output N first tracks (-N: all but N first)
        --noheader          don\'t print headers for result list
        --rawprint          output of raw values instead of human readable
@@ -1071,7 +1074,7 @@ value (if any) wil be returned.
 
 sub computeresults {
 	my ($song, $raw, $fieldname) = @_;
-	if ((!$raw) && defined ($FILEATTRDEF_COMPUTE{$fieldname})) {
+	if ((!$raw || $FILEATTRDEF{$fieldname}{'always-cooked'} ) && defined ($FILEATTRDEF_COMPUTE{$fieldname})) {
 		#print "Found code for $fieldname \n";
 		my $coderef = $FILEATTRDEF_COMPUTE{$fieldname};
 		return &$coderef($song);
