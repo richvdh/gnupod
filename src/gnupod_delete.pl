@@ -30,16 +30,21 @@ use GNUpod::FindHelper;
 use GNUpod::ArtworkDB;
 use Getopt::Long;
 
-my $fullversionstring = "gnupod_delete.pl Version ###__VERSION__### (C) Heinrich Langos";
+my $programName = "gnupod_delete.pl";
+
+my $fullversionstring = "$programName Version ###__VERSION__### (C) Heinrich Langos";
 
 use vars qw(%opts @keeplist);
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
-my $getoptres = GetOptions(\%opts, "version", "help|h", "list-attributes", "mount|m=s", "interactive|i", "force",
+my $getoptres = GetOptions(\%opts, "version", "help|h", "mount|m=s",
+	"interactive|i", "force",
 	"playlist|p=s",
 	@GNUpod::FindHelper::findoptions
 );
+
+# take model and mountpoint from gnupod_search preferences
 GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "gnupod_search");
 
 
@@ -67,7 +72,9 @@ usage($connection->{status}."\n") if $connection->{status};
 
 my $AWDB;
 
-my $firstrun = 1; #first run will look for the songs and playlists to delete. the second run will delete them.
+my $firstrun = 1;
+
+
 my $deletionconfirmed = 0;
 
 main($connection);
@@ -88,8 +95,9 @@ sub main {
 
 	} else {
 
+		# sort results list according to users wishes
 		@resultlist = sort GNUpod::FindHelper::comparesongs @resultlist;
-
+		# crop results according to users wishes
 		@resultlist = GNUpod::FindHelper::croplist({results => \@resultlist});
 
 	}
@@ -197,10 +205,9 @@ $rtxt = "" if (! defined($rtxt));
 die << "EOF";
 $fullversionstring
 $rtxt
-Usage: gnupod_delete.pl ...
+Usage: $programName ...
 
    -h, --help              display this help and exit
-       --list-attributes   display all attributes for filter/view/sort
        --version           output version information and exit
    -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
    -i, --interactive       always ask before deleting
@@ -222,3 +229,9 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 EOF
 }
 
+
+#first run will look for the songs and playlists to delete.
+#the second run will delete the files from the disk and will
+#generate the new xml file.
+#A keeplist of file ids is generated during the second run
+#in order to remove files not on that list from all playlists.

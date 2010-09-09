@@ -33,7 +33,9 @@ use Getopt::Long;
 
 #use Text::CharWidth;
 
-my $fullversionstring = "gnupod_find.pl Version ###__VERSION__### (C) Heinrich Langos";
+my $programName = "gnupod_find.pl";
+
+my $fullversionstring = "$programName Version ###__VERSION__### (C) Heinrich Langos";
 
 #use Data::Dumper;
 #$Data::Dumper::Sortkeys = 1;
@@ -44,9 +46,11 @@ use vars qw(%opts);
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
 
-my $getoptres = GetOptions(\%opts, "version", "help|h", "list-attributes", "mount|m=s",
+my $getoptres = GetOptions(\%opts, "version", "help|h", "mount|m=s",
 	@GNUpod::FindHelper::findoptions
 );
+
+# take model and mountpoint from gnupod_search preferences
 GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "gnupod_search");
 
 
@@ -128,10 +132,9 @@ $rtxt = "" if (! defined($rtxt));
 die << "EOF";
 $fullversionstring
 $rtxt
-Usage: gnupod_find.pl ...
+Usage: $programName ...
 
    -h, --help              display this help and exit
-       --list-attributes   display all attributes for filter/view/sort
        --version           output version information and exit
    -m, --mount=directory   iPod mountpoint, default is \$IPOD_MOUNTPOINT
 $GNUpod::FindHelper::findhelp
@@ -149,4 +152,148 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EOF
 }
+
+=head1 NAME
+
+gnupod_find.pl  - Find songs on your iPod
+
+=head1 SYNOPSIS
+
+gnupod_find.pl [OPTION]
+
+=head1 DESCRIPTION
+
+C<gnupod_find.pl> searches the F<GNUtunesDB.xml> file for matches to its
+arguments and shows those files.
+
+=head1 OPTIONS
+
+=head2 Generic Program Information
+
+=over 4
+
+=item -h, --help
+
+Display a brief help and exist.
+
+=item --version
+
+Output version information and exit.
+
+=item -m, --mount=directory
+
+iPod mount point, default is C<$IPOD_MOUNTPOINT>.
+
+=item     --list-attributes
+
+Display all attributes that can be used for the filter/view/sort options
+and exit.
+
+=item -f, --filter FILTERDEF[,FILTERDEF[,FILTERDEV...]]
+
+Only show songs that match FILTERDEF.
+
+FILTERDEF ::= <attribute>["<"|">"|"="|"<="|">="|"=="|"!="|"~"|"~="|"=~"]<value>
+  The operators "<", ">", "<=", ">=", "==", and "!=" work as you might expect.
+  The operators "~", "~=", and "=~" symbolize regex match (no need for // though).
+  The operator "=" checks equality on numeric fields and does regex match on strings.
+  TODO: document value for boolean and time fields
+
+Examples of filter options:
+  --filter artist="Pink" would find "Pink", "Pink Floyd" and "spinki",
+  --filter artist=="Pink" would find just "Pink" and not "pink" or "Pink Floyd",
+  --filter 'year<2005' would find songs made before 2005,
+  --filter 'addtime<2008-07-15' would find songs added before July 15th,
+  --filter 'addtime>yesterday' would find songs added in the last 24h,
+  --filter 'releasedate<last week' will find podcast entries that are older than a week.
+
+Note
+    --filter 'year=<1955,artist=Elvis'
+  will find the early songs of Elvis and is equivalent to
+    --filter 'year=<1955' --filter 'artist=Elvis'
+
+Please note that "<" and ">" most probably need to be escaped on your shell prompt.
+So you should probably use
+    --filter 'addtime>yesterday'
+  rather than
+    --filter addtime>yesterday
+
+=item -o, --or, --once
+
+Make any one filter rule match (think OR instead of AND logic)
+
+If the --once option is given any single match on one of the
+filter rules is enough to make a song match. Otherwise all conditions
+have to match a file.
+
+Example:
+    --filter 'year=<1955,artist=Elvis' --or
+  would find anything up to 1955 and everything by Elvis (even the
+  stuff older than 1955).
+
+=item -s, --sort SORTDEF
+
+Order output according to SORTDEF
+
+SORTDEF ::= ["+"|"-"]<attribute>,[["+"|"-"]<attribute>] ...
+  Is a comma separated list of fields to order the output by.
+  A "-" (minus) reverses the sort order.
+  Example "-year,+artist,+album,+songnum"
+  Default "+addtime"
+
+=item -v, --view VIEWDEF
+
+Show song attributes listed in VIEWDEF
+
+VIEWDEF ::= <attribute>[,<attribute>]...
+  A comma separated list of fields that you want to see in the output.
+  Example: "album,songnum,artist,title"
+  Default: "id,artist,album,title"
+
+
+The special attribute "default" can be used in the --view argument.
+
+Example:
+  --view "filesize,default"
+
+The special attribute "all" can be used to display all attributes.
+
+=item -l, --limit=N
+
+Only output N first matches. If N is negative, all "but" the N first
+matches will be listed.
+
+Example:
+  --limit=10
+  will print the first 10 matches
+  --limit=-3
+  will skip the first 3 matches and print the rest
+
+Note:
+  If you need the last 5 matches reverse the sort order and use --limit=5.
+
+=item --noheader
+
+Don't print headers for result list.
+
+=item --rawprint
+
+Output of raw values instead of human readable ones. This includes all
+timestamps and the attributes volume and soundcheck. Only attributes that
+don't have a raw value like unixpath, are still computed.
+
+=back
+
+
+###___PODINSERT man/general-tools.pod___###
+
+=head1 AUTHORS
+
+Written by Eric C. Cooper <ecc at cmu dot edu> - Contributed to the 'old' GNUpod (< 0.9)
+
+Adrian Ulrich <pab at blinkenlights dot ch> - Main author of GNUpod
+
+Heinrich Langos <henrik-gnupod at prak dot org> - Some patches
+
+###___PODINSERT man/footer.pod___###
 

@@ -38,11 +38,13 @@ use vars qw(%opts @keeplist);
 
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
-my $getoptres = GetOptions(\%opts, "version", "help|h", "list-attributes",
-	"mount|m=s", "interactive|i", "force",
+my $getoptres = GetOptions(\%opts, "version", "help|h", "mount|m=s",
+	"interactive|i", "force",
 	"set=s@",
 	@GNUpod::FindHelper::findoptions
 );
+
+# take model and mountpoint from gnupod_search preferences
 GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "gnupod_search");
 
 
