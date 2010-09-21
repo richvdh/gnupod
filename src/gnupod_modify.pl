@@ -223,6 +223,8 @@ By default gnupod_modify.pl will only make changes to 20 songs without asking.
 If there are more than 20 matches then gnupod_modify.pl will present
 the matches and ask the user to confirm the modification.
 
+=over 4
+
 =item -i, --interactive
 
 Always ask the user before making changes to the matching songs. No matter how
@@ -232,6 +234,8 @@ few matches there are.
 
 Never ask the user before making changes. No matter how many songs will be
 modified.
+
+=back
 
 =head2 Modification options
 

@@ -229,6 +229,73 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 EOF
 }
 
+=head1 NAME
+
+gnupod_delete.pl  - delete songs from your iPod
+
+=head1 SYNOPSIS
+
+gnupod_delete.pl [OPTION]
+
+=head1 DESCRIPTION
+
+C<gnupod_delete.pl> searches the F<GNUtunesDB.xml> file for matches to its
+arguments and deletes those files from your ipod.
+
+=head1 OPTIONS
+
+###___PODINSERT man/gnupod_find-options.pod___###
+
+=head2 Interaction Options
+
+By default gnupod_delete.pl will only delete up to 20 songs without asking.
+If there are more than 20 matches then gnupod_delete.pl will present
+the matches and ask the user to confirm the deletion.
+
+=over 4
+
+=item -i, --interactive
+
+Always ask the user before deleting the matching songs. No matter how
+few matches there are.
+
+=item --force
+
+Never ask the user before deleting. No matter how many songs will be
+deleted.
+
+=back
+
+=head2 Playlist option
+
+=over 4
+
+=item --playlist <regex>
+
+Deletes a playlist that matches regex instead of the actual songs.
+
+Example
+  --playlist news
+  Will delete playlists that contain the word "news" in their name.
+
+Be careful to anchor the regex if you want exact matches.
+The example above would also match a playlist named "mynewstuff" and one named "sinews".
+
+=back
+
+###___PODINSERT man/general-tools.pod___###
+
+=head1 AUTHORS
+
+Written by Eric C. Cooper <ecc at cmu dot edu> - Contributed to the 'old' GNUpod (< 0.9)
+
+Adrian Ulrich <pab at blinkenlights dot ch> - Main author of GNUpod
+
+Heinrich Langos <henrik-gnupod at prak dot org> - Some patches
+
+###___PODINSERT man/footer.pod___###
+
+
 
 #first run will look for the songs and playlists to delete.
 #the second run will delete the files from the disk and will
