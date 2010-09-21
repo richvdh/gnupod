@@ -27,7 +27,7 @@ and exit.
 
 =item -f, --filter FILTERDEF[,FILTERDEF[,FILTERDEV...]]
 
-Only show songs that match FILTERDEF.
+Filter for songs that match FILTERDEF.
 
 FILTERDEF ::= <attribute>["<"|">"|"="|"<="|">="|"=="|"!="|"~"|"~="|"=~"]<value>
   The operators "<", ">", "<=", ">=", "==", and "!=" work as you might expect.
@@ -69,10 +69,10 @@ songs recorded after 1955).
 
 =item -s, --sort SORTDEF
 
-Order output according to SORTDEF
+Order results according to SORTDEF
 
 SORTDEF ::= ["+"|"-"]<attribute>,[["+"|"-"]<attribute>] ...
-  Is a comma separated list of fields to order the output by.
+  Is a comma separated list of fields to order the results by.
   A "-" (minus) reverses the sort order.
   Example "-year,+artist,+album,+songnum"
   Default "+addtime"
@@ -96,14 +96,15 @@ Example:
 
 =item -l, --limit=N
 
-Only output N first matches. If N is negative, all "but" the N first
-matches will be listed.
+Only the N first matches will be retained and the rest will be ignored.
+
+If N is negative, the N first matches will be ignored and the rest will be retained.
 
 Example:
   --limit=10
-  will print the first 10 matches
+  will limit to the first 10 matches
   --limit=-3
-  will skip the first 3 matches and print the rest
+  will skip the first 3 matches and retain the rest
 
 Note:
   If you need the last 5 matches simply reverse the sort order and use --limit=5.
