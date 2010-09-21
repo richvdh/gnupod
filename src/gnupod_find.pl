@@ -26,20 +26,13 @@
 use strict;
 use warnings;
 use GNUpod::XMLhelper;
-#use GNUpod::FooBar;
 use GNUpod::FindHelper;
 #use GNUpod::ArtworkDB;
 use Getopt::Long;
 
-#use Text::CharWidth;
-
 my $programName = "gnupod_find.pl";
 
 my $fullversionstring = "$programName Version ###__VERSION__### (C) Heinrich Langos";
-
-#use Data::Dumper;
-#$Data::Dumper::Sortkeys = 1;
-#$Data::Dumper::Terse = 1;
 
 use vars qw(%opts);
 
@@ -48,14 +41,12 @@ $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
 my $getoptres = GetOptions(\%opts, "version", "help|h", "mount|m=s",
 	@GNUpod::FindHelper::findoptions
+
 );
 
 # take model and mountpoint from gnupod_search preferences
 GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "gnupod_search");
 
-
-#print Dumper(\%opts);
-#print "Options: ".Dumper(\%opts);
 
 usage()   if ($opts{help} || !$getoptres );
 version() if $opts{version};
