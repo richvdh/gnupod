@@ -200,3 +200,63 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 EOF
 }
 
+=head1 NAME
+
+gnupod_modify.pl  - modify songs on your iPod
+
+=head1 SYNOPSIS
+
+gnupod_modify.pl [OPTION]
+
+=head1 DESCRIPTION
+
+C<gnupod_modify.pl> searches the F<GNUtunesDB.xml> file for matches to its
+arguments and modifies those files' attributes according to your command.
+
+=head1 OPTIONS
+
+###___PODINSERT man/gnupod_find-options.pod___###
+
+=head2 Interaction Options
+
+By default gnupod_modify.pl will only make changes to 20 songs without asking.
+If there are more than 20 matches then gnupod_modify.pl will present
+the matches and ask the user to confirm the modification.
+
+=item -i, --interactive
+
+Always ask the user before making changes to the matching songs. No matter how
+few matches there are.
+
+=item --force
+
+Never ask the user before making changes. No matter how many songs will be
+modified.
+
+=head2 Modification options
+
+=over 4
+
+=item --set <attribute>=<value>
+
+Sets the attribute for all maching songs to the given value.
+This option may be repeated several times in order to set more
+than one attribute at a time.
+
+Example
+  --set artist="Pink Floyd" --set album="The Wall"
+
+=back
+
+###___PODINSERT man/general-tools.pod___###
+
+=head1 AUTHORS
+
+Written by Eric C. Cooper <ecc at cmu dot edu> - Contributed to the 'old' GNUpod (< 0.9)
+
+Adrian Ulrich <pab at blinkenlights dot ch> - Main author of GNUpod
+
+Heinrich Langos <henrik-gnupod at prak dot org> - Some patches
+
+###___PODINSERT man/footer.pod___###
+
