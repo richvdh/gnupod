@@ -1,0 +1,127 @@
+=head2 Generic Program Information
+
+=over 4
+
+=item -h, --help
+
+Display a brief help and exist.
+
+=item --version
+
+Output version information and exit.
+
+=item -m, --mount=directory
+
+iPod mount point, default is C<$IPOD_MOUNTPOINT>.
+
+=item     --list-attributes
+
+Display all attributes that can be used for the filter/view/sort options
+and exit.
+
+=back
+
+=head2 Filter/Sort/View Options
+
+=over 4
+
+=item -f, --filter FILTERDEF[,FILTERDEF[,FILTERDEV...]]
+
+Only show songs that match FILTERDEF.
+
+FILTERDEF ::= <attribute>["<"|">"|"="|"<="|">="|"=="|"!="|"~"|"~="|"=~"]<value>
+  The operators "<", ">", "<=", ">=", "==", and "!=" work as you might expect.
+  The operators "~", "~=", and "=~" symbolize regex match (no need for // though).
+  The operator "=" checks equality on numeric fields and does regex match on strings.
+  TODO: document value for boolean and time fields
+
+Examples of filter options:
+  --filter artist="Pink" would find "Pink", "Pink Floyd" and "spinki",
+  --filter artist=="Pink" would find just "Pink" and not "pink" or "Pink Floyd",
+  --filter 'year<2005' would find songs made before 2005,
+  --filter 'addtime<2008-07-15' would find songs added before July 15th,
+  --filter 'addtime>yesterday' would find songs added in the last 24h,
+  --filter 'releasedate<last week' will find podcast entries that are older than a week.
+
+Note
+    --filter 'year=<1955,artist=Elvis'
+  will find the early songs of Elvis and is equivalent to
+    --filter 'year=<1955' --filter 'artist=Elvis'
+
+Please note that "<" and ">" most probably need to be escaped on your shell prompt.
+So you should probably use
+    --filter 'addtime>yesterday'
+  rather than
+    --filter addtime>yesterday
+
+=item -o, --or, --once
+
+Make any one filter rule match (think OR instead of AND logic)
+
+If the --once option is given any single match on one of the
+filter rules is enough to make a song match. Otherwise all conditions
+have to match a file.
+
+Example:
+    --filter 'year=<1955,artist=Elvis' --or
+  would find songs by anybody up to 1955 and everything by Elvis (even the
+songs recorded after 1955).
+
+=item -s, --sort SORTDEF
+
+Order output according to SORTDEF
+
+SORTDEF ::= ["+"|"-"]<attribute>,[["+"|"-"]<attribute>] ...
+  Is a comma separated list of fields to order the output by.
+  A "-" (minus) reverses the sort order.
+  Example "-year,+artist,+album,+songnum"
+  Default "+addtime"
+
+=item -v, --view VIEWDEF
+
+Show song attributes listed in VIEWDEF
+
+VIEWDEF ::= <attribute>[,<attribute>]...
+  A comma separated list of fields that you want to see in the output.
+  Example: "album,songnum,artist,title"
+  Default: "id,artist,album,title"
+
+
+The special attributes "default" and "all" can also be used in the --view argument.
+
+Example:
+  --view "filesize,default"
+  is equivalent to
+  --view "filesize,id,artist,album,title"
+
+=item -l, --limit=N
+
+Only output N first matches. If N is negative, all "but" the N first
+matches will be listed.
+
+Example:
+  --limit=10
+  will print the first 10 matches
+  --limit=-3
+  will skip the first 3 matches and print the rest
+
+Note:
+  If you need the last 5 matches simply reverse the sort order and use --limit=5.
+
+=back
+
+=head2 Display Options
+
+=over 4
+
+=item --noheader
+
+Don't print headers for result list.
+
+=item --rawprint
+
+Output of raw values instead of human readable ones. This includes all
+timestamps and the attributes volume and soundcheck. Only attributes that
+don't have a raw value like unixpath, are still computed.
+
+=back
