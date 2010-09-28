@@ -36,6 +36,8 @@ my $fullVersionString = "$programName Version ###__VERSION__### (C) Heinrich Lan
 
 use vars qw(%opts @keeplist);
 
+my $AWDB;
+
 $opts{mount} = $ENV{IPOD_MOUNTPOINT};
 
 my $getoptres = GetOptions(\%opts, "version", "help|h", "mount|m=s",
@@ -44,8 +46,9 @@ my $getoptres = GetOptions(\%opts, "version", "help|h", "mount|m=s",
 	@GNUpod::FindHelper::findoptions
 );
 
-# take model and mountpoint from gnupod_search preferences
-GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s'}, "gnupod_search");
+# take model, mountpoint, automktunes, and bgcolor from gnupod_search preferences
+# this should not override options that are already set in opts
+GNUpod::FooBar::GetConfig(\%opts, {mount=>'s', model=>'s', automktunes=>'b', bgcolor=>'s'}, "gnupod_search");
 
 
 usage()   if ($opts{help} || !$getoptres );
@@ -63,11 +66,15 @@ my $foo = GNUpod::FindHelper::process_options(\%opts);
 if (!defined $foo) { usage("Trouble parsing find options.") };
 if (ref(\$foo) eq "SCALAR") { usage($foo)};
 
+my $changingArtwork;
 my %changingAttributes = ();
 for (@{$opts{set}}) {
 	if (/^(.+?)=(.*)$/) {
 		if (defined(GNUpod::FindHelper::resolve_attribute($1))) {
+			# TODO check for readonly flag
 			$changingAttributes{$1}=$2;
+		} elsif ($1 eq 'artwork') {
+			$changingArtwork=$2;
 		} else {
 			usage("Unknown attribute \"".$1."\". ".GNUpod::FindHelper::help_find_attribute($1));
 		}
@@ -79,8 +86,6 @@ for (@{$opts{set}}) {
 # -> Connect the iPod
 my $connection = GNUpod::FooBar::connect(\%opts);
 usage($connection->{status}."\n") if $connection->{status};
-
-my $AWDB;
 
 my $firstrun = 1; #first run will look for the songs and playlists to modify. the second run will modify them.
 my $modificationconfirmed = 0;
@@ -123,10 +128,20 @@ sub main {
 		if ($modificationconfirmed) {
 			foreach my $res (@resultlist) { $resultids{$res->{id}}=1; }
 			$firstrun = 0;
-			$AWDB = GNUpod::ArtworkDB->new(Connection=>$connection, DropUnseen=>1);
+			if (defined($changingArtwork)) {
+				$AWDB = GNUpod::ArtworkDB->new(Connection=>$connection, DropUnseen=>1);
+				if( $AWDB->PrepareImage(File=>$changingArtwork, Model=>$opts{model}, bgcolor=>$opts{bgcolor}) ) {
+					$AWDB->LoadArtworkDb or die "Failed to load artwork database\n";
+				} else {
+					warn "$0: Could not load $changingAttributes{artwork}, skipping artwork\n";
+					undef $changingArtwork;
+				}
+			}
 			GNUpod::XMLhelper::doxml($con->{xml}) or usage("Failed to parse $con->{xml}, did you run gnupod_INIT.pl?\n");
 			GNUpod::XMLhelper::writexml($con,{automktunes=>$opts{automktunes}});
-			$AWDB->WriteArtworkDb;
+			if (defined($changingArtwork)) {
+				$AWDB->WriteArtworkDb;
+			}
 		}
 	}
 }
@@ -147,12 +162,18 @@ sub newfile {
 				# set the fileTags attributes to their new values
 				$fileTag->{file}{$_} = $changingAttributes{$_};
 			}
+			if (defined($changingArtwork)) {
+				# -> Add/Set artwork
+				$fileTag->{file}{has_artwork} = 1;
+				$fileTag->{file}{artworkcnt}  = 1;
+				$fileTag->{file}{dbid_1}      = $AWDB->InjectImage;
+			}
 		}
 		# add it to XML
 		GNUpod::XMLhelper::mkfile($fileTag);
 
 		# -> and keep artwork
-		$AWDB->KeepImage($fileTag->{file}->{dbid_1});
+		$AWDB->KeepImage($fileTag->{file}{dbid_1});
 	}
 }
 

@@ -485,6 +485,7 @@ DOCUMENT ME!
 		'help' => 'iPod path',
 		'header' => 'IPODPATH',
 		'width' => 40,
+		'readonly' => 1,
 		},
 
 	'unixpath' => {
@@ -493,6 +494,7 @@ DOCUMENT ME!
 		'help' => 'Unix path',
 		'header' => 'UNIXPATH',
 		'width' => 40,
+		'readonly' => 1,
 		'always-cooked' => 1,
 		},
 
@@ -550,6 +552,7 @@ DOCUMENT ME!
 		'help' => 'Item ID within GNUpod',
 		'header' => 'ID',
 		'width' => 6,
+		'readonly' => 1,
 		},
 
 );
