@@ -195,16 +195,16 @@ sub _Pretender {
 		my $size      = $wl->{$k}->{size};
 		
 		if(defined($fill_with)) {
-			seek($fd,$k,0) or die "Unable to seek to $k : $!\n";
+			sysseek($fd,$k,0) or die "Unable to seek to $k : $!\n";
 			my $br = sysread($fd, $wl->{$k}->{write}, $size);
 			die "Failed to read $size bytes, got only $br\n" if $br != $size;
 			$writeback = chr($fill_with) x $size;
 		}
-		seek($fd,$k,0) or die "Unable to seek to $k : $!\n";
+		sysseek($fd,$k,0) or die "Unable to seek to $k : $!\n";
 		my $bw = syswrite($fd, $writeback, $size);
 		die "Failed to write $size bytes, only wrote $bw\n" if $bw != $size;
 	}
-	seek($fd,0,0); # Doesn't hurt :-)
+	sysseek($fd,0,0); # Doesn't hurt :-)
 }
 
 
