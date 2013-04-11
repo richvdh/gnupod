@@ -9,27 +9,30 @@ use strict; #of course :)
 
 my %opts = ();
 
-my $DST             = $ARGV[6] || "/";  #DESTDIR
 $opts{MODE}         = $ARGV[0];  #INSTALL MKPGK or REMOVE
 $opts{perlbin}      = $ARGV[1];  #Path to perl
 $opts{podmanbin}    = $ARGV[2];  #Path to perldoc
 $opts{bindir}       = $ARGV[3];  #Bindir
 $opts{infodir}      = $ARGV[4];  #Infodir
 $opts{mandir}       = $ARGV[5];  #Mandir
+my $DST             = $ARGV[6] || "/";  #DESTDIR
+my $pmdir           = $ARGV[7] || $INC[0];  #perl modules dir
+
+
 
 
 my $VINSTALL = `cat .gnupod_version`; #Version of this release
 
 #Check if everything looks okay..
 die "File .gnupod_version does not exist, did you run configure?\n" unless $VINSTALL;
-die "Expected 5 arguments, got ".int(@ARGV)."\n make will run me, not you! stupid human!" if !$opts{mandir} || $ARGV[7];
-die "Strange Perl installation, no \@INC! Can't install Perl-Module(s), killing myself..\n" if !$INC[0];
+die "Expected 5 arguments, got ".int(@ARGV)."\n make will run me, not you! stupid human!" if !$opts{mandir} || $ARGV[8];
+die "Strange Perl installation, no \@INC! Can't install Perl-Module(s), killing myself..\n" if !$pmdir;
 
 if($opts{MODE} eq "INSTALL") {
  #ok, we are still alive, let's blow up the system ;)
  print "Installing GNUpod $VINSTALL using gnupod_install 0.26\n";
  install_scripts("build/bin/*.pl", $DST.$opts{bindir});
- install_pm("build/bin/GNUpod", "GNUpod", $opts{perlbin}, $DST);
+ install_pm("build/bin/GNUpod", "GNUpod", $DST.$pmdir);
  install_man("build/man/*.gz", $DST.$opts{mandir}."/man1");
  install_info("build/info/gnupod.info", $DST.$opts{infodir});
  print "done!\n";
@@ -44,7 +47,7 @@ elsif($opts{MODE} eq "BUILD") {
 elsif($opts{MODE} eq "REMOVE") {
  print "Removing GNUpod $VINSTALL...\n";
  remove_scripts("build/bin/*.pl", $opts{bindir});
- remove_pm("build/bin/GNUpod/*.pm", "GNUpod");
+ remove_pm("build/bin/GNUpod/*.pm", "GNUpod", $pmdir);
  remove_mandocs("build/man/*.gz", $opts{mandir}."/man1");
  remove_docs("gnupod", $opts{infodir});
 }
@@ -166,14 +169,14 @@ sub remove_scripts {
 ##########################
 #Uninstall Modules
 sub remove_pm {
- my($globme, $modi) = @_;
- print " > Removing Modules at $INC[0]/$modi\n";
+ my($globme, $modi, $pmdir) = @_;
+ print " > Removing Modules at $pmdir/$modi\n";
  foreach (glob($globme)) {
-  my $rmme = $INC[0]."/$modi/".fof($_);
+  my $rmme = "$pmdir/$modi/".fof($_);
   print "   -> Removing $rmme  ";
    killold($rmme);
  }
- rmdir($INC[0]."/$modi") or print "Could not remove $INC[0]/$modi: $!\n";
+ rmdir("$pmdir/$modi") or print "Could not remove $pmdir/$modi: $!\n";
 }
 
 
@@ -203,9 +206,9 @@ return undef;
 ########################################################
 # Install Perl modules
 sub install_pm {
-my($basedir, $modi, $perlbin, $pfix) = @_;
+my($basedir, $modi, $moddir) = @_;
 
-my $fullINCdir = "$pfix"."$INC[0]/$modi";
+my $fullINCdir = "$moddir/$modi";
 my $stepINC    = _recmkdir($fullINCdir);
 
 print "Installing Modules at $stepINC\n";
