@@ -1248,7 +1248,8 @@ sub get_string {
 	$anz   = int($anz);
 	sysseek($fh, $start, 0);
 	#start reading
-	sysread($fh, $buffer, $anz);
+	my $bytes_read = sysread($fh, $buffer, $anz);
+	Carp::confess("Short read: Wanted $anz bytes at $start, got $bytes_read, syserr: $!\n") if $anz != $bytes_read;
 	return $buffer;
 }
 
