@@ -43,6 +43,14 @@ my @plorder = ();
 my $xid = 1;
 use vars qw($XDAT);
 
+######################################################
+# Get a new unique song id
+sub get_new_id {
+	while($idpub[$xid]) { $xid++; }
+	$idpub[$xid] = 1;
+	return $xid;
+}
+
 ##############################################
 # Convert an ipod path to unix
 sub realpath {
@@ -164,9 +172,7 @@ sub mkfile {
 
 		#Create the id item if requested
 		if($magic->{addid} && int($hcopy{id}) < 1) {
-			while($idpub[$xid]) { $xid++; }
-			$hcopy{id} = $xid;
-			$idpub[$xid] = 1;
+			$hcopy{id} = get_new_id();
 		}
 
 		#Build $r
