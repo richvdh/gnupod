@@ -781,6 +781,8 @@ sub process_options {
 							$value = UnixDate(ParseDate($3),"%s");
 						} else {
 							# fall back to Date::Parse
+							require Date::Parse;
+							import Date::Parse ();
 							$value = Date::Parse::str2time($3);
 						}
 						if (defined($value)) {
