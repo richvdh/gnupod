@@ -48,6 +48,7 @@ GetOptions(\%opts, "version", "help|h", "mount|m=s", "decode|x=s", "restore|r", 
                    "disable-ape-tag", "set-title|t=s", "set-artist|a=s", "set-album|l=s", "set-genre|g=s", "set-rating=i",
                    "set-playcount=i", "set-bookmarkable|b", "set-shuffleskip", "artwork=s", "replaygain-album",
                    "set-songnum", "playlist|p=s@", "reencode|e=i",
+                   "set-releasedate=s",
                    "min-vol-adj=i", "max-vol-adj=i", "playlist-is-podcast", "podcast-files-limit=i", "podcast-cache-dir=s",
                    "podcast-artwork", "set-compilation");
 
@@ -62,6 +63,12 @@ GNUpod::FooBar::GetConfig(\%opts, {'decode'=>'s', mount=>'s', duplicate=>'b', mo
 usage("\n--decode needs 'pcm' 'mp3' 'aac' 'video' 'aacbm' or 'alac' -> '--decode=mp3'\n") if $opts{decode} && $opts{decode} !~ /^(mp3|video|aac|aacbm|pcm|alac|crashme)$/;
 usage()   if $opts{help};
 version() if $opts{version};
+
+# convert releasedate to correct format
+if ($opts{'set-releasedate'}) {
+    my $rdate = $opts{'set-releasedate'};
+    $opts{'set-releasedate'} = int(Date::Parse::str2time($rdate))+MACTIME;
+}
 
 $SIG{'INT'} = \&handle_int;
 my @XFILES  = ();
@@ -196,6 +203,7 @@ sub startup {
 		$fh->{playcount}    = $opts{'set-playcount'}   if $opts{'set-playcount'};
 		$fh->{title}        = $opts{'set-title'}       if $opts{'set-title'};
 		$fh->{songnum}      = 1+$addcount              if $opts{'set-songnum'};
+                $fh->{releasedate}  = $opts{'set-releasedate'} if $opts{'set-releasedate'};
 		if($awdb_image_prepared) {
 			$fh->{has_artwork} = 1;
 			$fh->{artworkcnt}  = 1;
