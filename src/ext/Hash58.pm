@@ -22,7 +22,7 @@ package GNUpod::Hash58;
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.#
 
 use strict;
-use Digest::SHA1;
+use Digest::SHA;
 
 use constant OFFSET_UNK30  => 0x30;     # Will set this to 1
 use constant OFFSET_DBID   => 0x18;     # Offset of dbid, we need to blank it out
@@ -122,7 +122,7 @@ sub CreateHash {
 	my $brain = _PrepareItunes(FD=>*ITUNES);                               # Blank out some offsets in iTunesDB
 
 	Hmac($key,64,0x36);                                                    # Create HMAC for $key
-	$sha1 = Digest::SHA1->new;                                             # SHA1-Round1
+	$sha1 = Digest::SHA->new(1);                                           # SHA1-Round1
 	$sha1->add(_ArrayRefToString($key));                                   # -> Add HMACed $key
 	$sha1->addfile(*ITUNES);                                               # -> Add iTunesDB with some blanks
 	$phash = $sha1->digest;                                                # -> this is the phash
@@ -162,7 +162,7 @@ sub CreateKey {
 		$y->[$i] = $inv_table->[$y->[$i]];
 	}
 	
-	my $sha1 = Digest::SHA1->new;
+	my $sha1 = Digest::SHA->new(1);
 	   $sha1->add(_ArrayRefToString($fixed));
 	   $sha1->add(_ArrayRefToString($y));
 	
