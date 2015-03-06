@@ -390,7 +390,9 @@ sub newfile {
 	$dupdb_normal{lc($_[0]->{file}->{title})."/$_[0]->{file}->{bitrate}/$_[0]->{file}->{time}/$_[0]->{file}->{filesize}"}= $_[0]->{file}->{id}||-1;
 
 	#This is worse than _normal, but the only way to detect dups *before* re-encoding...
-	$dupdb_lazy{lc($_[0]->{file}->{title})."/".lc($_[0]->{file}->{album})."/".lc($_[0]->{file}->{artist})}= $_[0]->{file}->{id}||-1;
+	$dupdb_lazy{lc($_[0]->{file}->{title} || "")."/".
+                        lc($_[0]->{file}->{album} || "")."/".
+                        lc($_[0]->{file}->{artist} || "")}= $_[0]->{file}->{id}||-1;
 	
 	#Add podcast infos if it is an podcast
 	if($_[0]->{file}->{podcastguid}) {

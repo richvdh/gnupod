@@ -372,7 +372,7 @@ sub writexml {
 			print OUT " </smartplaylist>\n";
 		}
 		elsif(my $phr = get_plpref($current_plname)) { #plprefs found..
-			if (defined(@{$XDAT->{playlists}->{data}->{$current_plname}})) { #the playlist is not empty
+			if (@{$XDAT->{playlists}->{data}->{$current_plname}}) { #the playlist is not empty
 				print OUT "\n ".mkfile({playlist=>$phr}, {return=>1,noend=>1})."\n";
 				foreach(@{$XDAT->{playlists}->{data}->{$current_plname}}) {
 					print OUT "   $_\n";

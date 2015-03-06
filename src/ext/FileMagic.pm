@@ -362,7 +362,7 @@ sub __flatten {
 		foreach (keys(%{$in})) {
 			my $kvp = __flatten($_, $exclude); # key
 			next if !defined($kvp);
-			my $v = __flatten(%{$in}->{$_}, $exclude); # value
+			my $v = __flatten($in->{$_}, $exclude); # value
 			$kvp .= " : ".$v     if (defined($v) && ("$v" ne ""));
 			push @out, $kvp;
 		}
@@ -418,9 +418,9 @@ sub __merge_strings {
 	my $case = "check";
 
 	if (ref($options) eq "HASH") {
-		$joinby = %{$options}->{joinby}        if defined(%{$options}->{joinby});
-		$wspace = lc(%{$options}->{wspace})    if defined(%{$options}->{wspace});
-		$case   = lc(%{$options}->{case})      if defined(%{$options}->{case});
+		$joinby = $options->{joinby}        if defined($options->{joinby});
+		$wspace = lc($options->{wspace})    if defined($options->{wspace});
+		$case   = lc($options->{case})      if defined($options->{case});
 	}
 	my $merged = "";
 
