@@ -209,6 +209,8 @@ sub startup {
 			$fh->{artworkcnt}  = 1;
 			$fh->{dbid_1}      = $AWDB->InjectImage;
 		}
+
+		$fh->{played_flag} = 0;
 		
 		#Set the addtime to unixtime(now)+MACTIME (the iPod uses mactime)
 		#This breaks perl < 5.8 if we don't use int(time()) !
