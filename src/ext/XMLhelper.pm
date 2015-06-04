@@ -361,6 +361,7 @@ sub writexml {
 	#Print all playlists
 	foreach(getpl_attribs()) {
 		my $current_plname = $_->{name};
+		print STDERR "writing playlist '$current_plname'\n";
 		
 		if(my $shr = get_splpref($current_plname)) { #xmlheader present
 			print OUT "\n ".mkfile({smartplaylist=>$shr}, {return=>1,noend=>1})."\n";
@@ -372,10 +373,11 @@ sub writexml {
 			print OUT " </smartplaylist>\n";
 		}
 		elsif(my $phr = get_plpref($current_plname)) { #plprefs found..
-			if (@{$XDAT->{playlists}->{data}->{$current_plname}}) { #the playlist is not empty
+			$pl = $XDAT->{playlists}->{data}->{$current_plname};
+			if ($pl && @{$pl}) { # the playlist is not empty
 				print OUT "\n ".mkfile({playlist=>$phr}, {return=>1,noend=>1})."\n";
-				foreach(@{$XDAT->{playlists}->{data}->{$current_plname}}) {
-					print OUT "   $_\n";
+				foreach(@{$pl}) {
+					print OUT "	  $_\n";
 				}
 				print OUT " </playlist>\n";
 			} else {
